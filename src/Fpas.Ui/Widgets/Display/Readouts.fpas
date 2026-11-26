@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Display.Readouts;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
 
 // Native instrument value size.
 public type Size = enum: byte

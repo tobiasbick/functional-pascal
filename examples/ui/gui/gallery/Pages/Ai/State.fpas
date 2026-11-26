@@ -2,7 +2,8 @@
 
 unit GuiGallery.Pages.Ai.State;
 
-uses Fpas.Ui.Widgets.Ai.Composers as Composer, Fpas.Ui.Widgets.Ai.ResponseActions as Response;
+uses Fpas.Ui.Widgets.Ai.Composers as Composer;
+uses Fpas.Ui.Widgets.Ai.ResponseActions as Response;
 
 // Current values for the original AI examples.
 public type Model = record

@@ -2,11 +2,15 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.SearchField;
 
-uses
-  Fpas.Ui.Widgets.Inputs.SearchFields as Search, Fpas.Ui.Widgets.Inputs.TextFields as Fields,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as TextField,
-  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T, System as Sys;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as TextField;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+uses System as Sys;
 
 // Resolves a search editor with an optional clear control.
 // ## Type parameters

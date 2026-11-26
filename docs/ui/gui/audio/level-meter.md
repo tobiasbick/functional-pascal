@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Audio.LevelMeter;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.LevelMeters as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.LevelMeters as W;
 
 // Displays a two-channel master meter.
 // ## Parameters

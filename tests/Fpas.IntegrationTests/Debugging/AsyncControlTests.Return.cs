@@ -18,8 +18,8 @@ public sealed partial class AsyncControlTests
         using var program = new Debuggee("own-async-return");
         var source = """
             program AsyncReturn;
-            uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks,
-              System.IO.File as File, System.Threading.Thread as Thread;
+            uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
+              uses System.IO.File as File; uses System.Threading.Thread as Thread;
             async function Child(Input: int; Gate: Tasks.Task<int>): Tasks.Task<int>;
             begin
               const Release: int := await Gate;
@@ -49,8 +49,8 @@ public sealed partial class AsyncControlTests
             end program;
             """;
         source = source.Replace("await Gate;", $"await {awaited};", StringComparison.Ordinal);
-        if (loadTwice) source = source.Replace("System.IO.File as File, System.Threading.Thread as Thread;",
-            "System.IO.File as File, System.Threading.Thread as Thread, System.Runtime.Loader.AssemblyLoadContext as LoadContext, System.IO.Path as Path;", StringComparison.Ordinal)
+        if (loadTwice) source = source.Replace("System.IO.File as File; uses System.Threading.Thread as Thread;",
+            "System.IO.File as File; uses System.Threading.Thread as Thread; uses System.Runtime.Loader.AssemblyLoadContext as LoadContext; uses System.IO.Path as Path;", StringComparison.Ordinal)
             .Replace("Console.WriteLine('pending');", "Console.WriteLine('pending'); const Duplicate: LoadContext := new LoadContext('duplicate', false); discard Duplicate.LoadFromAssemblyPath(Path.GetFullPath('Program.dll'));", StringComparison.Ordinal);
         if (generic) source = source.Replace("Child(", "Child<T>(", StringComparison.Ordinal)
             .Replace("await Child<T>(Input, Gate)", "await Child<T>(Input, Gate).ConfigureAwait(false)", StringComparison.Ordinal)

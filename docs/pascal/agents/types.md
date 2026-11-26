@@ -48,7 +48,8 @@ clauses; [functions](functions.md) explains them and inference.
 ```pascal
 program AgentTypes;
 
-uses System as Sys, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
 
 type UserId = distinct long;
 
@@ -118,7 +119,10 @@ end unit;
 ```pascal project=agent-units
 program AgentUnits;
 
-uses Agent.Values as Values, Agent.Values.Count as Count, System as Sys, System.Console as Console;
+uses Agent.Values as Values;
+uses Agent.Values.Count as Count;
+uses System as Sys;
+uses System.Console as Console;
 
 begin
   const First: Count := Values.Advance();

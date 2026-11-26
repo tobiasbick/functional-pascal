@@ -3,15 +3,21 @@
 // Second owned stage: one file at a time, independent of directory enumeration.
 unit FpasAmp.Library.Metadata.Internal.Worker;
 
-uses
-  FpasAmp.Library.Metadata.Internal.Policy as P, FpasAmp.Library.Metadata.Internal.Pending as Pending,
-  FpasAmp.Library.Metadata.Internal.Reading as Reading, FpasAmp.Library.Metadata.Persistence.Store as Store,
-  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
-  FpasAmp.Library.UserData.Schema as Users, FpasAmp.Library.UserData.Identity as Identity,
-  FpasAmp.Library.Metadata.Internal.Recovery as Recovery,
-  FpasAmp.Library.Playlists.Formats.Reading as Playlists,
-  FpasAmp.Library.Playlists.Persistence.Store as PlaylistStore,
-  Microsoft.Data.Sqlite as Db, System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
+uses FpasAmp.Library.Metadata.Internal.Pending as Pending;
+uses FpasAmp.Library.Metadata.Internal.Policy as P;
+uses FpasAmp.Library.Metadata.Internal.Reading as Reading;
+uses FpasAmp.Library.Metadata.Internal.Recovery as Recovery;
+uses FpasAmp.Library.Metadata.Persistence.Store as Store;
+uses FpasAmp.Library.Persistence.Schema as Schema;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Playlists.Formats.Reading as Playlists;
+uses FpasAmp.Library.Playlists.Persistence.Store as PlaylistStore;
+uses FpasAmp.Library.UserData.Identity as Identity;
+uses FpasAmp.Library.UserData.Schema as Users;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 const SqliteBusy: int := 5;
 

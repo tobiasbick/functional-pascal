@@ -2,10 +2,12 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.RowNavigation;
 
-uses
-  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as A,
-  Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Layout.ScrollViews as V;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 function Distance(Target: A.NavigationStop; Region: A.ScrollRegion): int;
 begin

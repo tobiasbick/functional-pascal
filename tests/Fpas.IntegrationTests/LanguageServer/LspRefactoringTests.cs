@@ -62,9 +62,11 @@ public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<S
         var path = directory.File("Types/Types.fpas");
         var original = """
             unit Types;
-            uses System.Text as Drop, System.Console as Log, System.Collections.Generic as Col,
-              // Keep the attached note.
-              System.IO as Retain;
+            uses System.Text as Drop;
+            uses System.Console as Log;
+            uses System.Collections.Generic as Col;
+            // Keep the attached note.
+            uses System.IO as Retain;
             public function Make(): Col.List<int>;
             begin
               Log.WriteLine('ready');
@@ -92,7 +94,7 @@ public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<S
         var imports = Result(await client.Request("fpas/prepareRefactoring", new
             { schemaVersion = 1, kind = "organize-imports", textDocument, position = at, end = at }));
         var edit = Assert.Single(Assert.Single(imports.GetProperty("files").EnumerateArray()).GetProperty("edits").EnumerateArray());
-        Assert.Equal("System.Text as Drop, ", edit.GetProperty("expectedText").GetString());
+        Assert.Equal("uses System.Text as Drop;\r\n", edit.GetProperty("expectedText").GetString());
         Assert.Equal("", edit.GetProperty("newText").GetString());
         Assert.Contains(imports.GetProperty("notes").EnumerateArray(), note => note.GetString()!.Contains("comment", StringComparison.Ordinal));
         Assert.Equal(original, File.ReadAllText(path));

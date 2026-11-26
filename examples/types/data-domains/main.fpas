@@ -2,7 +2,8 @@
 
 program DomainDemo;
 
-uses Example.Domains as D, System.Console as Console;
+uses Example.Domains as D;
+uses System.Console as Console;
 
 begin
   const Account: D.AccountId := new D.AccountId(42L);

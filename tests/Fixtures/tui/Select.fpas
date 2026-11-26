@@ -2,11 +2,17 @@
 
 program SelectContract;
 
-uses
-  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Mvu.Application as M,
-  Fpas.Ui.Layout as L, System as Sys, System.Console as Console;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as M;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Application as T;
+uses Fpas.Ui.Tui.Headless as Headless;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Inputs.Selects as S;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses System as Sys;
+uses System.Console as Console;
 
 const Items: array of S.Item := [
   new S.Item('Ada'),

@@ -2,7 +2,9 @@
 
 unit GuiGallery.Pages.Motion.State;
 
-uses Fpas.Ui.Widgets.Audio.NowPlaying as Player, Fpas.Ui.Widgets.Charts.Charts as Colors, Fpas.Ui.Graphics as Graphics;
+uses Fpas.Ui.Graphics as Graphics;
+uses Fpas.Ui.Widgets.Audio.NowPlaying as Player;
+uses Fpas.Ui.Widgets.Charts.Charts as Colors;
 
 // Model for the original Motion page and the rolling-number sample.
 public type Model = record

@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.PresencePill;
 
-uses
-  Fpas.Ui.Widgets.Canvas.PresencePills as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P,
-  Fpas.Ui.Widgets.Canvas.LiveCursors as Live, Fpas.Ui.Gui.Internal.Data.CanvasData as Data;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Data.CanvasData as Data;
+uses Fpas.Ui.Widgets.Canvas.LiveCursors as Live;
+uses Fpas.Ui.Widgets.Canvas.PresencePills as D;
 
 // Presents CUI's native PresencePill widget.
 // ## Type parameters

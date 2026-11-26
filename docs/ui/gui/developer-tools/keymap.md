@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DeveloperTools.Keymap;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.Keymaps as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.Keymaps as W;
 
 // Shows the current keyboard bindings.
 // ## Parameters

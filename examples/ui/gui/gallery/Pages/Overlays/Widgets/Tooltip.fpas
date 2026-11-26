@@ -2,15 +2,14 @@
 
 unit GuiGallery.Pages.Overlays.Widgets.Tooltip;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Overlays.State as State,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Actions.IconButtons as Icons,
-  Fpas.Ui.Widgets.Overlays.Tooltips as Tips,
-  Fpas.Ui.Layout as L,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Overlays.Tooltips as Tips;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Overlays.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
 
 function Help(Id: string; Glyph: int; Label: string; Shortcut: string := ''): E.Element<State.Msg>;
 begin

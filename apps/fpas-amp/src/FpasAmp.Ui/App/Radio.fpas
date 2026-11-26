@@ -2,12 +2,16 @@
 
 unit FpasAmp.Ui.App.Radio;
 
-uses
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Radio.Model as M,
-  FpasAmp.Ui.Radio.Update as Search, FpasAmp.Ui.Navigation.Model as Nav,
-  FpasAmp.Ui.Settings.Model as Settings, FpasAmp.Ui.Settings.Editing as Editing,
-  Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as Composition,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Mvu.Composition as Composition;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Radio.Model as M;
+uses FpasAmp.Ui.Radio.Update as Search;
+uses FpasAmp.Ui.Settings.Editing as Editing;
+uses FpasAmp.Ui.Settings.Model as Settings;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 function Update(Current: App.State; Action: M.Msg): A.Transition<App.State, App.Msg>;
 begin

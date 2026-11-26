@@ -2,9 +2,10 @@
 
 unit FpasAmp.UiTests.AcoustId;
 
-uses
-  FpasAmp.Ui.TagEditor.AcoustId as Acoust, FpasAmp.Ui.TagEditor.MusicBrainz as MB,
-  System as Sys, Xunit as X;
+uses FpasAmp.Ui.TagEditor.AcoustId as Acoust;
+uses FpasAmp.Ui.TagEditor.MusicBrainz as MB;
+uses System as Sys;
+uses Xunit as X;
 
 // Checks the AcoustID response contract at the boundary of the shared picker.
 public type AcoustIdTests = record

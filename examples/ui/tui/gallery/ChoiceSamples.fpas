@@ -2,9 +2,11 @@
 
 unit TuiGallery.ChoiceSamples;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as Style,
-  Fpas.Ui.Widgets.Actions.SegmentedControls as S, Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Actions.SegmentedControls as S;
 
 // User changes in the original CUI selection examples.
 public type Msg = variant

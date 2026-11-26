@@ -15,7 +15,7 @@ public sealed partial class DapDebuggerTests
         using var program = new Debuggee("dap-private-terminal");
         await program.Compile("""
             program TerminalTarget;
-            uses System.Console as Console, System.Threading.Thread as Thread;
+            uses System.Console as Console; uses System.Threading.Thread as Thread;
             begin
               const Width: int := Console.WindowWidth;
               Console.WriteLine('before:' + Width.ToString() + 'x' + Console.WindowHeight.ToString());

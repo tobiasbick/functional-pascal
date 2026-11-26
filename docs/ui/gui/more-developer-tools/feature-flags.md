@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.FeatureFlags;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.FeatureFlagEditors as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.FeatureFlagEditors as W;
 
 // Displays feature flags from the current environment model.
 // ## Parameters

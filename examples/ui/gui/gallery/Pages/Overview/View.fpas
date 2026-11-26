@@ -2,17 +2,20 @@
 
 unit GuiGallery.Pages.Overview.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Overview.State as State,
-  GuiGallery.Pages.Overview.Widgets.Workspace as Workspace, GuiGallery.Pages.Overview.Widgets.Team as Team,
-  GuiGallery.Shared.State as Demo, Fpas.Ui.Widgets.Containers.Grids as Grid, Fpas.Ui.Widgets.Charts.Metrics as Metrics,
-  Fpas.Ui.Composition as U, Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
-  GuiGallery.Shared.Sections as G,
-  System as Sys;
+uses Fpas.Ui.Composition as U;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Charts.Metrics as Metrics;
+uses Fpas.Ui.Widgets.Containers.Grids as Grid;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Overview.State as State;
+uses GuiGallery.Pages.Overview.Widgets.Team as Team;
+uses GuiGallery.Pages.Overview.Widgets.Workspace as Workspace;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 // Builds the gallery introduction and workspace preview.
 // ## Type parameters

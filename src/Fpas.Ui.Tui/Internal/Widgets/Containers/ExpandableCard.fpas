@@ -2,10 +2,12 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Containers.ExpandableCard;
 
-uses
-  Fpas.Ui.Widgets.Containers.ExpandableCards as C, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
-  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as A;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as C;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
 
 // Lowers the card to a stable action and a model-controlled body.
 // ## Type parameters

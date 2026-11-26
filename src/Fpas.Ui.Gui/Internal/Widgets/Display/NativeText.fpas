@@ -2,8 +2,8 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Display.NativeText;
 
-uses
-  Fpas.Ui.Widgets.Display.Texts as D, Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Display.Texts as D;
 
 // Draws the native CUI text.
 // ## Type parameters

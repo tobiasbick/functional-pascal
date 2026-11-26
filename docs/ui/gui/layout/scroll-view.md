@@ -11,7 +11,8 @@ Available in **GUI and TUI**.
 ```pascal
 unit Docs.Ui.Layout.ScrollView;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Shows cards in a bounded horizontal viewport.
 // ## Parameters

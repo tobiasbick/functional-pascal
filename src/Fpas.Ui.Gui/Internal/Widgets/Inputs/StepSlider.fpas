@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.StepSlider;
 
-uses
-  Fpas.Ui.Widgets.Inputs.StepSliders as A, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Core.Parts as W, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Widgets.Audio.ControlWells as Wells;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as W;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Widgets.Audio.ControlWells as Wells;
+uses Fpas.Ui.Widgets.Inputs.StepSliders as A;
 
 // Presents the native step slider.
 // ## Type parameters

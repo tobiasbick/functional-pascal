@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.LanguagesExample;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Widgets.Inputs.MultiSelects as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.MultiSelects as M;
+uses Fpas.Ui.Widgets.Inputs.Selects as S;
 
 const Choices: array of S.Item := [
   new S.Item('C'), new S.Item('C++'), new S.Item('Rust'), new S.Item('Zig'),

@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Pickers.DatePickers;
 
-uses Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
 
 // Presentation and input settings for a native date field.
 public type Options = record

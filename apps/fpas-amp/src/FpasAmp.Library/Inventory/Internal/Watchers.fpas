@@ -3,12 +3,13 @@
 // Watcher callbacks only invalidate directories; they never enumerate or wait on scans.
 unit FpasAmp.Library.Inventory.Internal.Watchers;
 
-uses
-  FpasAmp.Library.Inventory.Internal.Inbox as Q,
-  FpasAmp.Library.Sources as S,
-  FpasAmp.Library.Inventory.Internal.Directories as Directories,
-  FpasAmp.Library.Metadata.Covers as Covers,
-  System as Sys, System.IO as IO, System.Collections.Generic as C;
+uses FpasAmp.Library.Inventory.Internal.Directories as Directories;
+uses FpasAmp.Library.Inventory.Internal.Inbox as Q;
+uses FpasAmp.Library.Metadata.Covers as Covers;
+uses FpasAmp.Library.Sources as S;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
 
 // Native watchers owned by the scan worker.
 public type Watchers = record implements Sys.IDisposable

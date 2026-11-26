@@ -10,7 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Ai.AgentStatus;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.AgentStatuses as W, Fpas.Ui.Widgets.Feedback.TaskStates as T;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.AgentStatuses as W;
+uses Fpas.Ui.Widgets.Feedback.TaskStates as T;
 
 // Displays the current running action.
 // ## Parameters

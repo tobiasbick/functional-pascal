@@ -9,7 +9,8 @@ Use a rating to collect a whole number of stars. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Selection.Rating;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Ratings as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Ratings as C;
 
 // Builds the rating example.
 // ## Parameters

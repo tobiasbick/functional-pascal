@@ -3,12 +3,16 @@
 // Compact playback bookmark: the catalogue supplies the queue on restart.
 unit FpasAmp.Persistence.PlayerState;
 
-uses
-  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Persistence.JsonOutput as Output,
-  FpasAmp.Ui.Player.Model as M,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Library.Metadata.Model as Tracks, System as Sys, System.Collections.Generic as C,
-  System.Collections.Immutable as I, System.Text.Json as J;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Persistence.JsonFields as Fields;
+uses FpasAmp.Persistence.JsonOutput as Output;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Player.Model as M;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Text.Json as J;
 
 // The playing source and track at close, independent of subsequent navigation.
 public type Saved = record

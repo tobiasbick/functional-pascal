@@ -3,11 +3,13 @@
 // Reconstructible catalogue schema; source settings remain authoritative in JSON.
 unit FpasAmp.Library.Persistence.Schema;
 
-uses
-  FpasAmp.Library.Persistence.Sql as Sql,
-  FpasAmp.Library.Metadata.Persistence.Schema as Metadata, Microsoft.Data.Sqlite as Db, System as Sys,
-  FpasAmp.Library.Playlists.Persistence.Schema as Playlists, FpasAmp.Library.Content.Schema as Content,
-  FpasAmp.Library.Albums.Persistence.Schema as Albums;
+uses FpasAmp.Library.Albums.Persistence.Schema as Albums;
+uses FpasAmp.Library.Content.Schema as Content;
+uses FpasAmp.Library.Metadata.Persistence.Schema as Metadata;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Playlists.Persistence.Schema as Playlists;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
 
 // Initializes a new database or validates the supported schema without resetting data.
 // `Connection` is an open, worker-owned connection.

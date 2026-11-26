@@ -3,25 +3,47 @@
 // MVU boundary: routes slice messages and owns the library subscriptions.
 unit FpasAmp.Ui.App.Controller;
 
-uses
-  FpasAmp.Ui.Music.LibraryPage as LibrarySongs, FpasAmp.Ui.App.Model as M, FpasAmp.Ui.App.Browsing as Browsing,
-  FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Settings.Update as SettingsUpdate,
-  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Navigation.Update as Navigation,
-  FpasAmp.Library.Playlists.Model as Playlists, System.Collections.Immutable as I,
-  FpasAmp.Library.Inventory.Monitoring as Monitoring, Fpas.Ui.Mvu.Application as Mvu,
-  FpasAmp.Library.Metadata.Monitoring as Metadata, System.Collections.Generic as C,
-  FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Library.Albums.Model as Releases, FpasAmp.Ui.Albums.Update as AlbumUpdate, FpasAmp.Ui.Albums.Grid as Grid,
-  FpasAmp.Library.Albums.Access as AlbumAccess, Fpas.Ui.Mvu.Composition as Composition,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.Update as Player,
-  FpasAmp.Ui.Player.Availability as Availability, FpasAmp.Ui.Player.Playback as Playback, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Ui.Settings.Editing as Editing, System.Linq as Linq,
-  FpasAmp.Ui.App.Analysis as Analysis, Fpas.Media.Audio as Audio,
-  FpasAmp.Ui.TagEditor.Model as TagModel, FpasAmp.Ui.TagEditor.Update as TagUpdate,
-  System as Sys, System.Threading as T, System.Threading.Tasks as Tasks,
-  FpasAmp.Ui.App.Radio as Radio, FpasAmp.Ui.Radio.Model as RadioModel,
-  FpasAmp.Ui.App.Podcasts as Podcasts, FpasAmp.Ui.Podcasts.Model as PodcastModel,
-  FpasAmp.Ui.App.Subscriptions as Subscriptions;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Composition as Composition;
+uses FpasAmp.Library.Albums.Access as AlbumAccess;
+uses FpasAmp.Library.Albums.Model as Releases;
+uses FpasAmp.Library.Inventory.Monitoring as Monitoring;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Library.Playlists.Model as Playlists;
+uses FpasAmp.Ui.Albums.Grid as Grid;
+uses FpasAmp.Ui.Albums.Model as AlbumModel;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses FpasAmp.Ui.Albums.Update as AlbumUpdate;
+uses FpasAmp.Ui.App.Analysis as Analysis;
+uses FpasAmp.Ui.App.Browsing as Browsing;
+uses FpasAmp.Ui.App.Model as M;
+uses FpasAmp.Ui.App.Podcasts as Podcasts;
+uses FpasAmp.Ui.App.Radio as Radio;
+uses FpasAmp.Ui.App.Subscriptions as Subscriptions;
+uses FpasAmp.Ui.Music.LibraryPage as LibrarySongs;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Navigation.Update as Navigation;
+uses FpasAmp.Ui.Player.Availability as Availability;
+uses FpasAmp.Ui.Player.Model as PlayerModel;
+uses FpasAmp.Ui.Player.Playback as Playback;
+uses FpasAmp.Ui.Player.Update as Player;
+uses FpasAmp.Ui.Podcasts.Model as PodcastModel;
+uses FpasAmp.Ui.Radio.Model as RadioModel;
+uses FpasAmp.Ui.Settings.Editing as Editing;
+uses FpasAmp.Ui.Settings.Model as SettingsModel;
+uses FpasAmp.Ui.Settings.Update as SettingsUpdate;
+uses FpasAmp.Ui.TagEditor.Model as TagModel;
+uses FpasAmp.Ui.TagEditor.Update as TagUpdate;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Linq as Linq;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
 begin

@@ -2,7 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Media.Carousel;
 
-uses Fpas.Ui.Widgets.Media.Carousels as Carousels, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Media.Carousels as Carousels;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Presents CUI's native Carousel widget.
 // ## Type parameters

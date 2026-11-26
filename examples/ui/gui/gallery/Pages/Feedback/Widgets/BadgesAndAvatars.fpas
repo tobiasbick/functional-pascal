@@ -2,10 +2,14 @@
 
 unit GuiGallery.Pages.Feedback.Widgets.BadgesAndAvatars;
 
-uses
-  GuiGallery.Shared.Sections as G, Fpas.Ui.Layout as L, Fpas.Ui.Elements as E,
-  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Feedback.Badges as B,
-  Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Widgets.Media.AvatarGroups as Groups;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Feedback.Badges as B;
+uses Fpas.Ui.Widgets.Media.AvatarGroups as Groups;
+uses Fpas.Ui.Widgets.Media.Avatars as A;
+uses GuiGallery.Shared.Sections as G;
 
 // Shows the native badges, status avatars and overlapping team from Feedback.
 // ## Type parameters

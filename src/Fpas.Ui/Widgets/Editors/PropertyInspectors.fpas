@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Editors.PropertyInspectors;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
 
 // Typed value supported by CUI's inspector.
 public type Value = variant

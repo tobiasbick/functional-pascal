@@ -2,13 +2,20 @@
 
 unit FpasAmp.Ui.Podcasts.Toolbar;
 
-uses
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Podcasts.Catalog as Catalog,
-  FpasAmp.Ui.Albums.Toolbar.View as Layout, FpasAmp.Ui.Albums.Toolbar.Filters as Filters,
-  FpasAmp.Ui.Collections.TableSort as Sort, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Inputs.SearchFields as Fields,
-  Fpas.Ui.Widgets.Inputs.Selects as Select, System.Collections.Generic as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as Fields;
+uses Fpas.Ui.Widgets.Inputs.Selects as Select;
+uses FpasAmp.Ui.Albums.Toolbar.Filters as Filters;
+uses FpasAmp.Ui.Albums.Toolbar.View as Layout;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Collections.TableSort as Sort;
+uses FpasAmp.Ui.Podcasts.Catalog as Catalog;
+uses FpasAmp.Ui.Podcasts.Model as M;
+uses System.Collections.Generic as C;
 
 const Gap: L.Spacing := L.Spacing.Fixed(L.Measure.Logical(8));
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);

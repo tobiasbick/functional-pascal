@@ -2,9 +2,11 @@
 
 unit Gallery.Shared.SecurityCard;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
+uses Gallery.Shared.Strings as Strings;
+uses System as Sys;
 
 // Security starts closed in both galleries.
 public const Initial: bool := false;

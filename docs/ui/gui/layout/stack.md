@@ -10,9 +10,11 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Layout.Stack;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Containers.Stacks as W,
-  Fpas.Ui.Widgets.Feedback.Skeletons as Placeholder, Fpas.Ui.Widgets.Feedback.Badges as Badge;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Stacks as W;
+uses Fpas.Ui.Widgets.Feedback.Badges as Badge;
+uses Fpas.Ui.Widgets.Feedback.Skeletons as Placeholder;
 
 // Layers a badge over a placeholder.
 // ## Returns

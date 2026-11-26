@@ -12,7 +12,7 @@ public sealed partial class LintTests
         using var directory = CreateRulesProject();
         Write(directory, "Rules/Ports.fpas", """
             unit Ports;
-            uses System.Threading as T, System.Threading.Channels as C, System.Threading.Tasks as Tasks;
+            uses System.Threading as T; uses System.Threading.Channels as C; uses System.Threading.Tasks as Tasks;
             public type Session = record
               public Gate: T.SemaphoreSlim;
               public Inbox: C.Channel<int>;
@@ -164,7 +164,7 @@ public sealed partial class LintTests
         Assert.Equal(fresh, File.ReadAllText(baseline));
 
         static string Unit(string name, string[] imports) =>
-            $"unit {name}; uses {string.Join(", ", imports.Select(other => $"{other} as Use{other}"))}; " +
+            $"unit {name}; {string.Concat(imports.Select(other => $"uses {other} as Use{other}; "))}" +
             $"public function Read(): int; begin return {string.Join(" + ", imports.Select(other => $"Use{other}.Read()"))}; end function; end unit;";
     }
 

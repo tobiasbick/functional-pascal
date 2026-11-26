@@ -2,13 +2,21 @@
 
 unit GallerySkeletonContract;
 
-uses
-  GuiGallery.App.State as State, GuiGallery.App.Update as Update,
-  GalleryHostAssertions as A, Fpas.Ui.Elements as E, Fpas.Ui.Composition as U,
-  Fpas.Ui.Widgets.Feedback.Skeletons as Skel, Fpas.Ui.Widgets.Feedback.Spinners as Spin, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
-  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Validation as V,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Gui.Cui as Cui, System as Sys;
+uses Fpas.Ui.Composition as U;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Feedback.Skeletons as Skel;
+uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as Update;
+uses System as Sys;
 
 procedure Validate();
   procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);

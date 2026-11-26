@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.Waffle;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Waffles as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.Waffles as W;
 
 // Builds the waffle example.
 // ## Returns

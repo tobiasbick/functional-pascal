@@ -3,10 +3,12 @@
 // Structured lifetime for child tasks and asynchronous cleanup.
 unit Fpas.Execution.Workflows.Scopes;
 
-uses
-  System as Sys, System.Collections.Generic as C,
-  System.Runtime.CompilerServices as Runtime, System.Runtime.ExceptionServices as Errors,
-  System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Runtime.CompilerServices as Runtime;
+uses System.Runtime.ExceptionServices as Errors;
+uses System.Threading as Threads;
+uses System.Threading.Tasks as Tasks;
 
 // A child started in a scope.
 //

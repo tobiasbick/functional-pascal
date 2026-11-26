@@ -15,7 +15,7 @@ public sealed class StaticInspectionTests
         var library = await Library(program);
         var source = """
             program Statics;
-            uses Fixture as F, System.Console as Console;
+            uses Fixture as F; uses System.Console as Console;
             var Global: int := 21;
             procedure Observe();
             begin

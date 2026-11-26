@@ -2,10 +2,15 @@
 
 unit Fpas.Ui.Internal.Validation.Inputs.SmartInputRules;
 
-uses
-  Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Inputs.InlineEdits as I, Fpas.Ui.Widgets.Inputs.ScrubFields as S, Fpas.Ui.Widgets.Inputs.MoneyFields as M,
-  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as K, System as Sys, System.Text as Text;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Inputs.InlineEdits as I;
+uses Fpas.Ui.Widgets.Inputs.MoneyFields as M;
+uses Fpas.Ui.Widgets.Inputs.ScrubFields as S;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as K;
+uses System as Sys;
+uses System.Text as Text;
 
 procedure Width(Value: L.Extent; At: string);
 begin

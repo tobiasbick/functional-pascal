@@ -2,10 +2,11 @@
 
 unit Diagnostics.Samples;
 
-uses
-  System as Sys, System.IO as IO, System.Text as Text,
-  System.Globalization.CultureInfo as Culture,
-  System.Runtime.InteropServices.RuntimeInformation as Runtime;
+uses System as Sys;
+uses System.Globalization.CultureInfo as Culture;
+uses System.IO as IO;
+uses System.Runtime.InteropServices.RuntimeInformation as Runtime;
+uses System.Text as Text;
 
 // Formats a sample with invariant round-trip precision.
 // ## Parameters

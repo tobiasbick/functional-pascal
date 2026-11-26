@@ -3,13 +3,22 @@
 // Cached startup data, configuration context and safe database failures.
 unit FpasAmp.Library.Tests.StorageLoading;
 
-uses
-  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.StorageSupport as D,
-  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
-  FpasAmp.Library.Persistence.Loading as Loading, FpasAmp.Library.Persistence.Locations as Locations,
-  FpasAmp.Library.Inventory.Internal.Tree as Trees, FpasAmp.Library.Inventory.Model as M,
-  FpasAmp.Library.Sources as S, Microsoft.Data.Sqlite as Db, System as Sys,
-  System.IO as IO, System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T, Xunit as X;
+uses FpasAmp.Library.Inventory.Internal.Tree as Trees;
+uses FpasAmp.Library.Inventory.Model as M;
+uses FpasAmp.Library.Persistence.Loading as Loading;
+uses FpasAmp.Library.Persistence.Locations as Locations;
+uses FpasAmp.Library.Persistence.Schema as Schema;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Sources as S;
+uses FpasAmp.Library.Tests.StorageSupport as D;
+uses FpasAmp.Library.Tests.Support as H;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading as T;
+uses Xunit as X;
 
 // Verifies loading and policy changes without traversing the music roots.
 public type StorageLoadingTests = record

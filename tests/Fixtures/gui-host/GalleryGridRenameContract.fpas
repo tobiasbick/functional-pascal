@@ -2,10 +2,11 @@
 
 unit GalleryGridRenameContract;
 
-uses
-  GuiGallery.Pages.DataGrid.State as S, GuiGallery.Pages.DataGrid.Update as U,
-  Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as T,
-  System as Sys;
+uses Fpas.Ui.Widgets.Collections.DataGrids as D;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses GuiGallery.Pages.DataGrid.State as S;
+uses GuiGallery.Pages.DataGrid.Update as U;
+uses System as Sys;
 
 // Checks that a name edit preserves sorting and row identity in the gallery grid.
 public procedure Verify();

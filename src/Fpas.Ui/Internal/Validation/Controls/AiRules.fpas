@@ -2,9 +2,12 @@
 
 unit Fpas.Ui.Internal.Validation.Controls.AiRules;
 
-uses
-  Fpas.Ui.Widgets.Ai.ModelPickers as M, Fpas.Ui.Widgets.Ai.Sources as S, Fpas.Ui.Widgets.Feedback.TaskStates as T,
-  Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Widgets.Ai.ModelPickers as M;
+uses Fpas.Ui.Widgets.Ai.Sources as S;
+uses Fpas.Ui.Widgets.Feedback.TaskStates as T;
+uses System as Sys;
 
 // Checks the task status and displayed text.
 // ## Parameters

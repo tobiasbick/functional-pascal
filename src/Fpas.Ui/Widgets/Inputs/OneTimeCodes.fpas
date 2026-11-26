@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Inputs.OneTimeCodes;
 
-uses Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
 
 // Presentation and input options for a graphical one-time code.
 public type Options = record

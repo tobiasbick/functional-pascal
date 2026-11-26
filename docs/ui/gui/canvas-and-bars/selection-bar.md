@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CanvasAndBars.SelectionBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Canvas.SelectionBars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Canvas.SelectionBars as W;
 
 // Adds a bulk action bar to a list.
 // ## Parameters

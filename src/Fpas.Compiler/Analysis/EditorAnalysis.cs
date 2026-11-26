@@ -63,7 +63,7 @@ public static class EditorAnalysis
         var type = before is ":" or "new" || before == "(" && previous.Length >= 2 && previous[^2].Text is "cast" or "typeof";
         var kind = import ? "import" : type ? "type" : before == "." ? "member" : "expression";
         if (before is "program" or "unit" or "function" or "procedure" or "var" or "const" or "type" or "as" ||
-            import && statement.Skip(Array.FindLastIndex(statement, item => item.Text == ",") + 1).Any(item => item.Text == "as"))
+            import && statement.Any(item => item.Text == "as"))
             return new("declaration", span, [], false);
         var probe = new EditorProbe(kind, prefix, start);
         try
@@ -74,7 +74,7 @@ public static class EditorAnalysis
                 var owner = prepared.Catalog.Units.FirstOrDefault(item => Paths.Equals(item.Source.Path, path));
                 if (import)
                 {
-                    var pathTokens = statement.Skip(Array.FindLastIndex(statement, item => item.Text is "uses" or ",") + 1);
+                    var pathTokens = statement.Skip(1);
                     var qualifier = string.Concat(pathTokens.Select(item => item.Text));
                     foreach (var candidate in prepared.References.EditorPaths(qualifier, prefix, token)) probe.Add(candidate);
                     foreach (var unit in prepared.Catalog.Units.Where(unit => unit != owner && unit.Syntax.Name.Text.StartsWith(qualifier, StringComparison.Ordinal)))

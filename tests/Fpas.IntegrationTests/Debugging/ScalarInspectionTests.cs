@@ -21,7 +21,7 @@ public sealed class ScalarInspectionTests
         var arguments = string.Join(", ", Enumerable.Range(0, 80));
         var source = $$"""
             program BindingPrefix;
-            uses System.Console as Console, System.Runtime.CompilerServices as Runtime;
+            uses System.Console as Console; uses System.Runtime.CompilerServices as Runtime;
             [Runtime.MethodImplAttribute(Runtime.MethodImplOptions.NoInlining)]
             procedure Consume({{parameters}});
             begin
@@ -71,7 +71,7 @@ public sealed class ScalarInspectionTests
         using var program = new Debuggee("own-removed-source-point");
         await program.Compile("""
             program RemovedPoint;
-            uses System.Console as Console, System.Runtime.CompilerServices as Runtime;
+            uses System.Console as Console; uses System.Runtime.CompilerServices as Runtime;
             [Runtime.MethodImplAttribute(Runtime.MethodImplOptions.NoInlining)]
             procedure Observe(Input: int);
             begin
@@ -104,7 +104,7 @@ public sealed class ScalarInspectionTests
         using var program = new Debuggee("own-optimized-values");
         var source = """
             program OptimizedScalars;
-            uses System.Console as Console, System.IO.File as File, System.Runtime.CompilerServices as Runtime;
+            uses System.Console as Console; uses System.IO.File as File; uses System.Runtime.CompilerServices as Runtime;
             [Runtime.MethodImplAttribute(Runtime.MethodImplOptions.NoInlining)]
             function Calculate(Input: int): int;
             begin
@@ -170,7 +170,7 @@ public sealed class ScalarInspectionTests
         using var program = new Debuggee("own-passive-scalars");
         var source = """
             program Scalars;
-            uses System.Console as Console, System.Double as Real, System.Single as Single, System.String as Text;
+            uses System.Console as Console; uses System.Double as Real; uses System.Single as Single; uses System.String as Text;
             type Choice = enum : ulong Last = 18446744073709551615UL; end enum;
             procedure Observe();
             begin
@@ -245,7 +245,7 @@ public sealed class ScalarInspectionTests
         var declarations = string.Join('\n', Enumerable.Range(0, 40).Select(index => $"  const Text{index}: string := Text;"));
         var source = $$"""
             program BindingPages;
-            uses System.Console as Console, System.String as String;
+            uses System.Console as Console; uses System.String as String;
             procedure Observe();
             begin
               const Text: string := new String(#955, 5000);

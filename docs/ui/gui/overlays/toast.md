@@ -9,8 +9,8 @@ Return a toast command from an update after an operation finishes. Available in 
 ```pascal
 unit Docs.Ui.Overlays.Toast;
 
-uses Fpas.Ui.Gui.Toasts as W,
-  Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Gui.Toasts as W;
+uses Fpas.Ui.Mvu.Application as Mvu;
 
 // Builds the command for the update function.
 // ## Returns

@@ -3,13 +3,18 @@
 // Track presentation and selection for a single release.
 unit FpasAmp.Ui.Albums.Music.Browse;
 
-uses
-  Fpas.Media.Tags.AudioFiles as MediaTags, FpasAmp.Library.Albums.Model as Albums,
-  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
-  FpasAmp.Ui.Collections.FilterOptions as Options,
-  FpasAmp.Library.Search.Text as Text, System as Sys, System.IO as IO,
-  System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T;
+uses Fpas.Media.Tags.AudioFiles as MediaTags;
+uses FpasAmp.Library.Albums.Model as Albums;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Search.Text as Text;
+uses FpasAmp.Ui.Albums.Music.Model as M;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses FpasAmp.Ui.Collections.FilterOptions as Options;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading as T;
 
 // Returns the title of `Track`, using its file name when no title is tagged.
 public function Title(Track: Tracks.Entry): string;

@@ -9,8 +9,9 @@ Use an inline alert for an update, result or warning that belongs in the page. S
 ```pascal
 unit Docs.Ui.Feedback.Alert;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.Alerts as W,
-  Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Feedback.Alerts as W;
 
 // Builds the alert example.
 // ## Returns

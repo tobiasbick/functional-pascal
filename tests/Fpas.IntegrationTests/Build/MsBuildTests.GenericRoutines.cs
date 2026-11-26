@@ -31,7 +31,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
-            uses Demo.Bridge as B, System as Sys;
+            uses Demo.Bridge as B; uses System as Sys;
             public function Roundtrip<T>(Value: T): T; begin return B.Forward<T>(Value); end function;
             public function Compare<T>(Left: T; Right: T): int;
             where T: Sys.IComparable<T>;
@@ -60,7 +60,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
-            uses System as Sys, Demo as D, Demo.GenericLibrary as G;
+            uses System as Sys; uses Demo as D; uses Demo.GenericLibrary as G;
             public function Forward<T>(Value: T): T; begin return G.Identity<T>(Value); end function;
             public function Callback<T>(): function(T): T; begin return G.Identity<T>; end function;
             public function Hold<T>(Value: T): function(): T; begin return function(): T => G.Identity<T>(Value); end function;

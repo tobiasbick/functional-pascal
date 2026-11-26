@@ -2,9 +2,9 @@
 
 unit Fpas.Ui.Gui.TraceGeometry;
 
-uses
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Widgets.Developer.TraceViewers as Trace;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Developer.TraceViewers as Trace;
 
 // Reads one span from the last presented native trace on the window owner thread.
 // ## Type parameters

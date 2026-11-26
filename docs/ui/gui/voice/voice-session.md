@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Voice.VoiceSession;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.VoiceSessions as W, Fpas.Ui.Widgets.Audio.Voice as V;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.Voice as V;
+uses Fpas.Ui.Widgets.Audio.VoiceSessions as W;
 
 // Shows an active conversation and its latest transcript.
 // ## Parameters

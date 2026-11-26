@@ -11,7 +11,7 @@ public sealed partial class MsBuildTests
         using var project = sdk.CreateProject();
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
-            uses System as Sys, Demo as D, Demo.Helpers as H, System.Console as Console;
+            uses System as Sys; uses Demo as D; uses Demo.Helpers as H; uses System.Console as Console;
             public function Apply(Transform: function(int): int; Value: int): int;
             begin return Transform(Value); end function;
             public function Counter(Start: int): function(): int;

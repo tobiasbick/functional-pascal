@@ -2,12 +2,11 @@
 
 unit GuiGallery.Pages.Inputs.Widgets.SearchField;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Inputs.State as State,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Inputs.SearchFields as Search;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Inputs.State as State;
+uses GuiGallery.Shared.State as Demo;
 
 // Builds the search box alongside the password field in the Inputs card.
 //

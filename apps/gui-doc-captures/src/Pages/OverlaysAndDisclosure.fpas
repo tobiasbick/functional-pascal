@@ -2,11 +2,16 @@
 
 unit GuiDocCaptures.Pages.OverlaysAndDisclosure;
 
-uses
-  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
-  GuiDocCaptures.Rendering.Gestures as Gestures, GuiGallery.App.State as Gallery,
-  Fpas.Ui.Gui.Application as Gui, GuiGallery.Pages.Overlays.State as Overlays, GuiGallery.Pages.Disclosure.State as Disclosure,
-  GuiGallery.Shared.State as Demo, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses GuiDocCaptures.Rendering.Gestures as Gestures;
+uses GuiDocCaptures.Rendering.Presented as Presented;
+uses GuiDocCaptures.Rendering.Regions as Regions;
+uses GuiGallery.App.State as Gallery;
+uses GuiGallery.Pages.Disclosure.State as Disclosure;
+uses GuiGallery.Pages.Overlays.State as Overlays;
+uses GuiGallery.Shared.State as Demo;
 
 // Captures the overlays chapter from its presented gallery page.
 // ## Parameters

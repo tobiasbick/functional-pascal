@@ -2,78 +2,89 @@
 
 unit GuiGallery.App.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Desktop.State as DesktopState, GuiGallery.Pages.Desktop.View as DesktopView,
-  GuiGallery.Pages.EditingTools.State as EditState, GuiGallery.Pages.EditingTools.View as EditView,
-  GuiGallery.Pages.Ai.State as AiState, GuiGallery.Pages.Ai.View as Ai,
-  GuiGallery.Pages.Voice.State as VoiceState, GuiGallery.Pages.Voice.View as Voice, GuiGallery.App.Update as AppUpdate,
-  GuiGallery.Pages.Feedback.State as FeedbackState,
-  GuiGallery.Pages.Social.State as SocialState, GuiGallery.Pages.Social.View as Social,
-  GuiGallery.Pages.Code.View as Code,
-  GuiGallery.Pages.Code.Tools as CodeTools, GuiGallery.Pages.Code.State as CodePage,
-  GuiGallery.Pages.Instruments.State as InstrumentState,
-  GuiGallery.Pages.Instruments.View as Instruments,
-  GuiGallery.Pages.Motion.State as MotionState,
-  GuiGallery.Pages.Motion.View as Motion,
-  GuiGallery.Pages.Creative.State as CreativeState,
-  GuiGallery.Pages.Creative.View as Creative,
-  GuiGallery.Pages.Canvas.State as CanvasState, GuiGallery.Pages.Canvas.View as Canvas,
-  GuiGallery.Pages.Files.State as FileState,
-  GuiGallery.Pages.Files.View as Files,
-  GuiGallery.Pages.Developer.State as DeveloperState, GuiGallery.Pages.Developer.View as Developer,
-  GuiGallery.Pages.MoreDeveloper.State as MoreDeveloperState, GuiGallery.Pages.MoreDeveloper.View as MoreDeveloper,
-  GuiGallery.Pages.Planning.State as PlanningState,
-  GuiGallery.Pages.Planning.View as Planning,
-  GuiGallery.Pages.DataGrid.State as GridState,
-  GuiGallery.Pages.DataGrid.View as GridView,
-  GuiGallery.Pages.MoreCharts.State as MoreChartsState,
-  GuiGallery.Pages.MoreCharts.View as MoreCharts,
-  GuiGallery.Pages.Charts.State as ChartsState,
-  GuiGallery.Pages.Charts.View as Charts,
-  System.Collections.Generic as Collections,
-  GuiGallery.Pages.Feedback.View as Feedback,
-  GuiGallery.Pages.Layout.View as LayoutDemo,
-  GuiGallery.Pages.Display.View as Display,
-  GuiGallery.Pages.Buttons.State as ButtonsState,
-  GuiGallery.Pages.Buttons.View as Buttons,
-  GuiGallery.Pages.Inputs.State as InputsState,
-  GuiGallery.Pages.Inputs.View as Inputs,
-  GuiGallery.Pages.Selection.State as SelectionState,
-  GuiGallery.Pages.Selection.View as Selection,
-  GuiGallery.Pages.Navigation.State as NavigationState,
-  GuiGallery.Pages.Navigation.View as Navigation,
-  GuiGallery.Pages.Lists.State as ListsState,
-  GuiGallery.Pages.Lists.View as Lists,
-  GuiGallery.Pages.Overlays.State as OverlaysState,
-  GuiGallery.Pages.Overlays.View as Overlays,
-  GuiGallery.Pages.Actions.State as ActionsState,
-  GuiGallery.Pages.Actions.View as Actions,
-  GuiGallery.Pages.Capture.State as CaptureState,
-  GuiGallery.Pages.Capture.View as Capture,
-  GuiGallery.Pages.Audio.State as AudioState,
-  GuiGallery.Pages.Audio.View as Audio,
-  GuiGallery.Pages.Pickers.State as PickersState,
-  GuiGallery.Pages.Pickers.View as Pickers,
-  GuiGallery.Pages.SmartInputs.State as SmartInputsState,
-  GuiGallery.Pages.SmartInputs.View as SmartInputs,
-  GuiGallery.Pages.Disclosure.State as DisclosureState,
-  GuiGallery.Pages.Disclosure.View as Disclosure,
-  GuiGallery.Pages.Reader.View as Reader,
-  GuiGallery.App.Palette as Palette, GuiGallery.Pages.Overview.View as Overview, Fpas.Ui.Gui.Toasts as Toasts,
-  GuiGallery.Pages.Overlays.Widgets.Dialog as Dialog,
-  GuiGallery.Pages.Overlays.Widgets.DeleteDialog as DeleteDialog,
-  GuiGallery.Pages.Overlays.Widgets.Notifications as Notifications,
-  GuiGallery.App.State as State,
-  GuiGallery.Shared.State as Demo,
-  Fpas.Ui.Composition as U,
-  GuiGallery.App.Sidebar as Sidebar,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
-  Fpas.Ui.Widgets.Actions.IconButtons as Icons,
-  Fpas.Ui.Styles as S,
-  System as Sys;
+uses Fpas.Ui.Composition as U;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.App.Palette as Palette;
+uses GuiGallery.App.Sidebar as Sidebar;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as AppUpdate;
+uses GuiGallery.Pages.Actions.State as ActionsState;
+uses GuiGallery.Pages.Actions.View as Actions;
+uses GuiGallery.Pages.Ai.State as AiState;
+uses GuiGallery.Pages.Ai.View as Ai;
+uses GuiGallery.Pages.Audio.State as AudioState;
+uses GuiGallery.Pages.Audio.View as Audio;
+uses GuiGallery.Pages.Buttons.State as ButtonsState;
+uses GuiGallery.Pages.Buttons.View as Buttons;
+uses GuiGallery.Pages.Canvas.State as CanvasState;
+uses GuiGallery.Pages.Canvas.View as Canvas;
+uses GuiGallery.Pages.Capture.State as CaptureState;
+uses GuiGallery.Pages.Capture.View as Capture;
+uses GuiGallery.Pages.Charts.State as ChartsState;
+uses GuiGallery.Pages.Charts.View as Charts;
+uses GuiGallery.Pages.Code.State as CodePage;
+uses GuiGallery.Pages.Code.Tools as CodeTools;
+uses GuiGallery.Pages.Code.View as Code;
+uses GuiGallery.Pages.Creative.State as CreativeState;
+uses GuiGallery.Pages.Creative.View as Creative;
+uses GuiGallery.Pages.DataGrid.State as GridState;
+uses GuiGallery.Pages.DataGrid.View as GridView;
+uses GuiGallery.Pages.Desktop.State as DesktopState;
+uses GuiGallery.Pages.Desktop.View as DesktopView;
+uses GuiGallery.Pages.Developer.State as DeveloperState;
+uses GuiGallery.Pages.Developer.View as Developer;
+uses GuiGallery.Pages.Disclosure.State as DisclosureState;
+uses GuiGallery.Pages.Disclosure.View as Disclosure;
+uses GuiGallery.Pages.Display.View as Display;
+uses GuiGallery.Pages.EditingTools.State as EditState;
+uses GuiGallery.Pages.EditingTools.View as EditView;
+uses GuiGallery.Pages.Feedback.State as FeedbackState;
+uses GuiGallery.Pages.Feedback.View as Feedback;
+uses GuiGallery.Pages.Files.State as FileState;
+uses GuiGallery.Pages.Files.View as Files;
+uses GuiGallery.Pages.Inputs.State as InputsState;
+uses GuiGallery.Pages.Inputs.View as Inputs;
+uses GuiGallery.Pages.Instruments.State as InstrumentState;
+uses GuiGallery.Pages.Instruments.View as Instruments;
+uses GuiGallery.Pages.Layout.View as LayoutDemo;
+uses GuiGallery.Pages.Lists.State as ListsState;
+uses GuiGallery.Pages.Lists.View as Lists;
+uses GuiGallery.Pages.MoreCharts.State as MoreChartsState;
+uses GuiGallery.Pages.MoreCharts.View as MoreCharts;
+uses GuiGallery.Pages.MoreDeveloper.State as MoreDeveloperState;
+uses GuiGallery.Pages.MoreDeveloper.View as MoreDeveloper;
+uses GuiGallery.Pages.Motion.State as MotionState;
+uses GuiGallery.Pages.Motion.View as Motion;
+uses GuiGallery.Pages.Navigation.State as NavigationState;
+uses GuiGallery.Pages.Navigation.View as Navigation;
+uses GuiGallery.Pages.Overlays.State as OverlaysState;
+uses GuiGallery.Pages.Overlays.View as Overlays;
+uses GuiGallery.Pages.Overlays.Widgets.DeleteDialog as DeleteDialog;
+uses GuiGallery.Pages.Overlays.Widgets.Dialog as Dialog;
+uses GuiGallery.Pages.Overlays.Widgets.Notifications as Notifications;
+uses GuiGallery.Pages.Overview.View as Overview;
+uses GuiGallery.Pages.Pickers.State as PickersState;
+uses GuiGallery.Pages.Pickers.View as Pickers;
+uses GuiGallery.Pages.Planning.State as PlanningState;
+uses GuiGallery.Pages.Planning.View as Planning;
+uses GuiGallery.Pages.Reader.View as Reader;
+uses GuiGallery.Pages.Selection.State as SelectionState;
+uses GuiGallery.Pages.Selection.View as Selection;
+uses GuiGallery.Pages.SmartInputs.State as SmartInputsState;
+uses GuiGallery.Pages.SmartInputs.View as SmartInputs;
+uses GuiGallery.Pages.Social.State as SocialState;
+uses GuiGallery.Pages.Social.View as Social;
+uses GuiGallery.Pages.Voice.State as VoiceState;
+uses GuiGallery.Pages.Voice.View as Voice;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
+uses System.Collections.Generic as Collections;
 
 const DrawerBreakpoint: int := 760;
 

@@ -2,9 +2,10 @@
 
 unit NativeApi.State;
 
-uses
-  Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Developer.TraceViewers as Trace,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Charts.EventTracks as Events;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Widgets.Charts.EventTracks as Events;
+uses Fpas.Ui.Widgets.Developer.TraceViewers as Trace;
 
 // Retained native API demonstration state.
 public type Model = record

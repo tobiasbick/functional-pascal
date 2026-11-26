@@ -3,16 +3,22 @@
 // Exercises all three levels against scanned media, persistent ratings and native controls.
 unit FpasAmp.UiTests.NativeCollections;
 
-uses
-  FpasAmp.UiTests.CollectionFixture as Fixture, FpasAmp.Library.Tests.Support as H,
-  FpasAmp.Library.Tests.MetadataSupport as Sources, FpasAmp.Library.Inventory.Monitoring as Monitor,
-  FpasAmp.Library.Albums.Model as Catalog, FpasAmp.Ui.App.Model as App,
-  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings,
-  FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Music.Model as Music,
-  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Shell as Shell,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Media.Audio as Audio,
-  System as Sys, Xunit as X;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses FpasAmp.Library.Albums.Model as Catalog;
+uses FpasAmp.Library.Inventory.Monitoring as Monitor;
+uses FpasAmp.Library.Tests.MetadataSupport as Sources;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Ui.Albums.Model as Albums;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Settings.Model as Settings;
+uses FpasAmp.Ui.Shell as Shell;
+uses FpasAmp.UiTests.CollectionFixture as Fixture;
+uses System as Sys;
+uses Xunit as X;
 
 procedure Send(Session: Shell.Session; Message: Albums.Msg);
 begin

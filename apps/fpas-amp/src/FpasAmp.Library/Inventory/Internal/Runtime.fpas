@@ -3,17 +3,28 @@
 // One background owner for SQLite, traversal, clear commands and progress.
 unit FpasAmp.Library.Inventory.Internal.Runtime;
 
-uses
-  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Model as M,
-  FpasAmp.Library.Inventory.Progress as P, FpasAmp.Library.Inventory.Internal.Reporting as Reports,
-  FpasAmp.Library.Inventory.Internal.Inbox as Q, FpasAmp.Library.Inventory.Internal.Planning as Plans,
-  FpasAmp.Library.Inventory.Internal.Tree as Trees, FpasAmp.Library.Inventory.Internal.Watchers as W,
-  FpasAmp.Library.Inventory.Internal.Observations as O, FpasAmp.Library.Persistence.Sql as Sql,
-  FpasAmp.Library.Persistence.Schema as Schema, FpasAmp.Library.Persistence.Loading as Loading,
-  FpasAmp.Library.Persistence.Locations as Locations, FpasAmp.Library.Persistence.Checkpoints as Checkpoints,
-  FpasAmp.Library.Persistence.Clearing as Clearing, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T,
-  System.Threading.Tasks as Tasks, System.Threading.Channels as Channels;
+uses FpasAmp.Library.Inventory.Internal.Inbox as Q;
+uses FpasAmp.Library.Inventory.Internal.Observations as O;
+uses FpasAmp.Library.Inventory.Internal.Planning as Plans;
+uses FpasAmp.Library.Inventory.Internal.Reporting as Reports;
+uses FpasAmp.Library.Inventory.Internal.Tree as Trees;
+uses FpasAmp.Library.Inventory.Internal.Watchers as W;
+uses FpasAmp.Library.Inventory.Model as M;
+uses FpasAmp.Library.Inventory.Progress as P;
+uses FpasAmp.Library.Persistence.Checkpoints as Checkpoints;
+uses FpasAmp.Library.Persistence.Clearing as Clearing;
+uses FpasAmp.Library.Persistence.Loading as Loading;
+uses FpasAmp.Library.Persistence.Locations as Locations;
+uses FpasAmp.Library.Persistence.Schema as Schema;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Sources as S;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Threading as T;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
 
 async function Work(Connection: Db.SqliteConnection; Inbox: Q.Inbox; Output: Channels.ChannelWriter<M.Snapshot>; Progress: Channels.ChannelWriter<P.Snapshot>; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken; Notify: Sys.Action?; UserDataPath: string?): Tasks.Task;
   procedure Changed();

@@ -39,7 +39,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Loops;
-            uses Shared as S, System.Threading.Tasks as Tasks;
+            uses Shared as S; uses System.Threading.Tasks as Tasks;
             type High = ulong range 18446744073709551614UL..18446744073709551615UL;
             public function RepeatSync(): int;
             begin

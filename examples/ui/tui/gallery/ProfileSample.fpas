@@ -2,12 +2,17 @@
 
 unit TuiGallery.ProfileSample;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Gallery.Shared.SwitchExamples as Switches,
-  Gallery.Shared.Profile as Demo, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+uses Gallery.Shared.Profile as Demo;
+uses Gallery.Shared.Strings as Strings;
+uses Gallery.Shared.SwitchExamples as Switches;
 
 // Modal example presented over the gallery.
 public type Layer = enum

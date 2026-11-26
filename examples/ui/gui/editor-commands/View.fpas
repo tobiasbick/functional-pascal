@@ -2,11 +2,16 @@
 
 unit EditorCommands.View;
 
-uses
-  EditorCommands.State as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Editors.CodeEditors as Editor, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
-  Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk, Fpas.Ui.Widgets.Overlays.UserMenus as Users,
-  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Overlays.Tours as Tours, System as Sys;
+uses EditorCommands.State as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk;
+uses Fpas.Ui.Widgets.Editors.CodeEditors as Editor;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses Fpas.Ui.Widgets.Overlays.Tours as Tours;
+uses Fpas.Ui.Widgets.Overlays.UserMenus as Users;
+uses System as Sys;
 
 // Composes native widgets with model-owned editor commands and optional presentation settings.
 // ## Parameters

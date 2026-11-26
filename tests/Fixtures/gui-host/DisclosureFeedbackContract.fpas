@@ -2,14 +2,23 @@
 
 unit GalleryDisclosureFeedbackContract;
 
-uses
-  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
-  GuiGallery.App.Update as G, GuiGallery.Pages.Disclosure.State as D,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Widgets.Feedback.Banners as B, Fpas.Ui.Widgets.Feedback.Checklists as C,
-  GuiGallery.Pages.Disclosure.Clock as Clock, Fpas.Ui.Mvu.Testing.EffectReplies as Replies,
-  System as Sys, System.Threading as Threads, System.Threading.Channels as Channels,
-  System.Globalization as Culture;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
+uses Fpas.Ui.Widgets.Feedback.Banners as B;
+uses Fpas.Ui.Widgets.Feedback.Checklists as C;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as G;
+uses GuiGallery.App.View as View;
+uses GuiGallery.Pages.Disclosure.Clock as Clock;
+uses GuiGallery.Pages.Disclosure.State as D;
+uses System as Sys;
+uses System.Globalization as Culture;
+uses System.Threading as Threads;
+uses System.Threading.Channels as Channels;
 
 // Exercises the original banner, countdowns and onboarding examples.
 // ## Parameters

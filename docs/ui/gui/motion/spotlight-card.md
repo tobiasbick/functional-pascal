@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.SpotlightCard;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Motion.Spotlights as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Motion.Spotlights as W;
 
 // Wraps a renderer description in a spotlight card.
 // ## Parameters

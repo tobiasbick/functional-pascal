@@ -2,8 +2,13 @@
 
 unit Fpas.Ui.Internal.Validation.Structure.CollectionRules;
 
-uses
-  Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.TerminalExtensions.SelectionLists as Lists;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // Checks item keys and the model-owned selection of a terminal list.
 // ## Parameters

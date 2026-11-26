@@ -2,13 +2,23 @@
 
 unit GuiGallery.Pages.Motion.Controls;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Motion.State as M, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Navigation.Docks as Docking,
-  Fpas.Ui.Widgets.Audio.ControlTiles as Tiles, Fpas.Ui.Widgets.Containers.Grids as Grids, Fpas.Ui.Widgets.Charts.Charts as Colors, Fpas.Ui.Graphics as Graphics,
-  Fpas.Ui.Widgets.Audio.NowPlaying as Player, Fpas.Ui.Widgets.Navigation.TabBars as Tabs, Fpas.Ui.Widgets.Audio.Waveforms as Waves,
-  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Actions.IconButtons as Icons, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Audio.ControlTiles as Tiles;
+uses Fpas.Ui.Widgets.Audio.NowPlaying as Player;
+uses Fpas.Ui.Widgets.Audio.Waveforms as Waves;
+uses Fpas.Ui.Widgets.Charts.Charts as Colors;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Containers.Grids as Grids;
+uses Fpas.Ui.Widgets.Navigation.Docks as Docking;
+uses Fpas.Ui.Widgets.Navigation.TabBars as Tabs;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Motion.State as M;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
 
 function Glyph(Code: int): string;
 begin

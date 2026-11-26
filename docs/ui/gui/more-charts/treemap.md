@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.Treemap;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Treemaps as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.Treemaps as W;
 
 // Builds the treemap example.
 // ## Parameters

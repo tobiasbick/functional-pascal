@@ -33,8 +33,8 @@ program         = ["async"], "program", qualified_name, ";", [imports],
                   "end", "program", ";" ;
 unit            = "unit", qualified_name, ";", [imports],
                   {declaration}, "end", "unit", ";" ;
-imports         = "uses", import, {",", import}, ";" ;
-import          = qualified_name, "as", identifier ;
+imports         = import, {import} ;
+import          = "uses", qualified_name, "as", identifier, ";" ;
 qualified_name  = identifier, {".", identifier} ;
 
 declaration     = {attribute}, [visibility],

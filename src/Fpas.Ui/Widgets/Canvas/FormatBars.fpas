@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Canvas.FormatBars;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
 
 // Current text formatting.
 public type Value = record

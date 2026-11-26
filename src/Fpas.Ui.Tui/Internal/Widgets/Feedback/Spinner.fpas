@@ -2,11 +2,14 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Feedback.Spinner;
 
-uses
-  Fpas.Ui.Widgets.Feedback.Spinners as Spin, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
-  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Widgets.Developer.Terminal as T,
-  Fpas.Ui.Graphics as G, System.Collections.Generic as C;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
+uses System.Collections.Generic as C;
 
 // Resolves shared spinner options to a terminal glyph sequence.
 // ## Type parameters

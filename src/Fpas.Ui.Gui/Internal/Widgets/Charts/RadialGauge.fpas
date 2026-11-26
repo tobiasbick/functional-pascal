@@ -2,11 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.RadialGauge;
 
-uses
-  Fpas.Ui.Widgets.Charts.RadialGauges as W, Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Data.ChartData as Common, Fpas.Ui.Gui.Internal.Data.MoreChartData as Data,
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size, Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Common;
+uses Fpas.Ui.Gui.Internal.Data.MoreChartData as Data;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Widgets.Charts.RadialGauges as W;
 
 // Presents CUI's native radial-gauge.
 // ## Type parameters

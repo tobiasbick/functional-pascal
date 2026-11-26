@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Ai.AgentStatus;
 
-uses Fpas.Ui.Widgets.Ai.AgentStatuses as AgentStatuses, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Widgets.Ai.AgentStatuses as AgentStatuses;
 
 // Presents CUI's native AgentStatus.
 // ## Type parameters

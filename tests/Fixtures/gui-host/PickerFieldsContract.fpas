@@ -2,19 +2,18 @@
 
 unit GalleryPickerFieldsContract;
 
-uses
-  GuiGallery.App.Update as GalleryUpdate,
-  GuiGallery.Pages.Inputs.State as SliceInputs,
-  GuiGallery.App.State as State,
-  GuiGallery.App.View as View,
-  Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Widgets.Inputs.Selects as S,
-  Fpas.Ui.Widgets.Inputs.NumberFields as N,
-  Fpas.Ui.Validation as V,
-  Fpas.Ui.Elements as E,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Inputs.NumberFields as N;
+uses Fpas.Ui.Widgets.Inputs.Selects as S;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as GalleryUpdate;
+uses GuiGallery.App.View as View;
+uses GuiGallery.Pages.Inputs.State as SliceInputs;
+uses System as Sys;
 
 procedure Check(Value: bool; Reason: string);
 begin

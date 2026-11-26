@@ -2,12 +2,18 @@
 
 unit Fpas.Ui.Internal.Mapping.Feedback;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.Banners as Banners, Fpas.Ui.Widgets.Feedback.Countdowns as Countdowns,
-  Fpas.Ui.Widgets.Feedback.Checklists as Checklists, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
-  Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Widgets.Feedback.Spinners as Spinners,
-  Fpas.Ui.Widgets.Planning.TimelineItems as Timeline, Fpas.Ui.Widgets.Audio.LevelMeters as Levels,
-  Fpas.Ui.Layout as L, Fpas.Ui.Internal.Mapping.MessageMapping as M, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Mapping.MessageMapping as M;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Audio.LevelMeters as Levels;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Feedback.Banners as Banners;
+uses Fpas.Ui.Widgets.Feedback.Checklists as Checklists;
+uses Fpas.Ui.Widgets.Feedback.Countdowns as Countdowns;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars;
+uses Fpas.Ui.Widgets.Feedback.Spinners as Spinners;
+uses Fpas.Ui.Widgets.Planning.TimelineItems as Timeline;
+uses System as Sys;
 
 // Maps feedback widgets into the parent message space.
 // ## Type parameters

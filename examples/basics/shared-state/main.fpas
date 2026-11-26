@@ -2,7 +2,8 @@
 
 program SharedStateDemo;
 
-uses Game.Statistics as Statistics, System.Console as Console;
+uses Game.Statistics as Statistics;
+uses System.Console as Console;
 
 procedure Advance(ref Counter: long);
 begin

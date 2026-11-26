@@ -10,7 +10,8 @@ Both use the same dispatch and implementation rules. A record needs an explicit
 ```pascal
 program InterfaceSources;
 
-uses System as Sys, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
 
 type ISource<T> = protocol
   Name: string;

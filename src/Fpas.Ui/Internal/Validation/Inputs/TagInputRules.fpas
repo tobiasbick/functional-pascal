@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Internal.Validation.Inputs.TagInputRules;
 
-uses Fpas.Ui.Widgets.Inputs.TagInputs as T, Fpas.Ui.Internal.Validation.Core.Checks as R, System.Text as Text;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Widgets.Inputs.TagInputs as T;
+uses System.Text as Text;
 
 // Validates ordered tags and their limits.
 //

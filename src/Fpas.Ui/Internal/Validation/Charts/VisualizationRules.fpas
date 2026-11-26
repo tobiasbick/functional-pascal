@@ -2,11 +2,18 @@
 
 unit Fpas.Ui.Internal.Validation.Charts.VisualizationRules;
 
-uses
-  Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.Heatmaps as H, Fpas.Ui.Widgets.Charts.CalendarHeatmaps as Calendar,
-  Fpas.Ui.Widgets.Charts.Treemaps as T, Fpas.Ui.Widgets.Charts.RadarCharts as Ra, Fpas.Ui.Widgets.Charts.Funnels as F,
-  Fpas.Ui.Widgets.Charts.SplitBars as S, Fpas.Ui.Widgets.Charts.Waffles as W, Fpas.Ui.Internal.Validation.Core.ChartChecks as Common,
-  Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Common;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Widgets.Charts.CalendarHeatmaps as Calendar;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.Funnels as F;
+uses Fpas.Ui.Widgets.Charts.Heatmaps as H;
+uses Fpas.Ui.Widgets.Charts.RadarCharts as Ra;
+uses Fpas.Ui.Widgets.Charts.SplitBars as S;
+uses Fpas.Ui.Widgets.Charts.Treemaps as T;
+uses Fpas.Ui.Widgets.Charts.Waffles as W;
+uses System as Sys;
 
 procedure Samples(Values: array of float; Nonnegative: bool; At: string);
 begin

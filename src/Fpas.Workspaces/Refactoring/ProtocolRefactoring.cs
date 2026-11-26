@@ -50,11 +50,14 @@ public static partial class CheckedRefactoring
         var newline = LineEnding(source.Text, record.BodyEnd);
         if (requirements.Imports.Count != 0)
         {
-            var imports = string.Join(", ", requirements.Imports);
+            var imports = string.Join(newline, requirements.Imports.Select(import => "uses " + import + ";"));
             if (syntax.Imports() is { } existing)
             {
-                var last = existing.Items[^1].End;
-                draft.Edit(source, last, last, ", " + imports);
+                var end = existing.End;
+                var lineEnd = source.Text.IndexOfAny(['\r', '\n'], end);
+                if (lineEnd >= 0 && source.Text.AsSpan(end, lineEnd - end).TrimStart().StartsWith("//", StringComparison.Ordinal))
+                    end = lineEnd;
+                draft.Edit(source, end, end, newline + imports);
             }
             else
             {
@@ -64,7 +67,7 @@ public static partial class CheckedRefactoring
                 var tail = lineEnd >= 0 ? source.Text[end..lineEnd].TrimStart() : "";
                 if (tail.StartsWith("//", StringComparison.Ordinal) || string.IsNullOrWhiteSpace(tail))
                     end = lineEnd < 0 ? end : lineEnd;
-                draft.Edit(source, end, end, newline + newline + "uses " + imports + ";" +
+                draft.Edit(source, end, end, newline + newline + imports +
                     (end == lineEnd ? "" : newline));
             }
         }

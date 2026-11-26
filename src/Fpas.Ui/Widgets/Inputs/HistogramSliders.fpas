@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Inputs.HistogramSliders;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RangeSliders as R;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
 
 // Presentation and input settings for a histogram range slider.
 public type Options = record

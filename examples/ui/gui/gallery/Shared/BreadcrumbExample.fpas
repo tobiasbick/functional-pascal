@@ -2,7 +2,8 @@
 
 unit Gallery.Shared.BreadcrumbExample;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Breadcrumbs as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.Breadcrumbs as B;
 
 const Path: array of string := ['Home', 'Projects', 'FPas CUI', 'Settings'];
 

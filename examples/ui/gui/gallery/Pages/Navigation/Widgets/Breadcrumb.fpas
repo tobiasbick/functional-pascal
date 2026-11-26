@@ -2,10 +2,9 @@
 
 unit GuiGallery.Pages.Navigation.Widgets.Breadcrumb;
 
-uses
-  GuiGallery.Pages.Navigation.State as State,
-  Gallery.Shared.BreadcrumbExample as Sample,
-  Fpas.Ui.Elements as E;
+uses Fpas.Ui.Elements as E;
+uses Gallery.Shared.BreadcrumbExample as Sample;
+uses GuiGallery.Pages.Navigation.State as State;
 
 // Builds the sample path from the Navigation page.
 //

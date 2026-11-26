@@ -18,7 +18,7 @@ public sealed class ExpressionInspectionTests
         using var program = new Debuggee("own-skipped-generic-types");
         await program.Compile("""
             program GenericTypes;
-            uses System.Console as Console, System.Runtime.CompilerServices as Runtime;
+            uses System.Console as Console; uses System.Runtime.CompilerServices as Runtime;
             [Runtime.MethodImplAttribute(Runtime.MethodImplOptions.NoInlining)]
             procedure Observe<T>(Value: T);
             begin
@@ -56,7 +56,7 @@ public sealed class ExpressionInspectionTests
         using var program = new Debuggee("own-passive-expressions");
         var source = """
             program Expressions;
-            uses System.Console as Console, System.IO.File as File, System.String as Strings;
+            uses System.Console as Console; uses System.IO.File as File; uses System.String as Strings;
             var Global: int := 21;
             type Point = record public X: int; end record;
             type UserId = distinct long;

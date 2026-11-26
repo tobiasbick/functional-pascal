@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.HttpResponseStatus;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.ResponseStatuses as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.ResponseStatuses as W;
 
 // Displays the recorded response metrics.
 // ## Parameters

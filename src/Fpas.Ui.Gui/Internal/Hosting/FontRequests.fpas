@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Hosting.FontRequests;
 
-uses
-  Fpas.Ui.Gui.Fonts as Fonts, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Cui.Resources as Resources,
-  Fpas.Ui.Graphics as G, System.Collections.Generic as Generic;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Resources as Resources;
+uses Fpas.Ui.Gui.Fonts as Fonts;
+uses System.Collections.Generic as Generic;
 
 // Applies one resource operation on the GUI owner thread.
 // ## Type parameters

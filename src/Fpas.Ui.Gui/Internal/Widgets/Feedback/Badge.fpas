@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Badge;
 
-uses Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Feedback.Badges as B;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Feedback.Badges as B;
 
 // Draws a native badge.
 // ## Type parameters

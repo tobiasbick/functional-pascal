@@ -53,8 +53,8 @@ public sealed class PipedSourceTests
         const string source = """
             program Probe;
 
-            uses System.Console as Console, System.Text.Encoding as Encoding,
-              System.Reflection.Assembly as Assembly, Fpas.Core as Core;
+            uses System.Console as Console; uses System.Text.Encoding as Encoding;
+              uses System.Reflection.Assembly as Assembly; uses Fpas.Core as Core;
 
             begin
               Console.InputEncoding := Encoding.UTF8;

@@ -2,13 +2,20 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Collections.Table;
 
-uses
-  Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
-  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene,
-  Fpas.Ui.Tui.Internal.Layout.ScrollViews as Scroll, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
-  Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
-  Fpas.Ui.Tui.Internal.View.Tree as E, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as Scene;
+uses Fpas.Ui.Tui.Internal.Layout.ScrollViews as Scroll;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Widgets.Developer.Terminal as Terminal;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 function Caption<TMsg>(Cell: T.Cell<TMsg>): string;
 begin

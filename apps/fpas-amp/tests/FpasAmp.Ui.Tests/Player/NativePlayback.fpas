@@ -3,17 +3,29 @@
 // Real shell, transport mailbox, decoder, device callback and native meter.
 unit FpasAmp.UiTests.NativePlayback;
 
-uses
-  FpasAmp.UiTests.PlaybackFixture as Fixture, FpasAmp.Ui.Albums.Music.Model as Music,
-  FpasAmp.Ui.Shell as Shell, FpasAmp.Ui.App.Model as App,
-  FpasAmp.Ui.Player.Model as Player, FpasAmp.Ui.Settings.Model as Settings,
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Inventory.Monitoring as Monitor,
-  FpasAmp.Library.Tests.Support as H, Fpas.Media.Audio as Audio, Fpas.Ui.Gui.Cui as Cui,
-  FpasAmp.Library.Tests.MetadataSupport as Fixtures, FpasAmp.Library.Sources as Sources,
-  FpasAmp.AppState as Storage, FpasAmp.Persistence.PlayerState as Transport,
-  FpasAmp.Settings as Preferences, FpasAmp.Ui.Player.Presets as Presets,
-  Fpas.Ui.Gui.Application as Gui, System as Sys, System.IO as IO,
-  System.Collections.Immutable as I, System.Threading as T, Xunit as X;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses FpasAmp.AppState as Storage;
+uses FpasAmp.Library.Inventory.Monitoring as Monitor;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Sources as Sources;
+uses FpasAmp.Library.Tests.MetadataSupport as Fixtures;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Persistence.PlayerState as Transport;
+uses FpasAmp.Settings as Preferences;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Player.Model as Player;
+uses FpasAmp.Ui.Player.Presets as Presets;
+uses FpasAmp.Ui.Settings.Model as Settings;
+uses FpasAmp.Ui.Shell as Shell;
+uses FpasAmp.UiTests.PlaybackFixture as Fixture;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading as T;
+uses Xunit as X;
 
 procedure WaitFor(Session: Shell.Session; Ready: function(Player.State): bool; Reason: string);
 begin

@@ -2,9 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.SeedField;
 
-uses
-  Fpas.Ui.Widgets.Inputs.SeedFields as A, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Core.Parts as W, Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as W;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Widgets.Inputs.SeedFields as A;
 
 // Presents the native seed field.
 // ## Type parameters

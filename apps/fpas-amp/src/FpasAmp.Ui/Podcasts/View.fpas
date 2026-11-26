@@ -2,20 +2,30 @@
 
 unit FpasAmp.Ui.Podcasts.View;
 
-uses
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Podcasts.Model as M,
-  FpasAmp.Ui.Podcasts.Toolbar as Toolbar,
-  FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.Browse as Time,
-  FpasAmp.Ui.Player.Model as Player, FpasAmp.Library.Metadata.Model as Tracks, Fpas.Media.Images as Images,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
-  Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
-  Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
-  Fpas.Ui.Widgets.Inputs.TextFields as Fields,
-  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Menus as Menus,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Media.Images as Images;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Collections.DataGrids as Grid;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Containers.EmptyStates as Empty;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Albums.Artwork as Artwork;
+uses FpasAmp.Ui.Albums.Music.Browse as Time;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Player.Model as Player;
+uses FpasAmp.Ui.Podcasts.Model as M;
+uses FpasAmp.Ui.Podcasts.Toolbar as Toolbar;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const Stretch: L.Flow := new L.Flow(Align := L.Alignment.Stretch);

@@ -2,8 +2,9 @@
 
 unit GuiGallery.Pages.Navigation.Widgets.Tabs;
 
-uses
-  GuiGallery.Pages.Navigation.State as State, Gallery.Shared.TabExamples as Sample, Fpas.Ui.Elements as E;
+uses Fpas.Ui.Elements as E;
+uses Gallery.Shared.TabExamples as Sample;
+uses GuiGallery.Pages.Navigation.State as State;
 
 // Builds the two original tab previews for the Navigation page.
 // ## Parameters

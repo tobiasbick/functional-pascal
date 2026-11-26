@@ -9,7 +9,8 @@ Use chips for independently selected categories. The gallery places them in a ro
 ```pascal
 unit Docs.Ui.Selection.Chip;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Chips as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Chips as C;
 
 // Builds the chip example.
 // ## Parameters

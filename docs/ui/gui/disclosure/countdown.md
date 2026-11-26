@@ -9,8 +9,8 @@ Use a countdown to show remaining time. The gallery displays standard tiles and 
 ```pascal
 unit Docs.Ui.Disclosure.Countdown;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Feedback.Countdowns as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.Countdowns as W;
 
 // Builds the countdown example.
 // ## Parameters

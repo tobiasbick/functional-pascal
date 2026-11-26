@@ -9,8 +9,9 @@ Use a badge for a compact label such as Active, Pending or Overdue. Available in
 ```pascal
 unit Docs.Ui.Feedback.Badge;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.Badges as W,
-  Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Feedback.Badges as W;
 
 // Builds the badge example.
 // ## Returns

@@ -10,7 +10,10 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.ImageCropper;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Media.ImageCroppers as W, Fpas.Ui.Widgets.Media.MediaImages as M, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Media.ImageCroppers as W;
+uses Fpas.Ui.Widgets.Media.MediaImages as M;
 
 // Edits a square crop in source-image coordinates.
 // ## Parameters

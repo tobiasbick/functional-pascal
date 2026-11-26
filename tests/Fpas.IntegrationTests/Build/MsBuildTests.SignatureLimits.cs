@@ -62,7 +62,7 @@ public sealed partial class MsBuildTests
         ];
         foreach (var (body, feature) in cases)
         {
-            var source = "program Invalid; uses Shared.Limits as L, Shared as S; begin " + body + " end; end program;";
+            var source = "program Invalid; uses Shared.Limits as L; uses Shared as S; begin " + body + " end; end program;";
             var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", project.File("Invalid.dll"),
                 "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--report", "json"], source);
             Assert.NotEqual(0, result.ExitCode);
@@ -75,7 +75,7 @@ public sealed partial class MsBuildTests
         }
         foreach (var body in new[] { "discard L.Count<string>(['a']);", "discard L.Count([new S.Named()]);" })
         {
-            var source = "program Invalid; uses Shared.Limits as L, Shared as S; begin " + body + " end; end program;";
+            var source = "program Invalid; uses Shared.Limits as L; uses Shared as S; begin " + body + " end; end program;";
             var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", project.File("Invalid.dll"),
                 "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--report", "json"], source);
             using var document = JsonDocument.Parse(result.Output);
@@ -88,7 +88,7 @@ public sealed partial class MsBuildTests
         }
         var run = await RunInterop(project, """
             program Supported;
-            uses Shared.Limits as L, Shared as S, System.Console as Console;
+            uses Shared.Limits as L; uses Shared as S; uses System.Console as Console;
             begin
               Console.WriteLine(L.Choose(42)); Console.WriteLine(new S.DefaultValue().Value);
               Console.WriteLine(L.Choose([1, 2, 3])); Console.WriteLine(new S.DefaultValue([4, 5]).Value);

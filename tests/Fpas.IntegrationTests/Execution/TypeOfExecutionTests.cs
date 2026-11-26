@@ -7,7 +7,7 @@ public sealed class TypeOfExecutionTests
     [Fact]
     public Task Typeof_uses_CLR_identity_for_primitives_nullable_types_arrays_and_callable_aliases() => ProgramExecution.Output("""
         program TypeIdentity;
-        uses System as Sys, System.Console as Console, System.Collections.Generic as C;
+        uses System as Sys; uses System.Console as Console; uses System.Collections.Generic as C;
         type Number = int;
         begin
           const Type: Sys.Type := typeof(int);
@@ -34,7 +34,7 @@ public sealed class TypeOfExecutionTests
     [Fact]
     public Task Generic_type_tokens_keep_type_method_closure_and_async_parameter_scopes() => ProgramExecution.Output("""
         async program GenericTypes;
-        uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks, System.Collections.Generic as C;
+        uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks; uses System.Collections.Generic as C;
         type Box<T> = record
           public Value: T;
           public function Get<U>(): array of Sys.Type;

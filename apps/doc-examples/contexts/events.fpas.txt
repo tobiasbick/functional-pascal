@@ -2,7 +2,8 @@
 
 program Example;
 
-uses System.Console as Console, System.Timers as Timers;
+uses System.Console as Console;
+uses System.Timers as Timers;
 
 begin
   using const Timer: Timers.Timer := new Timers.Timer(100.0);

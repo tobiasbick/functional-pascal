@@ -2,9 +2,9 @@
 
 unit Gallery.Shared.ProgressExample;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.ProgressBars as P;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as P;
+uses Gallery.Shared.Strings as Strings;
 
 // Builds the determinate upload indicator.
 // ## Type parameters

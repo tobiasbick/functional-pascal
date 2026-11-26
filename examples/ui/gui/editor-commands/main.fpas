@@ -2,9 +2,11 @@
 
 program EditorCommandsExample;
 
-uses
-  EditorCommands.State as S, EditorCommands.Update as Update, EditorCommands.View as View,
-  Fpas.Ui.Gui.Desktop as Gui, System as Sys;
+uses EditorCommands.State as S;
+uses EditorCommands.Update as Update;
+uses EditorCommands.View as View;
+uses Fpas.Ui.Gui.Desktop as Gui;
+uses System as Sys;
 
 begin
   const Args: array of string := Sys.Environment.GetCommandLineArgs();

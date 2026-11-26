@@ -2,10 +2,13 @@
 
 async program WorkflowLifetimes;
 
-uses
-  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Scopes as S, Fpas.Execution.Workflows.Layers as L,
-  System as Sys, System.Collections.Generic as C, System.Threading as T,
-  System.Threading.Tasks as Tasks;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Execution.Workflows.Layers as L;
+uses Fpas.Execution.Workflows.Scopes as S;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 procedure Check(Condition: bool; Message: string);
 begin

@@ -57,7 +57,7 @@ public sealed partial class MsBuildTests
             """);
         var result = await RunInterop(project, """
             program ImportedOperators;
-            uses Shared as S, System.Console as Console;
+            uses Shared as S; uses System.Console as Console;
 
             var Order: int := 0;
 

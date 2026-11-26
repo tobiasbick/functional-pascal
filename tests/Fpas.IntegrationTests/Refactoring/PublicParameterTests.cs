@@ -24,7 +24,7 @@ public sealed class PublicParameterTests(SdkPackageFixture sdk) : IClassFixture<
             """;
         const string caller = """
             program Consumer;
-            uses Demo.Bridge as B, System.Console as Console;
+            uses Demo.Bridge as B; uses System.Console as Console;
             begin
               var Number: long := 41;
               Console.WriteLine(B.Evaluate(Ignored := 99, Used := 41) and B.Evaluate('other'));

@@ -9,7 +9,7 @@ public sealed partial class AsyncControlTests
         using var program = new Debuggee("own-nested-async-entry");
         await program.Compile("""
             program NestedEntry;
-            uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks;
+            uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
             async function Child<T>(Input: T; Gate: Tasks.Task<int>): Tasks.Task<T>;
             begin
               const Release: int := await Gate;
@@ -53,7 +53,7 @@ public sealed partial class AsyncControlTests
         using var program = new Debuggee("own-async-kickoff");
         await program.Compile("""
             program AsyncKickoff;
-            uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks;
+            uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
             async function Work(Input: int; Gate: Tasks.Task<int>): Tasks.Task<int>;
             begin
               var Value: int := Input + 1;

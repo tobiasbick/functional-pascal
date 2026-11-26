@@ -11,7 +11,9 @@ Center a short decision over the current view. Under **Components â†’ Overlays â
 ```pascal
 unit Docs.Tui.Widgets.Dialog;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Dialogs as W, Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as W;
 
 // Builds the dialog example.
 // ## Parameters

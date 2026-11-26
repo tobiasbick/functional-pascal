@@ -53,7 +53,7 @@ public sealed partial class MsBuildTests
         }
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Nested;
-            uses Shared as S, Shared.Nesting as N, System as Sys, System.Collections.Generic as C;
+            uses Shared as S; uses Shared.Nesting as N; uses System as Sys; uses System.Collections.Generic as C;
             public type Selected = N.Outer<string?>.Inner<int>;
             type Root = N.Outer<string?>;
             public function Create<T, U>(First: T; Second: U): S.Nesting.Outer<T>.Inner<U>;
@@ -119,7 +119,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
-            uses Demo.Nested as N, Shared.Nesting as S;
+            uses Demo.Nested as N; uses Shared.Nesting as S;
             public function Replay(): S.Outer<string?>.Inner<int>;
             begin
               var Value: N.Selected := N.Select();

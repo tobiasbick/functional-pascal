@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Desktop.StatusBar;
 
-uses
-  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Widgets.Desktop.StatusBars as S, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop,
-  Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as S;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // Draws the native status bar and forwards actions admitted by the frame.
 // ## Type parameters

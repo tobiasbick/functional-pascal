@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.InputDispatch;
 
-uses
-  Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Layout.Scene as A,
-  Fpas.Ui.Tui.Application as App, Fpas.Ui.TerminalExtensions.Input as K, System as Sys;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Internal.Hosting.Interaction as I;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses System as Sys;
 
 // Routes an admitted input against the currently presented layout.
 //

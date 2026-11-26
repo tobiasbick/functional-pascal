@@ -63,9 +63,10 @@ public sealed class CliEditingRefactoringsTests(SdkPackageFixture sdk) : IClassF
     {
         var source = """
             unit Demo.Bridge;
-            uses System.Text as Drop, System.Collections.Generic as Col,
-              // Keep the attached note.
-              System.IO as Retain;
+            uses System.Text as Drop;
+            uses System.Collections.Generic as Col;
+            // Keep the attached note.
+            uses System.IO as Retain;
             public function Make(): Col.List<int>;
             begin return new Col.List<int>(); end function;
             end unit;
@@ -81,7 +82,7 @@ public sealed class CliEditingRefactoringsTests(SdkPackageFixture sdk) : IClassF
         Assert.Null(plan.SelectionEnd);
         Assert.Contains(plan.Notes!, note => note.Contains("adjacent comment", StringComparison.Ordinal));
         var edit = Assert.Single(Assert.Single(plan.Files).Edits);
-        Assert.Equal("System.Text as Drop, ", edit.ExpectedText);
+        Assert.Equal("uses System.Text as Drop;\r\n", edit.ExpectedText);
         Assert.Empty(edit.NewText);
 
         var applied = await RenameFixture.Cli(directory, "apply", Project, "--plan", path, "--no-restore");

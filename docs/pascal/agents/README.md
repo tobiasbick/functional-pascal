@@ -10,7 +10,8 @@ owns detailed semantics and the [grammar](../../specs/syntax.md) defines syntax.
 ```pascal
 program AgentStart;
 
-uses System as Sys, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
 
 function Double(Value: int): int;
 requires Value >= int.MinValue div 2 and Value <= int.MaxValue div 2;
@@ -45,7 +46,7 @@ See [CLI](cli.md) for project inputs and options.
   A `char` is one UTF-16 code unit. Strings use apostrophes, doubled inside text.
 - `const` prevents rebinding. Arrays and FPAS records are references. Imported
   collections follow their CLR type. A const reference can still point to a mutable object.
-- Import namespaces, types, and units explicitly with aliases. Call real .NET
+- Import each namespace, type, or unit with its own `uses` statement and alias. Call real .NET
   APIs through those aliases. Mark declarations and record members `public` to
   expose them. Unmarked record members are private to the declaring record.
 - End statements with `;`, including before `else`. Close constructs by name.

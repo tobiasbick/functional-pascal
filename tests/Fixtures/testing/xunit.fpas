@@ -2,10 +2,14 @@
 
 unit NativeTests;
 
-uses
-  Xunit as X, Xunit.Abstractions as A, System as Sys, System.Threading.Tasks as Tasks,
-  System.IO.File as File, System.Collections.Generic as C,
-  Fpas.Compiler as Compiler, Fpas.Compiler.Formatting as Formatting;
+uses Fpas.Compiler as Compiler;
+uses Fpas.Compiler.Formatting as Formatting;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO.File as File;
+uses System.Threading.Tasks as Tasks;
+uses Xunit as X;
+uses Xunit.Abstractions as A;
 
 var Active: int := 0;
 var FixtureCount: int := 0;

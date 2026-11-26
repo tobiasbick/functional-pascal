@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Ai.ToolCall;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.ToolCalls as W, Fpas.Ui.Widgets.Feedback.TaskStates as T;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.ToolCalls as W;
+uses Fpas.Ui.Widgets.Feedback.TaskStates as T;
 
 // Shows the result of a completed search.
 // ## Parameters

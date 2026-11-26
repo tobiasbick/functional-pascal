@@ -2,18 +2,20 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.KeyRouting;
 
-uses
-  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.TerminalExtensions.Input as K,
-  Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows,
-  Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as ChoiceStrip,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios,
-  Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation,
-  Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling,
-  Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList,
-  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit,
-  System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as ChoiceStrip;
+uses Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation;
+uses Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Layout.ScrollViews as V;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
 
 // Routes a key through the focused control before the active scope and shortcuts.
 // ## Type parameters

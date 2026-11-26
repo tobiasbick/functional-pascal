@@ -2,9 +2,11 @@
 
 unit Gallery.Shared.PeopleTable;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses Gallery.Shared.Strings as Strings;
+uses System as Sys;
 
 // One person in the GUI and terminal Data display examples.
 public type Person = record

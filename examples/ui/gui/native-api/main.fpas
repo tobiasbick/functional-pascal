@@ -2,9 +2,10 @@
 
 program NativeApiExample;
 
-uses
-  NativeApi.State as S, NativeApi.View as View, NativeApi.Update as Update,
-  Fpas.Ui.Gui.Desktop as Gui;
+uses Fpas.Ui.Gui.Desktop as Gui;
+uses NativeApi.State as S;
+uses NativeApi.Update as Update;
+uses NativeApi.View as View;
 
 begin
   Gui.Run<S.Model, S.Msg>(

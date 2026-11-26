@@ -2,31 +2,38 @@
 
 program GuiDocCaptures;
 
-uses
-  GuiDocCaptures.Rendering.Gestures as Gestures,
-  GuiDocCaptures.Pages.Actions as ActionPage, GuiDocCaptures.Pages.InputsAndPickers as FormPages,
-  GuiDocCaptures.Pages.OverlaysAndDisclosure as OverlayPages,
-  GuiDocCaptures.Pages.SelectionAndNavigation as Guides,
-  GuiDocCaptures.Rendering.Presented as Presented, GuiDocCaptures.Pages.FeedbackAndDataDisplay as Collections,
-  GuiDocCaptures.Chapters as Chapters, GuiDocCaptures.Pages.Charts as Charts,
-  GuiDocCaptures.Rendering.CropImages as CropImages,
-  GuiDocCaptures.Pages.InstrumentsAndCapture as Devices,
-  GuiDocCaptures.Pages.Workspaces as Workspaces,
-  GuiDocCaptures.Pages.SourceTools as SourceTools,
-  GuiDocCaptures.Pages.CreativeAndCanvas as Creative,
-  GuiDocCaptures.Pages.SocialAndVoice as Social,
-  GuiDocCaptures.Pages.AiAndMotion as Effects, GuiDocCaptures.Pages.Foundations as Foundations, GuiDocCaptures.Pages.SmartInputs as Smart,
-  GuiDocCaptures.Pages.Overview as Overview,
-  GuiGallery.App.State as Gallery,
-  GuiGallery.App.Update as Update, GuiGallery.App.View as View,
-  GuiGallery.Pages.Feedback.State as Feedback,
-  GuiGallery.Pages.Charts.State as ChartState,
-  GuiGallery.Pages.Audio.State as Audio,
-  Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Mvu.Application as App,
-  Fpas.Ui.Widgets.Actions.StatusButtons as Status,
-  System as Sys, System.IO as IO;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Mvu.Application as App;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Status;
+uses GuiDocCaptures.Chapters as Chapters;
+uses GuiDocCaptures.Pages.Actions as ActionPage;
+uses GuiDocCaptures.Pages.AiAndMotion as Effects;
+uses GuiDocCaptures.Pages.Charts as Charts;
+uses GuiDocCaptures.Pages.CreativeAndCanvas as Creative;
+uses GuiDocCaptures.Pages.FeedbackAndDataDisplay as Collections;
+uses GuiDocCaptures.Pages.Foundations as Foundations;
+uses GuiDocCaptures.Pages.InputsAndPickers as FormPages;
+uses GuiDocCaptures.Pages.InstrumentsAndCapture as Devices;
+uses GuiDocCaptures.Pages.OverlaysAndDisclosure as OverlayPages;
+uses GuiDocCaptures.Pages.Overview as Overview;
+uses GuiDocCaptures.Pages.SelectionAndNavigation as Guides;
+uses GuiDocCaptures.Pages.SmartInputs as Smart;
+uses GuiDocCaptures.Pages.SocialAndVoice as Social;
+uses GuiDocCaptures.Pages.SourceTools as SourceTools;
+uses GuiDocCaptures.Pages.Workspaces as Workspaces;
+uses GuiDocCaptures.Rendering.CropImages as CropImages;
+uses GuiDocCaptures.Rendering.Gestures as Gestures;
+uses GuiDocCaptures.Rendering.Presented as Presented;
+uses GuiGallery.App.State as Gallery;
+uses GuiGallery.App.Update as Update;
+uses GuiGallery.App.View as View;
+uses GuiGallery.Pages.Audio.State as Audio;
+uses GuiGallery.Pages.Charts.State as ChartState;
+uses GuiGallery.Pages.Feedback.State as Feedback;
+uses System as Sys;
+uses System.IO as IO;
 
 procedure Run(Destination: string; Chapter: string);
 requires Destination <> '';

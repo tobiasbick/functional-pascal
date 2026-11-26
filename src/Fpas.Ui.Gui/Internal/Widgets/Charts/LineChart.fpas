@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.LineChart;
 
-uses
-  Fpas.Ui.Widgets.Charts.Charts as Ch, Fpas.Ui.Gui.Internal.Data.ChartData as Data,
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Data;
+uses Fpas.Ui.Widgets.Charts.Charts as Ch;
 
 // Draws the native CUI line-chart.
 // ## Type parameters

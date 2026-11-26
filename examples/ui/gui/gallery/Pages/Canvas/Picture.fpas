@@ -2,7 +2,8 @@
 
 unit GuiGallery.Pages.Canvas.Picture;
 
-uses Fpas.Ui.Widgets.Media.MediaImages as Media, System as Sys;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses System as Sys;
 
 const Width: int := 288;
 const Height: int := 360;

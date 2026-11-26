@@ -2,10 +2,14 @@
 
 unit Example;
 
-uses
-  System as Sys, System.Console as Console, System.IO as IO, System.Math as Math,
-  System.Threading as Threading, System.Threading.Tasks as Tasks,
-  System.Collections.Generic as Collections, System.Text.Json.Serialization as Serialization;
+uses System as Sys;
+uses System.Collections.Generic as Collections;
+uses System.Console as Console;
+uses System.IO as IO;
+uses System.Math as Math;
+uses System.Text.Json.Serialization as Serialization;
+uses System.Threading as Threading;
+uses System.Threading.Tasks as Tasks;
 
 // @example
 

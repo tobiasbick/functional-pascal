@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.Typewriter;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Motion.Typewriters as W, Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Widgets.Motion.Typewriters as W;
 
 // Reveals the current answer text.
 // ## Parameters

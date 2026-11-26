@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.AppChrome.Dockspace;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Desktop.Dockspaces as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Desktop.Dockspaces as W;
 
 // Creates an editor with two dockable panels.
 // ## Parameters

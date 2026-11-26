@@ -2,10 +2,11 @@
 
 unit GuiGallery.Pages.SmartInputs.Update;
 
-uses
-  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
-  Fpas.Ui.Mvu.Application as Mvu,
-  GuiGallery.Pages.SmartInputs.State as S, Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis, System.Text as Text;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis;
+uses GuiGallery.Pages.SmartInputs.State as S;
+uses System.Text as Text;
 
 function ApplyEmoji(State: S.Model; Change: Emojis.Change): S.Model;
 begin

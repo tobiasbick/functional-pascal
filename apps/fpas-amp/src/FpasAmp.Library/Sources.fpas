@@ -3,9 +3,10 @@
 // UI-independent music locations and path rules.
 unit FpasAmp.Library.Sources;
 
-uses
-  System as Sys, System.IO as IO, System.Collections.Generic as C,
-  Fpas.Media.Tags.Playlists as Playlists;
+uses Fpas.Media.Tags.Playlists as Playlists;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
 
 // One configured location, including its ordinary subdirectories.
 public type MusicSource = record

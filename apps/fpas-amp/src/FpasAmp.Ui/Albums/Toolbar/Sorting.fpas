@@ -3,10 +3,12 @@
 // Criterion and direction share one native CUI menu trigger.
 unit FpasAmp.Ui.Albums.Toolbar.Sorting;
 
-uses
-  FpasAmp.Ui.Albums.Toolbar.Model as M, Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Styles as S, System as Sys,
-  System.Collections.Generic as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses FpasAmp.Ui.Albums.Toolbar.Model as M;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 function Name(Value: M.Order; Scope: M.Scope): string;
 begin

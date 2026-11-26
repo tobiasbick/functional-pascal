@@ -2,10 +2,14 @@
 
 unit GalleryCaptureContract;
 
-uses
-  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
-  GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Widgets.Files.SignaturePads as Signatures;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Widgets.Files.SignaturePads as Signatures;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as G;
+uses GuiGallery.App.View as View;
 
 // Exercises the original Capture layout and the native signature Clear action.
 // ## Parameters

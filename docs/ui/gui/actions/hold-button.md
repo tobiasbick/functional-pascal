@@ -9,7 +9,8 @@ Require a deliberate hold before a destructive or hard-to-undo action. Available
 ```pascal
 unit Docs.Ui.Actions.HoldButton;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.HoldButtons as H;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.HoldButtons as H;
 
 // Builds the example view.
 // ## Returns

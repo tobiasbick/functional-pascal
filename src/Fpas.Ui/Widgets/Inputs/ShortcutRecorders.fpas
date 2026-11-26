@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Inputs.ShortcutRecorders;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses System as Sys;
 
 // Native CUI key values; None represents an empty shortcut.
 public type Key = enum: byte

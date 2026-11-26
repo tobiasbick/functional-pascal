@@ -9,7 +9,8 @@ Use radio cards when each exclusive choice needs a description, icon or badge. A
 ```pascal
 unit Docs.Ui.Selection.RadioCards;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RadioCards as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.RadioCards as C;
 
 // Builds the radio cards example.
 // ## Parameters

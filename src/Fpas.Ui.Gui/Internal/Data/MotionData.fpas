@@ -2,9 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Data.MotionData;
 
-uses
-  Fpas.Ui.Widgets.Motion.Motion as M, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors,
-  Fpas.Ui.Gui.Cui.Widgets.Motion as CuiMotion;
+uses Fpas.Ui.Gui.Cui.Widgets.Motion as CuiMotion;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
 
 // Converts common animated-text settings.
 // ## Parameters

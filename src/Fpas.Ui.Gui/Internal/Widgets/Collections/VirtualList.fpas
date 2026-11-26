@@ -2,11 +2,16 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Collections.VirtualList;
 
-uses
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Layout.Sizing as S,
-  Fpas.Ui.Gui.Internal.Layout.RealizedValidation as Realized, Fpas.Ui.Validation as V, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.RealizedValidation as Realized;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Validation as V;
+uses System as Sys;
 
 // Presents the native VirtualList element.
 // ## Type parameters

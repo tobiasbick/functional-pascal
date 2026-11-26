@@ -2,7 +2,9 @@
 
 program EditorProbe;
 
-uses System.Console as Console, Helpers as H, Fixture.Api as Api;
+uses Fixture.Api as Api;
+uses Helpers as H;
+uses System.Console as Console;
 
 function Double(Value: int): int;
 begin

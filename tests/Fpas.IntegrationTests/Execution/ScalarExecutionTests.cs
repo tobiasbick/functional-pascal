@@ -29,7 +29,7 @@ public sealed class ScalarExecutionTests
     [Fact]
     public Task Distinct_values_keep_nominal_identity_equality_nullable_and_generic_behavior() => ProgramExecution.Output("""
         program Domains;
-        uses System.Console as Console, System.Collections.Generic as C;
+        uses System.Console as Console; uses System.Collections.Generic as C;
         type UserId = distinct long;
         type PlayerName = distinct string;
         type Money = distinct decimal;

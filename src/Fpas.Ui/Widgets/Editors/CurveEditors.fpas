@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Editors.CurveEditors;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Interpolation of the outgoing curve segment.
 public type Mode = enum: byte

@@ -2,10 +2,13 @@
 
 unit NativePainting.Update;
 
-uses
-  NativePainting.State as S, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Fonts as Fonts,
-  Fpas.Ui.Gui.Cui.Resources as Resources, Fpas.Ui.Widgets.Canvas.Canvases as Canvas,
-  Fpas.Ui.Graphics as G, System.IO as IO;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Cui.Resources as Resources;
+uses Fpas.Ui.Gui.Fonts as Fonts;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses NativePainting.State as S;
+uses System.IO as IO;
 
 // Acknowledges native events and schedules resource work between frames.
 // ## Parameters

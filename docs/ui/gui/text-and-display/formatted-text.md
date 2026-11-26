@@ -10,9 +10,10 @@ face. Available in **GUI**.
 ```pascal
 unit Docs.Ui.TextAndDisplay.FormattedText;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Motion.Motion as M, Fpas.Ui.Widgets.Theming.Themes as T;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Widgets.Theming.Themes as T;
 
 // Draws one line from the editor preview.
 // ## Parameters

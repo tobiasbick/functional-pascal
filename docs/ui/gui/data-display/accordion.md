@@ -9,7 +9,8 @@ Use an accordion header to show or hide a section of related content. Available 
 ```pascal
 unit Docs.Ui.DataDisplay.Accordion;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Containers.Accordions as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Containers.Accordions as W;
 
 // Builds the accordion example.
 // ## Parameters

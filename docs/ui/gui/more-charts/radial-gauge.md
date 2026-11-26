@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.RadialGauge;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.RadialGauges as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.RadialGauges as W;
 
 // Builds the radial gauge example.
 // ## Parameters

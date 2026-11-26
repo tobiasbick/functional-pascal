@@ -16,7 +16,9 @@ check is a separate application rule.
 ```pascal
 program EnvironmentConfiguration;
 
-uses System as Sys, System.Console as Console, System.Globalization as Global;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Globalization as Global;
 
 function ReadAttempts(Text: string?): int;
 begin
@@ -71,9 +73,10 @@ adds ninety minutes of elapsed time without consulting the machine's local zone.
 ```pascal
 program TimeAndDuration;
 
-uses
-  System as Sys, System.Console as Console, System.Diagnostics as Diagnostics,
-  System.Globalization as Global;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Diagnostics as Diagnostics;
+uses System.Globalization as Global;
 
 begin
   const Culture: Global.CultureInfo := Global.CultureInfo.InvariantCulture;

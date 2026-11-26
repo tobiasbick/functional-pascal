@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.ControlTile;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.ControlTiles as W, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.ControlTiles as W;
+uses System as Sys;
 
 // Toggles the Wi-Fi setting.
 // ## Parameters

@@ -2,9 +2,12 @@
 
 unit Fractals.Rendering;
 
-uses
-  Fractals.Camera as C, Fpas.Ui.TerminalExtensions.CellGrids as Grids,
-  Fpas.Ui.Widgets.Developer.Terminal as T, System as Sys, System.Collections.Generic as Lists, System.Threading as Threads;
+uses Fpas.Ui.TerminalExtensions.CellGrids as Grids;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fractals.Camera as C;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+uses System.Threading as Threads;
 
 const Ocean: array of int := [$051025, $143F79, $1884B3, $51C9D4, $DCF7F4];
 const Ember: array of int := [$300909, $9E2A15, $E16D1C, $FFC25E, $FFF2D3];

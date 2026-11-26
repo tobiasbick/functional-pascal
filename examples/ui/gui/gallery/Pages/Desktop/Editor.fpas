@@ -2,12 +2,19 @@
 
 unit GuiGallery.Pages.Desktop.Editor;
 
-uses
-  GuiGallery.Pages.Desktop.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme,
-  Fpas.Ui.Widgets.Desktop.MenuBars as Bar, Fpas.Ui.Widgets.Overlays.Menus as M, Gallery.Shared.EditorStatus as StatusExample,
-  Fpas.Ui.Widgets.Desktop.DocumentTabs as Docs, Fpas.Ui.Widgets.Desktop.Toolbars as Tools, Fpas.Ui.Widgets.Motion.Motion as Glyphs,
-  System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Desktop.DocumentTabs as Docs;
+uses Fpas.Ui.Widgets.Desktop.MenuBars as Bar;
+uses Fpas.Ui.Widgets.Desktop.Toolbars as Tools;
+uses Fpas.Ui.Widgets.Motion.Motion as Glyphs;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+uses Gallery.Shared.EditorStatus as StatusExample;
+uses GuiGallery.Pages.Desktop.State as S;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 function Action(Key: string; Label: string; Hint: string := ''; Enabled: bool := true; Checked: bool := false): M.Entry<S.Msg>;
 begin

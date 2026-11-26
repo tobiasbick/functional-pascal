@@ -9,8 +9,8 @@ Attach a context menu to the native control that should receive a right click. A
 ```pascal
 unit Docs.Ui.Overlays.ContextMenu;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.Menus as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as W;
 
 // Builds the context menu example.
 // ## Parameters

@@ -9,7 +9,8 @@ Use a tag input for an ordered list of user-entered labels. Available in **GUI**
 ```pascal
 unit Docs.Ui.Inputs.TagInput;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TagInputs as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.TagInputs as W;
 
 // Builds the tag input example.
 // ## Parameters

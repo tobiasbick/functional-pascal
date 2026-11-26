@@ -74,7 +74,9 @@ language does not create ownership/borrowing guarantees for those aliases.
 ```pascal
 program AgentPatterns;
 
-uses System as Sys, System.IO as IO, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
+uses System.IO as IO;
 
 type Outcome = variant
   Ready(Value: int);

@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CreativeControls.PaletteStrip;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.PaletteStrips as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.PaletteStrips as W;
 
 // Displays the current palette.
 // ## Parameters

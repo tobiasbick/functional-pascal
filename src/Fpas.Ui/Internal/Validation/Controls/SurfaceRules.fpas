@@ -2,10 +2,18 @@
 
 unit Fpas.Ui.Internal.Validation.Controls.SurfaceRules;
 
-uses
-  Fpas.Ui.Widgets.Containers.Grids as G, Fpas.Ui.Widgets.Containers.Cards as C, Fpas.Ui.Widgets.Feedback.Badges as B, Fpas.Ui.Widgets.Charts.Metrics as M,
-  Fpas.Ui.Widgets.Media.AvatarGroups as A, Fpas.Ui.Widgets.Containers.EmptyStates as E, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
-  Fpas.Ui.Layout as L, Fpas.Ui.Internal.Validation.Core.Checks as Rules, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Charts.Metrics as M;
+uses Fpas.Ui.Widgets.Containers.Cards as C;
+uses Fpas.Ui.Widgets.Containers.EmptyStates as E;
+uses Fpas.Ui.Widgets.Containers.Grids as G;
+uses Fpas.Ui.Widgets.Feedback.Badges as B;
+uses Fpas.Ui.Widgets.Media.AvatarGroups as A;
+uses System as Sys;
 
 procedure CheckDistance(Value: float; At: string);
 begin

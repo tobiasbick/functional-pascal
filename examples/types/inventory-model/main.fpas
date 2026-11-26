@@ -2,7 +2,8 @@
 
 program InventoryModel;
 
-uses System.Console as Console, Dungeon.Inventory as Inventory;
+uses Dungeon.Inventory as Inventory;
+uses System.Console as Console;
 
 begin
   const Rope: Inventory.Item := new Inventory.Item(Name := 'Rope', Weight := 1.5);

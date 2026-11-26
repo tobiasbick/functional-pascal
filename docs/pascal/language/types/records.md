@@ -80,7 +80,8 @@ or emitted property/accessor identities; diagnose these collisions explicitly.
 ```pascal
 program Shapes;
 
-uses System.Console as Console, System.Math as Math;
+uses System.Console as Console;
+uses System.Math as Math;
 
 type Point = record
   public X: double;

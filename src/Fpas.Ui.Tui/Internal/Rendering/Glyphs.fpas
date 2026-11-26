@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Tui.Internal.Rendering.Glyphs;
 
-uses System as Sys, System.Globalization as Global;
+uses System as Sys;
+uses System.Globalization as Global;
 
 // Replaces controls, invalid scalar fragments and clusters without a visible base
 // with one space, preserving marks and joiners inside visible text clusters.

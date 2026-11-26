@@ -3,15 +3,28 @@
 // Music page exercises real catalogue changes, virtual rows and playback bookmarks.
 unit FpasAmp.UiTests.NativeMusic;
 
-uses
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.UiTests.CollectionFixture as Fixture, FpasAmp.Library.Tests.Support as H,
-  FpasAmp.Library.Tests.MetadataSupport as Sources, FpasAmp.Library.Inventory.Monitoring as Monitor,
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Shell as Shell, FpasAmp.Ui.Settings.Model as Settings,
-  FpasAmp.Ui.Music.LibraryPage as LibraryPage, FpasAmp.Ui.Albums.Music.Model as Music,
-  FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Player.Model as Player,
-  FpasAmp.Persistence.PlayerState as Bookmark, FpasAmp.AppState as Storage,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Gui.Cui as Cui, Fpas.Media.Audio as Audio,
-  System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Threading as T, Xunit as X;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses FpasAmp.AppState as Storage;
+uses FpasAmp.Library.Inventory.Monitoring as Monitor;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Tests.MetadataSupport as Sources;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Persistence.PlayerState as Bookmark;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Music.LibraryPage as LibraryPage;
+uses FpasAmp.Ui.Player.Model as Player;
+uses FpasAmp.Ui.Settings.Model as Settings;
+uses FpasAmp.Ui.Shell as Shell;
+uses FpasAmp.UiTests.CollectionFixture as Fixture;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading as T;
+uses Xunit as X;
 
 // End-to-end checks for the Music destination.
 public type LibraryMusicTests = record

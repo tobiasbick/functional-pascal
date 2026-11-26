@@ -2,7 +2,11 @@
 
 unit Fpas.Ui.Tui.Internal.Rendering.Presentation;
 
-uses Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.IO as IO, System.Text as Text;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Text as Text;
 
 function Color(Value: int?; Foreground: bool): string;
 begin

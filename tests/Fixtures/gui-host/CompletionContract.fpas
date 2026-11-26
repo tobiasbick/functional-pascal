@@ -2,10 +2,14 @@
 
 unit GalleryCompletionContract;
 
-uses
-  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
-  GuiGallery.App.Update as Update, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host, System as Sys;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as Update;
+uses GuiGallery.App.View as View;
+uses System as Sys;
 
 // Exercises the workspace form, shared dialogs, notification preferences and timed archive toast.
 // ## Parameters

@@ -75,7 +75,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
-            uses Demo.Models as M, Shared as S;
+            uses Demo.Models as M; uses Shared as S;
             public function Maximum(): M.Count; begin return M.Largest(); end function;
             public function Text(Value: M.MaybeText): M.MaybeText; begin return M.Echo(Value); end function;
             public function Texts(Value: M.Texts): M.Texts; begin return M.EchoTexts(Value); end function;

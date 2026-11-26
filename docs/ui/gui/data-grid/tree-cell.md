@@ -11,9 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DataGrid.TreeCell;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.TreeTables as W,
-  Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Widgets.Collections.TreeTables as W;
 
 // Displays a source folder inside an ordinary table.
 // ## Parameters

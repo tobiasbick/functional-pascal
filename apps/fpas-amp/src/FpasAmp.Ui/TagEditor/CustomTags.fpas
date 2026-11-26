@@ -3,8 +3,11 @@
 // Resolves MusicBrainz's Picard names to the file's existing native field names.
 unit FpasAmp.Ui.TagEditor.CustomTags;
 
-uses
-  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Library.TagEditing.Fields as F, System.IO as IO, System.Collections.Generic as C, System.Collections.Immutable as I;
+uses FpasAmp.Library.TagEditing.Fields as F;
+uses FpasAmp.Ui.TagEditor.Model as M;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
 
 function Key(Name: string): string;
 begin

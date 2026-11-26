@@ -3,9 +3,10 @@
 // Explicit index clearing never deletes media or source preferences.
 unit FpasAmp.Library.Persistence.Clearing;
 
-uses
-  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
-  Microsoft.Data.Sqlite as Db, System.Threading as T;
+uses FpasAmp.Library.Persistence.Schema as Schema;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses Microsoft.Data.Sqlite as Db;
+uses System.Threading as T;
 
 // Clears one source's memberships/checkpoints, or all source data when `Id` is empty.
 // `Connection` is worker-owned; cancellation rolls back the transaction before commit.

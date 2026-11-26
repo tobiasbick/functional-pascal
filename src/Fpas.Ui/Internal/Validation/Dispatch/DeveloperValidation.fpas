@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Internal.Validation.Dispatch.DeveloperValidation;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as V, Fpas.Ui.Internal.Validation.Dispatch.DeveloperInspectorValidation as Inspectors, Fpas.Ui.Internal.Validation.Dispatch.DeveloperReportValidation as Reports;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Core.Checks as V;
+uses Fpas.Ui.Internal.Validation.Dispatch.DeveloperInspectorValidation as Inspectors;
+uses Fpas.Ui.Internal.Validation.Dispatch.DeveloperReportValidation as Reports;
 
 // Validates the developer widget's native inputs.
 // ## Type parameters

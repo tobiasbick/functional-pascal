@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.ApiExplorer;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.ApiExplorers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.ApiExplorers as W;
 
 // Shows the API catalog loaded by the application.
 // ## Parameters

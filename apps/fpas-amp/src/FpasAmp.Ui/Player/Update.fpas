@@ -3,12 +3,19 @@
 // Pure player transitions on the UI owner.
 unit FpasAmp.Ui.Player.Update;
 
-uses
-  FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio,
-  System as Sys, System.Collections.Immutable as I,
-  FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Player.Live as Live,
-  Fpas.Media.Images as Images, Fpas.Media.Tags.AudioFiles as Tags;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Media.Images as Images;
+uses Fpas.Media.Tags.AudioFiles as Tags;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Fingerprints as Fp;
+uses FpasAmp.Ui.Player.Live as Live;
+uses FpasAmp.Ui.Player.Model as M;
+uses FpasAmp.Ui.Player.Presets as Presets;
+uses FpasAmp.Ui.Radio.Model as Radio;
+uses System as Sys;
+uses System.Collections.Immutable as I;
 
 const RestartAfter: double := 3000.0;
 

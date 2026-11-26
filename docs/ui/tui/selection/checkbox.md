@@ -9,7 +9,8 @@ Use a checkbox for an independent option. **Components → Selection → Checkbo
 ```pascal
 unit Docs.Tui.Selection.Checkbox;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Checkboxes as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Checkboxes as C;
 
 // Displays whether any or all items in a group are selected.
 // ## Parameters

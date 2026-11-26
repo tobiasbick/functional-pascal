@@ -2,29 +2,30 @@
 
 unit Fpas.Ui.Internal.Validation.Inputs.PickerValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
-  Fpas.Ui.Internal.Validation.Inputs.PickerRules as PickerRules,
-  Fpas.Ui.Internal.Validation.Inputs.DateRangeRules as DateRangeRules,
-  Fpas.Ui.Internal.Validation.Inputs.SelectRules as SelectRules,
-  Fpas.Ui.Internal.Validation.Inputs.SmartInputRules as SmartRules,
-  Fpas.Ui.Internal.Validation.Inputs.NumberFieldRules as NumberRules,
-  Fpas.Ui.Widgets.Pickers.ColorPickers as ColorPickers,
-  Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis,
-  Fpas.Ui.Widgets.Pickers.Calendars as Calendars,
-  Fpas.Ui.Widgets.Pickers.DatePickers as DatePickers,
-  Fpas.Ui.Widgets.Pickers.DateRanges as Dates,
-  Fpas.Ui.Widgets.Pickers.DateRangePickers as RangePickers,
-  Fpas.Ui.Widgets.Pickers.TimePickers as TimePickers,
-  Fpas.Ui.Widgets.Pickers.WheelPickers as WheelPickers,
-  Fpas.Ui.Widgets.Pickers.TimeDials as TimeDials,
-  Fpas.Ui.Widgets.Inputs.Selects as Selects,
-  Fpas.Ui.Widgets.Inputs.MultiSelects as Multi,
-  Fpas.Ui.Widgets.Inputs.InlineEdits as InlineEdits,
-  Fpas.Ui.Widgets.Inputs.ScrubFields as ScrubFields,
-  Fpas.Ui.Widgets.Inputs.MoneyFields as MoneyFields,
-  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as RecorderKeys,
-  Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Inputs.DateRangeRules as DateRangeRules;
+uses Fpas.Ui.Internal.Validation.Inputs.NumberFieldRules as NumberRules;
+uses Fpas.Ui.Internal.Validation.Inputs.PickerRules as PickerRules;
+uses Fpas.Ui.Internal.Validation.Inputs.SelectRules as SelectRules;
+uses Fpas.Ui.Internal.Validation.Inputs.SmartInputRules as SmartRules;
+uses Fpas.Ui.Widgets.Inputs.InlineEdits as InlineEdits;
+uses Fpas.Ui.Widgets.Inputs.MoneyFields as MoneyFields;
+uses Fpas.Ui.Widgets.Inputs.MultiSelects as Multi;
+uses Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields;
+uses Fpas.Ui.Widgets.Inputs.ScrubFields as ScrubFields;
+uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as RecorderKeys;
+uses Fpas.Ui.Widgets.Pickers.Calendars as Calendars;
+uses Fpas.Ui.Widgets.Pickers.ColorPickers as ColorPickers;
+uses Fpas.Ui.Widgets.Pickers.DatePickers as DatePickers;
+uses Fpas.Ui.Widgets.Pickers.DateRangePickers as RangePickers;
+uses Fpas.Ui.Widgets.Pickers.DateRanges as Dates;
+uses Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis;
+uses Fpas.Ui.Widgets.Pickers.TimeDials as TimeDials;
+uses Fpas.Ui.Widgets.Pickers.TimePickers as TimePickers;
+uses Fpas.Ui.Widgets.Pickers.WheelPickers as WheelPickers;
+uses System as Sys;
 
 // Validates pickers, selects and smart input controls when matched.
 // ## Type parameters

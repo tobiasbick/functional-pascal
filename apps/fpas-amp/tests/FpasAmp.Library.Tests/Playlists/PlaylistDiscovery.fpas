@@ -3,12 +3,19 @@
 // Source file lists follow discovery/watchers while audio inventories stay separate.
 unit FpasAmp.Library.Tests.PlaylistDiscovery;
 
-uses
-  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
-  FpasAmp.Library.Tests.PlaylistSupport as P, FpasAmp.Library.Playlists.Model as M,
-  FpasAmp.Library.Playlists.Access as Access, FpasAmp.Library.Sources as S,
-  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Inventory.Model as Inventory,
-  FpasAmp.Library.Metadata.Model as Tags, System.IO as IO, System.Collections.Immutable as I, System.Threading.Tasks as Tasks, Xunit as X;
+uses FpasAmp.Library.Inventory.Model as Inventory;
+uses FpasAmp.Library.Inventory.Monitoring as Monitor;
+uses FpasAmp.Library.Metadata.Model as Tags;
+uses FpasAmp.Library.Playlists.Access as Access;
+uses FpasAmp.Library.Playlists.Model as M;
+uses FpasAmp.Library.Sources as S;
+uses FpasAmp.Library.Tests.MetadataSupport as F;
+uses FpasAmp.Library.Tests.PlaylistSupport as P;
+uses FpasAmp.Library.Tests.Support as H;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading.Tasks as Tasks;
+uses Xunit as X;
 
 // Automatic playlist import, stale-content errors and filter lifecycle.
 public type DiscoveryTests = record

@@ -3,11 +3,14 @@
 // Derives the shown albums from the catalogue, the search text, the filters and the order.
 unit FpasAmp.Ui.Albums.Browse;
 
-uses
-  FpasAmp.Library.Albums.Model as Library, FpasAmp.Library.Search.Matching as Matching,
-  FpasAmp.Ui.Collections.FilterOptions as Options,
-  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, System as Sys, System.Collections.Generic as C,
-  System.Collections.Immutable as I, System.Globalization as G;
+uses FpasAmp.Library.Albums.Model as Library;
+uses FpasAmp.Library.Search.Matching as Matching;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses FpasAmp.Ui.Collections.FilterOptions as Options;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Globalization as G;
 
 // Search documents and filter choices, prepared once per catalogue snapshot.
 public type Catalog = record

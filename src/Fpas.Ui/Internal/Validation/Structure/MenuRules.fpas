@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Internal.Validation.Structure.MenuRules;
 
-uses Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Styles as S, Fpas.Ui.Internal.Validation.Core.Checks as Rules, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses System as Sys;
 
 // Validates menu identities, commands and optional dropdown settings.
 // ## Type parameters

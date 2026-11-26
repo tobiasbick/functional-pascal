@@ -2,11 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.RadioCards;
 
-uses
-  Fpas.Ui.Widgets.Inputs.RadioCards as R, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as C,
-  System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Inputs.RadioCards as R;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Presents the native CUI card grid and tracks its positional focus targets.
 //

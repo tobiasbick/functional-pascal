@@ -4,16 +4,25 @@
 // level meters and a seekable position bar.
 unit FpasAmp.Ui.Player.View;
 
-uses
-  FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Player.Presets as Presets,
-  Fpas.Ui.Widgets.Overlays.Popovers as Popovers, Fpas.Ui.Widgets.Overlays.Menus as Menus,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
-  Fpas.Ui.Widgets.Audio.Faders as Faders,
-  Fpas.Ui.Widgets.Audio.LevelMeters as Meters, Fpas.Ui.Widgets.Audio.Waveforms as Waves,
-  Fpas.Ui.Widgets.Display.Texts as Texts, System as Sys, System.Collections.Generic as C,
-  FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Albums.Artwork as Covers;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Audio.Faders as Faders;
+uses Fpas.Ui.Widgets.Audio.LevelMeters as Meters;
+uses Fpas.Ui.Widgets.Audio.Waveforms as Waves;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses Fpas.Ui.Widgets.Overlays.Popovers as Popovers;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Albums.Artwork as Covers;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Player.Model as M;
+uses FpasAmp.Ui.Player.Presets as Presets;
+uses FpasAmp.Ui.Radio.Model as Radio;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const FaderLength: int := 64;

@@ -9,7 +9,8 @@ Use an avatar group to show several people in a compact space. The gallery shows
 ```pascal
 unit Docs.Ui.Feedback.AvatarGroup;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Media.AvatarGroups as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Media.AvatarGroups as W;
 
 // Builds the avatar group example.
 // ## Parameters

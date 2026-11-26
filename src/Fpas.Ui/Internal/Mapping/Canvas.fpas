@@ -2,17 +2,19 @@
 
 unit Fpas.Ui.Internal.Mapping.Canvas;
 
-uses
-  Fpas.Ui.Widgets.Canvas.FormatBars as FormatBars,
-  Fpas.Ui.Widgets.Canvas.LiveCursors as LiveCursors,
-  Fpas.Ui.Widgets.Canvas.PresencePills as PresencePills,
-  Fpas.Ui.Widgets.Canvas.SelectionRings as SelectionRings,
-  Fpas.Ui.Widgets.Canvas.CanvasControls as CanvasControls,
-  Fpas.Ui.Widgets.Canvas.ResultCards as ResultCards,
-  Fpas.Ui.Widgets.Canvas.SelectionBars as SelectionBars,
-  Fpas.Ui.Widgets.Desktop.Toolbars as Toolbars,
-  Fpas.Ui.Widgets.Editors.NodeEditors as NodeEditors, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Media.MediaImages as Media,
-  System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Canvas.CanvasControls as CanvasControls;
+uses Fpas.Ui.Widgets.Canvas.FormatBars as FormatBars;
+uses Fpas.Ui.Widgets.Canvas.LiveCursors as LiveCursors;
+uses Fpas.Ui.Widgets.Canvas.PresencePills as PresencePills;
+uses Fpas.Ui.Widgets.Canvas.ResultCards as ResultCards;
+uses Fpas.Ui.Widgets.Canvas.SelectionBars as SelectionBars;
+uses Fpas.Ui.Widgets.Canvas.SelectionRings as SelectionRings;
+uses Fpas.Ui.Widgets.Desktop.Toolbars as Toolbars;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as NodeEditors;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 function MapNodes<TChild, TParent>(Items: array of NodeEditors.Node<TChild>; Child: function(E.Element<TChild>): E.Element<TParent>): array of NodeEditors.Node<TParent>;
 begin

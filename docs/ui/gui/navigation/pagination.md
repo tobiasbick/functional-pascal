@@ -10,7 +10,8 @@ Use pagination to change pages within a collection. Available in **GUI** and
 ```pascal
 unit Docs.Ui.Navigation.Pagination;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Paginations as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.Paginations as C;
 
 // Builds the pagination example.
 // ## Parameters

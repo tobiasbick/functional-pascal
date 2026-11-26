@@ -21,7 +21,7 @@ public sealed partial class MsBuildTests
         ];
         var source = new StringBuilder("""
             unit Demo.Bridge;
-            uses System as Sys, System.Numerics as N, System.Threading.Tasks as Tasks;
+            uses System as Sys; uses System.Numerics as N; uses System.Threading.Tasks as Tasks;
             public type Flags = enum : byte None = 0; First = 1; Second = 2; end enum;
             public type Meters = distinct int;
             public type Percent = int range 0..100;

@@ -2,7 +2,9 @@
 
 program CollectionEvents;
 
-uses System as Sys, System.Console as Console, System.ComponentModel as Component;
+uses System as Sys;
+uses System.ComponentModel as Component;
+uses System.Console as Console;
 
 begin
   const Values: Component.BindingList<int> := new Component.BindingList<int>();

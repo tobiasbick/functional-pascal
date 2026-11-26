@@ -9,8 +9,9 @@ Use an inline range calendar when both date choices should stay visible. The gal
 ```pascal
 unit Docs.Ui.Pickers.DateRangeCalendar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.DateRangeCalendars as W,
-  Fpas.Ui.Widgets.Pickers.DateRanges as R;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.DateRangeCalendars as W;
+uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 
 // Builds the date range calendar example.
 // ## Parameters

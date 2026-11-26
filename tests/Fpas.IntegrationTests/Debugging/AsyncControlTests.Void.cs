@@ -13,8 +13,8 @@ public sealed partial class AsyncControlTests
         using var program = new Debuggee("own-async-void");
         await program.Compile("""
             program VoidAwait;
-            uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks,
-              System.IO.File as File, System.Threading.Thread as Thread;
+            uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
+              uses System.IO.File as File; uses System.Threading.Thread as Thread;
             async function Work(Gate: Tasks.Task; Value: int): Tasks.Task;
             begin
               await Gate;

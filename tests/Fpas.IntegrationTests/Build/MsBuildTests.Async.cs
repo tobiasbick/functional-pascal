@@ -32,7 +32,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
-            uses System as Sys, System.Threading.Tasks as Tasks, Demo as D;
+            uses System as Sys; uses System.Threading.Tasks as Tasks; uses Demo as D;
             public async function Wait(Gate: Tasks.Task<int>; State: array of int): Tasks.Task<int>;
             requires State.Length = 3;
             ensures (Returned: int): Returned = State[2];

@@ -25,10 +25,12 @@ normal CLR struct that can cross await; this example does not require Span APIs.
 // Application-local process execution and text capture.
 unit Recipes.ProcessCapture;
 
-uses
-  System as Sys, System.Diagnostics as Diagnostics, System.IO as IO,
-  System.Text as Text, System.Threading as Threading,
-  System.Threading.Tasks as Tasks;
+uses System as Sys;
+uses System.Diagnostics as Diagnostics;
+uses System.IO as IO;
+uses System.Text as Text;
+uses System.Threading as Threading;
+uses System.Threading.Tasks as Tasks;
 
 // A bounded prefix of one output stream.
 public type CapturedText = record
@@ -180,9 +182,11 @@ PATH; use an absolute executable path when selecting a specific installation.
 ```pascal project=process-capture
 async program CaptureVersion;
 
-uses
-  System as Sys, System.Console as Console, System.Diagnostics as Diagnostics,
-  System.Threading as Threading, Recipes.ProcessCapture as Capture;
+uses Recipes.ProcessCapture as Capture;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Diagnostics as Diagnostics;
+uses System.Threading as Threading;
 
 begin
   const Options: Diagnostics.ProcessStartInfo := new Diagnostics.ProcessStartInfo('dotnet');

@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Overlays.Popovers;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // Placement and spacing of a native popover.
 public type Options = record

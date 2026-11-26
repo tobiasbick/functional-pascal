@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Motion.ShimmerTexts;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Motion.Motion as Motion;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 
 // Draws the native CUI shimmer text.
 // ## Type parameters

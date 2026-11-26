@@ -17,7 +17,7 @@ internal static class EnvironmentProbe
         File.WriteAllText(root.File("main.fpas"), """
             program Probe;
 
-            uses System.Environment as Env, System.IO.File as File, System.Threading.Thread as Thread;
+            uses System.Environment as Env; uses System.IO.File as File; uses System.Threading.Thread as Thread;
 
             begin
               if args.Length <> 1 or args[0] <> '--version' then return; end if;

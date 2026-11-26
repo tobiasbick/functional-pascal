@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.Breadcrumb;
 
-uses
-  Fpas.Ui.Widgets.Navigation.Breadcrumbs as B, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Core.Context as C, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Navigation.Breadcrumbs as B;
+uses System.Collections.Generic as Lists;
 
 // Draws CUI's breadcrumb and publishes ancestor activations.
 //

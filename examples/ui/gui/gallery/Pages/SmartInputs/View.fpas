@@ -2,17 +2,16 @@
 
 unit GuiGallery.Pages.SmartInputs.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  System.Collections.Generic as Lists,
-  GuiGallery.Pages.SmartInputs.Widgets.Editors as Editors,
-  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
-  GuiGallery.Pages.SmartInputs.State as State,
-  GuiGallery.Pages.SmartInputs.Widgets.EmojiMessage as EmojiMessage,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Inputs.TextFields as F;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses Fpas.Ui.Widgets.Inputs.TextFields as F;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.SmartInputs.State as State;
+uses GuiGallery.Pages.SmartInputs.Widgets.Editors as Editors;
+uses GuiGallery.Pages.SmartInputs.Widgets.EmojiMessage as EmojiMessage;
+uses GuiGallery.Shared.Sections as G;
+uses System.Collections.Generic as Lists;
 
 // Builds the complete original Smart inputs page with native CUI widgets.
 //

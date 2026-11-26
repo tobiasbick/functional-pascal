@@ -2,15 +2,14 @@
 
 unit GuiGallery.Pages.Actions.Widgets.SplitButton;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Actions.State as State,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Widgets.Actions.SplitButtons as Split,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.SplitButtons as Split;
+uses GuiGallery.Pages.Actions.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 function Items(ShowResult: bool): array of Split.Item<State.Msg>;
   function Item(Key: string; Caption: string; Glyph: int): Split.Item<State.Msg>;

@@ -2,13 +2,16 @@
 
 unit Fpas.Ui.Internal.Mapping.Display;
 
-uses
-  Fpas.Ui.Internal.Mapping.MessageMapping as Mapping,
-  Fpas.Ui.Widgets.Canvas.Painting as Painting,
-  Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Media.Images as Images,
-  Fpas.Ui.Widgets.Canvas.Canvases as Canvases,
-  Fpas.Ui.Widgets.Overlays.Veils as Veils, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Media.MediaImages as Media, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Internal.Mapping.MessageMapping as Mapping;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvases;
+uses Fpas.Ui.Widgets.Canvas.Painting as Painting;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Media.Images as Images;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses Fpas.Ui.Widgets.Overlays.Veils as Veils;
+uses System as Sys;
 
 // Translates callbacks and children for native display elements.
 // ## Type parameters

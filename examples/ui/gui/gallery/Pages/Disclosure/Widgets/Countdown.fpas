@@ -2,9 +2,11 @@
 
 unit GuiGallery.Pages.Disclosure.Widgets.Countdown;
 
-uses
-  GuiGallery.Pages.Disclosure.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Widgets.Feedback.Countdowns as D, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Feedback.Countdowns as D;
+uses GuiGallery.Pages.Disclosure.State as S;
+uses GuiGallery.Shared.Sections as G;
 
 // Shows the original standard and compact countdowns.
 // ## Parameters

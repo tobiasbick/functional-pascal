@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Overlays.UserMenus;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // Options for the native account trigger and its popup.
 public type Options = record

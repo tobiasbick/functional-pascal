@@ -11,7 +11,7 @@ namespace Fpas.Compiler.Analysis;
 /// <param name="Alias">The alias name.</param>
 /// <param name="QualifiedName">The CLR type or FPAS unit to import.</param>
 /// <param name="AssemblyHash">The content hash of the defining reference, for an imported CLR type.</param>
-/// <param name="Edit">The edit that adds the import to the uses clause.</param>
+/// <param name="Edit">The edit that adds a uses statement.</param>
 public sealed record EditorImport(SourceSpan Receiver, SourceSpan Member, string Alias, string QualifiedName, string? AssemblyHash,
     DiagnosticEdit Edit);
 
@@ -60,13 +60,13 @@ public static class EditorImports
             var alias = IdentifierFacts.Spell(receiver.Text);
             var qualified = string.Join('.', target.Qualified.Split('.').Select(IdentifierFacts.Spell));
             var newline = input.Text.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
-            var at = tokens.First(item => item.Text == ";").Position + 1;
+            var after = unit.Imports.LastOrDefault() is { } last ? last.Alias.Position : 0;
+            var at = tokens.First(item => item.Position > after && item.Text == ";").Position + 1;
             var text = newline + "uses " + qualified + " as " + alias + ";";
-            if (unit.Imports.LastOrDefault() is { } last)
-            {
-                at = last.Alias.Position + last.Alias.Length;
-                text = ", " + qualified + " as " + alias;
-            }
+            var lineEnd = input.Text.IndexOfAny(['\r', '\n'], at);
+            if (lineEnd < 0) lineEnd = input.Text.Length;
+            if (input.Text.AsSpan(at, lineEnd - at).TrimStart().StartsWith("//", StringComparison.Ordinal))
+                at = lineEnd;
             var document = new SourceDocument(path, input.Text, token);
             return new(document.Span(receiver.Position, receiver.Length), document.Span(member.Position, member.Length),
                 receiver.Text, target.Qualified, target.Hash, new(source.Location(at, 0), "", text));

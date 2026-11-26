@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Canvas.PresencePills;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Canvas.LiveCursors as Live;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Canvas.LiveCursors as Live;
 
 // Presence pill settings.
 public type Options = record

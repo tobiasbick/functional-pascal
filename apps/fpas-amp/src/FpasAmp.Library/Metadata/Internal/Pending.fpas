@@ -3,9 +3,10 @@
 // Indexed durable jobs bound memory and keep changed earlier files responsive.
 unit FpasAmp.Library.Metadata.Internal.Pending;
 
-uses
-  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Sources as S,
-  Microsoft.Data.Sqlite as Db, System as Sys;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Sources as S;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
 
 // One observed audio/playlist file, revalidated at read and commit boundaries.
 public type File = record

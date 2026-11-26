@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Containers.Disclosure;
 
-uses
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
+uses System.Collections.Generic as Lists;
 
 // Draws CUI's accordion or expandable card, including its outgoing body.
 //

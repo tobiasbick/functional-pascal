@@ -3,7 +3,8 @@
 // File-backed caches and user lists have separate storage lifetimes.
 unit FpasAmp.Library.Playlists.Persistence.Schema;
 
-uses FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses Microsoft.Data.Sqlite as Db;
 
 // Creates cache tables inside catalogue `Transaction` on `Connection`.
 public procedure Catalogue(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction);

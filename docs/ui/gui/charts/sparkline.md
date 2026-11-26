@@ -11,7 +11,8 @@ See also the [terminal sparkline](../../tui/charts/sparkline.md).
 ```pascal
 unit Docs.Ui.Charts.Sparkline;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Sparklines as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Sparklines as W;
 
 // Builds the sparkline example.
 // ## Parameters

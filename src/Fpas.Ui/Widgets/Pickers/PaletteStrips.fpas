@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Pickers.PaletteStrips;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 
 // One swatch in the palette.
 public type Swatch = record

@@ -2,9 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.QueryBuilder;
 
-uses
-  Fpas.Ui.Widgets.Developer.QueryBuilders as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper,
-  Fpas.Ui.Gui.Cui as Cui, System.Collections.Generic as Lists, System as Sys;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Widgets.Developer.QueryBuilders as D;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 function PackField(Items: array of D.Field): array of CuiDeveloper.CuiDevField;
 begin

@@ -9,9 +9,9 @@ Use a popover for a panel anchored to a control. The gallery keeps filter contro
 ```pascal
 unit Docs.Ui.Overlays.Popover;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.Popovers as W,
-  Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Overlays.Popovers as W;
 
 // Builds the popover example.
 // ## Parameters

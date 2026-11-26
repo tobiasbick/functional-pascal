@@ -2,16 +2,27 @@
 
 program CompositionContract;
 
-uses
-  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as M,
-  Fpas.Ui.Composition as U, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Inputs.TextFields as F, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.TerminalExtensions.Input as Keys,
-  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Popovers as Popovers,
-  Fpas.Ui.Widgets.Navigation.ScrollAnchors as Anchors, Fpas.Ui.Widgets.Navigation.TableOfContents as Toc,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Planning.Kanbans as Kanbans,
-  System as Sys, System.Console as Console, System.Threading as Threads,
-  System.Threading.Tasks as Tasks;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Ui.Composition as U;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Mvu.Composition as M;
+uses Fpas.Ui.TerminalExtensions.Input as Keys;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Inputs.TextFields as F;
+uses Fpas.Ui.Widgets.Navigation.ScrollAnchors as Anchors;
+uses Fpas.Ui.Widgets.Navigation.TableOfContents as Toc;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses Fpas.Ui.Widgets.Overlays.Popovers as Popovers;
+uses Fpas.Ui.Widgets.Planning.Kanbans as Kanbans;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Threading as Threads;
+uses System.Threading.Tasks as Tasks;
 
 type Payload<TMsg> = record implements A.HostExtension<TMsg>
   // Message delivered by the test host.

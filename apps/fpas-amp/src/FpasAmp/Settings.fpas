@@ -3,20 +3,23 @@
 // Stores the user's sources, appearance, mixer and metadata settings.
 unit FpasAmp.Settings;
 
-uses
-  FpasAmp.Library.Sources as Locations,
-  Fpas.Media.Tags.Playlists as Playlists,
-  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Persistence.JsonOutput as Output,
-  FpasAmp.Persistence.UserFiles as Files,
-  FpasAmp.Ui.Settings.Model as Model, Fpas.Media.Audio as Audio, FpasAmp.Ui.Player.Model as Player, FpasAmp.Persistence.RadioFavorites as Favorites,
-  FpasAmp.Persistence.PodcastSubscriptions as Podcasts,
-  Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  System as Sys,
-  System.Collections.Generic as C,
-  System.IO as IO,
-  System.Text.Json as J,
-  System.Text.RegularExpressions as R;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Media.Tags.Playlists as Playlists;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses FpasAmp.Library.Sources as Locations;
+uses FpasAmp.Persistence.JsonFields as Fields;
+uses FpasAmp.Persistence.JsonOutput as Output;
+uses FpasAmp.Persistence.PodcastSubscriptions as Podcasts;
+uses FpasAmp.Persistence.RadioFavorites as Favorites;
+uses FpasAmp.Persistence.UserFiles as Files;
+uses FpasAmp.Ui.Player.Model as Player;
+uses FpasAmp.Ui.Settings.Model as Model;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+uses System.Text.Json as J;
+uses System.Text.RegularExpressions as R;
 
 const DefaultAppearance: string := 'system';
 

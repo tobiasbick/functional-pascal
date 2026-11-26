@@ -2,16 +2,15 @@
 
 unit GuiGallery.Pages.Overlays.View;
 
-uses
-  GuiGallery.Pages.Overlays.State as S,
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Overlays.Widgets.Dialog as Dialog,
-  GuiGallery.Pages.Overlays.Widgets.ContextMenu as Context,
-  GuiGallery.Pages.Overlays.Widgets.Toast as Toast,
-  GuiGallery.Pages.Overlays.Widgets.Tooltip as Tooltip,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses GuiGallery.Pages.Overlays.State as S;
+uses GuiGallery.Pages.Overlays.Widgets.ContextMenu as Context;
+uses GuiGallery.Pages.Overlays.Widgets.Dialog as Dialog;
+uses GuiGallery.Pages.Overlays.Widgets.Toast as Toast;
+uses GuiGallery.Pages.Overlays.Widgets.Tooltip as Tooltip;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
 
 // Builds the native overlay triggers and examples.
 // ## Parameters

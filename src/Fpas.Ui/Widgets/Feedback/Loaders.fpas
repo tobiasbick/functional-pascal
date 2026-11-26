@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Feedback.Loaders;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Native loader animation.
 public type Animation = enum: byte

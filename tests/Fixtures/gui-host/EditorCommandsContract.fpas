@@ -2,13 +2,19 @@
 
 unit EditorCommandsContract;
 
-uses
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.EditorCommands as Commands,
-  Fpas.Ui.Gui.Shortcuts as Shortcuts, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
-  Fpas.Ui.Widgets.Editors.CodeEditors as Editor, Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
-  Fpas.Ui.Mvu.Application as Mvu, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.EditorCommands as Commands;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Gui.Shortcuts as Shortcuts;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk;
+uses Fpas.Ui.Widgets.Editors.CodeEditors as Editor;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses System as Sys;
 
 type Msg = variant
   Observed(Value: Editor.Event);

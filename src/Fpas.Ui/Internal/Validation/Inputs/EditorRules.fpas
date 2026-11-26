@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Internal.Validation.Inputs.EditorRules;
 
-uses
-  Fpas.Ui.Widgets.Inputs.TextFields as F, Fpas.Ui.Widgets.Inputs.SearchFields as S, Fpas.Ui.Widgets.Inputs.TextAreas as A,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Internal.Validation.Core.Checks as R,
-  System as Sys, System.Text as Text;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as S;
+uses Fpas.Ui.Widgets.Inputs.TextAreas as A;
+uses Fpas.Ui.Widgets.Inputs.TextFields as F;
+uses System as Sys;
+uses System.Text as Text;
 
 procedure CheckValue(Value: string; Capacity: int; Size: B.Size; Password: bool; Multiline: bool; At: string);
 begin

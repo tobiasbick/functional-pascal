@@ -72,7 +72,7 @@ internal static class TestTemplate
         "nunit" => $$"""
             unit {{identifier}};
 
-            uses NUnit.Framework as N, NUnit.Framework.Legacy as L;
+            uses NUnit.Framework as N; uses NUnit.Framework.Legacy as L;
 
             [N.TestFixtureAttribute]
             public type Tests = record
@@ -92,10 +92,10 @@ internal static class TestTemplate
         async program {{identifier}}.Runner;
 
         uses
-          System as Sys, System.Reflection as Reflection, System.Collections.Generic as Collections,
-          Microsoft.Testing.Platform.Builder as Platform,
-          Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions as MSTest,
-          Microsoft.Testing.Extensions.TrxReportExtensions as Trx;
+          System as Sys; uses System.Reflection as Reflection; uses System.Collections.Generic as Collections;
+          uses Microsoft.Testing.Platform.Builder as Platform;
+          uses Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions as MSTest;
+          uses Microsoft.Testing.Extensions.TrxReportExtensions as Trx;
 
         begin
           const Args: array of string := Sys.Environment.GetCommandLineArgs();

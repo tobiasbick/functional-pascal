@@ -3,10 +3,13 @@
 // File lists are replaceable caches; user-owned lists are written separately.
 unit FpasAmp.Library.Playlists.Persistence.Store;
 
-uses
-  FpasAmp.Library.Playlists.Formats.Reading as Reading,
-  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.IO as IO, System.Collections.Generic as C, System.Threading as T;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Playlists.Formats.Reading as Reading;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+uses System.Threading as T;
 
 // Saves `Value` for the same observed playlist ID/stamp while policy remains
 // `Current`. `Users` supplies durable track identities; failures preserve entries.

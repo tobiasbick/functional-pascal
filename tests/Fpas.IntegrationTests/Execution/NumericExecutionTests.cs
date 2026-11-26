@@ -96,7 +96,7 @@ public sealed class NumericExecutionTests
     public Task Metadata_overloads_and_source_calls_apply_numeric_widening()
         => ProgramExecution.Output("""
             program Calls;
-            uses System.Console as Console, System.Math as Math;
+            uses System.Console as Console; uses System.Math as Math;
             function Half(Value: double): double;
             begin
               return Value / 2.0;

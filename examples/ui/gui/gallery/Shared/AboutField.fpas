@@ -2,9 +2,9 @@
 
 unit Gallery.Shared.AboutField;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextAreas as Area;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.TextAreas as Area;
+uses Gallery.Shared.Strings as Strings;
 
 // Starting profile description used by both galleries.
 public const Initial: string := 'Mathematician and writer. I like engines that compute and interfaces that stay out of the way.';

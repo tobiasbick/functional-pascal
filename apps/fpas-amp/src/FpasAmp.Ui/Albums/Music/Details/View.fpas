@@ -3,13 +3,23 @@
 // Shared track detail dialog for both the album and library song tables.
 unit FpasAmp.Ui.Albums.Music.Details.View;
 
-uses
-  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Ui.Albums.Music.Details.Metadata as Metadata, FpasAmp.Ui.Albums.Music.Details.Source as Source,
-  FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Player.Model as Player, FpasAmp.Library.Metadata.Model as Tracks,
-  Fpas.Media.Tags.AudioFiles as Tags, Fpas.Media.Images as Images, Fpas.Ui.Layout as L, Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Media.Images as Images;
+uses Fpas.Media.Tags.AudioFiles as Tags;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Albums.Artwork as Artwork;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Details.Metadata as Metadata;
+uses FpasAmp.Ui.Albums.Music.Details.Source as Source;
+uses FpasAmp.Ui.Albums.Music.Model as M;
+uses FpasAmp.Ui.Player.Model as Player;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const Sections: array of Tabs.Item := [

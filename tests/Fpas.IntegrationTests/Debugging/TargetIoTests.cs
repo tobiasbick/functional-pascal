@@ -20,7 +20,7 @@ public sealed class TargetIoTests
         using var program = new Debuggee("own-exact-utf8-boundary");
         await program.Compile($$"""
             program BoundaryOutput;
-            uses System.Console as Console, System.IO.Stream as Stream, System.Threading.Thread as Thread;
+            uses System.Console as Console; uses System.IO.Stream as Stream; uses System.Threading.Thread as Thread;
             begin
               const Output: Stream := Console.OpenStandardOutput();
               Output.WriteByte(226); Output.WriteByte(130); Output.Flush(); Thread.Sleep(100);
@@ -48,7 +48,7 @@ public sealed class TargetIoTests
         using var program = new Debuggee("own-split-utf8-output");
         await program.Compile($$"""
             program SplitOutput;
-            uses System.Console as Console, System.IO.Stream as Stream, System.Threading.Thread as Thread;
+            uses System.Console as Console; uses System.IO.Stream as Stream; uses System.Threading.Thread as Thread;
             begin
               const Output: Stream := Console.OpenStandardOutput();
               Output.WriteByte(240); Output.WriteByte(159); Output.Flush(); Thread.Sleep(100);
@@ -74,7 +74,7 @@ public sealed class TargetIoTests
         using var program = new Debuggee("own-invalid-output-byte");
         await program.Compile("""
             program InvalidOutput;
-            uses System.Console as Console, System.IO.Stream as Stream;
+            uses System.Console as Console; uses System.IO.Stream as Stream;
             begin
               const Output: Stream := Console.OpenStandardOutput();
               Output.WriteByte(255);
@@ -101,7 +101,7 @@ public sealed class TargetIoTests
         using var program = new Debuggee(OperatingSystem.IsLinux() ? "own-target-io-λ \"quoted\\" : "own-target-io-λ space");
         await program.Compile("""
             program TargetIo;
-            uses System.Console as Console, System.Convert as Convert, System.Text.Encoding as Text, System.IO.Stream as Stream;
+            uses System.Console as Console; uses System.Convert as Convert; uses System.Text.Encoding as Text; uses System.IO.Stream as Stream;
             begin
               Console.OutputEncoding := Text.UTF8;
               Console.WriteLine(args.Length);
@@ -187,7 +187,7 @@ public sealed class TargetIoTests
         using var program = new Debuggee("own-prefix-output");
         await program.Compile($$"""
             program PrefixOutput;
-            uses System.Console as Console, System.Text.Encoding as Text, System.Threading.Thread as Thread;
+            uses System.Console as Console; uses System.Text.Encoding as Text; uses System.Threading.Thread as Thread;
             begin
               Console.OutputEncoding := Text.UTF8;
               {{(exact ? "Console.Write('abcdefg');" : "Console.Write('😀'); Console.Out.Flush(); Thread.Sleep(100); Console.Write('😀'); Console.Out.Flush(); Thread.Sleep(100); Console.Write('end');")}}

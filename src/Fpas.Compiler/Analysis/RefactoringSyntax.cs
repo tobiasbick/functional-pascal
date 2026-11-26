@@ -41,18 +41,18 @@ public sealed record RefactoringArgument(string? Name, SourceSpan Span, SourceSp
 /// <param name="Type">The complete parameter type annotation.</param>
 public sealed record RefactoringParameter(int Owner, int Index, string Mode, SourceSpan? Modifier, SourceSpan Type);
 
-/// <summary>Extents of one import in a uses clause.</summary>
-/// <param name="Start">The offset of the imported name.</param>
+/// <summary>Extents of one uses statement.</summary>
+/// <param name="Start">The offset of the uses keyword.</param>
 /// <param name="Target">The offset of the last part of the imported name.</param>
 /// <param name="Alias">The offset of the alias.</param>
-/// <param name="End">The end offset of the alias.</param>
+/// <param name="End">The end offset of the terminating semicolon.</param>
 /// <param name="TargetName">The qualified imported name.</param>
 /// <param name="AliasName">The alias.</param>
 public sealed record RefactoringImport(int Start, int Target, int Alias, int End, string TargetName, string AliasName);
 
-/// <summary>Extents of a uses clause.</summary>
-/// <param name="Start">The offset of the uses keyword.</param>
-/// <param name="End">The end offset of the terminating semicolon.</param>
+/// <summary>Extents of the uses statements in a source.</summary>
+/// <param name="Start">The offset of the first uses keyword.</param>
+/// <param name="End">The end offset of the last import's semicolon.</param>
 /// <param name="Items">The imports in source order.</param>
 /// <param name="Comments">All comment ranges of the source, so edits can preserve them.</param>
 public sealed record RefactoringImports(int Start, int End, IReadOnlyList<RefactoringImport> Items, IReadOnlyList<SourceSpan> Comments);
@@ -217,16 +217,19 @@ public sealed partial class RefactoringSyntax
             => document.Span(expression.SpanStart, expression.SpanEnd - expression.SpanStart);
     }
 
-    /// <summary>Finds the extents of the uses clause.</summary>
+    /// <summary>Finds the extents of the uses statements.</summary>
     /// <returns>The extents, or <see langword="null"/> when the source imports nothing.</returns>
     public RefactoringImports? Imports()
     {
         if (unit.Imports.Count == 0) return null;
-        var first = FindIndex(item => item.Position == unit.Imports[0].Target.Position);
-        var last = FindIndex(item => item.Position == unit.Imports[^1].Alias.Position);
-        return new(tokens[first - 1].Position, End(tokens[last + 1]),
-            unit.Imports.Select(item => new RefactoringImport(item.Target.Position, item.Target.Parts[^1].Position,
-                item.Alias.Position, End(item.Alias), item.Target.Text, item.Alias.Text)).ToArray(),
+        var imports = unit.Imports.Select(import =>
+        {
+            var first = FindIndex(item => item.Position == import.Target.Position);
+            var last = FindIndex(item => item.Position == import.Alias.Position);
+            return new RefactoringImport(tokens[first - 1].Position, import.Target.Parts[^1].Position,
+                import.Alias.Position, End(tokens[last + 1]), import.Target.Text, import.Alias.Text);
+        }).ToArray();
+        return new(imports[0].Start, imports[^1].End, imports,
             comments.Select(comment => document.Span(comment.Start, comment.End - comment.Start)).ToArray());
     }
 

@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Voice.Composer;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.Composers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.Composers as W;
 
 // Shows a message composer with optional recording.
 // ## Parameters

@@ -2,10 +2,16 @@
 
 unit Fpas.Ui.Gui.Desktop;
 
-uses
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Cui.CuiDesktop as Native, Fpas.Ui.Gui.Shortcuts as Shortcuts,
-  Fpas.Ui.Gui.Internal.Hosting.Session as SessionHost, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.CuiDesktop as Native;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as SessionHost;
+uses Fpas.Ui.Gui.Shortcuts as Shortcuts;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses System as Sys;
 
 // Native window configuration in logical units.
 public type Options = record

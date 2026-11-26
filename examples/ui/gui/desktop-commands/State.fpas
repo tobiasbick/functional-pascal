@@ -2,10 +2,10 @@
 
 unit DesktopCommands.State;
 
-uses
-  DesktopCommands.Preferences as Preferences,
-  Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  System as Sys;
+uses DesktopCommands.Preferences as Preferences;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses System as Sys;
 
 // Number of timed steps in the example background job.
 public const WorkSteps: int := 8;

@@ -3,9 +3,10 @@
 // Search text folding, phonetic codes and edit distance.
 unit FpasAmp.Library.Tests.SearchWords;
 
-uses
-  FpasAmp.Library.Search.Text as Words, FpasAmp.Library.Search.Matching as Matching,
-  System.Collections.Immutable as I, Xunit as X;
+uses FpasAmp.Library.Search.Matching as Matching;
+uses FpasAmp.Library.Search.Text as Words;
+uses System.Collections.Immutable as I;
+uses Xunit as X;
 
 function Album(Title: string; Artist: string; Genre: string := ''): Matching.Document;
 begin

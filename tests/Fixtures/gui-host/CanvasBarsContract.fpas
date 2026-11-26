@@ -2,15 +2,20 @@
 
 unit GalleryCanvasBarsContract;
 
-uses
-  GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
-  GalleryHostAssertions as A,
-  GuiGallery.Pages.Canvas.State as Canvas, GuiGallery.Pages.Canvas.Update as CanvasUpdate,
-  GuiGallery.Pages.Canvas.SampleBounds as SampleBounds,
-  Fpas.Ui.Widgets.Editors.NodeEditors as Nodes, Fpas.Ui.Widgets.Canvas.CanvasControls as Controls,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
-  Fpas.Ui.Gui.Internal.Core.Context as Context;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as Context;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Widgets.Canvas.CanvasControls as Controls;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as Nodes;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as Update;
+uses GuiGallery.App.View as Gallery;
+uses GuiGallery.Pages.Canvas.SampleBounds as SampleBounds;
+uses GuiGallery.Pages.Canvas.State as Canvas;
+uses GuiGallery.Pages.Canvas.Update as CanvasUpdate;
 
 procedure MovedSampleBounds();
 begin

@@ -58,10 +58,12 @@ field target syntax is outside the baseline.
 ```pascal
 program AgentInterop;
 
-uses
-  System as Sys, System.Console as Console, System.Collections.Generic as C,
-  System.Linq.Enumerable as Enumerable, System.Text.Json as Json,
-  System.Text.Json.Serialization as Serialization;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Console as Console;
+uses System.Linq.Enumerable as Enumerable;
+uses System.Text.Json as Json;
+uses System.Text.Json.Serialization as Serialization;
 
 type Descending = record implements C.IComparer<int>
   public function Compare(Left: int; Right: int): int;
@@ -106,9 +108,10 @@ dispatched handler. Use explicit cleanup where the lifetime requires it.
 ```pascal
 program AgentEvents;
 
-uses
-  System as Sys, System.Console as Console, System.Collections.ObjectModel as C,
-  System.Collections.Specialized as Events;
+uses System as Sys;
+uses System.Collections.ObjectModel as C;
+uses System.Collections.Specialized as Events;
+uses System.Console as Console;
 
 begin
   var Changes: int := 0;

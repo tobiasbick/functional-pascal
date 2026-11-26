@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.ChatMessage;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Conversation.ChatMessages as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Conversation.ChatMessages as W;
 
 // Shows the final outgoing message in a group.
 // ## Parameters

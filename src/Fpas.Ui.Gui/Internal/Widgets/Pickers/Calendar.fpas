@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.Calendar;
 
-uses
-  Fpas.Ui.Widgets.Pickers.Calendars as Calendar, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Widgets.Pickers.CalendarParts as Parts, System as Sys;
+uses Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.CalendarParts as Parts;
+uses Fpas.Ui.Widgets.Pickers.Calendars as Calendar;
+uses System as Sys;
 
 // Draws the native single-date calendar.
 // ## Type parameters

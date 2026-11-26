@@ -9,7 +9,8 @@ Use a reorderable list to let the user arrange a small set of items by dragging.
 ```pascal
 unit Docs.Ui.DataDisplay.ReorderableList;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.ReorderableLists as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.ReorderableLists as W;
 
 // Builds the reorderable list example.
 // ## Parameters

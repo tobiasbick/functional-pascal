@@ -81,7 +81,8 @@ cleanup. Continue reaches the next iteration/test; break exits the innermost loo
 ```pascal
 program AgentBasics;
 
-uses System as Sys, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
 
 begin
   const Items: array of int := [1, 2];

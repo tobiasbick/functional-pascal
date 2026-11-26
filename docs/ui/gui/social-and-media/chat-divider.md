@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.ChatDivider;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Conversation.ChatDividers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Conversation.ChatDividers as W;
 
 // Marks a new day in a chat transcript.
 // ## Parameters

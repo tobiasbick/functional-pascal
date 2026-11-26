@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Collections.Tables;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Globalization as Culture;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses System as Sys;
+uses System.Globalization as Culture;
 
 // Text alignment within a table column.
 public type Alignment = enum: byte

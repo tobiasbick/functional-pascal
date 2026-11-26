@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.EditingTools.CurveEditor;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Editors.CurveEditors as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Editors.CurveEditors as W;
 
 // Edits an easing curve over two seconds.
 // ## Parameters

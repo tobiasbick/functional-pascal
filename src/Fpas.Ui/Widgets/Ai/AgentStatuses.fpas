@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Ai.AgentStatuses;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.TaskStates as TaskStates;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.TaskStates as TaskStates;
 
 // Native presentation and interaction options.
 public type Options = record

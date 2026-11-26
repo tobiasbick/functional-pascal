@@ -2,10 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Files.AvatarUpload;
 
-uses
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles,
-  Fpas.Ui.Gui.Cui as Cui, System as Sys;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses System as Sys;
 
 // Draws CUI's uploadable avatar and forwards file actions.
 // ## Type parameters

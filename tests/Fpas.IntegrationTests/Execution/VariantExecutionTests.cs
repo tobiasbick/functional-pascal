@@ -20,7 +20,7 @@ public sealed class VariantExecutionTests
     [Fact]
     public Task Variant_factories_equality_hashing_and_payload_patterns_execute() => ProgramExecution.Output("""
         program Actions;
-        uses System.Console as Console, System.Collections.Generic as Collections;
+        uses System.Console as Console; uses System.Collections.Generic as Collections;
         type Outcome = variant
           Idle;
           Moved(X: int; Y: int);
@@ -82,7 +82,7 @@ public sealed class VariantExecutionTests
     [Fact]
     public Task Primitive_ranges_nulls_CLR_type_patterns_and_single_evaluation_execute() => ProgramExecution.Output("""
         program PrimitivePatterns;
-        uses System.Console as Console, System as Sys;
+        uses System.Console as Console; uses System as Sys;
         function Classify(Value: object?): string;
         begin
           return case Value of

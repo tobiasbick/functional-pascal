@@ -2,7 +2,8 @@
 
 async program LoopDemo;
 
-uses System.Console as Console, System.Threading.Tasks as Tasks;
+uses System.Console as Console;
+uses System.Threading.Tasks as Tasks;
 
 type Attempt = byte range 1..3;
 

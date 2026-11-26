@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Gui.Internal.Data.FileData;
 
-uses Fpas.Ui.Widgets.Files.FileListings as F, Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles, System as Sys;
+uses Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles;
+uses Fpas.Ui.Widgets.Files.FileListings as F;
+uses System as Sys;
 
 // Bridges an optional FPAS directory provider to the call-scoped CUI callback.
 // ## Parameters

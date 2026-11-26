@@ -10,7 +10,8 @@ object and a separate example with a parse error. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Code.JsonViewer;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.JsonViews as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.JsonViews as W;
 
 // Displays the current JSON document.
 // ## Parameters

@@ -2,10 +2,15 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Collections.Table;
 
-uses
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Gui.Internal.Layout.Sizing as S, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses System as Sys;
 
 // Presents the native Table element.
 // ## Type parameters

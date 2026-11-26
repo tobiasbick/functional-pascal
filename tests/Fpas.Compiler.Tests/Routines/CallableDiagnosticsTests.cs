@@ -34,7 +34,7 @@ public sealed class CallableDiagnosticsTests
     [InlineData("var Text: string? := 'known'; const Clear: function(): bool := function(): bool begin Text := null; return false; end function; Text := 'known'; discard if Text <> null and Clear() then Text.Length else 0 end if;", "FP3013")]
     public void Unsafe_or_invalid_callables_are_diagnosed(string body, string code)
     {
-        var result = TestCompilation.CompileAgainstFramework("program Bad; uses System as Sys, System.Linq.Enumerable as Seq; begin " + body + " end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Bad; uses System as Sys; uses System.Linq.Enumerable as Seq; begin " + body + " end; end program;");
         Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
         Assert.Null(result.Program);
     }

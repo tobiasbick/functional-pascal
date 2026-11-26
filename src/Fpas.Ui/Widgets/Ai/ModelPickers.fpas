@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Ai.ModelPickers;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
 
 // A choice in the native model menu.
 public type Item = record

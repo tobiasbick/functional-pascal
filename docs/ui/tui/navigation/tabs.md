@@ -9,7 +9,8 @@ Tabs switch the content inside a page. Under **Components → Navigation → Tab
 ```pascal
 unit Docs.Tui.Navigation.Tabs;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
 
 // Builds the strip and the content chosen by the current model.
 // ## Parameters

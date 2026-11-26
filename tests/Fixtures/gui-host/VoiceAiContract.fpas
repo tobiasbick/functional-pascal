@@ -2,11 +2,18 @@
 
 unit GalleryVoiceAiContract;
 
-uses
-  GalleryHostAssertions as A, GuiGallery.App.State as G, GuiGallery.App.Update as U, GuiGallery.App.View as V,
-  GuiGallery.Pages.Voice.State as VoicePage, GuiGallery.Pages.Voice.Update as VoiceUpdate,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Mvu.Application as Mvu, System as Sys, System.IO as IO;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as G;
+uses GuiGallery.App.Update as U;
+uses GuiGallery.App.View as V;
+uses GuiGallery.Pages.Voice.State as VoicePage;
+uses GuiGallery.Pages.Voice.Update as VoiceUpdate;
+uses System as Sys;
+uses System.IO as IO;
 
 procedure Run(Page: G.Page; Renderer: Cui.CuiRenderer; Capture: string);
   function Update(Model: G.Model; Message: G.Msg): Mvu.Transition<G.Model, G.Msg>;

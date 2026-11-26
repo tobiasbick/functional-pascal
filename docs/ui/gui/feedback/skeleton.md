@@ -9,8 +9,9 @@ Use a skeleton to reserve the shape of content while it loads. Available in **GU
 ```pascal
 unit Docs.Ui.Feedback.Skeleton;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.Skeletons as W,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Feedback.Skeletons as W;
 
 // Builds the skeleton example.
 // ## Returns

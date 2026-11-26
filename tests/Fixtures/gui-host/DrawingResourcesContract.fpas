@@ -2,15 +2,26 @@
 
 unit DrawingResourcesContract;
 
-uses
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Cui.Resources as Resources,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Fonts as Fonts,
-  Fpas.Ui.Gui.Localization as Localization, Fpas.Ui.Gui.Colors as Colors,
-  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys, Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Canvas.Painting as Painting,
-  Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics,
-  Fpas.Ui.Widgets.Media.MediaImages as Images, Fpas.Ui.Graphics as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Composition as Composition, Fpas.Ui.Layout as L,
-  Fpas.Ui.Validation as V, Fpas.Ui.Mvu.Application as Mvu, System as Sys;
+uses Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Colors as Colors;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Resources as Resources;
+uses Fpas.Ui.Gui.Fonts as Fonts;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Gui.Localization as Localization;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Widgets.Canvas.Painting as Painting;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses Fpas.Ui.Widgets.Media.MediaImages as Images;
+uses Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses System as Sys;
 
 type Msg = variant
   Load;

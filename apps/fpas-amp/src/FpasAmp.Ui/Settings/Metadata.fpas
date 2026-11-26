@@ -3,13 +3,17 @@
 // The AcoustID settings card.
 unit FpasAmp.Ui.Settings.Metadata;
 
-uses
-  FpasAmp.Ui.Settings.Model as M, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Display.Links as Links, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
-  Fpas.Ui.Widgets.Containers.Cards as Cards,
-  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Styles as Style,
-  System.Collections.Generic as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Display.Links as Links;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+uses FpasAmp.Ui.Settings.Model as M;
+uses System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 

@@ -11,9 +11,11 @@ indented tree cells. Available in **GUI**.
 ```pascal
 unit Docs.Ui.DataGrid.TreeTable;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Collections.TreeTables as W,
-  Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Collections.DataGrids as D;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Widgets.Collections.TreeTables as W;
 
 // Builds the file summary tree.
 // ## Parameters
@@ -64,8 +66,10 @@ disabled.
 ```pascal
 unit Docs.Ui.DataGrid.TreeTableMenu;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.TreeTables as W,
-  Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.DataGrids as D;
+uses Fpas.Ui.Widgets.Collections.TreeTables as W;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // Messages of the file tree.
 public type Msg = variant

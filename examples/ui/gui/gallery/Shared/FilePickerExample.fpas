@@ -2,9 +2,9 @@
 
 unit Gallery.Shared.FilePickerExample;
 
-uses
-  Fpas.Ui.Widgets.Files.FileListings as Files, Fpas.Ui.Widgets.Files.FilePickers as Picker,
-  System as Sys;
+uses Fpas.Ui.Widgets.Files.FileListings as Files;
+uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
+uses System as Sys;
 
 // Original Open button caption.
 public const OpenLabel: string := 'Open…';

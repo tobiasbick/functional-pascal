@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Internal.Validation.Controls.DisclosureRules;
 
-uses
-  Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, Fpas.Ui.Widgets.Containers.ExpandableTexts as Texts,
-  Fpas.Ui.Styles as S, Fpas.Ui.Internal.Validation.Core.Checks as R, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
+uses Fpas.Ui.Widgets.Containers.ExpandableTexts as Texts;
+uses System as Sys;
 
 // Validates a native disclosure header.
 //

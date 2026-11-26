@@ -9,7 +9,8 @@ Use a ruler slider to move a measurement tape under a fixed marker. The gallery 
 ```pascal
 unit Docs.Ui.Pickers.RulerSlider;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RulerSliders as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.RulerSliders as W;
 
 // Builds the ruler slider example.
 // ## Parameters

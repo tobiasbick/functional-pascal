@@ -16,7 +16,9 @@ cancellation inside Work. The caller owns the semaphore and its lifetime.
 // Application-local serialization of asynchronous work.
 unit Recipes.Coordination;
 
-uses System as Sys, System.Threading as Threading, System.Threading.Tasks as Tasks;
+uses System as Sys;
+uses System.Threading as Threading;
+uses System.Threading.Tasks as Tasks;
 
 // Holds the caller's permit until the supplied work has completed.
 public async function UnderGate<T>(
@@ -48,9 +50,11 @@ three pending jobs together; each shared update then uses the same semaphore.
 ```pascal project=serialized-work
 async program SerializedJobs;
 
-uses
-  System as Sys, System.Console as Console, System.Threading as Threading,
-  System.Threading.Tasks as Tasks, Recipes.Coordination as Coordination;
+uses Recipes.Coordination as Coordination;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Threading as Threading;
+uses System.Threading.Tasks as Tasks;
 
 begin
   using const Gate: Threading.SemaphoreSlim := new Threading.SemaphoreSlim(1, 1);
@@ -104,9 +108,10 @@ asynchronous operations; no sleeps or timing assumptions are needed.
 ```pascal
 async program TaskOutcomes;
 
-uses
-  System as Sys, System.Console as Console, System.Threading as Threading,
-  System.Threading.Tasks as Tasks;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Threading as Threading;
+uses System.Threading.Tasks as Tasks;
 
 begin
   const First: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(

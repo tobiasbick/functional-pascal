@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Files.Dropzones;
 
-uses Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
 
 // Display and input settings for a native file dropzone.
 public type Options = record

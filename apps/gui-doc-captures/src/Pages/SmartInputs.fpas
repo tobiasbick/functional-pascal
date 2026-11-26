@@ -2,10 +2,12 @@
 
 unit GuiDocCaptures.Pages.SmartInputs;
 
-uses
-  GuiDocCaptures.Rendering.Presented as Presented, GuiDocCaptures.Rendering.Regions as Regions,
-  GuiGallery.App.State as Gallery, GuiGallery.Pages.SmartInputs.State as Smart,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Widgets.Pickers.EmojiPickers as Emoji;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Widgets.Pickers.EmojiPickers as Emoji;
+uses GuiDocCaptures.Rendering.Presented as Presented;
+uses GuiDocCaptures.Rendering.Regions as Regions;
+uses GuiGallery.App.State as Gallery;
+uses GuiGallery.Pages.SmartInputs.State as Smart;
 
 // Captures the Smart inputs controls and the open emoji palette.
 // ## Parameters

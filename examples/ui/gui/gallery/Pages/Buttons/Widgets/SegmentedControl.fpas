@@ -2,14 +2,13 @@
 
 unit GuiGallery.Pages.Buttons.Widgets.SegmentedControl;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Buttons.State as State,
-  Fpas.Ui.Widgets.Actions.SegmentedControls as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Actions.SegmentedControls as S;
+uses GuiGallery.Pages.Buttons.State as State;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 // Clones CUI's medium icon choices and compact date-range example.
 //

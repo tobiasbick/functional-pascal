@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DeveloperTools.ProblemsPanel;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.ProblemsPanels as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.ProblemsPanels as W;
 
 // Displays the latest diagnostics.
 // ## Parameters

@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Desktop.MenuBars;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // One title and its commands in a native desktop menu bar.
 // ## Type parameters

@@ -2,28 +2,28 @@
 
 unit GalleryDisclosureContract;
 
-uses
-  GuiGallery.App.Update as GalleryUpdate,
-  GuiGallery.Shared.State as SliceShared,
-  GuiGallery.Pages.Overlays.State as SliceOverlays,
-  GuiGallery.Pages.Disclosure.State as SliceDisclosure,
-  GalleryHostAssertions as A,
-  GuiGallery.App.State as State,
-  GuiGallery.App.View as Gallery,
-  Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Containers.Accordions as Accordions,
-  Fpas.Ui.Widgets.Containers.ExpandableCards as Cards,
-  Fpas.Ui.Widgets.Containers.ExpandableTexts as Texts,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Overlays.Dialogs as D,
-  Fpas.Ui.Styles as S, Fpas.Ui.Validation as V,
-  Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Containers.Accordions as Accordions;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
+uses Fpas.Ui.Widgets.Containers.ExpandableTexts as Texts;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as D;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as GalleryUpdate;
+uses GuiGallery.App.View as Gallery;
+uses GuiGallery.Pages.Disclosure.State as SliceDisclosure;
+uses GuiGallery.Pages.Overlays.State as SliceOverlays;
+uses GuiGallery.Shared.State as SliceShared;
+uses System as Sys;
 
 procedure Validate();
   procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);

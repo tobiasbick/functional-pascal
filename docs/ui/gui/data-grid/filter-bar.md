@@ -11,7 +11,8 @@ gallery starts with Engine and Platform selected in Team. Available in
 ```pascal
 unit Docs.Ui.DataGrid.FilterBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.FilterBars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.FilterBars as W;
 
 // Shows filters for the people view.
 // ## Parameters

@@ -2,13 +2,23 @@
 
 unit Fpas.Ui.Gui.Internal.Input.ModalFocus;
 
-uses
-  Fpas.Ui.Gui.Internal.Input.Focus as F, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V,
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards,
-  Fpas.Ui.Widgets.Desktop.Dockspaces as Dock, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Actions.SwipeActions as Swipe, Fpas.Ui.Widgets.Media.Carousels as Carousels, Fpas.Ui.Widgets.Containers.CardStacks as CardStacks,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Overlays.Veils as Veils,
-  Fpas.Ui.Widgets.Planning.Kanbans as Kanbans, Fpas.Ui.Widgets.Editors.NodeEditors as Nodes,
-  System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Input.Focus as F;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Actions.SwipeActions as Swipe;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Containers.CardStacks as CardStacks;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
+uses Fpas.Ui.Widgets.Desktop.Dockspaces as Dock;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as Nodes;
+uses Fpas.Ui.Widgets.Media.Carousels as Carousels;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses Fpas.Ui.Widgets.Overlays.Veils as Veils;
+uses Fpas.Ui.Widgets.Planning.Kanbans as Kanbans;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
 
 // Finds the last/deepest active modal scope in traversal order.
 //

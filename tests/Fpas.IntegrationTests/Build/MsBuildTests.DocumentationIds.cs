@@ -47,7 +47,7 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             // Container.
             unit Demo.Api;
-            uses System as Sys, System.Collections.Generic as Collections;
+            uses System as Sys; uses System.Collections.Generic as Collections;
             // Box.
             public type Box<T> = record
               // Value.

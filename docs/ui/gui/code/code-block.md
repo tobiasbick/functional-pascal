@@ -10,7 +10,8 @@ button. The gallery includes C, Python, shell and SQL. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Code.CodeBlock;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.CodeBlocks as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.CodeBlocks as W;
 
 // Displays the current SQL query.
 // ## Parameters

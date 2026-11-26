@@ -2,10 +2,16 @@
 
 program TextAreaContract;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextAreas as A, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Mvu.Application as M,
-  Fpas.Ui.Layout as L, System as Sys, System.Console as Console;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as M;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Application as T;
+uses Fpas.Ui.Tui.Headless as Headless;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Inputs.TextAreas as A;
+uses System as Sys;
+uses System.Console as Console;
 
 type Msg = variant
   Edit(Value: string);

@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Developer.HexViews;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
 
 // Zero-based byte selection.
 public type Selection = record

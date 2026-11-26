@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Editors.FlameGraphs;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // A timed call span.
 public type Span = record

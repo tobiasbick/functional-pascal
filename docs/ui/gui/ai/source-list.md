@@ -10,7 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Ai.SourceList;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.SourceLists as W, Fpas.Ui.Widgets.Ai.Sources as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.SourceLists as W;
+uses Fpas.Ui.Widgets.Ai.Sources as S;
 
 // Shows sources collected by the application.
 // ## Parameters

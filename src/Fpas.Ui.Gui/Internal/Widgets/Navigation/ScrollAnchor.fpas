@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.ScrollAnchor;
 
-uses Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
 
 // Emits CUI's zero-height scroll destination.
 // ## Type parameters

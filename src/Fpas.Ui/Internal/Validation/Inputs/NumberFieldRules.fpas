@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Internal.Validation.Inputs.NumberFieldRules;
 
-uses Fpas.Ui.Widgets.Inputs.NumberFields as N, Fpas.Ui.Internal.Validation.Core.Checks as R, System as Sys, System.Globalization as Culture;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Widgets.Inputs.NumberFields as N;
+uses System as Sys;
+uses System.Globalization as Culture;
 
 // Validates the number field's model and native display capacity.
 //

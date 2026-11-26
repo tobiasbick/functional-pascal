@@ -14,8 +14,8 @@ public sealed class OwnedProcessTests
         var source = fixture.File("Parent.fpas"); var assembly = fixture.File("Parent.dll");
         File.WriteAllText(source, """
             program Parent;
-            uses System as S, System.IO.File as File, System.Diagnostics as P,
-              System.Threading.Thread as Thread;
+            uses System as S; uses System.IO.File as File; uses System.Diagnostics as P;
+              uses System.Threading.Thread as Thread;
             begin
               const Args: array of string := S.Environment.GetCommandLineArgs();
               if Args[1] = 'child' then

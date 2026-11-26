@@ -2,7 +2,19 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel;
 
-uses Fpas.Ui.Tui.Internal.Layout.Measurement as Measurement, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Measurement as Measurement;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
 
 // Final placement of a modal panel and its pinned close button and scrolling body.
 type PanelBounds = record

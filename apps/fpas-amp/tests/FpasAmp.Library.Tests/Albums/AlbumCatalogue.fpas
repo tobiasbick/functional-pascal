@@ -3,11 +3,20 @@
 // Catalogue reads and publications during scanning.
 unit FpasAmp.Library.Tests.AlbumCatalogue;
 
-uses
-  FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Albums.Internal.Observing as Observer, FpasAmp.Library.Metadata.Persistence.Queries as Songs, FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Albums.Persistence.Queries as Albums,
-  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
-  FpasAmp.Library.UserData.Schema as Users, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+uses FpasAmp.Library.Albums.Internal.Observing as Observer;
+uses FpasAmp.Library.Albums.Model as M;
+uses FpasAmp.Library.Albums.Persistence.Queries as Albums;
+uses FpasAmp.Library.Metadata.Persistence.Queries as Songs;
+uses FpasAmp.Library.Persistence.Schema as Schema;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Library.UserData.Schema as Users;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
+uses Xunit as X;
 
 // Verifies the library snapshot and its observation during catalogue changes.
 public type CatalogueTests = record

@@ -2,9 +2,10 @@
 
 unit FpasAmp.Ui.Radio.Model;
 
-uses
-  Fpas.Ui.Widgets.Collections.Tables as Tables,
-  System as Sys, System.Text as Text, System.Security.Cryptography as Crypto;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses System as Sys;
+uses System.Security.Cryptography as Crypto;
+uses System.Text as Text;
 
 // A station from the directory or a stream entered by the listener.
 public type Station = record

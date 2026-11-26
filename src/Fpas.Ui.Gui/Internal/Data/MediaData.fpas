@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Gui.Internal.Data.MediaData;
 
-uses Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Gui.Cui.Widgets.Media as CuiMedia;
+uses Fpas.Ui.Gui.Cui.Widgets.Media as CuiMedia;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 
 // Converts a shared picture source to the native upload descriptor.
 // ## Parameters

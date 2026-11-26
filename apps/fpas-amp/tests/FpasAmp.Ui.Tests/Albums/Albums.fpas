@@ -3,21 +3,36 @@
 // Album updates keep browser state and release rating controls after durable writes.
 unit FpasAmp.UiTests.Albums;
 
-uses
-  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host, FpasAmp.Ui.Shell as Shell,
-  FpasAmp.Library.Tests.MetadataSupport as Sources, FpasAmp.Library.Tests.AlbumSupport as Fixtures,
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Albums.Persistence.Queries as Query,
-  System as Sys, System.IO as IO, System.Threading.Channels as Channels,
-  FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Media,
-  FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Update as Update,
-  FpasAmp.Library.Albums.Model as Library, Fpas.Media.Images as Images,
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller,
-  FpasAmp.Ui.Albums.Music.Model as Music,
-  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings,
-  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Inventory.Monitoring as Monitor,
-  System.Threading as T, System.Threading.Tasks as Tasks,
-  Fpas.Ui.Mvu.Application as A, System.Collections.Immutable as I, Xunit as X;
+uses Fpas.Media.Audio as Media;
+uses Fpas.Media.Images as Images;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
+uses FpasAmp.Library.Albums.Model as Library;
+uses FpasAmp.Library.Albums.Persistence.Queries as Query;
+uses FpasAmp.Library.Inventory.Monitoring as Monitor;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Tests.AlbumSupport as Fixtures;
+uses FpasAmp.Library.Tests.MetadataSupport as Sources;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Ui.Albums.Model as M;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Update as Update;
+uses FpasAmp.Ui.App.Controller as Controller;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Player.Playback as Playback;
+uses FpasAmp.Ui.Settings.Model as Settings;
+uses FpasAmp.Ui.Shell as Shell;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading as T;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
+uses Xunit as X;
 
 function Rating(Session: Gui.Session<App.Msg>; AlbumId: string): Gui.Control;
 begin

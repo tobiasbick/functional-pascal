@@ -9,9 +9,9 @@ Use a confirm popover for a short question next to the action that opened it. Av
 ```pascal
 unit Docs.Ui.Disclosure.ConfirmPopover;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.ConfirmPopovers as W,
-  Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as W;
 
 // Builds the confirm popover example.
 // ## Parameters

@@ -2,10 +2,11 @@
 
 unit FpasAmp.Ui.Collections.TableSort;
 
-uses
-  FpasAmp.Ui.Albums.Toolbar.Sorting as Sorting, Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Overlays.Menus as Menus,
-  System.Collections.Generic as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses FpasAmp.Ui.Albums.Toolbar.Sorting as Sorting;
+uses System.Collections.Generic as C;
 
 // Shows the active sort and maps selections to the same order used by the table.
 // ## Type parameters

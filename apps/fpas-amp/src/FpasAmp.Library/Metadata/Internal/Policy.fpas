@@ -3,10 +3,12 @@
 // Small configuration mailbox; pending metadata remains in SQLite, not an unbounded queue.
 unit FpasAmp.Library.Metadata.Internal.Policy;
 
-uses
-  FpasAmp.Library.Sources as S, System as Sys, System.Threading as T,
-  System.Threading.Tasks as Tasks,
-  System.Collections.Generic as C, System.Runtime.CompilerServices as R;
+uses FpasAmp.Library.Sources as S;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Runtime.CompilerServices as R;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // An isolated discovery policy with a monotonically increasing version.
 public type Configuration = record

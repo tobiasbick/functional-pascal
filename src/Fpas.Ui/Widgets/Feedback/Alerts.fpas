@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Feedback.Alerts;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses System as Sys;
 
 // Inline alert presentation and input options.
 public type Options = record

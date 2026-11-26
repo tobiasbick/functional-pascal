@@ -2,10 +2,13 @@
 
 unit GuiGallery.Pages.Desktop.HostActions;
 
-uses
-  GuiGallery.Pages.Desktop.State as S, GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Layout as L, Fpas.Ui.Styles as Styles,
-  Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses GuiGallery.Pages.Desktop.State as S;
+uses GuiGallery.Shared.Sections as G;
 
 // Path copied by the clipboard example.
 public const SamplePath: string := 'projects/atlas/notes.md';

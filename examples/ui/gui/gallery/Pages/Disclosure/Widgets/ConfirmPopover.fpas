@@ -2,16 +2,15 @@
 
 unit GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Disclosure.State as State,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Overlays.ConfirmPopovers as P,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as P;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Disclosure.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
 
 // Builds the native inline branch-confirmation example.
 //

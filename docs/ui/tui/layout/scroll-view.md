@@ -9,7 +9,8 @@ Keep a long list or body inside a bounded area. The gallery preview scrolls inde
 ```pascal
 unit Docs.Tui.Widgets.ScrollView;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Builds the scroll view example.
 // ## Parameters

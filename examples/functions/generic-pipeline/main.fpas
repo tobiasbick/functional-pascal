@@ -2,7 +2,8 @@
 
 program GenericPipeline;
 
-uses System.Console as Console, Pipelines as Pipeline;
+uses Pipelines as Pipeline;
+uses System.Console as Console;
 
 function Double(Value: int): int;
 begin

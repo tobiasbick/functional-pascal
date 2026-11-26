@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Gui.FileDialogs;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Cui as Cui, System as Sys;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses System as Sys;
 
 // An owner-window file selection request.
 // ## Type parameters

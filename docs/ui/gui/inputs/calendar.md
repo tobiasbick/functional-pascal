@@ -9,8 +9,9 @@ Use a calendar to leave single-date selection visible. The gallery shares its se
 ```pascal
 unit Docs.Ui.Inputs.Calendar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.Calendars as W,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.Calendars as W;
+uses System as Sys;
 
 // Builds the calendar example.
 // ## Parameters

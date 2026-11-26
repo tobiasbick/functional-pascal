@@ -3,11 +3,15 @@
 // Search, filters and sorting select the albums the grid shows.
 unit FpasAmp.UiTests.AlbumBrowse;
 
-uses
-  FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Update as Update,
-  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Library.Albums.Model as Library,
-  Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I, System.Linq as L,
-  Xunit as X;
+uses Fpas.Ui.Mvu.Application as A;
+uses FpasAmp.Library.Albums.Model as Library;
+uses FpasAmp.Ui.Albums.Model as M;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses FpasAmp.Ui.Albums.Update as Update;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.Linq as L;
+uses Xunit as X;
 
 function Catalogue(): I.ImmutableArray<Library.Album>;
 begin

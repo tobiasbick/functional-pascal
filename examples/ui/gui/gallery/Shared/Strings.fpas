@@ -2,9 +2,8 @@
 
 unit Gallery.Shared.Strings;
 
-uses
-  System.Reflection as Reflection,
-  System.Resources as Resources;
+uses System.Reflection as Reflection;
+uses System.Resources as Resources;
 
 const Catalog: Resources.ResourceManager := new Resources.ResourceManager(
   'Gallery.Shared.Strings', Reflection.Assembly.GetExecutingAssembly()

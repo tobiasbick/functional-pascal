@@ -154,7 +154,8 @@ The FPAS executable references the library:
 ```pascal file=src/App/Main.fpas
 program StandaloneApp;
 
-uses Standalone.Messages as Messages, System.Console as Console;
+uses Standalone.Messages as Messages;
+uses System.Console as Console;
 
 begin
   Console.WriteLine(Messages.Create('FPAS').Text);

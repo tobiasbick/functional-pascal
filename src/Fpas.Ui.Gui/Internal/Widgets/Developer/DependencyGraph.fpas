@@ -2,7 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.DependencyGraph;
 
-uses Fpas.Ui.Widgets.Developer.DependencyGraphs as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Widgets.Developer.DependencyGraphs as D;
+uses System.Collections.Generic as Lists;
 
 function PackGraphNode(Items: array of D.Vertex): array of CuiDeveloper.CuiDevGraphNode;
 begin

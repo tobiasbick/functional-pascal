@@ -9,8 +9,9 @@ Use a status spinner for work that moves from an activity indicator to a success
 ```pascal
 unit Docs.Ui.Feedback.StatusSpinner;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.StatusSpinners as W,
-  Fpas.Ui.Widgets.Actions.StatusButtons as Work;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Work;
+uses Fpas.Ui.Widgets.Feedback.StatusSpinners as W;
 
 // Builds the status spinner example.
 // ## Parameters

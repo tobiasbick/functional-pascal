@@ -2,9 +2,10 @@
 
 program DiagnosticsWorkload;
 
-uses
-  System as Sys, System.Diagnostics as Diag, Diagnostics.Workloads as Work,
-  Diagnostics.Samples as Samples;
+uses Diagnostics.Samples as Samples;
+uses Diagnostics.Workloads as Work;
+uses System as Sys;
+uses System.Diagnostics as Diag;
 
 function Integer(Value: string; Minimum: int; Maximum: int): int;
 begin

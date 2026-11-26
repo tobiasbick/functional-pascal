@@ -3,9 +3,9 @@
 // Search ranking: word order, prefixes, typo forgiveness and exact numbers.
 unit FpasAmp.Library.Tests.SearchRanking;
 
-uses
-  FpasAmp.Library.Search.Matching as Matching,
-  System.Collections.Immutable as I, Xunit as X;
+uses FpasAmp.Library.Search.Matching as Matching;
+uses System.Collections.Immutable as I;
+uses Xunit as X;
 
 function Album(Title: string; Artist: string; Genre: string := ''): Matching.Document;
 begin

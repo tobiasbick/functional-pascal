@@ -85,7 +85,7 @@ public sealed partial class DiagnosticsWorkflowTests(DiagnosticsFixture fixture)
         using var child = new Debuggee("measurement-output-limit");
         await child.Compile("""
             program OutputFlood;
-            uses System as Sys, System.IO as IO, System.Text as Text, System.Threading as Threading;
+            uses System as Sys; uses System.IO as IO; uses System.Text as Text; uses System.Threading as Threading;
             begin
               const Bytes: array of byte := Text.Encoding.UTF8.GetBytes(new Sys.String(#233, 40000));
               IO.File.WriteAllText(args[0], Sys.Environment.ProcessId.ToString());

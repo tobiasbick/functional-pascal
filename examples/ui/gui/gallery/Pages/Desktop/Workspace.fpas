@@ -2,12 +2,20 @@
 
 unit GuiGallery.Pages.Desktop.Workspace;
 
-uses
-  GuiGallery.Pages.Desktop.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme,
-  Fpas.Ui.Widgets.Desktop.Dockspaces as Dock, Fpas.Ui.Widgets.Desktop.Toolbars as Tools, Fpas.Ui.Widgets.Collections.Trees as Tree,
-  Fpas.Ui.Widgets.Collections.ListItems as Item, Fpas.Ui.Widgets.Developer.LogConsoles as Log, Fpas.Ui.Widgets.Editors.PropertyInspectors as Property,
-  Fpas.Ui.Widgets.Motion.Motion as Text, Fpas.Ui.Widgets.Canvas.Canvases as Canvas, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Widgets.Collections.ListItems as Item;
+uses Fpas.Ui.Widgets.Collections.Trees as Tree;
+uses Fpas.Ui.Widgets.Desktop.Dockspaces as Dock;
+uses Fpas.Ui.Widgets.Desktop.Toolbars as Tools;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as Log;
+uses Fpas.Ui.Widgets.Editors.PropertyInspectors as Property;
+uses Fpas.Ui.Widgets.Motion.Motion as Text;
+uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+uses GuiGallery.Pages.Desktop.State as S;
+uses GuiGallery.Shared.Sections as G;
+uses System.Collections.Generic as Lists;
 
 const Titles: array of string := ['Scene tree', 'Assets', 'Viewport', 'Log', 'Inspector'];
 const Icons: array of string := ['', '', '', '', ''];

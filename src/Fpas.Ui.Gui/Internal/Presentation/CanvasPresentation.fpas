@@ -2,26 +2,28 @@
 
 unit Fpas.Ui.Gui.Internal.Presentation.CanvasPresentation;
 
-uses
-  Fpas.Ui.Widgets.Canvas.FormatBars as FormatBars,
-  Fpas.Ui.Widgets.Canvas.LiveCursors as LiveCursors,
-  Fpas.Ui.Widgets.Canvas.PresencePills as PresencePills,
-  Fpas.Ui.Widgets.Canvas.SelectionRings as SelectionRings,
-  Fpas.Ui.Widgets.Canvas.CanvasControls as CanvasControls,
-  Fpas.Ui.Widgets.Canvas.ResultCards as ResultCards,
-  Fpas.Ui.Widgets.Canvas.SelectionBars as SelectionBars,
-  Fpas.Ui.Widgets.Desktop.Toolbars as Toolbars,
-  Fpas.Ui.Widgets.Editors.NodeEditors as NodeEditors, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Media.MediaImages as Media,
-  Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Widgets.Canvas.FormatBar as FormatBarWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Canvas.LiveCursors as LiveCursorsWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Canvas.PresencePill as PresencePillWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Canvas.SelectionRing as SelectionRingWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Canvas.CanvasControls as CanvasControlsWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Canvas.ResultCard as ResultCardWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Canvas.SelectionBar as SelectionBarWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Desktop.Toolbar as ToolbarWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Editors.NodeEditor as NodeEditorWidget;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Widgets.Canvas.CanvasControls as CanvasControlsWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Canvas.FormatBar as FormatBarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Canvas.LiveCursors as LiveCursorsWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Canvas.PresencePill as PresencePillWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Canvas.ResultCard as ResultCardWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Canvas.SelectionBar as SelectionBarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Canvas.SelectionRing as SelectionRingWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Desktop.Toolbar as ToolbarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Editors.NodeEditor as NodeEditorWidget;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Canvas.CanvasControls as CanvasControls;
+uses Fpas.Ui.Widgets.Canvas.FormatBars as FormatBars;
+uses Fpas.Ui.Widgets.Canvas.LiveCursors as LiveCursors;
+uses Fpas.Ui.Widgets.Canvas.PresencePills as PresencePills;
+uses Fpas.Ui.Widgets.Canvas.ResultCards as ResultCards;
+uses Fpas.Ui.Widgets.Canvas.SelectionBars as SelectionBars;
+uses Fpas.Ui.Widgets.Canvas.SelectionRings as SelectionRings;
+uses Fpas.Ui.Widgets.Desktop.Toolbars as Toolbars;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as NodeEditors;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 
 // Presents canvas elements using their native adapters.
 // ## Type parameters

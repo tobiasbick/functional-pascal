@@ -9,7 +9,8 @@ Use a tree for nested nodes such as files and folders. Compose each group with B
 ```pascal
 unit Docs.Ui.DataDisplay.Tree;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.Trees as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.Trees as W;
 
 // Changes proposed by the source tree.
 public type Msg = variant

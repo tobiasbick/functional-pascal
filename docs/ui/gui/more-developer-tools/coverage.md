@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.Coverage;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.Coverages as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.Coverages as W;
 
 // Shows a coverage report.
 // ## Parameters

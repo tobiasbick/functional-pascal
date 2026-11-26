@@ -10,7 +10,8 @@ unit in the same control. Available in **GUI**.
 ```pascal
 unit Docs.Ui.SmartInputs.ScrubField;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.ScrubFields as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.ScrubFields as W;
 
 // Edits the corner radius.
 // ## Parameters

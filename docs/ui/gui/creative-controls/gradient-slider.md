@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CreativeControls.GradientSlider;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.GradientSliders as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.GradientSliders as W;
 
 // Shows a hue slider with a swatch.
 // ## Parameters

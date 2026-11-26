@@ -2,7 +2,9 @@
 
 unit GuiGallery.Pages.MoreCharts.Layout;
 
-uses GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses GuiGallery.Shared.Sections as G;
 
 // Builds the native gallery's full-width section row.
 // ## Type parameters

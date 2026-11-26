@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Inputs.RadioGroups;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // One positional choice in a radio group.
 public type Item = record

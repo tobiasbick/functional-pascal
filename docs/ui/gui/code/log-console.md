@@ -11,7 +11,8 @@ Available in **GUI** and [TUI](../../tui/developer/log-console.md).
 ```pascal
 unit Docs.Ui.Code.LogConsole;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.LogConsoles as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as W;
 
 // Displays build output.
 // ## Parameters

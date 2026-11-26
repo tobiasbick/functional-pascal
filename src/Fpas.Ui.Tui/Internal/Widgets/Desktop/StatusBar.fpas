@@ -2,11 +2,15 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar;
 
-uses
-  Fpas.Ui.Widgets.Desktop.StatusBars as Bars, Fpas.Ui.Widgets.Overlays.Menus as Menus,
-  Fpas.Ui.Styles as S, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as Bars;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // Resolves the shared status items into one terminal row and an optional divider.
 // ## Type parameters

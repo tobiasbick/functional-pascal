@@ -2,13 +2,16 @@
 
 unit GuiGallery.Pages.Pickers.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
-  Gallery.Shared.LanguagesExample as Sample, Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L, GuiGallery.Pages.Pickers.Widgets.DateRange as DateRange,
-  GuiGallery.Pages.Pickers.Widgets.Time as Time, GuiGallery.Pages.Pickers.Widgets.WheelsAndDial as WheelsAndDial,
-  GuiGallery.Pages.Pickers.Widgets.RulerAndHistogram as RulerAndHistogram;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Gallery.Shared.LanguagesExample as Sample;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Pickers.State as State;
+uses GuiGallery.Pages.Pickers.Widgets.DateRange as DateRange;
+uses GuiGallery.Pages.Pickers.Widgets.RulerAndHistogram as RulerAndHistogram;
+uses GuiGallery.Pages.Pickers.Widgets.Time as Time;
+uses GuiGallery.Pages.Pickers.Widgets.WheelsAndDial as WheelsAndDial;
+uses GuiGallery.Shared.Sections as G;
 
 // Shows the original CUI Pickers page.
 // ## Parameters

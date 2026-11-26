@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.Uptime;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.Uptimes as W, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.Uptimes as W;
+uses System as Sys;
 
 // Displays the latest availability history.
 // ## Parameters

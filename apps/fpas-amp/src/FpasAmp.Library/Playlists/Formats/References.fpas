@@ -3,7 +3,9 @@
 // Location normalization never opens media or contacts URI targets.
 unit FpasAmp.Library.Playlists.Formats.References;
 
-uses FpasAmp.Library.Persistence.Sql as Sql, System as Sys, System.IO as IO;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses System as Sys;
+uses System.IO as IO;
 
 // A normalized playlist reference, with a catalogue key only for host-local paths.
 public type Reference = record

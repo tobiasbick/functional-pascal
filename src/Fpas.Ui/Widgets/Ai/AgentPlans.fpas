@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Ai.AgentPlans;
 
-uses Fpas.Ui.Elements as E, System as Sys, Fpas.Ui.Widgets.Feedback.TaskStates as TaskStates;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.TaskStates as TaskStates;
+uses System as Sys;
 
 // One step in the plan.
 public type Step = record

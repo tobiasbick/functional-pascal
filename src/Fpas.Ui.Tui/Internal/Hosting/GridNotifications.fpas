@@ -2,10 +2,11 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.GridNotifications;
 
-uses
-  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
-  Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Mvu.Session as Runtime,
-  System.Collections.Generic as C;
+uses Fpas.Ui.Mvu.Session as Runtime;
+uses Fpas.Ui.TerminalExtensions.CellGrids as Grids;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses System.Collections.Generic as C;
 
 // Admits deferred size messages in order when the bounded host mailbox has space.
 // `TMsg` is the application message type, `Pending` the owner's backlog and `Post` its mailbox.

@@ -11,7 +11,9 @@ reopens the window there. Available in **GUI**.
 ```pascal
 unit Docs.Ui.AppChrome.Window;
 
-uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Windows as Windows;
+uses Fpas.Ui.Mvu.Application as Mvu;
 
 // Window actions of a document application.
 public type Msg = variant

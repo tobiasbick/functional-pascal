@@ -9,7 +9,8 @@ A select displays one model-owned choice in a single terminal row. Under **Compo
 ```pascal
 unit Docs.Tui.Inputs.Select;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Selects as S;
 
 // Builds a searchable language picker.
 // ## Parameters

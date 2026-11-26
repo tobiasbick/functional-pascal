@@ -3,10 +3,12 @@
 // Retained unavailable/paused views cannot prove that an old location disappeared.
 unit FpasAmp.Library.Metadata.Internal.Recovery;
 
-uses
-  FpasAmp.Library.Sources as S, FpasAmp.Library.Persistence.Sql as Sql,
-  FpasAmp.Library.Inventory.Internal.Directories as Directories,
-  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO;
+uses FpasAmp.Library.Inventory.Internal.Directories as Directories;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Sources as S;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.IO as IO;
 
 // Allows hash-based recovery only when known source policies/errors do not make
 // `Path` uncertain. `Connection` is the catalogue and `Sources` the current policy.

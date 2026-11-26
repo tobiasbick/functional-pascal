@@ -14,7 +14,9 @@ specific failure types the application can handle.
 ```pascal
 program ReadWorld;
 
-uses System as Sys, System.IO as IO, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
+uses System.IO as IO;
 
 begin
   try

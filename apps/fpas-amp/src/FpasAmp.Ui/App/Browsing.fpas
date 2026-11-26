@@ -3,10 +3,12 @@
 // Maps the three sidebar destinations and their nested pages to the shared catalogue.
 unit FpasAmp.Ui.App.Browsing;
 
-uses
-  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Navigation.Model as Nav,
-  FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
-  FpasAmp.Ui.Albums.Grid as Grid, FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Grid as Grid;
+uses FpasAmp.Ui.Albums.Model as AlbumModel;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses FpasAmp.Ui.App.Model as M;
+uses FpasAmp.Ui.Navigation.Model as Nav;
 
 // Returns the persisted route for the selected grid or track list in `Browser`.
 public function Destination(Browser: AlbumModel.State): Nav.Route;

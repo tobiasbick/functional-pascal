@@ -2,10 +2,11 @@
 
 unit FpasAmp.Ui.Podcasts.Browse;
 
-uses
-  FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Collections.TableRows as Rows,
-  FpasAmp.Ui.Collections.FilterOptions as Options,
-  System as Sys, System.Collections.Generic as C;
+uses FpasAmp.Ui.Collections.FilterOptions as Options;
+uses FpasAmp.Ui.Collections.TableRows as Rows;
+uses FpasAmp.Ui.Podcasts.Model as M;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 function Shows(Current: M.State; Subscriptions: array of M.Show): array of M.Show;
 begin

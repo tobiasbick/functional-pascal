@@ -2,11 +2,15 @@
 
 unit FpasAmp.Ui.TagEditor.SearchView;
 
-uses
-  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Ui.TagEditor.MusicBrainz as MB,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Inputs.TextFields as Fields,
-  Fpas.Ui.Widgets.Inputs.Selects as Select, System.Collections.Generic as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Inputs.Selects as Select;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+uses FpasAmp.Ui.TagEditor.Model as M;
+uses FpasAmp.Ui.TagEditor.MusicBrainz as MB;
+uses System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const Flow: L.Flow := new L.Flow(

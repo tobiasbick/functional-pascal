@@ -2,12 +2,11 @@
 
 unit GuiGallery.Shared.Update;
 
-uses
-  Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Gui.Toasts as Toasts,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  Fpas.Ui.Widgets.Theming.Themes as Themes,
-  GuiGallery.Shared.State as S;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses GuiGallery.Shared.State as S;
 
 // Applies a message to this feature and describes its effects.
 // ## Parameters

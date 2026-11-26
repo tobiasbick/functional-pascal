@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Files.AvatarUploads;
 
-uses Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
 
 // Extensions accepted by CUI for avatar image drops.
 public const ImageExtensions: string := 'png;jpg;jpeg;bmp;gif;tga';

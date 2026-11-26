@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Motion.Motion;
 
-uses Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Built-in CUI typeface for text and text effects.
 public type Font = enum: byte

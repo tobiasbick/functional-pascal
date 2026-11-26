@@ -3,9 +3,13 @@
 // Groups artists or genres while preserving the catalogue order of their releases.
 unit FpasAmp.Ui.Albums.Groups;
 
-uses
-  FpasAmp.Library.Albums.Model as Library, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, System as Sys, System.Collections.Generic as C,
-  System.Collections.Immutable as I, System.Text as Text, System.Linq as Linq;
+uses FpasAmp.Library.Albums.Model as Library;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Linq as Linq;
+uses System.Text as Text;
 
 // Collection headers and the releases backing their artwork and drill-down.
 public type Catalog = record

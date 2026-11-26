@@ -10,7 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.TextAndDisplay.Icon;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Display.Icons as W, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Display.Icons as W;
+uses System as Sys;
 
 // Draws the native file icon.
 // ## Returns

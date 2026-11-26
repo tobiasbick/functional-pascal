@@ -2,12 +2,20 @@
 
 unit Fpas.Ui.Internal.Validation.Charts.InstrumentRules;
 
-uses
-  Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR, Fpas.Ui.Internal.Validation.Core.ChartChecks as ChartRules,
-  Fpas.Ui.Internal.Validation.Controls.FeedbackRules as Feedback, Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks,
-  Fpas.Ui.Widgets.Developer.JsonViews as JsonViews, Fpas.Ui.Widgets.Display.Readouts as Readouts, Fpas.Ui.Widgets.Display.DotDisplays as Displays,
-  Fpas.Ui.Widgets.Charts.DotCharts as Dots, Fpas.Ui.Widgets.Charts.EventTracks as Tracks, Fpas.Ui.Widgets.Charts.Charts as Charts,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Styles as Styles, System as Sys;
+uses Fpas.Ui.Internal.Validation.Controls.FeedbackRules as Feedback;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as ChartRules;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Widgets.Charts.DotCharts as Dots;
+uses Fpas.Ui.Widgets.Charts.EventTracks as Tracks;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks;
+uses Fpas.Ui.Widgets.Developer.JsonViews as JsonViews;
+uses Fpas.Ui.Widgets.Display.DotDisplays as Displays;
+uses Fpas.Ui.Widgets.Display.Readouts as Readouts;
+uses System as Sys;
 
 // Validates a native code block.
 // ## Parameters

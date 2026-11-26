@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Ai.ContextMeter;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.ContextMeters as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.ContextMeters as W;
 
 // Shows the current context usage.
 // ## Parameters

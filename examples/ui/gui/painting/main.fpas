@@ -2,9 +2,11 @@
 
 program NativePaintingExample;
 
-uses
-  NativePainting.State as S, NativePainting.Update as Update, NativePainting.View as View,
-  Fpas.Ui.Gui.Desktop as Gui, System as Sys;
+uses Fpas.Ui.Gui.Desktop as Gui;
+uses NativePainting.State as S;
+uses NativePainting.Update as Update;
+uses NativePainting.View as View;
+uses System as Sys;
 
 begin
   const Args: array of string := Sys.Environment.GetCommandLineArgs();

@@ -3,9 +3,9 @@
 // Toolbar edits stay local; the album slice derives the shown albums from them.
 unit FpasAmp.Ui.Albums.Toolbar.Update;
 
-uses
-  FpasAmp.Ui.Albums.Toolbar.Model as M, FpasAmp.Library.Search.Matching as Matching,
-  System as Sys;
+uses FpasAmp.Library.Search.Matching as Matching;
+uses FpasAmp.Ui.Albums.Toolbar.Model as M;
+uses System as Sys;
 
 function Searching(Text: string): bool;
 begin

@@ -2,11 +2,14 @@
 
 unit GuiDocCaptures.Pages.AiAndMotion;
 
-uses
-  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
-  GuiGallery.App.State as Gallery, GuiGallery.Pages.Ai.State as Ai,
-  GuiGallery.Pages.Motion.State as Motion, Fpas.Ui.Widgets.Ai.Composers as Composer,
-  Fpas.Ui.Gui.Application as Gui, System as Sys;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Widgets.Ai.Composers as Composer;
+uses GuiDocCaptures.Rendering.Presented as Presented;
+uses GuiDocCaptures.Rendering.Regions as Regions;
+uses GuiGallery.App.State as Gallery;
+uses GuiGallery.Pages.Ai.State as Ai;
+uses GuiGallery.Pages.Motion.State as Motion;
+uses System as Sys;
 
 procedure RequireOpen(Session: Gui.Session<Gallery.Msg>; Id: string);
 begin

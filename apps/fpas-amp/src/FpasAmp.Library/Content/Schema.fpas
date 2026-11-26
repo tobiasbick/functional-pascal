@@ -3,7 +3,8 @@
 // Durable, indexed pending work avoids polling previously processed files.
 unit FpasAmp.Library.Content.Schema;
 
-uses FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses Microsoft.Data.Sqlite as Db;
 
 // Creates the pending queue/triggers inside catalogue `Transaction` on `Connection`.
 // `Populate` initializes pending work when upgrading an existing index.

@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupPlacement;
 
-uses Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses System as Sys;
 
 // Places a popup at its trigger and flips it when the opposite side has more room.
 // ## Parameters

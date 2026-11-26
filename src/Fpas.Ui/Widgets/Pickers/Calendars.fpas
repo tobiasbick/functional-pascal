@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Pickers.Calendars;
 
-uses Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
 
 // Gets the stable identity of a day cell.
 // ## Parameters

@@ -3,9 +3,10 @@
 // Explicit user ratings have a durable lifetime independent of imported tags.
 unit FpasAmp.Library.UserData.Ratings;
 
-uses
-  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.Threading as T;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Threading as T;
 
 // Persists `Value` (one through ten, or null to clear) for existing UUID `Id`.
 // `Connection` is an open user database. Unknown IDs fail instead of creating detached ratings.

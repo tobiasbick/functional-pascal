@@ -2,7 +2,9 @@
 
 unit DocExamples.Diagnostics;
 
-uses DocExamples.Model as M, System as S, System.Text.Json as J;
+uses DocExamples.Model as M;
+uses System as S;
+uses System.Text.Json as J;
 
 // The compiler error count, expectation result, and first reported error.
 public type Checked = record

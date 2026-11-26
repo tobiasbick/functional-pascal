@@ -2,29 +2,28 @@
 
 unit GallerySelectionContract;
 
-uses
-  GuiGallery.App.Update as GalleryUpdate,
-  GuiGallery.Shared.State as SliceShared,
-  GuiGallery.Pages.Selection.State as SliceSelection,
-  GuiGallery.App.State as State,
-  GuiGallery.App.View as View,
-  Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Mvu.Application as App,
-  Fpas.Ui.Widgets.Inputs.Checkboxes as Checkboxes,
-  Fpas.Ui.Widgets.Inputs.Switches as Switches,
-  Fpas.Ui.Widgets.Inputs.RadioButtons as Radio,
-  Fpas.Ui.Widgets.Inputs.RadioGroups as Radios,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Inputs.RadioCards as Cards,
-  Fpas.Ui.Widgets.Inputs.Sliders as S,
-  Fpas.Ui.Widgets.Inputs.RangeSliders as R,
-  Fpas.Ui.Widgets.Inputs.Chips as Chips,
-  Fpas.Ui.Widgets.Inputs.Ratings as Ratings,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Validation as V,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as App;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Inputs.Checkboxes as Checkboxes;
+uses Fpas.Ui.Widgets.Inputs.Chips as Chips;
+uses Fpas.Ui.Widgets.Inputs.RadioButtons as Radio;
+uses Fpas.Ui.Widgets.Inputs.RadioCards as Cards;
+uses Fpas.Ui.Widgets.Inputs.RadioGroups as Radios;
+uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
+uses Fpas.Ui.Widgets.Inputs.Ratings as Ratings;
+uses Fpas.Ui.Widgets.Inputs.Sliders as S;
+uses Fpas.Ui.Widgets.Inputs.Switches as Switches;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as GalleryUpdate;
+uses GuiGallery.App.View as View;
+uses GuiGallery.Pages.Selection.State as SliceSelection;
+uses GuiGallery.Shared.State as SliceShared;
+uses System as Sys;
 
 procedure Check(Value: bool; Reason: string);
 begin

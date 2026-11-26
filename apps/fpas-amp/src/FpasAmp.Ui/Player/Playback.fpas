@@ -3,10 +3,16 @@
 // The GUI submits transport requests in order; file and device work runs on one worker.
 unit FpasAmp.Ui.Player.Playback;
 
-uses
-  FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks, Fpas.Media.Audio as Audio, Fpas.Ui.Mvu.Application as A,
-  System as Sys, System.Threading as T, System.Threading.Channels as Channels,
-  System.Threading.Tasks as Tasks, System.IO as IO, FpasAmp.Ui.Podcasts.Downloads as Downloads;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Mvu.Application as A;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Player.Model as M;
+uses FpasAmp.Ui.Podcasts.Downloads as Downloads;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
 
 // Mailbox shared by the owner-thread controller and its lifetime subscriptions.
 public type Connection = record

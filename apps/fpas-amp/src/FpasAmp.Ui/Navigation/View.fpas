@@ -3,14 +3,23 @@
 // Existing CUI navigation, scrolling and empty-state widgets compose the app shell.
 unit FpasAmp.Ui.Navigation.View;
 
-uses
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Navigation.Model as M,
-  FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Library.Sources as Sources,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
-  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
-  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Styles as Styles,
-  Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.IO as IO,
-  System.Collections.Generic as C, FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Podcasts.Model as Podcasts;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.Widgets.Containers.EmptyStates as Empty;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Navigation.Navigation as Nav;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses FpasAmp.Library.Playlists.Model as Lists;
+uses FpasAmp.Library.Sources as Sources;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Navigation.Model as M;
+uses FpasAmp.Ui.Podcasts.Model as Podcasts;
+uses FpasAmp.Ui.Radio.Model as Radio;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
 
 // Desktop sidebar width, in logical units.
 public const Width: int := 224;

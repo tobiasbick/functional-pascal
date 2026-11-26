@@ -72,7 +72,7 @@ diagnostics go to stderr.
   quote escaping and character codes. Normalize line endings in multiline
   strings to LF and preserve their spaces and tabs.
 - Preserve all tokens, explicit parentheses, named endings, semicolons,
-  declaration/import order and scope boundaries. Do not add or remove `begin`.
+  declaration order and scope boundaries. Do not add or remove `begin`.
 - Put routine bodies, control bodies, record/variant/enum/protocol members and
   case arms on structural lines. Bodies indent one level. A case statement's
   arm body indents another level below its `when`/`else` header.
@@ -106,8 +106,13 @@ collection, validation, processing and reporting. Keep related bindings and
 operations together. The formatter preserves these authored sections rather
 than inferring their meaning.
 
-Import and formal parameter lists retain authored line groups. Expanded lists
-start their contents on a new line indented two spaces from the owning line.
+Each `uses` statement occupies its own line. Sort by the full import target,
+using ordinal comparison. Put `Std` and `Std.*` first, then leave one blank
+line before the other imports when both groups are present. An import can
+exceed the width target. Comments attached to an import move with it.
+
+Formal parameter lists retain authored line groups. Expanded lists start
+their contents on a new line indented two spaces from the owning line.
 Closing delimiters return to the owning indentation. Calls, indexes and array
 literals also expand automatically when over the width target. Nested lists are
 measured at their structural indentation. A multiline element expands its parent;
@@ -125,7 +130,8 @@ A single-element array branch stays on one line if the element is single-line,
 the array fits the width target, and it has no internal comments or blank lines.
 Case expressions use structural arm lines.
 
-All `//` comments retain their order and text, except trailing whitespace.
+All `//` comments retain their text, except trailing whitespace. Comments
+outside the import block retain their order.
 Standalone comments stay before the following token; trailing comments stay on
 the preceding code line. A comment after `then` or `do` can stay on that clause's
 line. Contiguous declaration documentation stays attached; an authored blank

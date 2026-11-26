@@ -8,7 +8,7 @@ public sealed class AsyncExecutionTests
     public Task Tasks_value_tasks_generics_records_and_async_lambdas_execute()
         => ProgramExecution.Output("""
             async program Asynchronous;
-            uses System.Console as Console, System.Threading.Tasks as Tasks;
+            uses System.Console as Console; uses System.Threading.Tasks as Tasks;
             async function Echo<T>(Value: T): Tasks.Task<T>;
             begin await Tasks.Task.Delay(1); return Value; end function;
             type Box<T> = record
@@ -42,7 +42,7 @@ public sealed class AsyncExecutionTests
     public Task Await_preserves_expression_order_branches_and_loops()
         => ProgramExecution.Output("""
             async program Expressions;
-            uses System.Console as Console, System.Threading.Tasks as Tasks;
+            uses System.Console as Console; uses System.Threading.Tasks as Tasks;
             async function Number(Value: int): Tasks.Task<int>;
             begin await Tasks.Task.Delay(1); return Value; end function;
             function Mark(Value: int): int;
@@ -74,8 +74,8 @@ public sealed class AsyncExecutionTests
     public Task Async_assignments_mutate_the_original_struct_storage()
         => ProgramExecution.Output("""
             async program StructAssignments;
-            uses System as Sys, System.Console as Console, System.Drawing as Drawing,
-              System.Numerics as Numerics, System.Threading.Tasks as Tasks;
+            uses System as Sys; uses System.Console as Console; uses System.Drawing as Drawing;
+              uses System.Numerics as Numerics; uses System.Threading.Tasks as Tasks;
 
             async function Update(Gate: Tasks.Task<int>): Tasks.Task;
             begin
@@ -109,7 +109,7 @@ public sealed class AsyncExecutionTests
     public Task Await_keeps_the_original_generic_reference_receiver()
         => ProgramExecution.Output("""
             async program GenericReceiver;
-            uses System.Console as Console, System.Collections.Generic as C, System.Threading.Tasks as Tasks;
+            uses System.Console as Console; uses System.Collections.Generic as C; uses System.Threading.Tasks as Tasks;
 
             async function Update<T>(Original: T; Replacement: T; Gate: Tasks.Task<int>): Tasks.Task;
             where T: class, C.IList<int>;
@@ -143,7 +143,7 @@ public sealed class AsyncExecutionTests
     public Task Await_in_catch_finally_and_contracts_preserves_cleanup_and_results()
         => ProgramExecution.Output("""
             async program Cleanup;
-            uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks;
+            uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
             async function Work(State: array of int; Mode: int): Tasks.Task<int>;
             requires Mode >= 0;
             ensures (Returned: int): Returned = State[0];
@@ -177,7 +177,7 @@ public sealed class AsyncExecutionTests
     public Task Filters_search_before_async_unwind_and_cleanup_failures_restart_search()
         => ProgramExecution.Output("""
             async program FilterOrdering;
-            uses System as Sys, System.Console as Console, System.IO as IO, System.Threading.Tasks as Tasks;
+            uses System as Sys; uses System.Console as Console; uses System.IO as IO; uses System.Threading.Tasks as Tasks;
 
             function Filter(State: array of int; Throwing: bool): bool;
             begin

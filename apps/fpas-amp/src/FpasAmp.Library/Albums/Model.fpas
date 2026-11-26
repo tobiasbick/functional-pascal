@@ -3,7 +3,10 @@
 // Detached album headers; image bytes are requested independently for visible tiles.
 unit FpasAmp.Library.Albums.Model;
 
-uses System as Sys, System.Collections.Immutable as I, System.Security.Cryptography as Crypto, System.Text as Text;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.Security.Cryptography as Crypto;
+uses System.Text as Text;
 
 // A named catalogue group that contains tracks from a release.
 public type Membership = record

@@ -2,11 +2,16 @@
 
 unit NativeApi.View;
 
-uses
-  NativeApi.State as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Charts.DotCharts as Dots,
-  Fpas.Ui.Widgets.Charts.EventTracks as Events, Fpas.Ui.Widgets.Developer.TraceViewers as Trace,
-  Fpas.Ui.Widgets.Actions.Buttons as Buttons, System.Globalization as Culture, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Widgets.Charts.DotCharts as Dots;
+uses Fpas.Ui.Widgets.Charts.EventTracks as Events;
+uses Fpas.Ui.Widgets.Developer.TraceViewers as Trace;
+uses NativeApi.State as S;
+uses System as Sys;
+uses System.Globalization as Culture;
 
 // Builds native widget examples without a custom layout or interaction engine.
 // ## Parameters

@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Planning.WeekCalendars;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses System as Sys;
 
 // One timed event.
 public type Appointment = record

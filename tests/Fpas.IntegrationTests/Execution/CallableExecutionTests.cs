@@ -8,7 +8,7 @@ public sealed class CallableExecutionTests
     public Task Named_routines_callable_parameters_returns_and_both_lambda_bodies_execute()
         => ProgramExecution.Output("""
             program Functions;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             function Double(Value: int): int;
             begin return Value * 2; end function;
             function Apply(Transform: function(int): int; Value: int): int;
@@ -62,7 +62,7 @@ public sealed class CallableExecutionTests
     public Task Loop_captures_keep_iteration_values_and_fresh_local_cells()
         => ProgramExecution.Output("""
             program Iterations;
-            uses System as Sys, System.Collections.Generic as C, System.Console as Console;
+            uses System as Sys; uses System.Collections.Generic as C; uses System.Console as Console;
             begin
               const Functions: C.List<Sys.Func<int>> := new C.List<Sys.Func<int>>();
               for Index: int := 1 to 3 do
@@ -83,7 +83,7 @@ public sealed class CallableExecutionTests
     public Task Explicit_generic_Linq_calls_bind_typed_callbacks_and_preserve_laziness()
         => ProgramExecution.Output("""
             program Pipeline;
-            uses System.Linq.Enumerable as Seq, System.Collections.Generic as C, System.Console as Console;
+            uses System.Linq.Enumerable as Seq; uses System.Collections.Generic as C; uses System.Console as Console;
             function Label(Value: int): string;
             begin return 'item:' + Value.ToString(); end function;
             begin
@@ -110,7 +110,7 @@ public sealed class CallableExecutionTests
     public Task Delegate_exceptions_and_lambdas_declared_in_finally_use_their_own_control_flow()
         => ProgramExecution.Output("""
             program Cleanup;
-            uses System as Sys, System.IO as IO, System.Console as Console;
+            uses System as Sys; uses System.IO as IO; uses System.Console as Console;
             begin
               const Fail: procedure() := procedure() begin
                 using const Reader: IO.StringReader := new IO.StringReader('text');
@@ -136,7 +136,7 @@ public sealed class CallableExecutionTests
     public Task Lambda_arithmetic_uses_its_lexical_checked_context()
         => ProgramExecution.Output("""
             program Arithmetic;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             begin
               const Wrap: function(int): int := unchecked(function(Value: int): int => Value + 1);
               const Check: function(int): int := function(Value: int): int => Value + 1;

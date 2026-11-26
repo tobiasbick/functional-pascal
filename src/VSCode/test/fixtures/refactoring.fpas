@@ -2,7 +2,9 @@
 
 program RefactoringProbe;
 
-uses System.Text as Unused, System.Console as Console, RefactoringDependency as Keep;
+uses RefactoringDependency as Keep;
+uses System.Console as Console;
+uses System.Text as Unused;
 
 var Trace: int := 0;
 

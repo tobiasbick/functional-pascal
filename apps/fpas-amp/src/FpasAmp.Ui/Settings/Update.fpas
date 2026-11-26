@@ -3,14 +3,19 @@
 // Settings slice update: edits stay synchronous; index clearing runs in the background.
 unit FpasAmp.Ui.Settings.Update;
 
-uses
-  FpasAmp.Ui.Settings.Model as M, FpasAmp.Ui.Settings.Editing as Editing,
-  FpasAmp.Ui.Settings.InventoryState as State, FpasAmp.Library.Sources as Sources,
-  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
-  FpasAmp.Library.Inventory.Monitoring as Monitoring,
-  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Gui.Cui.CuiDesktop as Desktop, System as Sys,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Ui.Gui.Cui.CuiDesktop as Desktop;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses FpasAmp.Library.Inventory.Model as Inventory;
+uses FpasAmp.Library.Inventory.Monitoring as Monitoring;
+uses FpasAmp.Library.Inventory.Progress as Progress;
+uses FpasAmp.Library.Sources as Sources;
+uses FpasAmp.Ui.Settings.Editing as Editing;
+uses FpasAmp.Ui.Settings.InventoryState as State;
+uses FpasAmp.Ui.Settings.Model as M;
+uses System as Sys;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 function Clear(Library: Monitoring.Session; Target: string): Mvu.Command<M.Msg>;
 begin

@@ -2,10 +2,12 @@
 
 unit GuiDocCaptures.Rendering.Regions;
 
-uses
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  GuiGallery.App.State as Gallery, System as Sys, System.IO as IO,
-  System.Collections.Generic as Generic;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses GuiGallery.App.State as Gallery;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
+uses System.IO as IO;
 
 // Adjustments to the default crop margins for native captions and panel edges.
 public type Insets = record

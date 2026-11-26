@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Overlays.HoverCards;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // Placement, sizing and input settings for a native hover card.
 public type Options = record

@@ -2,7 +2,31 @@
 
 unit Fpas.Ui.Gui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Gui.Internal.Hosting.ThemeApplication as ThemeApplication, Fpas.Ui.Gui.Internal.Hosting.KeyBindings as KeyBindings, Fpas.Ui.Gui.Shortcuts as Shortcuts, Fpas.Ui.Gui.Internal.Hosting.FrameControls as FrameControls, Fpas.Ui.Gui.Internal.Hosting.Requests as Requests, Fpas.Ui.Gui.Internal.Layout.LayoutValidation as LayoutValidation, Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing, Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip as Tooltip, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Internal.Widgets.Feedback.Toast as Toast, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Presentation.Presentation as P, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Input.ModalFocus as F, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Collections.Generic as Generic, System.Threading.Tasks as Tasks, Fpas.Ui.Gui.Windows as Windows;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Hosting.FrameControls as FrameControls;
+uses Fpas.Ui.Gui.Internal.Hosting.KeyBindings as KeyBindings;
+uses Fpas.Ui.Gui.Internal.Hosting.Requests as Requests;
+uses Fpas.Ui.Gui.Internal.Hosting.ThemeApplication as ThemeApplication;
+uses Fpas.Ui.Gui.Internal.Input.ModalFocus as F;
+uses Fpas.Ui.Gui.Internal.Layout.LayoutValidation as LayoutValidation;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing;
+uses Fpas.Ui.Gui.Internal.Presentation.Presentation as P;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Toast as Toast;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip as Tooltip;
+uses Fpas.Ui.Gui.Shortcuts as Shortcuts;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Gui.Windows as Windows;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Session as Runtime;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
+uses System.Threading.Tasks as Tasks;
 
 // Takes ownership of a native window and drives shared MVU transitions on its creating thread.
 //

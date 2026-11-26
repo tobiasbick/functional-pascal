@@ -2,7 +2,23 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.Interaction;
 
-uses Fpas.Ui.Tui.Internal.Hosting.KeyRouting as KeyRoutes, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.TerminalExtensions.CellGrids as Grids;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Hosting.KeyRouting as KeyRoutes;
+uses Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation;
+uses Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Layout.ScrollViews as V;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
 
 // Owner-thread interaction state used to route input against a presented scene.
 // ## Type parameters

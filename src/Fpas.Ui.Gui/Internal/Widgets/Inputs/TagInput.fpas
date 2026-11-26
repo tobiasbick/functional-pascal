@@ -2,10 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.TagInput;
 
-uses
-  Fpas.Ui.Widgets.Inputs.TagInputs as T, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs,
-  Fpas.Ui.Gui.Cui as Cui, System as Sys;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Inputs.TagInputs as T;
+uses System as Sys;
 
 // Draws a native tag input and publishes changes and remove actions.
 //

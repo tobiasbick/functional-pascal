@@ -2,15 +2,25 @@
 
 unit FpasAmp.UiTests.MusicBrainz;
 
-uses
-  FpasAmp.Ui.TagEditor.MusicBrainz as MB, FpasAmp.Library.TagEditing.Fields as Fields,
-  FpasAmp.Ui.TagEditor.MusicBrainzTags as Tags, MetaBrainz.MusicBrainz.Interfaces.Entities as E,
-  FpasAmp.Ui.TagEditor.CustomTags as Custom, FpasAmp.Ui.TagEditor.Model as Editor,
-  FpasAmp.Ui.TagEditor.Changes as Changes, FpasAmp.Ui.Providers.RequestPacing as Pacing,
-  FpasAmp.Library.TagEditing.Files as Files, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.UiTests.ProviderHttp as Server,
-  System as Sys, System.Net as Net, System.Net.Http as Http, System.Net.Sockets as Sockets,
-  System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.TagEditing.Fields as Fields;
+uses FpasAmp.Library.TagEditing.Files as Files;
+uses FpasAmp.Ui.Providers.RequestPacing as Pacing;
+uses FpasAmp.Ui.TagEditor.Changes as Changes;
+uses FpasAmp.Ui.TagEditor.CustomTags as Custom;
+uses FpasAmp.Ui.TagEditor.Model as Editor;
+uses FpasAmp.Ui.TagEditor.MusicBrainz as MB;
+uses FpasAmp.Ui.TagEditor.MusicBrainzTags as Tags;
+uses FpasAmp.UiTests.ProviderHttp as Server;
+uses MetaBrainz.MusicBrainz.Interfaces.Entities as E;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.Net as Net;
+uses System.Net.Http as Http;
+uses System.Net.Sockets as Sockets;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
+uses Xunit as X;
 
 // Checks the provider and tag editor contract against scripted MusicBrainz HTTP responses.
 public type MusicBrainzTests = record

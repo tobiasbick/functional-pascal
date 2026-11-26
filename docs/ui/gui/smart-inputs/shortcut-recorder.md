@@ -10,7 +10,8 @@ shortcut. Available in **GUI**.
 ```pascal
 unit Docs.Ui.SmartInputs.ShortcutRecorder;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as W;
 
 // Supplies a command-palette shortcut for the initial model.
 // ## Returns

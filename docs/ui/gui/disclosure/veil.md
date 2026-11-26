@@ -11,8 +11,8 @@ Use a veil to visually cover a picture or spoiler until the user reveals it. Ava
 ```pascal
 unit Docs.Ui.Disclosure.Veil;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.Veils as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Veils as W;
 
 // Builds the veil example.
 // ## Parameters

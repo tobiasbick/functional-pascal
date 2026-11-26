@@ -9,7 +9,8 @@ Use a table for a collection with columns, optional sorting and row selection. T
 ```pascal
 unit Docs.Ui.DataDisplay.Table;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.Tables as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.Tables as W;
 
 // Messages proposed by a sort header or selectable row.
 public type Msg = variant

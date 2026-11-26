@@ -20,7 +20,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Contracts.fpas"), """
             unit Demo.Contracts;
-            uses System as Sys, Demo as D, System.Threading.Tasks as Tasks, System.ComponentModel as Metadata;
+            uses System as Sys; uses Demo as D; uses System.Threading.Tasks as Tasks; uses System.ComponentModel as Metadata;
             public var Disposals: int := 0;
             [Metadata.DescriptionAttribute('source interface')]
             public type IRoot<T> = protocol
@@ -98,7 +98,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
-            uses Demo.Contracts as C, System as Sys, System.Threading.Tasks as Tasks;
+            uses Demo.Contracts as C; uses System as Sys; uses System.Threading.Tasks as Tasks;
             public type Local = record implements C.IRoot<string>
               public Value: string;
               public function Read(): string; begin return self.Value; end function;

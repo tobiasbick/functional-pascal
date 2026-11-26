@@ -10,7 +10,8 @@ whether the bedtime estimate is above or below the threshold. Available in **GUI
 ```pascal
 unit Docs.Ui.Instruments.DotDisplay;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Display.DotDisplays as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Display.DotDisplays as W;
 
 // Displays the status at bedtime.
 // ## Parameters

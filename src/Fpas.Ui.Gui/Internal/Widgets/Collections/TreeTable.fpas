@@ -2,12 +2,20 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Collections.TreeTable;
 
-uses
-  Fpas.Ui.Widgets.Collections.TreeTables as T, Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Widgets.Collections.DataGrid as G,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Cui.Widgets.Overlays as CuiOverlays, Fpas.Ui.Widgets.Overlays.Menus as M,
-  Fpas.Ui.Gui.Internal.Widgets.Overlays.Menu as MenuWidget, System as Sys,
-  System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections;
+uses Fpas.Ui.Gui.Cui.Widgets.Overlays as CuiOverlays;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Gui.Internal.Widgets.Collections.DataGrid as G;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.Menu as MenuWidget;
+uses Fpas.Ui.Widgets.Collections.DataGrids as D;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Collections.TreeTables as T;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Draws an indented native table cell.
 // ## Type parameters

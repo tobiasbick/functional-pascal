@@ -82,7 +82,7 @@ public sealed class SemanticConstructTests
     {
         const string source = """
             program Infrastructure;
-            uses System as S, System.Timers as Timers, System.Threading.Tasks as Tasks;
+            uses System as S; uses System.Timers as Timers; uses System.Threading.Tasks as Tasks;
             [S.ObsoleteAttribute('Example', DiagnosticId := 'ExampleCode')]
             procedure Handler(Sender: object?; Args: Timers.ElapsedEventArgs);
             begin end procedure;

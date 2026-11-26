@@ -32,8 +32,10 @@ Reference `Fpas.Ui.Tui` in the application project. This program opens a single 
 ```pascal
 program FirstTerminal;
 
-uses Fpas.Ui.Tui.Host as Tui, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Tui.Host as Tui;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
 
 function Update(Model: int; Message: int): Mvu.Transition<int, int>;
 begin

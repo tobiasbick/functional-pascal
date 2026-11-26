@@ -9,7 +9,8 @@ zoom and adjust the iteration limit.
 ```pascal
 unit Docs.Tui.Widgets.CellGrid;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.TerminalExtensions.CellGrids as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.TerminalExtensions.CellGrids as W;
 
 // Builds the cell grid example.
 // ## Parameters

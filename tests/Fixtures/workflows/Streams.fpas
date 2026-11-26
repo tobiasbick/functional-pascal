@@ -2,10 +2,13 @@
 
 async program WorkflowStreams;
 
-uses
-  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Layers as L, Fpas.Execution.Workflows.Streams as Streams,
-  System as Sys, System.Collections.Generic as C, System.Threading as T,
-  System.Threading.Tasks as Tasks;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Execution.Workflows.Layers as L;
+uses Fpas.Execution.Workflows.Streams as Streams;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 procedure Check(Condition: bool; Message: string);
 begin

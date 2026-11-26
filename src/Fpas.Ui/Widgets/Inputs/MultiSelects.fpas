@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Inputs.MultiSelects;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Selects as S;
 
 // Presentation and input options for a multi-select.
 public type Options = record

@@ -2,10 +2,12 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerListing;
 
-uses
-  Fpas.Ui.Widgets.Files.FileListings as F, Fpas.Ui.Widgets.Files.FilePickers as Picker,
-  System as Sys, System.Collections.Generic as C, System.IO as IO,
-  System.IO.Enumeration.FileSystemName as Glob;
+uses Fpas.Ui.Widgets.Files.FileListings as F;
+uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+uses System.IO.Enumeration.FileSystemName as Glob;
 
 const Slash: char := #47;
 const Backslash: char := #92;

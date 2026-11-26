@@ -2,12 +2,11 @@
 
 unit GuiGallery.Pages.Actions.Update;
 
-uses
-  Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Widgets.Actions.StatusButtons as Work,
-  Fpas.Ui.Widgets.Conversation.Reactions as React,
-  GuiGallery.Pages.Actions.State as S,
-  GuiGallery.Pages.Actions.Commands as Commands;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Work;
+uses Fpas.Ui.Widgets.Conversation.Reactions as React;
+uses GuiGallery.Pages.Actions.Commands as Commands;
+uses GuiGallery.Pages.Actions.State as S;
 
 function ChangeReaction(Items: array of React.Item; Index: int; Value: React.Item): array of React.Item;
 begin

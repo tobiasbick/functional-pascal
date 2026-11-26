@@ -38,7 +38,7 @@ public sealed class CompilerCliTests
         var source = """
             // The comment deliberately contains 'quotes' and unused tokens.
             program Strings;
-            uses System.Console as Console, System.String as Text;
+            uses System.Console as Console; uses System.String as Text;
             begin
               const Message: string := Text.Concat('It''s ', Text.Concat('FPAS ', '😀'));
               const Number: int := 12_345;

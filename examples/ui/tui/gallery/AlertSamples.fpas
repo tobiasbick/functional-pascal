@@ -2,9 +2,11 @@
 
 unit TuiGallery.AlertSamples;
 
-uses
-  Gallery.Shared.Strings as Strings, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Feedback.Alerts as A;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Feedback.Alerts as A;
+uses Gallery.Shared.Strings as Strings;
 
 // Shows the CUI Feedback examples in a terminal column.
 // ## Type parameters

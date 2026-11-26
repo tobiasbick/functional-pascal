@@ -2,9 +2,16 @@
 
 unit GuiGallery.Pages.MoreDeveloper.Update;
 
-uses
-  GuiGallery.Pages.MoreDeveloper.State as M, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Developer.RegexTesters as R, Fpas.Ui.Widgets.Developer.RequestBars as H, Fpas.Ui.Widgets.Developer.KeyValueEditors as K, Fpas.Ui.Widgets.Developer.ApiExplorers as A, Fpas.Ui.Widgets.Developer.FeatureFlagEditors as F, Fpas.Ui.Widgets.Charts.TimeHistograms as G, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
+uses Fpas.Ui.Widgets.Charts.TimeHistograms as G;
+uses Fpas.Ui.Widgets.Developer.ApiExplorers as A;
+uses Fpas.Ui.Widgets.Developer.FeatureFlagEditors as F;
+uses Fpas.Ui.Widgets.Developer.KeyValueEditors as K;
+uses Fpas.Ui.Widgets.Developer.RegexTesters as R;
+uses Fpas.Ui.Widgets.Developer.RequestBars as H;
+uses GuiGallery.Pages.MoreDeveloper.State as M;
+uses System.Collections.Generic as Lists;
 
 function Request(Model: M.Model; Value: H.Event): M.Model;
 begin

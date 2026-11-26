@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Overlays.Veils;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
 
 // Appearance and interaction settings for a native veil.
 public type Options = record

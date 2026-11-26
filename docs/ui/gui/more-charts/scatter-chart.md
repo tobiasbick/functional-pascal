@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.ScatterChart;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.ScatterCharts as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.ScatterCharts as W;
 
 // Builds the scatter chart example.
 // ## Parameters

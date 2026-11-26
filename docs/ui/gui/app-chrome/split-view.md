@@ -10,7 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.AppChrome.SplitView;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Desktop.SplitViews as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Desktop.SplitViews as W;
 
 // Shows two panes at the current split ratio.
 // ## Parameters

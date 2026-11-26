@@ -50,7 +50,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Types;
-            uses Demo.Models as M, Shared as S, System as Sys, System.Threading.Tasks as Tasks;
+            uses Demo.Models as M; uses Shared as S; uses System as Sys; uses System.Threading.Tasks as Tasks;
             public const IntegerType: Sys.Type := typeof(int);
             type Hidden = record public Value: int := S.Log.Mark(); end record;
             public function Snapshot(): array of Sys.Type;

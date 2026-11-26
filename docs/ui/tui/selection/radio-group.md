@@ -9,7 +9,8 @@ Use a radio group when choosing one option replaces the previous choice. Both ga
 ```pascal
 unit Docs.Tui.Selection.RadioGroup;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RadioGroups as R;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.RadioGroups as R;
 
 // Builds the save-frequency control.
 // ## Parameters

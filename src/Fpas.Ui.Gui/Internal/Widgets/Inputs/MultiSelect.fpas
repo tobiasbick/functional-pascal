@@ -2,11 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.MultiSelect;
 
-uses
-  Fpas.Ui.Widgets.Inputs.MultiSelects as M, Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs,
-  Fpas.Ui.Gui.Cui as Cui, System as Sys,
-  System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Inputs.MultiSelects as M;
+uses Fpas.Ui.Widgets.Inputs.Selects as S;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Draws the native multi-select and publishes the visible options.
 // ## Type parameters

@@ -2,8 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Display.Keycap;
 
-uses
-  Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
 
 // Draws the native CUI keycap.
 // ## Type parameters

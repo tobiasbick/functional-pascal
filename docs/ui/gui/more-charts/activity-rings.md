@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.ActivityRings;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.ActivityRings as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.ActivityRings as W;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Builds the activity rings example.
 // ## Returns

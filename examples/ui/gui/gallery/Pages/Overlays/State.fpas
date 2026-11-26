@@ -2,8 +2,7 @@
 
 unit GuiGallery.Pages.Overlays.State;
 
-uses
-  GuiGallery.Shared.State as Demo;
+uses GuiGallery.Shared.State as Demo;
 
 // State owned by this gallery feature.
 public type Model = record

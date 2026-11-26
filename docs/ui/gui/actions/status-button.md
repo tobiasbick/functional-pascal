@@ -9,7 +9,8 @@ Show the progress and outcome of work in the button that started it. Available i
 ```pascal
 unit Docs.Ui.Actions.StatusButton;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.StatusButtons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as B;
 
 // Builds the example view.
 // ## Parameters

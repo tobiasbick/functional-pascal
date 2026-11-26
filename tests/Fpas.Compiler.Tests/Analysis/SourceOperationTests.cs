@@ -44,7 +44,7 @@ public sealed class SourceOperationTests
     {
         var snapshot = Analyze("""
             program Operations;
-            uses System.Text as Text, System.Collections.Generic as C, System.Timers as Timers;
+            uses System.Text as Text; uses System.Collections.Generic as C; uses System.Timers as Timers;
             begin
               const Buffer: Text.StringBuilder := new Text.StringBuilder();
               Buffer.Length := 0;
@@ -76,7 +76,7 @@ public sealed class SourceOperationTests
     {
         var snapshot = Analyze("""
             program Dispatch;
-            uses System as S, System.Numerics as N;
+            uses System as S; uses System.Numerics as N;
             function Read(Value: int): int; begin return Value; end function;
             function Read(Value: string): int; begin return Value.Length; end function;
             function Apply(Value: function(int): int): int; begin return Value(1); end function;
@@ -104,7 +104,7 @@ public sealed class SourceOperationTests
     {
         var snapshot = Analyze("""
             program Protocols;
-            uses System.Threading.Tasks as Tasks, System.IO as Io;
+            uses System.Threading.Tasks as Tasks; uses System.IO as Io;
             async function Work(): Tasks.Task<int>;
             begin
               await using const Stream: Io.MemoryStream := new Io.MemoryStream();

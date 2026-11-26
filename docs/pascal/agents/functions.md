@@ -81,7 +81,8 @@ effects. Async Task<T> ensures binds T, and failures fault the returned task.
 ```pascal
 program AgentFunctions;
 
-uses System as Sys, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
 
 function Identity<T>(Value: T): T;
 begin

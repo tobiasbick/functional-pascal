@@ -2,12 +2,16 @@
 
 unit GuiGallery.Pages.Layout.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Containers.Stacks as Stacks,
-  Fpas.Ui.Widgets.Feedback.Skeletons as Skeletons, Fpas.Ui.Widgets.Feedback.Badges as Badges, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
-  Fpas.Ui.Styles as S, GuiGallery.Shared.Sections as G,
-  System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Containers.Stacks as Stacks;
+uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
+uses Fpas.Ui.Widgets.Feedback.Skeletons as Skeletons;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Shared.Sections as G;
+uses System.Collections.Generic as Lists;
 
 function DirectionRow<TMsg>(Id: string; Direction: L.Direction; Message: TMsg): E.Element<TMsg>;
 begin

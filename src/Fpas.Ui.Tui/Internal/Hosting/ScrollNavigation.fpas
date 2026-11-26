@@ -2,7 +2,15 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.TerminalExtensions.CellGrids as Grids, System.Collections.Generic as C, Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, System as Sys;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.TerminalExtensions.CellGrids as Grids;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Layout.ScrollViews as V;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 procedure Notify<TMsg>(View: V.Viewport<TMsg>; Position: L.ScrollPosition; Offset: int; Apply: procedure(TMsg));
 begin

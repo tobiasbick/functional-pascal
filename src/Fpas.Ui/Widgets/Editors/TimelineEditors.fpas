@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Editors.TimelineEditors;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Editors.CurveEditors as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Editors.CurveEditors as C;
 
 // Frame ruler labels.
 public type Ruler = enum: byte

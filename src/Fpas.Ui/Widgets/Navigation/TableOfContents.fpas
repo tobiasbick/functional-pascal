@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Navigation.TableOfContents;
 
-uses Fpas.Ui.Elements as E, System as Sys, System.Globalization as Culture;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
+uses System.Globalization as Culture;
 
 // One entry in CUI's outline of a scroll view.
 public type Item = record

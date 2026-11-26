@@ -2,9 +2,10 @@
 
 unit FpasAmp.Ui.Player.Live;
 
-uses
-  FpasAmp.Ui.Player.Model as M, FpasAmp.Ui.Radio.Model as R,
-  Fpas.Media.Audio as Audio, System as Sys;
+uses Fpas.Media.Audio as Audio;
+uses FpasAmp.Ui.Player.Model as M;
+uses FpasAmp.Ui.Radio.Model as R;
+uses System as Sys;
 
 // Selects Station and switches the player from a remembered file queue to live mode.
 public function Start(Current: M.State; Station: R.Station): M.Transition;

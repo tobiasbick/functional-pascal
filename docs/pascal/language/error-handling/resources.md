@@ -58,7 +58,9 @@ nor ensures those aliases remain usable afterward.
 ```pascal
 program ResourceLifetime;
 
-uses System as Sys, System.IO as IO, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
+uses System.IO as IO;
 
 begin
   const Stream: IO.MemoryStream := new IO.MemoryStream();

@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.TabBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.TabBars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.TabBars as W;
 
 // Shows navigation tabs for a compact view.
 // ## Parameters

@@ -3,9 +3,11 @@
 // Parameterized SQLite primitives for the worker-owned inventory database.
 unit FpasAmp.Library.Persistence.Sql;
 
-uses
-  Microsoft.Data.Sqlite as Db, SQLitePCL as Native, System.Threading as T,
-  System as Sys, System.IO as IO;
+uses Microsoft.Data.Sqlite as Db;
+uses SQLitePCL as Native;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
 
 // Produces a stable lexical key for an absolute normalized path, including Unicode.
 // `Path` is normalized by Sources.Normalize or filesystem enumeration.

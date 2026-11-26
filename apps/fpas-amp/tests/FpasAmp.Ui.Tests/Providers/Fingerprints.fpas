@@ -3,19 +3,37 @@
 // Exercises both routes to a fingerprint with the real native tool and a private library.
 unit FpasAmp.UiTests.Fingerprints;
 
-uses
-  FpasAmp.UiTests.PlaybackFixture as Wave, FpasAmp.Library.Tests.Support as H,
-  FpasAmp.Library.Tests.MetadataSupport as Fixtures, FpasAmp.Library.Sources as Sources,
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Inventory.Monitoring as Monitor,
-  FpasAmp.Library.Metadata.Fingerprints.Calculator as Measurement,
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Shell as Shell, FpasAmp.Ui.Player.Model as Player,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.View as View,
-  FpasAmp.Ui.Music.LibraryPage as Songs, FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings,
-  Fpas.Media.Audio as Audio, FpasAmp.Ui.Fingerprints as Fp, Fpas.Ui.Elements as E,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Mvu.Application as Mvu,
-  FpasAmp.Ui.App.Controller as Controller, FpasAmp.Ui.Player.Playback as Playback,
-  System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Threading as T, System.Threading.Channels as Channels, Xunit as X;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Session as Runtime;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
+uses FpasAmp.Library.Inventory.Monitoring as Monitor;
+uses FpasAmp.Library.Metadata.Fingerprints.Calculator as Measurement;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Sources as Sources;
+uses FpasAmp.Library.Tests.MetadataSupport as Fixtures;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Music.View as View;
+uses FpasAmp.Ui.App.Controller as Controller;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Fingerprints as Fp;
+uses FpasAmp.Ui.Music.LibraryPage as Songs;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Player.Model as Player;
+uses FpasAmp.Ui.Player.Playback as Playback;
+uses FpasAmp.Ui.Settings.Model as Settings;
+uses FpasAmp.Ui.Shell as Shell;
+uses FpasAmp.UiTests.PlaybackFixture as Wave;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading as T;
+uses System.Threading.Channels as Channels;
+uses Xunit as X;
 
 function ClipboardText(Node: E.Element<Music.Msg>; Id: string := 'track-copy-fingerprint'): string?;
 begin

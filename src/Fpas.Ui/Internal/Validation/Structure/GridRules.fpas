@@ -2,10 +2,15 @@
 
 unit Fpas.Ui.Internal.Validation.Structure.GridRules;
 
-uses
-  Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR, Fpas.Ui.Widgets.Collections.DataGrids as G, Fpas.Ui.Widgets.Collections.TreeTables as T,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Collections.FilterBars as Filters,
-  Fpas.Ui.Layout as L, System as Sys, System.Globalization as Culture;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Collections.DataGrids as G;
+uses Fpas.Ui.Widgets.Collections.FilterBars as Filters;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Collections.TreeTables as T;
+uses System as Sys;
+uses System.Globalization as Culture;
 
 // Checks UTF-8 text and its native buffer capacity.
 // ## Parameters

@@ -9,7 +9,8 @@ Show counts and the current user's reaction alongside a message or activity. Ava
 ```pascal
 unit Docs.Ui.Actions.Reactions;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Conversation.Reactions as R;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Conversation.Reactions as R;
 
 // The reaction and its position after activation.
 public type Change = record

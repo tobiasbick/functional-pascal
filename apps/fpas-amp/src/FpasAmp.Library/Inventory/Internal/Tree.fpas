@@ -3,17 +3,20 @@
 // Streaming physical traversal with independently owned source memberships.
 unit FpasAmp.Library.Inventory.Internal.Tree;
 
-uses
-  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Model as M,
-  FpasAmp.Library.Inventory.Progress as P,
-  FpasAmp.Library.Inventory.Internal.Directories as Directories,
-  FpasAmp.Library.Inventory.Internal.Observations as O,
-  FpasAmp.Library.Inventory.Internal.Catalog as Data,
-  Fpas.Media.Tags.Playlists as PlaylistFormats,
-  FpasAmp.Library.Albums.Artwork.Names as ArtworkNames,
-  FpasAmp.Library.TagEditing.Files as TagFiles,
-  System as Sys, System.IO as IO, System.Collections.Generic as C,
-  System.Collections.Immutable as I, System.Threading as T;
+uses Fpas.Media.Tags.Playlists as PlaylistFormats;
+uses FpasAmp.Library.Albums.Artwork.Names as ArtworkNames;
+uses FpasAmp.Library.Inventory.Internal.Catalog as Data;
+uses FpasAmp.Library.Inventory.Internal.Directories as Directories;
+uses FpasAmp.Library.Inventory.Internal.Observations as O;
+uses FpasAmp.Library.Inventory.Model as M;
+uses FpasAmp.Library.Inventory.Progress as P;
+uses FpasAmp.Library.Sources as S;
+uses FpasAmp.Library.TagEditing.Files as TagFiles;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading as T;
 
 // Worker-owned physical directory cache and source-specific observed facts.
 public type Tree = record

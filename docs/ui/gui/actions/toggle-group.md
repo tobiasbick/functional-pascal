@@ -9,7 +9,8 @@ Group independent flags such as text formatting or exclusive choices such as ali
 ```pascal
 unit Docs.Ui.Actions.ToggleGroup;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.ToggleGroups as T;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.ToggleGroups as T;
 
 // Builds the example view.
 // ## Parameters

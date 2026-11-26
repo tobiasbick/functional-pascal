@@ -30,7 +30,7 @@ public sealed class ExceptionInspectionTests
         using var program = new Debuggee("own-exception-policy");
         await program.Compile("""
             program ExceptionPolicy;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             procedure Work();
             begin
               try

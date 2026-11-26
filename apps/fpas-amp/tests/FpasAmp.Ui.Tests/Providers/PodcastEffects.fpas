@@ -2,14 +2,22 @@
 
 unit FpasAmp.UiTests.PodcastEffects;
 
-uses
-  FpasAmp.UiTests.ProviderHttp as Http, FpasAmp.Library.Tests.AlbumSupport as Art,
-  FpasAmp.Ui.Podcasts.Model as P, FpasAmp.Ui.Podcasts.Update as Podcasts,
-  FpasAmp.Ui.Podcasts.DirectoryData as Directory,
-  Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Session as Runtime,
-  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, System as Sys, System.Net as N,
-  System.Net.Sockets as Sockets, System.Text.Json as J, System.Threading as T, System.Threading.Channels as Channels,
-  System.Threading.Tasks as Tasks, Xunit as X;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Mvu.Session as Runtime;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
+uses FpasAmp.Library.Tests.AlbumSupport as Art;
+uses FpasAmp.Ui.Podcasts.DirectoryData as Directory;
+uses FpasAmp.Ui.Podcasts.Model as P;
+uses FpasAmp.Ui.Podcasts.Update as Podcasts;
+uses FpasAmp.UiTests.ProviderHttp as Http;
+uses System as Sys;
+uses System.Net as N;
+uses System.Net.Sockets as Sockets;
+uses System.Text.Json as J;
+uses System.Threading as T;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
+uses Xunit as X;
 
 // Exercises the podcast effects through a real mailbox and loopback HTTP.
 public type PodcastEffectTests = record

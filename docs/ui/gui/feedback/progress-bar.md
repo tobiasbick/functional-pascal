@@ -9,7 +9,8 @@ Use a progress bar for a task with measurable progress or work that has no known
 ```pascal
 unit Docs.Ui.Feedback.ProgressBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.ProgressBars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as W;
 
 // Builds the progress bar example.
 // ## Parameters

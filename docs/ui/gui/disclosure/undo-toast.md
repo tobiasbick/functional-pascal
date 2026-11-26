@@ -9,8 +9,8 @@ Offer a short period to reverse an operation by returning a toast with an action
 ```pascal
 unit Docs.Ui.Disclosure.UndoToast;
 
-uses Fpas.Ui.Gui.Toasts as W,
-  Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Gui.Toasts as W;
+uses Fpas.Ui.Mvu.Application as Mvu;
 
 // Builds the command for the update function.
 // ## Returns

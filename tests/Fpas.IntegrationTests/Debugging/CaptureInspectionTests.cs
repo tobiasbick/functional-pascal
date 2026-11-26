@@ -14,7 +14,7 @@ public sealed class CaptureInspectionTests
         using var program = new Debuggee("own-async-closure-captures");
         var source = """
             program AsyncClosure;
-            uses System.Console as Console, System.Threading.Tasks as Tasks, System.Runtime.CompilerServices as Runtime;
+            uses System.Console as Console; uses System.Threading.Tasks as Tasks; uses System.Runtime.CompilerServices as Runtime;
             function Factory(Seed: int): function(): Tasks.Task<int>;
             begin
               var Value: int := Seed;
@@ -61,7 +61,7 @@ public sealed class CaptureInspectionTests
         using var program = new Debuggee("own-capture-values");
         var source = """
             program Captures;
-            uses System.Console as Console, System.Runtime.CompilerServices as Runtime;
+            uses System.Console as Console; uses System.Runtime.CompilerServices as Runtime;
             function Factory(Seed: int): function(int): int;
             begin
               var Value: int := Seed;
@@ -117,7 +117,7 @@ public sealed class CaptureInspectionTests
         using var program = new Debuggee("own-async-capture-values");
         var source = """
             program AsyncCaptures;
-            uses System.Console as Console, System.Threading.Tasks as Tasks, System.Runtime.CompilerServices as Runtime;
+            uses System.Console as Console; uses System.Threading.Tasks as Tasks; uses System.Runtime.CompilerServices as Runtime;
             async function Observe(): Tasks.Task;
             begin
               var Value: int := 40;

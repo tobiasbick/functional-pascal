@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Internal.Validation.Inputs.OneTimeCodeRules;
 
-uses Fpas.Ui.Widgets.Inputs.OneTimeCodes as O, Fpas.Ui.Internal.Validation.Core.Checks as R, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Widgets.Inputs.OneTimeCodes as O;
+uses System as Sys;
 
 // Validates the native box count and the model code.
 //

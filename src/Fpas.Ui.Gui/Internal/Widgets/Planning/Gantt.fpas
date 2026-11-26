@@ -2,9 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Planning.Gantt;
 
-uses
-  Fpas.Ui.Widgets.Planning.Gantts as A, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ScheduleData as D;
+uses Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Data.ScheduleData as D;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Widgets.Planning.Gantts as A;
 
 // Presents the native Gantt chart.
 // ## Type parameters

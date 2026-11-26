@@ -64,7 +64,7 @@ public sealed partial class DapDebuggerTests
 
     private static async Task WaitingProgram(Debuggee program) => await program.Compile("""
         program Waiting;
-        uses System.Environment as Environment, System.IO.File as File, System.Threading.Thread as Thread;
+        uses System.Environment as Environment; uses System.IO.File as File; uses System.Threading.Thread as Thread;
         begin
           File.WriteAllText('target.pid.tmp', Environment.ProcessId.ToString());
           File.Move('target.pid.tmp', 'target.pid');

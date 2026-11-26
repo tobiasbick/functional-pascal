@@ -2,9 +2,9 @@
 
 unit Fpas.Ui.Gui.Internal.Layout.RealizedValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V,
-  Fpas.Ui.Gui.Internal.Layout.LayoutValidation as Layout;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Internal.Layout.LayoutValidation as Layout;
+uses Fpas.Ui.Validation as V;
 
 // Validates only content requested by native virtualization before presenting it.
 // Modal scopes belong outside factories so the owner can resolve input before drawing.

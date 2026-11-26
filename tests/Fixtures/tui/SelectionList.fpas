@@ -2,11 +2,17 @@
 
 program SelectionListContract;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
-  Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.TerminalExtensions.Input as K,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Mvu.Application as M,
-  System as Sys, System.Console as Console;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as M;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.TerminalExtensions.SelectionLists as Lists;
+uses Fpas.Ui.Tui.Application as T;
+uses Fpas.Ui.Tui.Headless as Headless;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses System as Sys;
+uses System.Console as Console;
 
 type State = record
   public Selected: string := 'one';

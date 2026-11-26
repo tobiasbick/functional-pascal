@@ -2,18 +2,18 @@
 
 unit Fpas.Ui.Gui.Internal.Presentation.EditingToolPresentation;
 
-uses
-  Fpas.Ui.Widgets.Editors.PropertyInspectors as PropertyInspectors,
-  Fpas.Ui.Widgets.Editors.FlameGraphs as FlameGraphs,
-  Fpas.Ui.Widgets.Editors.CurveEditors as CurveEditors,
-  Fpas.Ui.Widgets.Editors.GradientEditors as GradientEditors,
-  Fpas.Ui.Widgets.Editors.TimelineEditors as TimelineEditors,
-  Fpas.Ui.Gui.Internal.Widgets.Editors.PropertyInspector as PropertyInspector,
-  Fpas.Ui.Gui.Internal.Widgets.Editors.FlameGraph as FlameGraph,
-  Fpas.Ui.Gui.Internal.Widgets.Editors.CurveEditor as CurveEditor,
-  Fpas.Ui.Gui.Internal.Widgets.Editors.GradientEditor as GradientEditor,
-  Fpas.Ui.Gui.Internal.Widgets.Editors.TimelineEditor as TimelineEditor,
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Elements as E;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Widgets.Editors.CurveEditor as CurveEditor;
+uses Fpas.Ui.Gui.Internal.Widgets.Editors.FlameGraph as FlameGraph;
+uses Fpas.Ui.Gui.Internal.Widgets.Editors.GradientEditor as GradientEditor;
+uses Fpas.Ui.Gui.Internal.Widgets.Editors.PropertyInspector as PropertyInspector;
+uses Fpas.Ui.Gui.Internal.Widgets.Editors.TimelineEditor as TimelineEditor;
+uses Fpas.Ui.Widgets.Editors.CurveEditors as CurveEditors;
+uses Fpas.Ui.Widgets.Editors.FlameGraphs as FlameGraphs;
+uses Fpas.Ui.Widgets.Editors.GradientEditors as GradientEditors;
+uses Fpas.Ui.Widgets.Editors.PropertyInspectors as PropertyInspectors;
+uses Fpas.Ui.Widgets.Editors.TimelineEditors as TimelineEditors;
 
 // Draws the native editing tools.
 // ## Type parameters

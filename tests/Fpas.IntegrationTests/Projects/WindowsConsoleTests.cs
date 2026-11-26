@@ -18,8 +18,8 @@ public sealed class WindowsConsoleTests(SdkPackageFixture sdk) : IClassFixture<S
         Assert.True(initialized.ExitCode == 0, initialized.Output + initialized.Error);
         File.WriteAllText(directory.File("App Grüße/main.fpas"), """
             program Terminal;
-            uses System.Console as Console, System.Environment as Env, System.Text.Encoding as Encoding,
-              System.IO.File as File;
+            uses System.Console as Console; uses System.Environment as Env; uses System.Text.Encoding as Encoding;
+              uses System.IO.File as File;
             begin
               Console.InputEncoding := Encoding.UTF8;
               Console.WriteLine('stdin:' + Console.IsInputRedirected.ToString());

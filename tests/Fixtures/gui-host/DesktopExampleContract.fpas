@@ -2,16 +2,24 @@
 
 unit DesktopExampleContract;
 
-uses
-  DesktopCommands.State as S, DesktopCommands.Preferences as Preferences,
-  DesktopCommands.Update as Update, DesktopCommands.View as View, GalleryHostAssertions as A,
-  DesktopCommands.Background as Background,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Desktop as GuiHost, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Core,
-  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  System as Sys, System.Globalization as Culture, System.IO as IO,
-  System.Threading.Channels as Channels;
+uses DesktopCommands.Background as Background;
+uses DesktopCommands.Preferences as Preferences;
+uses DesktopCommands.State as S;
+uses DesktopCommands.Update as Update;
+uses DesktopCommands.View as View;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Desktop as GuiHost;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Session as Core;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses GalleryHostAssertions as A;
+uses System as Sys;
+uses System.Globalization as Culture;
+uses System.IO as IO;
+uses System.Threading.Channels as Channels;
 
 const Timeout: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(5);
 

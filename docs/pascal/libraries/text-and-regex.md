@@ -14,9 +14,10 @@ syntax, options, timeout, and escaping follow the actual .NET regex API.
 ```pascal
 program TextAndRegex;
 
-uses
-  System as Sys, System.Console as Console, System.Text as Text,
-  System.Text.RegularExpressions as Regular;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Text as Text;
+uses System.Text.RegularExpressions as Regular;
 
 begin
   const Bytes: array of byte := Text.Encoding.UTF8.GetBytes('Aé');

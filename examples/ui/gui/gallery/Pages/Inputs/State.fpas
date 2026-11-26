@@ -2,9 +2,11 @@
 
 unit GuiGallery.Pages.Inputs.State;
 
-uses
-  Gallery.Shared.AboutField as AboutSample,
-  Gallery.Shared.PickerChoices as Choices, GuiGallery.Shared.State as Demo, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.Graphics as G;
+uses Gallery.Shared.AboutField as AboutSample;
+uses Gallery.Shared.PickerChoices as Choices;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 // State owned by this gallery feature.
 public type Model = record

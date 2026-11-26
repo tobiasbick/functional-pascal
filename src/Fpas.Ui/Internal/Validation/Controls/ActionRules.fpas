@@ -2,9 +2,12 @@
 
 unit Fpas.Ui.Internal.Validation.Controls.ActionRules;
 
-uses
-  Fpas.Ui.Widgets.Actions.SpeedDials as D, Fpas.Ui.Widgets.Actions.SwipeActions as S, Fpas.Ui.Widgets.Overlays.Menus as M,
-  Fpas.Ui.Styles as Styles, Fpas.Ui.Internal.Validation.Core.Checks as R, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.Widgets.Actions.SpeedDials as D;
+uses Fpas.Ui.Widgets.Actions.SwipeActions as S;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses System as Sys;
 
 // Validates a speed dial before native presentation.
 // ## Parameters

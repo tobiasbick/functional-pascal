@@ -99,7 +99,7 @@ public sealed class DebuggerAttributeTests
     {
         var program = Compile("""
             async program Methods;
-            uses System.Threading.Tasks as Tasks, System.Diagnostics as D;
+            uses System.Threading.Tasks as Tasks; uses System.Diagnostics as D;
             type R = record public X: int := 1; end record;
             function Make(Value: int): function(): int;
             begin return function(): int => Value; end function;

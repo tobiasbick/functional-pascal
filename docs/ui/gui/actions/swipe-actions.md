@@ -11,8 +11,9 @@ Reveal actions next to a list row without taking up space in its resting layout.
 ```pascal
 unit Docs.Ui.Actions.SwipeActions;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.SwipeActions as S,
-  Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Widgets.Actions.SwipeActions as S;
 
 // Builds the example view.
 // ## Returns

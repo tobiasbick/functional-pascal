@@ -3,12 +3,18 @@
 // Validates the indexed file version before attaching an acoustic fingerprint to its content.
 unit FpasAmp.Library.Metadata.Fingerprints.Store;
 
-uses
-  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Metadata.Fingerprints.Calculator as Calc,
-  FpasAmp.Library.Metadata.Internal.Reading as Reading, FpasAmp.Library.Metadata.Internal.Policy as Policy,
-  FpasAmp.Library.Sources as Sources, FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.IO as IO, System.Security.Cryptography as Crypto,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses FpasAmp.Library.Metadata.Fingerprints.Calculator as Calc;
+uses FpasAmp.Library.Metadata.Internal.Policy as Policy;
+uses FpasAmp.Library.Metadata.Internal.Reading as Reading;
+uses FpasAmp.Library.Metadata.Model as M;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Sources as Sources;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Security.Cryptography as Crypto;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 type FileVersion = record
   // Indexed size in bytes.

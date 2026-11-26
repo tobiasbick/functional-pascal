@@ -3,11 +3,14 @@
 // Bound queries use explicit sort keys and parameterized exact filters.
 unit FpasAmp.Library.Metadata.Persistence.Queries;
 
-uses
-  FpasAmp.Library.Serialization.CatalogueJson as Codec,
-  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
-  Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
-  System.Collections.Immutable as I, System.Threading as T;
+uses FpasAmp.Library.Metadata.Model as M;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Serialization.CatalogueJson as Codec;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Threading as T;
 
 const Columns: string := 'SELECT f.id,COALESCE(m.track_id,''''),f.path,COALESCE(m.sha256,''''),u.rating,m.tags_json,m.error,' +
   '(SELECT json_group_array(s.source_id) FROM source_files s WHERE s.file_id=f.id),COALESCE(a.album_id,''''),COALESCE(a.title,'''')';

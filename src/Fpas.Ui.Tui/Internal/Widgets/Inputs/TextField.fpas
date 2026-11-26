@@ -2,12 +2,16 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField;
 
-uses
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
-  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Widgets.Developer.Terminal as T,
-  Fpas.Ui.Styles as S, System.Collections.Generic as C;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses System.Collections.Generic as C;
 
 // Composes an editor with its optional caption and supporting text.
 // ## Type parameters

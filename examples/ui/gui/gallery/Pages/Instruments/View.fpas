@@ -2,12 +2,19 @@
 
 unit GuiGallery.Pages.Instruments.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Instruments.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Display.Readouts as R, Fpas.Ui.Widgets.Charts.DotCharts as D,
-  Fpas.Ui.Widgets.Display.DotDisplays as Display, Fpas.Ui.Widgets.Charts.EventTracks as T, Fpas.Ui.Widgets.Charts.Charts as C,
-  System as Sys, System.Globalization as Culture, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.DotCharts as D;
+uses Fpas.Ui.Widgets.Charts.EventTracks as T;
+uses Fpas.Ui.Widgets.Display.DotDisplays as Display;
+uses Fpas.Ui.Widgets.Display.Readouts as R;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Instruments.State as S;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+uses System.Globalization as Culture;
 
 function Dose(Time: double): float;
 begin

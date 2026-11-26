@@ -2,10 +2,12 @@
 
 unit FpasAmp.Ui.TagEditor.Model;
 
-uses
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.TagEditing.Files as Files,
-  FpasAmp.Ui.TagEditor.MusicBrainz as MB, FpasAmp.Ui.Providers.RequestPacing as Pacing,
-  Fpas.Ui.Layout as L, System.Collections.Immutable as I;
+uses Fpas.Ui.Layout as L;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.TagEditing.Files as Files;
+uses FpasAmp.Ui.Providers.RequestPacing as Pacing;
+uses FpasAmp.Ui.TagEditor.MusicBrainz as MB;
+uses System.Collections.Immutable as I;
 
 // A free-form tag row. Id stays stable while the name is edited.
 public type Custom = record

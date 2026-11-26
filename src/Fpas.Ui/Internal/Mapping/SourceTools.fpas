@@ -2,14 +2,14 @@
 
 unit Fpas.Ui.Internal.Mapping.SourceTools;
 
-uses
-  Fpas.Ui.Widgets.Display.Markdowns as Markdowns,
-  Fpas.Ui.Widgets.Editors.CodeEditors as CodeEditors,
-  Fpas.Ui.Widgets.Developer.DiffViews as DiffViews,
-  Fpas.Ui.Widgets.Developer.HexViews as HexViews,
-  Fpas.Ui.Widgets.Developer.LogConsoles as LogConsoles,
-  Fpas.Ui.Widgets.Developer.Terminals as Terminals,
-  Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.DiffViews as DiffViews;
+uses Fpas.Ui.Widgets.Developer.HexViews as HexViews;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as LogConsoles;
+uses Fpas.Ui.Widgets.Developer.Terminals as Terminals;
+uses Fpas.Ui.Widgets.Display.Markdowns as Markdowns;
+uses Fpas.Ui.Widgets.Editors.CodeEditors as CodeEditors;
+uses System as Sys;
 
 // Maps the source tools to a parent message type.
 // ## Type parameters

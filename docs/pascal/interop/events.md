@@ -27,10 +27,9 @@ declaration in the initial language.
 ```pascal
 program Events;
 
-uses
-  System.Console as Console,
-  System.Threading as Threading,
-  System.Timers as Timers;
+uses System.Console as Console;
+uses System.Threading as Threading;
+uses System.Timers as Timers;
 
 begin
   using const Timer: Timers.Timer := new Timers.Timer(100.0);

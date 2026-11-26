@@ -3,24 +3,41 @@
 // Responsive native shell; all destinations share the same MVU navigation state.
 unit FpasAmp.Ui.Shell;
 
-uses
-  FpasAmp.Library.Inventory.Monitoring as Monitoring,
-  FpasAmp.Ui.Music.LibraryPage as Songs, FpasAmp.Ui.Albums.Music.Model as TrackModel, FpasAmp.Ui.Albums.Music.View as TrackView, FpasAmp.Ui.App.Model as M, FpasAmp.Ui.App.Controller as Updates,
-  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Navigation.View as NavView,
-  FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.View as AlbumView,
-  Fpas.Ui.Composition as Composition,
-  FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Settings.View as SettingsView,
-  FpasAmp.Ui.TagEditor.Model as TagModel, FpasAmp.Ui.TagEditor.View as TagView,
-  FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.View as PlayerView,
-  FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Audio,
-  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Desktop as GuiHost, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
-  Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys,
-  FpasAmp.Library.Playlists.Model as Lists,
-  FpasAmp.Ui.Radio.View as RadioView, FpasAmp.Ui.Radio.Model as RadioModel,
-  FpasAmp.Ui.Podcasts.View as PodcastView;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Desktop as GuiHost;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses FpasAmp.Library.Inventory.Monitoring as Monitoring;
+uses FpasAmp.Library.Playlists.Model as Lists;
+uses FpasAmp.Ui.Albums.Model as AlbumModel;
+uses FpasAmp.Ui.Albums.Music.Model as TrackModel;
+uses FpasAmp.Ui.Albums.Music.View as TrackView;
+uses FpasAmp.Ui.Albums.View as AlbumView;
+uses FpasAmp.Ui.App.Controller as Updates;
+uses FpasAmp.Ui.App.Model as M;
+uses FpasAmp.Ui.Music.LibraryPage as Songs;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Navigation.View as NavView;
+uses FpasAmp.Ui.Player.Model as PlayerModel;
+uses FpasAmp.Ui.Player.Playback as Playback;
+uses FpasAmp.Ui.Player.View as PlayerView;
+uses FpasAmp.Ui.Podcasts.View as PodcastView;
+uses FpasAmp.Ui.Radio.Model as RadioModel;
+uses FpasAmp.Ui.Radio.View as RadioView;
+uses FpasAmp.Ui.Settings.Model as SettingsModel;
+uses FpasAmp.Ui.Settings.View as SettingsView;
+uses FpasAmp.Ui.TagEditor.Model as TagModel;
+uses FpasAmp.Ui.TagEditor.View as TagView;
+uses System as Sys;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 // Content width below which the player strip omits its equalizer and meters.

@@ -2,9 +2,11 @@
 
 unit Diagnostics.Workloads;
 
-uses
-  System as Sys, System.Diagnostics as Diag, System.Threading as Threading,
-  System.Runtime.CompilerServices as Compiler, System.Collections.Generic as Collections;
+uses System as Sys;
+uses System.Collections.Generic as Collections;
+uses System.Diagnostics as Diag;
+uses System.Runtime.CompilerServices as Compiler;
+uses System.Threading as Threading;
 
 // Expected result of one CPU batch.
 public const CpuChecksum: long := 11727587164160L;

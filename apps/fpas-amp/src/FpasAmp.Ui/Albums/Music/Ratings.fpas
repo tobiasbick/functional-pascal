@@ -3,9 +3,9 @@
 // Reconciles committed user ratings with overlapping library reads.
 unit FpasAmp.Ui.Albums.Music.Ratings;
 
-uses
-  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
-  System.Collections.Immutable as I;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Albums.Music.Model as M;
+uses System.Collections.Immutable as I;
 
 function ApplyReceipts(Items: I.ImmutableArray<Tracks.Entry>; Receipts: I.ImmutableDictionary<string, M.RatingReceipt>): I.ImmutableArray<Tracks.Entry>;
 begin

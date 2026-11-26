@@ -13,7 +13,7 @@ public sealed class RenameGraphTests(SdkPackageFixture sdk) : IClassFixture<SdkP
     public async Task Cross_DLL_calls_and_named_arguments_are_planned_against_temporary_metadata_and_execute_after_application()
     {
         const string library = "unit Demo.Bridge; public function Read(Value: int): int; begin return Value + 1; end function; end unit;";
-        const string consumer = "program Consumer; uses Demo.Bridge as B, System.Console as Console; begin Console.WriteLine(B.Read(Value := 41)); end; end program;";
+        const string consumer = "program Consumer; uses Demo.Bridge as B; uses System.Console as Console; begin Console.WriteLine(B.Read(Value := 41)); end; end program;";
         using var directory = RenameFixture.Create(sdk, library);
         Directory.CreateDirectory(directory.File("Consumer")); File.WriteAllText(directory.File("Consumer/Main.fpas"), consumer);
         File.WriteAllText(directory.File("Consumer/Consumer.fpasproj"), $"<Project Sdk=\"Fpas.NET.Sdk/{sdk.Version}\"><PropertyGroup><OutputType>Exe</OutputType></PropertyGroup><ItemGroup><ProjectReference Include=\"../Game/Game.fpasproj\" /></ItemGroup></Project>");

@@ -3,11 +3,14 @@
 // Source-scoped membership and errors over a shared physical directory traversal.
 unit FpasAmp.Library.Inventory.Internal.Catalog;
 
-uses
-  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Model as M,
-  FpasAmp.Library.Inventory.Progress as P,
-  FpasAmp.Library.Inventory.Internal.Observations as O, System as Sys, System.IO as IO,
-  System.Collections.Generic as C, System.Collections.Immutable as I;
+uses FpasAmp.Library.Inventory.Internal.Observations as O;
+uses FpasAmp.Library.Inventory.Model as M;
+uses FpasAmp.Library.Inventory.Progress as P;
+uses FpasAmp.Library.Sources as S;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
 
 // Worker-owned source memberships. Paused sources never inherit another source's updates.
 public type Catalog = record

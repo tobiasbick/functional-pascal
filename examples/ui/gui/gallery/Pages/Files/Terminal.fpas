@@ -2,9 +2,11 @@
 
 unit GuiGallery.Pages.Files.Terminal;
 
-uses
-  GuiGallery.Pages.Files.Folders as Files, Fpas.Ui.Widgets.Files.FileListings as Listing,
-  System as Sys, System.Globalization as Locale, System.Text as Text;
+uses Fpas.Ui.Widgets.Files.FileListings as Listing;
+uses GuiGallery.Pages.Files.Folders as Files;
+uses System as Sys;
+uses System.Globalization as Locale;
+uses System.Text as Text;
 
 // Initial ANSI output of the CUI shell example.
 public const Welcome: string := 'Type ' + Sys.Char.ConvertFromUtf32(27) + '[1mhelp' +

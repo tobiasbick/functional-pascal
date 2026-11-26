@@ -2,9 +2,11 @@
 
 unit Gallery.Shared.EditorStatus;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Styles as Style, System.Collections.Generic as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+uses Gallery.Shared.Strings as Strings;
+uses System.Collections.Generic as C;
 
 // Source excerpt shown above the editor status bar.
 public const CodeLines: array of string := [

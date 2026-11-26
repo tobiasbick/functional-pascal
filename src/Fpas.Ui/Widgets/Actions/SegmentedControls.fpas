@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Actions.SegmentedControls;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // One positional choice. Array order defines identity, matching native CUI.
 public type Item = record

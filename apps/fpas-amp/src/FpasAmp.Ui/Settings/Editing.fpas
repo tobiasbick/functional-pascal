@@ -3,15 +3,14 @@
 // Preference and source edits; each accepted change is saved before it is shown.
 unit FpasAmp.Ui.Settings.Editing;
 
-uses
-  FpasAmp.Library.Sources as Locations,
-  FpasAmp.Ui.Settings.Model as M,
-  Fpas.Ui.Widgets.Files.FilePickers as Picker,
-  Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  System as Sys,
-  System.Collections.Generic as C,
-  System.IO as IO;
+uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses FpasAmp.Library.Sources as Locations;
+uses FpasAmp.Ui.Settings.Model as M;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
 
 // Saves `Next` and shows it once the write succeeds.
 //

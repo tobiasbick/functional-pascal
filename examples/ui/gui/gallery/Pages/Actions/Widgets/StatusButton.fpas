@@ -2,12 +2,11 @@
 
 unit GuiGallery.Pages.Actions.Widgets.StatusButton;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Actions.State as State,
-  Fpas.Ui.Widgets.Actions.StatusButtons as Work,
-  Fpas.Ui.Elements as E,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Work;
+uses GuiGallery.Pages.Actions.State as State;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 // Shows CUI's inline save feedback.
 //

@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Ai.ContextMeters;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // One part of context usage.
 public type Part = record

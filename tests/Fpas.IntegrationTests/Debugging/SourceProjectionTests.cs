@@ -16,7 +16,7 @@ public sealed class SourceProjectionTests
         using var program = new Debuggee("own-source-self");
         var source = $$"""
             program Receiver;
-            uses System.Console as Console, System.Threading.Tasks as Tasks;
+            uses System.Console as Console; uses System.Threading.Tasks as Tasks;
             type Counter = record
               public Value: int;
               {{(asynchronous ? "public async function Read(): Tasks.Task<int>;" : "public function Read(): int;")}}
@@ -85,7 +85,7 @@ public sealed class SourceProjectionTests
         File.Delete(program.FilePath("Fpas.Core.dll"));
         var source = """
             program BrokenPresentation;
-            uses Fixture.Factory as Factory, System.Console as Console;
+            uses Fixture.Factory as Factory; uses System.Console as Console;
             begin
               const Value: object := Factory.Create();
               Factory.Call();

@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Media.ImageViewers;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 
 // The current image zoom and center in image pixels.
 public type Value = record

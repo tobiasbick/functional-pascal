@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.NowPlaying;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.NowPlaying as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.NowPlaying as W;
 
 // Shows a model-owned track and transport state.
 // ## Parameters

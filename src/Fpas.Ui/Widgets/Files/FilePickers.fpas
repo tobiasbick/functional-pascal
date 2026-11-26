@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Files.FilePickers;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Files.FileListings as F, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Files.FileListings as F;
+uses System as Sys;
 
 // Kind of file selection.
 public type Mode = enum: byte

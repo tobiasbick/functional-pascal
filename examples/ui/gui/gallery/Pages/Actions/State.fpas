@@ -2,12 +2,11 @@
 
 unit GuiGallery.Pages.Actions.State;
 
-uses
-  Fpas.Ui.Widgets.Actions.StatusButtons as Work,
-  Fpas.Ui.Widgets.Conversation.Reactions as React,
-  Fpas.Ui.Widgets.Actions.SwipeActions as Swipe,
-  System as Sys,
-  GuiGallery.Shared.State as Demo;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Work;
+uses Fpas.Ui.Widgets.Actions.SwipeActions as Swipe;
+uses Fpas.Ui.Widgets.Conversation.Reactions as React;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 // State owned by this gallery feature.
 public type Model = record

@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Ticker;
 
-uses Fpas.Ui.Widgets.Feedback.Tickers as W, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Cui.Widgets.Feedback as CuiFeedback;
+uses Fpas.Ui.Gui.Cui.Widgets.Feedback as CuiFeedback;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Widgets.Feedback.Tickers as W;
 
 // Draws the native scrolling ticker.
 // ## Type parameters

@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Desktop.SplitView;
 
-uses
-  Fpas.Ui.Widgets.Desktop.SplitViews as S, Fpas.Ui.Layout as L, Fpas.Ui.Elements as E,
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size,
-  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Desktop.SplitViews as S;
 
 // Presents both panes inside CUI's native split.
 // ## Type parameters

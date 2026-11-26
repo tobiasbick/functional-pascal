@@ -3,11 +3,23 @@
 // Load one release and apply song edits on the UI owner.
 unit FpasAmp.Ui.Albums.Music.Update;
 
-uses
-  FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Ratings as Ratings, FpasAmp.Ui.Albums.Artwork as Artwork,
-  Fpas.Media.Images as Imaging, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I,
-  Fpas.Ui.Gui.Desktop as Desktop, System.Diagnostics as D, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
+uses Fpas.Media.Images as Imaging;
+uses Fpas.Ui.Gui.Desktop as Desktop;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Ui.Albums.Artwork as Artwork;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Model as M;
+uses FpasAmp.Ui.Albums.Music.Ratings as Ratings;
+uses FpasAmp.Ui.Fingerprints as Fp;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.Diagnostics as D;
+uses System.IO as IO;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 const Empty: array of A.Command<M.Msg> := [];
 

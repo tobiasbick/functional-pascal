@@ -16,7 +16,7 @@ public sealed class TerminalWorkflowTests
         using var target = new Debuggee("terminal-workflow");
         await target.Compile("""
             program TerminalProbe;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             begin
               Console.InputEncoding := Sys.Text.Encoding.UTF8;
               Console.OutputEncoding := Sys.Text.Encoding.UTF8;

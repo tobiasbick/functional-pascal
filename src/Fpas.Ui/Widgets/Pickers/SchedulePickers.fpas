@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Pickers.SchedulePickers;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Action or changed value reported by the native widget.
 public type Event = record

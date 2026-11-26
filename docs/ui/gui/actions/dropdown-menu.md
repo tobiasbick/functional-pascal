@@ -9,7 +9,8 @@ Open a list of commands from a labeled or icon-only trigger. Available in **GUI*
 ```pascal
 unit Docs.Ui.Actions.DropdownMenu;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // Builds the example view.
 // ## Returns

@@ -2,13 +2,18 @@
 
 unit FpasAmp.Ui.TagEditor.AcoustId;
 
-uses
-  FpasAmp.Ui.TagEditor.ResponseJson as Response,
-  FpasAmp.Ui.TagEditor.MusicBrainz as MB, FpasAmp.Ui.Providers.RequestPacing as Pacing,
-  FpasAmp.Library.Metadata.Fingerprints.Calculator as Fingerprint,
-  System as Sys, System.Collections.Generic as C, System.Globalization as G,
-  System.Net.Http as H, System.Net.Http.Headers as Headers, System.Text.Json as J, System.Threading as T,
-  System.Threading.Tasks as Tasks;
+uses FpasAmp.Library.Metadata.Fingerprints.Calculator as Fingerprint;
+uses FpasAmp.Ui.Providers.RequestPacing as Pacing;
+uses FpasAmp.Ui.TagEditor.MusicBrainz as MB;
+uses FpasAmp.Ui.TagEditor.ResponseJson as Response;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Globalization as G;
+uses System.Net.Http as H;
+uses System.Net.Http.Headers as Headers;
+uses System.Text.Json as J;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 const Client: H.HttpClient := new H.HttpClient();
 const Gate: Pacing.Gate := Pacing.Gate.Create(334L);

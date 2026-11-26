@@ -3,10 +3,13 @@
 // Groups search, filters and one sort menu.
 unit FpasAmp.Ui.Albums.Toolbar.View;
 
-uses
-  FpasAmp.Ui.Albums.Toolbar.Model as M, FpasAmp.Ui.Albums.Toolbar.Filters as Filters,
-  FpasAmp.Ui.Albums.Toolbar.Sorting as Sorting, FpasAmp.Library.Search.Matching as Matching,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Inputs.SearchFields as Search;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
+uses FpasAmp.Library.Search.Matching as Matching;
+uses FpasAmp.Ui.Albums.Toolbar.Filters as Filters;
+uses FpasAmp.Ui.Albums.Toolbar.Model as M;
+uses FpasAmp.Ui.Albums.Toolbar.Sorting as Sorting;
 
 function Points(Value: int): L.Spacing;
 begin

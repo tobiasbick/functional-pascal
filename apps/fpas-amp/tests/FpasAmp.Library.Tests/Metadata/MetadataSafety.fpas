@@ -3,12 +3,20 @@
 // Read cancellation, ambiguous fingerprints, unavailable sources and user-store errors.
 unit FpasAmp.Library.Tests.MetadataSafety;
 
-uses
-  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
-  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Metadata.Monitoring as Metadata,
-  FpasAmp.Library.Metadata.Internal.Reading as Reading, FpasAmp.Library.Inventory.Monitoring as Monitor,
-  FpasAmp.Library.Sources as S, Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO,
-  System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+uses FpasAmp.Library.Inventory.Monitoring as Monitor;
+uses FpasAmp.Library.Metadata.Internal.Reading as Reading;
+uses FpasAmp.Library.Metadata.Model as M;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Library.Sources as S;
+uses FpasAmp.Library.Tests.MetadataSupport as F;
+uses FpasAmp.Library.Tests.Support as H;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
+uses Xunit as X;
 
 // Verifies that uncertainty never silently transfers ratings or destroys user data.
 public type MetadataSafetyTests = record

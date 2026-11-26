@@ -9,7 +9,8 @@ Use a list item for a row with a title and optional secondary information. Avail
 ```pascal
 unit Docs.Ui.DataDisplay.ListItem;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.ListItems as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.ListItems as W;
 
 // Builds the list item example.
 // ## Parameters

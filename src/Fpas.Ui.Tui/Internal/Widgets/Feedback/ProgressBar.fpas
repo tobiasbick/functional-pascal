@@ -2,12 +2,17 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar;
 
-uses
-  Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Layout as L,
-  Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
-  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as Bars;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // Resolves a determinate progress bar into terminal cells.
 // ## Type parameters

@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Actions.ToggleGroups;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // A positional toggle with a literal accessible label.
 public type Item = record

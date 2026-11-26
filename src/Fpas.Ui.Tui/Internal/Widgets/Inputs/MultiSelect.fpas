@@ -2,13 +2,18 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.MultiSelect;
 
-uses
-  Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Inputs.MultiSelects as Multi,
-  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P,
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup,
-  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Styles as Style,
-  System as Sys, System.Collections.Generic as C, System.Globalization as Culture, System.Linq.Enumerable as Linq;
+uses Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P;
+uses Fpas.Ui.Widgets.Inputs.MultiSelects as Multi;
+uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Globalization as Culture;
+uses System.Linq.Enumerable as Linq;
 
 // Opens the checklist and holds its current model bindings.
 // ## Type parameters

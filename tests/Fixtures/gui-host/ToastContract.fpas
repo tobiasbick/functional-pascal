@@ -2,18 +2,17 @@
 
 unit GalleryToastContract;
 
-uses
-  GuiGallery.App.Update as GalleryUpdate,
-  GuiGallery.Shared.State as SliceShared,
-  GuiGallery.App.State as State,
-  GuiGallery.App.View as View,
-  Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Gui.Toasts as Toasts,
-  System as Sys,
-  System.Diagnostics as Diagnostics,
-  System.Threading as Threads;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as GalleryUpdate;
+uses GuiGallery.App.View as View;
+uses GuiGallery.Shared.State as SliceShared;
+uses System as Sys;
+uses System.Diagnostics as Diagnostics;
+uses System.Threading as Threads;
 
 procedure Check(Condition: bool; Reason: string);
 begin

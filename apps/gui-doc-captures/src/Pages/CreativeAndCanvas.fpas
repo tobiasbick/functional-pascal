@@ -2,10 +2,11 @@
 
 unit GuiDocCaptures.Pages.CreativeAndCanvas;
 
-uses
-  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
-  GuiGallery.App.State as Gallery, GuiGallery.Pages.Canvas.State as Canvas,
-  Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Application as Gui;
+uses GuiDocCaptures.Rendering.Presented as Presented;
+uses GuiDocCaptures.Rendering.Regions as Regions;
+uses GuiGallery.App.State as Gallery;
+uses GuiGallery.Pages.Canvas.State as Canvas;
 
 // Captures the original Creative controls page.
 // ## Parameters

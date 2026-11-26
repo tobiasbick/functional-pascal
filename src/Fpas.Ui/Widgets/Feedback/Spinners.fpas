@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Feedback.Spinners;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // Activity styles used by the graphical and terminal hosts.
 public type Style = enum: byte

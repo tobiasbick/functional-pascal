@@ -10,8 +10,10 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SmartInputs.InlineEdit;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.InlineEdits as W,
-  System as Sys, System.Text as Text;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.InlineEdits as W;
+uses System as Sys;
+uses System.Text as Text;
 
 // Displays the confirmed title as an inline editor.
 // ## Parameters

@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.TerminalExtensions.CellGrids;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Widgets.Developer.Terminal as T, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses System as Sys;
 
 // An immutable row-major image for a terminal cell grid.
 public type Image = record

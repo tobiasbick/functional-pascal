@@ -3,17 +3,30 @@
 // Native hover timing, read-only details and the fixed footer use the real app view.
 unit FpasAmp.UiTests.NativeAlbumDetails;
 
-uses
-  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
-  FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging,
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Shell as Shell,
-  FpasAmp.Ui.App.Browsing as Browse, FpasAmp.AppState as Storage,
-  FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Update as Update, FpasAmp.Ui.Albums.View as View,
-  FpasAmp.Ui.Navigation.Model as Nav,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu,
-  System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Collections.Generic as C,
-  System.Threading as T, Xunit as X;
+uses Fpas.Media.Images as Imaging;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses FpasAmp.AppState as Storage;
+uses FpasAmp.Imaging as Thumbnails;
+uses FpasAmp.Library.Albums.Model as Library;
+uses FpasAmp.Library.Tests.AlbumSupport as Art;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Ui.Albums.Model as Albums;
+uses FpasAmp.Ui.Albums.Update as Update;
+uses FpasAmp.Ui.Albums.View as View;
+uses FpasAmp.Ui.App.Browsing as Browse;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Settings.Model as SettingsModel;
+uses FpasAmp.Ui.Shell as Shell;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading as T;
+uses Xunit as X;
 
 function Find(Session: Gui.Session<App.Msg>; Id: string): Gui.Control;
 begin

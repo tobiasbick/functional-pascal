@@ -2,30 +2,51 @@
 
 program TuiWidgetGallery;
 
-uses
-  TuiGallery.PlotSamples as PlotSamples,
-  TuiGallery.ChoiceSamples as ChoiceSamples,
-  TuiGallery.InputSamples as InputSamples, TuiGallery.AlertSamples as AlertSamples,
-  Gallery.Shared.PeopleFilters as FilterSample,
-  Gallery.Shared.PaginationExample as Pagination,
-  Gallery.Shared.BreadcrumbExample as Breadcrumb,
-  Gallery.Shared.LanguagesExample as LanguageSample,
-  TuiGallery.State as GalleryState, TuiGallery.State.Model as Model, TuiGallery.State.Msg as Msg,
-  Gallery.Shared.Strings as Strings,
-  Gallery.Shared.SecurityCard as Security,
-  Gallery.Shared.ProjectOptions as ProjectOptions,
-  Gallery.Shared.AboutField as AboutSample,
-  TuiGallery.ListSample as ListSample,
-  TuiGallery.FilePickerSample as Files,
-  TuiGallery.ToolSamples as Tools, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes,
-  Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Tui.Host as Host, Fpas.Ui.Elements as E,
-  TuiGallery.PeopleSample as People, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Composition as Composition,
-  Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.TerminalExtensions.Views as Views,
-  Gallery.Shared.PickerChoices as Pickers, Gallery.Shared.SaveFrequency as Frequency, Gallery.Shared.CheckboxExamples as Checks, Gallery.Shared.EditorStatus as Status, Gallery.Shared.ButtonExamples as Buttons, Gallery.Shared.ProgressExample as Progress,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Developer.Terminal as Term,
-  TuiGallery.ProfileSample as Profile, TuiGallery.Catalog as Catalog, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
-  Gallery.Shared.TabExamples as TabExamples, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, System as Sys, System.Threading as Threads;
+uses Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.TerminalExtensions.Input as Keys;
+uses Fpas.Ui.TerminalExtensions.Views as Views;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Headless as Headless;
+uses Fpas.Ui.Tui.Host as Host;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Developer.Terminal as Term;
+uses Fpas.Ui.Widgets.Navigation.Navigation as Nav;
+uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses Gallery.Shared.AboutField as AboutSample;
+uses Gallery.Shared.BreadcrumbExample as Breadcrumb;
+uses Gallery.Shared.ButtonExamples as Buttons;
+uses Gallery.Shared.CheckboxExamples as Checks;
+uses Gallery.Shared.EditorStatus as Status;
+uses Gallery.Shared.LanguagesExample as LanguageSample;
+uses Gallery.Shared.PaginationExample as Pagination;
+uses Gallery.Shared.PeopleFilters as FilterSample;
+uses Gallery.Shared.PickerChoices as Pickers;
+uses Gallery.Shared.ProgressExample as Progress;
+uses Gallery.Shared.ProjectOptions as ProjectOptions;
+uses Gallery.Shared.SaveFrequency as Frequency;
+uses Gallery.Shared.SecurityCard as Security;
+uses Gallery.Shared.Strings as Strings;
+uses Gallery.Shared.TabExamples as TabExamples;
+uses System as Sys;
+uses System.Threading as Threads;
+uses TuiGallery.AlertSamples as AlertSamples;
+uses TuiGallery.Catalog as Catalog;
+uses TuiGallery.ChoiceSamples as ChoiceSamples;
+uses TuiGallery.FilePickerSample as Files;
+uses TuiGallery.InputSamples as InputSamples;
+uses TuiGallery.ListSample as ListSample;
+uses TuiGallery.PeopleSample as People;
+uses TuiGallery.PlotSamples as PlotSamples;
+uses TuiGallery.ProfileSample as Profile;
+uses TuiGallery.State as GalleryState;
+uses TuiGallery.State.Model as Model;
+uses TuiGallery.State.Msg as Msg;
+uses TuiGallery.ToolSamples as Tools;
 
 function ThemeFor(State: Model): Themes.Theme;
 begin

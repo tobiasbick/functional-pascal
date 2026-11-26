@@ -2,11 +2,21 @@
 
 unit Fpas.Ui.Internal.Validation.Structure.PlanningRules;
 
-uses
-  Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR, Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart,
-  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B,
-  System as Sys, System.Collections.Generic as Lists,
-  Fpas.Ui.Widgets.Navigation.PathBars as PathBars, Fpas.Ui.Widgets.Files.FileBrowsers as FileBrowsers, Fpas.Ui.Widgets.Files.FilePickers as FilePickers, Fpas.Ui.Widgets.Planning.WeekCalendars as WeekCalendars, Fpas.Ui.Widgets.Planning.MonthCalendars as MonthCalendars, Fpas.Ui.Widgets.Planning.Gantts as Gantts, Fpas.Ui.Widgets.Planning.Kanbans as Kanbans;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Files.FileBrowsers as FileBrowsers;
+uses Fpas.Ui.Widgets.Files.FilePickers as FilePickers;
+uses Fpas.Ui.Widgets.Navigation.PathBars as PathBars;
+uses Fpas.Ui.Widgets.Planning.Gantts as Gantts;
+uses Fpas.Ui.Widgets.Planning.Kanbans as Kanbans;
+uses Fpas.Ui.Widgets.Planning.MonthCalendars as MonthCalendars;
+uses Fpas.Ui.Widgets.Planning.WeekCalendars as WeekCalendars;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 procedure Extent(Value: L.Extent; At: string);
 begin

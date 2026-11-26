@@ -9,9 +9,10 @@ Use an action footer to lay out the buttons at the bottom of a dialog. Available
 ```pascal
 unit Docs.Ui.Overlays.ActionFooter;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Actions.ActionFooters as W,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.ActionFooters as W;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // Builds the action footer example.
 // ## Returns

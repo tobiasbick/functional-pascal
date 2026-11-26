@@ -2,9 +2,11 @@
 
 unit TuiGallery.ListSample;
 
-uses
-  Gallery.Shared.ListEntries as Sample, Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.TerminalExtensions.SelectionLists as Lists;
+uses Gallery.Shared.ListEntries as Sample;
+uses Gallery.Shared.Strings as Strings;
+uses System as Sys;
 
 // Current selection and most recently opened row.
 public type State = record

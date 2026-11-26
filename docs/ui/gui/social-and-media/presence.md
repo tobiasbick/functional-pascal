@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.Presence;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Conversation.Presences as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Conversation.Presences as W;
 
 // Shows the people present in a conversation.
 // ## Parameters

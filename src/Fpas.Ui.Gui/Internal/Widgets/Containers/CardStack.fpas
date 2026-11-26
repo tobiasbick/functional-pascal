@@ -2,7 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Containers.CardStack;
 
-uses Fpas.Ui.Widgets.Containers.CardStacks as CardStacks, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.CardStacks as CardStacks;
 
 // Presents CUI's native CardStack widget.
 // ## Type parameters

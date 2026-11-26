@@ -9,7 +9,8 @@ Use a checkbox for an independent option, such as email notifications. Available
 ```pascal
 unit Docs.Ui.Selection.Checkbox;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Checkboxes as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Checkboxes as C;
 
 // Builds the checkbox example.
 // ## Parameters

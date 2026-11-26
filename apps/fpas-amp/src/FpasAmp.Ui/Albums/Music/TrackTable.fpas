@@ -3,17 +3,30 @@
 // Virtual release tracks with title and performer in the same cell.
 unit FpasAmp.Ui.Albums.Music.TrackTable;
 
-uses
-  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Ui.Albums.RatingStyle as RatingStyle, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Library.Albums.Model as Albums, Fpas.Media.Tags.AudioFiles as Tags,
-  FpasAmp.Ui.Player.Model as Player,
-  FpasAmp.Ui.Albums.Artwork as Artwork, Fpas.Media.Images as Imaging, System.Collections.Immutable as I,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
-  Fpas.Ui.Widgets.Inputs.Ratings as Ratings, Fpas.Ui.Widgets.Overlays.Menus as Menus,
-  Fpas.Ui.Widgets.Containers.EmptyStates as Empty, System as Sys, System.Collections.Generic as C;
+uses Fpas.Media.Images as Imaging;
+uses Fpas.Media.Tags.AudioFiles as Tags;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Collections.DataGrids as Grid;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Containers.EmptyStates as Empty;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Inputs.Ratings as Ratings;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses FpasAmp.Library.Albums.Model as Albums;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Albums.Artwork as Artwork;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Model as M;
+uses FpasAmp.Ui.Albums.RatingStyle as RatingStyle;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Player.Model as Player;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 // Persisted selection keys for the three sortable headers: title, time and rating.

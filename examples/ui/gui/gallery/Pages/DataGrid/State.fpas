@@ -2,10 +2,13 @@
 
 unit GuiGallery.Pages.DataGrid.State;
 
-uses
-  Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Widgets.Collections.Tables as T,
-  Fpas.Ui.Widgets.Collections.TreeTables as Tree, GuiGallery.Pages.DataGrid.People as People,
-  Gallery.Shared.PeopleFilters as Filters, System.Collections.Generic as Lists;
+uses Fpas.Ui.Widgets.Collections.DataGrids as D;
+uses Fpas.Ui.Widgets.Collections.FilterBars as F;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Widgets.Collections.TreeTables as Tree;
+uses Gallery.Shared.PeopleFilters as Filters;
+uses GuiGallery.Pages.DataGrid.People as People;
+uses System.Collections.Generic as Lists;
 
 // Model for the original grid and supplemental native tree table.
 public type Model = record

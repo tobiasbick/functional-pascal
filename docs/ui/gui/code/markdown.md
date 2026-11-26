@@ -10,7 +10,8 @@ gallery can replay its release notes as a stream. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Code.Markdown;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Display.Markdowns as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Display.Markdowns as W;
 
 // Renders release notes or a partial update to them.
 // ## Parameters

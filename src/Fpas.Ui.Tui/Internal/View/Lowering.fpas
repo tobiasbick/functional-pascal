@@ -2,18 +2,76 @@
 
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses
-  Fpas.Ui.Widgets.Feedback.Spinners as Spinners, Fpas.Ui.Tui.Internal.Widgets.Feedback.Spinner as Spinner,
-  Fpas.Ui.Widgets.Charts.Sparklines as Sparklines, Fpas.Ui.Tui.Internal.Widgets.Charts.Sparkline as Sparkline,
-  Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl as Segments,
-  Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields, Fpas.Ui.Tui.Internal.Widgets.Inputs.SearchField as Search,
-  Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields, Fpas.Ui.Tui.Internal.Widgets.Inputs.NumberField as Number,
-  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Tui.Internal.Widgets.Feedback.Alert as Alert,
-  Fpas.Ui.Widgets.Files.FilePickers as Files,
-  Fpas.Ui.Tui.Internal.Widgets.Files.FilePicker as FilePicker,
-  Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as PickerState,
-  Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
-  Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Tui.Internal.Widgets.Inputs.MultiSelect as MultiSelect, Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb, Fpas.Ui.Widgets.Collections.FilterBars as Filters, Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar as FilterWidget, Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Containers.ExpandableCard as Card, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown as Dropdown, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Widgets.Inputs.TextAreas as Areas, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as TabSettings, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Tui.Internal.Widgets.Inputs.ToggleRows as Toggles, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as TableWidget, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Desktop.StatusBars as StatusBars, Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar as StatusLine, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Elements as Ui;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as UiStyle;
+uses Fpas.Ui.TerminalExtensions.CellGrids as Grids;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.TerminalExtensions.SelectionLists as Lists;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button;
+uses Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl as Segments;
+uses Fpas.Ui.Tui.Internal.Widgets.Charts.Sparkline as Sparkline;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar as FilterWidget;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.Table as TableWidget;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows;
+uses Fpas.Ui.Tui.Internal.Widgets.Containers.ExpandableCard as Card;
+uses Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar as StatusLine;
+uses Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log;
+uses Fpas.Ui.Tui.Internal.Widgets.Feedback.Alert as Alert;
+uses Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress;
+uses Fpas.Ui.Tui.Internal.Widgets.Feedback.Spinner as Spinner;
+uses Fpas.Ui.Tui.Internal.Widgets.Files.FilePicker as FilePicker;
+uses Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as PickerState;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.MultiSelect as MultiSelect;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.NumberField as Number;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.SearchField as Search;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.ToggleRows as Toggles;
+uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb;
+uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar;
+uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown as Dropdown;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented;
+uses Fpas.Ui.Widgets.Charts.Sparklines as Sparklines;
+uses Fpas.Ui.Widgets.Collections.FilterBars as Filters;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as StatusBars;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as Logs;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars;
+uses Fpas.Ui.Widgets.Feedback.Spinners as Spinners;
+uses Fpas.Ui.Widgets.Files.FilePickers as Files;
+uses Fpas.Ui.Widgets.Inputs.MultiSelects as Multi;
+uses Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields;
+uses Fpas.Ui.Widgets.Inputs.RadioGroups as R;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields;
+uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
+uses Fpas.Ui.Widgets.Inputs.TextAreas as Areas;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+uses Fpas.Ui.Widgets.Navigation.Navigation as N;
+uses Fpas.Ui.Widgets.Navigation.Tabs as TabSettings;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // Lowers a validated shared tree into terminal measurement and painting data.
 //

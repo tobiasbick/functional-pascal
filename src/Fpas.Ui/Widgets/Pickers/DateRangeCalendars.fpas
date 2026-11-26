@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Pickers.DateRangeCalendars;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.DateRanges as R;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 
 // Displays CUI's inline date range calendar.
 // ## Type parameters

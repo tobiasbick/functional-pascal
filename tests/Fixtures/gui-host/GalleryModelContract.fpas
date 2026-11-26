@@ -2,19 +2,26 @@
 
 unit GalleryModelContract;
 
-uses
-  GalleryHostAssertions as A,
-  GuiGallery.Pages.Ai.State as Ai, GuiGallery.Pages.Ai.Update as AiUpdate,
-  GuiGallery.Pages.Canvas.State as Canvas, GuiGallery.Pages.Canvas.Update as CanvasUpdate,
-  GuiGallery.Pages.Instruments.State as Instruments,
-  GuiGallery.Pages.Files.Folders as Folders,
-  GuiGallery.Pages.Files.State as Files, GuiGallery.Pages.Files.Update as FilesUpdate,
-  GuiGallery.App.State as Gallery, GuiGallery.App.Update as Update, GuiGallery.App.View as View,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Widgets.Ai.Composers as Composer,
-  Fpas.Ui.Widgets.Ai.ResponseActions as Response, Fpas.Ui.Widgets.Charts.EventTracks as Events,
-  Fpas.Ui.Widgets.Navigation.PathBars as Paths,
-  System as Sys;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Widgets.Ai.Composers as Composer;
+uses Fpas.Ui.Widgets.Ai.ResponseActions as Response;
+uses Fpas.Ui.Widgets.Charts.EventTracks as Events;
+uses Fpas.Ui.Widgets.Navigation.PathBars as Paths;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as Gallery;
+uses GuiGallery.App.Update as Update;
+uses GuiGallery.App.View as View;
+uses GuiGallery.Pages.Ai.State as Ai;
+uses GuiGallery.Pages.Ai.Update as AiUpdate;
+uses GuiGallery.Pages.Canvas.State as Canvas;
+uses GuiGallery.Pages.Canvas.Update as CanvasUpdate;
+uses GuiGallery.Pages.Files.Folders as Folders;
+uses GuiGallery.Pages.Files.State as Files;
+uses GuiGallery.Pages.Files.Update as FilesUpdate;
+uses GuiGallery.Pages.Instruments.State as Instruments;
+uses System as Sys;
 
 procedure Regeneration();
 begin

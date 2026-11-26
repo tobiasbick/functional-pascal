@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Canvas.LiveCursors;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Editors.NodeEditors as N;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
 
 // A collaborator displayed by the cursor overlay or presence pill.
 public type Person = record

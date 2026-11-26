@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.TextAndDisplay.Keycap;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Display.Keycaps as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Display.Keycaps as W;
 
 // Shows the command-palette shortcut hint.
 // ## Returns

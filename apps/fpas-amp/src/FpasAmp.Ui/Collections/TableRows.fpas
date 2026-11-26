@@ -2,7 +2,9 @@
 
 unit FpasAmp.Ui.Collections.TableRows;
 
-uses System as Sys, System.Collections.Generic as C, System.Linq as Linq;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Linq as Linq;
 
 // Sorts rows while retaining input order for equal keys.
 // ## Type parameters

@@ -3,10 +3,14 @@
 // Navigation restoration is validated independently of rendering and display names.
 unit FpasAmp.UiTests.Navigation;
 
-uses
-  FpasAmp.Ui.Navigation.Model as M, FpasAmp.Ui.Navigation.Update as Update,
-  FpasAmp.Library.Playlists.Model as Lists, FpasAmp.AppState as AppState,
-  FpasAmp.Library.Tests.Support as H, System.IO as IO, System.Collections.Immutable as I, Xunit as X;
+uses FpasAmp.AppState as AppState;
+uses FpasAmp.Library.Playlists.Model as Lists;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Ui.Navigation.Model as M;
+uses FpasAmp.Ui.Navigation.Update as Update;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses Xunit as X;
 
 function Playlist(Id: string; Name: string := 'Mix'; Error: string? := null): Lists.Summary;
 begin

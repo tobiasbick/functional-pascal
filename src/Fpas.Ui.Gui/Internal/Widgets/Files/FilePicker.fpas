@@ -2,9 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Files.FilePicker;
 
-uses
-  Fpas.Ui.Widgets.Files.FilePickers as A, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles, Fpas.Ui.Gui.Internal.Data.FileData as D, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Data.FileData as D;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Files.FilePickers as A;
 
 // Presents the native file picker.
 // ## Type parameters

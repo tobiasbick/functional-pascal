@@ -2,9 +2,12 @@
 
 unit Fpas.Ui.Internal.Validation.Inputs.SelectionRules;
 
-uses
-  Fpas.Ui.Internal.Validation.Core.Checks as Rules, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
-  Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Widgets.Inputs.RadioCards as Cards, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Inputs.RadioCards as Cards;
+uses Fpas.Ui.Widgets.Inputs.RadioGroups as R;
+uses System as Sys;
 
 // Validates the visible and accessible text shared by selection controls.
 // ## Parameters

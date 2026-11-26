@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.EditingTools.FlameGraph;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Editors.FlameGraphs as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Editors.FlameGraphs as W;
 
 // Displays frame timings.
 // ## Parameters

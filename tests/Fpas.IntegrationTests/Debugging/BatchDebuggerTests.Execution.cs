@@ -39,7 +39,7 @@ public sealed partial class BatchDebuggerTests
         using var program = new Debuggee("batch-input-λ space");
         await program.Compile("""
             program BatchInput;
-            uses System.Console as Console, System.Text.Encoding as Encoding, System.Convert as Convert;
+            uses System.Console as Console; uses System.Text.Encoding as Encoding; uses System.Convert as Convert;
             begin
               Console.OutputEncoding := Encoding.UTF8; Console.InputEncoding := Encoding.UTF8;
               Console.WriteLine(args.Length); Console.WriteLine(Convert.ToBase64String(Encoding.UTF8.GetBytes(args[0])));

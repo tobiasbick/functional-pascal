@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.AspectPicker;
 
-uses
-  Fpas.Ui.Widgets.Pickers.AspectPickers as A, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Core.Parts as W, Fpas.Ui.Gui.Internal.Core.Values as Enc, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as W;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Widgets.Pickers.AspectPickers as A;
+uses System.Collections.Generic as Lists;
 
 // Presents the native aspect ratio picker.
 // ## Type parameters

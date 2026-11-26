@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Audio.NowPlaying;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Native value.
 public type Value = record

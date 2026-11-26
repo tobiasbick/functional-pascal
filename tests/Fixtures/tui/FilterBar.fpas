@@ -2,11 +2,16 @@
 
 program FilterBarContract;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless,
-  Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
-  Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Widgets.Actions.Buttons as B,
-  System as Sys, System.Console as Console;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Mvu.Application as M;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Application as T;
+uses Fpas.Ui.Tui.Headless as Headless;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Collections.FilterBars as F;
+uses System as Sys;
+uses System.Console as Console;
 
 const Fields: array of F.Field := [
   new F.Field('Team', ['Engine', 'Design', 'Platform']),

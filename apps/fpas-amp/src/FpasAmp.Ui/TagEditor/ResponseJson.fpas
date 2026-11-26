@@ -2,7 +2,8 @@
 
 unit FpasAmp.Ui.TagEditor.ResponseJson;
 
-uses System.Text.Json as J, System.Collections.Generic as C;
+uses System.Collections.Generic as C;
+uses System.Text.Json as J;
 
 // Reads the property Name from Item, returning an undefined element when absent.
 public function Property(Item: J.JsonElement; Name: string): J.JsonElement;

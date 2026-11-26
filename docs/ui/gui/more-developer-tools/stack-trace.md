@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.StackTrace;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.StackTraces as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.StackTraces as W;
 
 // Displays a recorded runtime error.
 // ## Parameters

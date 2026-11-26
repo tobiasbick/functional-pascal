@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Desktop.DocumentTabs;
 
-uses
-  Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop,
-  Fpas.Ui.Gui.Cui as Cui, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Desktop.DocumentTabs as D;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses System.Collections.Generic as Lists;
 
 // Draws the native document strip and returns proposals to the model.
 // ## Type parameters

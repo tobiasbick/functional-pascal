@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Feedback.StatusSpinners;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Widgets.Actions.StatusButtons as Buttons;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Buttons;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // Native statusspinner options.
 public type Options = record

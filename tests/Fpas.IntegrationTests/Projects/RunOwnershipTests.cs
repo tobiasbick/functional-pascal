@@ -19,8 +19,8 @@ public sealed class RunOwnershipTests(SdkPackageFixture sdk) : IClassFixture<Sdk
         var source = directory.File("Parent.fpas"); var ready = directory.File("child.pid");
         File.WriteAllText(source, """
             program Parent;
-            uses System as S, System.IO.File as File, System.Diagnostics as P,
-              System.Threading.Thread as Thread, System.Console as Console;
+            uses System as S; uses System.IO.File as File; uses System.Diagnostics as P;
+              uses System.Threading.Thread as Thread; uses System.Console as Console;
             begin
               if args[0] = 'child' then
                 File.WriteAllText(args[2] + '.tmp', S.Environment.ProcessId.ToString());

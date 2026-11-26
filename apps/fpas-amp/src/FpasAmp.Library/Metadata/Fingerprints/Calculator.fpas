@@ -3,9 +3,12 @@
 // Local acoustic fingerprint generation with the packaged Chromaprint tool.
 unit FpasAmp.Library.Metadata.Fingerprints.Calculator;
 
-uses
-  System as Sys, System.Diagnostics as D, System.IO as IO, System.Text.Json as J,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses System as Sys;
+uses System.Diagnostics as D;
+uses System.IO as IO;
+uses System.Text.Json as J;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // fpcalc's public algorithm number, stored alongside the encoded result.
 public const Algorithm: int := 2;

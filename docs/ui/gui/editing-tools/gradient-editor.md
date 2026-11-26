@@ -10,8 +10,9 @@ shows how flame color changes over its lifetime. Available in **GUI**.
 ```pascal
 unit Docs.Ui.EditingTools.GradientEditor;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G,
-  Fpas.Ui.Widgets.Editors.GradientEditors as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Editors.GradientEditors as W;
 
 // Defines a ramp with an opaque start and transparent end.
 // ## Returns

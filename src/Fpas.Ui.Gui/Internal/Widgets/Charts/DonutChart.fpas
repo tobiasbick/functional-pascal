@@ -2,10 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.DonutChart;
 
-uses
-  Fpas.Ui.Widgets.Charts.DonutCharts as D, Fpas.Ui.Gui.Internal.Data.ChartData as Data,
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Data;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Widgets.Charts.DonutCharts as D;
 
 // Draws the native CUI donut-chart.
 // ## Type parameters

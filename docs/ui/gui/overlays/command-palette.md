@@ -9,8 +9,8 @@ Use a command palette for searchable actions across the application. Available i
 ```pascal
 unit Docs.Ui.Overlays.CommandPalette;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.CommandPalettes as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as W;
 
 // Builds the command palette example.
 // ## Parameters

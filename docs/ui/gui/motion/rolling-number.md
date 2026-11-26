@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.RollingNumber;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Motion.NumberRolls as W, Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Widgets.Motion.NumberRolls as W;
 
 // Displays a preformatted total.
 // ## Parameters

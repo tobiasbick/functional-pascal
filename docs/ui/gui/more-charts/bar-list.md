@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.BarList;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.BarLists as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.BarLists as W;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Builds the bar list example.
 // ## Parameters

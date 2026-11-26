@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DeveloperTools.SchedulePicker;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.SchedulePickers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.SchedulePickers as W;
 
 // Shows a backup schedule in UTC.
 // ## Parameters

@@ -23,7 +23,7 @@ public sealed class EventMetadataTests
         var reference = directory.File("Contracts.dll"); File.WriteAllBytes(reference, Contract(shape));
         var result = FpasCompiler.Compile(new([new("consumer.fpas", $$"""
             program Consumer;
-            uses Contracts as C, System as Sys;
+            uses Contracts as C; uses System as Sys;
             procedure Wire(Value: C.IEvents; Handler: Sys.Action);
             begin {{operation}} Value.Changed with Handler; end procedure;
             begin end;

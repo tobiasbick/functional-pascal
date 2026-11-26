@@ -3,10 +3,14 @@
 // Shared song browsing and playback selection for releases and the Music destination.
 unit FpasAmp.Ui.Albums.Music.Model;
 
-uses
-  FpasAmp.Ui.Navigation.Model as Nav,
-  FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Metadata.Model as Tracks,
-  Fpas.Media.Images as Imaging, Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I;
+uses Fpas.Media.Images as Imaging;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses FpasAmp.Library.Albums.Model as Albums;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Fingerprints as Fp;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses System as Sys;
+uses System.Collections.Immutable as I;
 
 // Confirmed or draft track filters.
 public type Filters = record

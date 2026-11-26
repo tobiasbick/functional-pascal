@@ -9,7 +9,8 @@ Group commands behind one button. The **Options** example under **Components →
 ```pascal
 unit Docs.Tui.Actions.DropdownMenu;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as Menu;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menu;
 
 // Builds the project command menu.
 // ## Returns

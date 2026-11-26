@@ -9,8 +9,9 @@ Use a color picker for a swatch the user can edit. In the gallery it sets the br
 ```pascal
 unit Docs.Ui.Inputs.ColorPicker;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.ColorPickers as W,
-  Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Pickers.ColorPickers as W;
 
 // Builds the color picker example.
 // ## Parameters

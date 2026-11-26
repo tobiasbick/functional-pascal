@@ -3,13 +3,19 @@
 // Selects visible headers and keeps each grid’s filters and scroll position.
 unit FpasAmp.Ui.Albums.Grid;
 
-uses
-  FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Albums,
-  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Toolbar.Update as ToolbarUpdate,
-  FpasAmp.Ui.Albums.Browse as Browse, FpasAmp.Ui.Albums.Groups as Groups, Fpas.Media.Images as Images,
-  FpasAmp.Ui.Navigation.Model as Nav,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Browse as TrackBrowse,
-  System.Collections.Immutable as I, System.Collections.Generic as C, Fpas.Ui.Mvu.Application as A;
+uses Fpas.Media.Images as Images;
+uses Fpas.Ui.Mvu.Application as A;
+uses FpasAmp.Library.Albums.Model as Albums;
+uses FpasAmp.Ui.Albums.Browse as Browse;
+uses FpasAmp.Ui.Albums.Groups as Groups;
+uses FpasAmp.Ui.Albums.Model as M;
+uses FpasAmp.Ui.Albums.Music.Browse as TrackBrowse;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses FpasAmp.Ui.Albums.Toolbar.Update as ToolbarUpdate;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
 
 function Key(Scope: Toolbar.Scope; Id: string): string;
 begin

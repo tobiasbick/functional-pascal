@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Voice.VoiceOrb;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.VoiceOrbs as W, Fpas.Ui.Widgets.Audio.Voice as V;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.Voice as V;
+uses Fpas.Ui.Widgets.Audio.VoiceOrbs as W;
 
 // Shows the current state of a voice control.
 // ## Parameters

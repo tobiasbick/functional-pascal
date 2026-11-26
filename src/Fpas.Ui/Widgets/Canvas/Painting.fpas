@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Canvas.Painting;
 
-uses Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Media.MediaImages as Images;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Media.MediaImages as Images;
 
 // A point in canvas-local logical units.
 public type Point = record

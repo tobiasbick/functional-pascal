@@ -2,10 +2,9 @@
 
 unit GuiGallery.Pages.Overlays.Update;
 
-uses
-  Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Gui.Toasts as Toasts,
-  GuiGallery.Pages.Overlays.State as S;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses GuiGallery.Pages.Overlays.State as S;
 
 // Applies a message to this feature and describes its effects.
 // ## Parameters

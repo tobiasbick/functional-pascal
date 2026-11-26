@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CanvasAndBars.PresencePill;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Canvas.PresencePills as W, Fpas.Ui.Widgets.Canvas.LiveCursors as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Canvas.LiveCursors as L;
+uses Fpas.Ui.Widgets.Canvas.PresencePills as W;
 
 // Shows the current collaborators.
 // ## Parameters

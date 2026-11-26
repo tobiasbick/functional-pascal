@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DeveloperTools.TraceViewer;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.TraceViewers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.TraceViewers as W;
 
 // Shows the current trace.
 // ## Parameters

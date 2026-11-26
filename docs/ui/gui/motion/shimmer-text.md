@@ -10,7 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.ShimmerText;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Motion.ShimmerTexts as W, Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Widgets.Motion.ShimmerTexts as W;
 
 // Displays the current waiting message.
 // ## Parameters

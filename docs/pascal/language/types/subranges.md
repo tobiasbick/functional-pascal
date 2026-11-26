@@ -60,7 +60,8 @@ corruption is outside the language's guarantees.
 ```pascal
 program Ranges;
 
-uses System as Sys, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
 
 type Percent = int range 0..100;
 

@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Display.DotDisplays;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
 
 // Native dot-matrix display settings.
 public type Options = record

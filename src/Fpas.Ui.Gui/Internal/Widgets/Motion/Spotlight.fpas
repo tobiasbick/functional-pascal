@@ -2,9 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Motion.Spotlight;
 
-uses
-  Fpas.Ui.Widgets.Motion.Spotlights as W, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Motion.Spotlights as W;
 
 // Presents the native widget.
 // ## Type parameters

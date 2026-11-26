@@ -9,7 +9,8 @@ Use a number field for a bounded numeric value that the user can type or step up
 ```pascal
 unit Docs.Ui.Inputs.NumberField;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.NumberFields as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.NumberFields as W;
 
 // Builds the number field example.
 // ## Parameters

@@ -2,12 +2,11 @@
 
 unit GuiGallery.Pages.Selection.Widgets.Chip;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Selection.State as State,
-  Fpas.Ui.Widgets.Inputs.Chips as Chips,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Inputs.Chips as Chips;
+uses GuiGallery.Pages.Selection.State as State;
+uses GuiGallery.Shared.State as Demo;
 
 // Builds the original independent category chips in a wrapping row.
 //

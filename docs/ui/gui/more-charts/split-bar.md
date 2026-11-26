@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.SplitBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.SplitBars as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.SplitBars as W;
 
 // Builds the split bar example.
 // ## Returns

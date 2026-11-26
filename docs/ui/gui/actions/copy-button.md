@@ -9,7 +9,8 @@ Send literal text to the clipboard and show brief feedback next to the copied va
 ```pascal
 unit Docs.Ui.Actions.CopyButton;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.CopyButtons as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.CopyButtons as C;
 
 // Builds the example view.
 // ## Returns

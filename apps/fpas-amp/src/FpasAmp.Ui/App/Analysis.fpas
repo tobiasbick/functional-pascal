@@ -3,12 +3,19 @@
 // Playback-triggered waveform and local acoustic fingerprint analysis.
 unit FpasAmp.Ui.App.Analysis;
 
-uses
-  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Fingerprints as Fp,
-  FpasAmp.Ui.Albums.Music.Model as Songs, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Waveforms as Waves,
-  Fpas.Media.Audio as Audio, Fpas.Ui.Mvu.Application as Mvu, System as Sys,
-  System.Collections.Generic as C, System.Threading as T, System.Threading.Tasks as Tasks;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Library.Metadata.Waveforms as Waves;
+uses FpasAmp.Ui.Albums.Music.Model as Songs;
+uses FpasAmp.Ui.App.Model as M;
+uses FpasAmp.Ui.Fingerprints as Fp;
+uses FpasAmp.Ui.Player.Model as PlayerModel;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // Returns the waveform command for Current, using Service when the catalogue is available.
 public function Waveform(Current: PlayerModel.State; Service: Metadata.Session?): Mvu.Command<M.Msg>;

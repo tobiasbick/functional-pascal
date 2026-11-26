@@ -2,9 +2,12 @@
 
 unit GuiGallery.Pages.Feedback.Update;
 
-uses
-  GuiGallery.Pages.Feedback.State as S, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Widgets.Actions.StatusButtons as Work, System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Work;
+uses GuiGallery.Pages.Feedback.State as S;
+uses System as Sys;
+uses System.Threading as Threads;
+uses System.Threading.Tasks as Tasks;
 
 function Complete(Status: Work.Status): Mvu.Command<S.Msg>;
   async function Run(Post: function(S.Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;

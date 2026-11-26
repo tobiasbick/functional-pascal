@@ -11,9 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Reader.ScrollAnchor;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Navigation.ScrollAnchors as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Navigation.ScrollAnchors as W;
 
 // Builds the viewport targeted by the outline example.
 // ## Returns

@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Audio.Knob;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.Knobs as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.Knobs as W;
 
 // Adjusts the cutoff of a filter.
 // ## Parameters

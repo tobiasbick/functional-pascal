@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.CalendarHeatmap;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.CalendarHeatmaps as W,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.CalendarHeatmaps as W;
+uses System as Sys;
 
 // Builds the calendar heatmap example.
 // ## Parameters

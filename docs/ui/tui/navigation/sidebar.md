@@ -9,7 +9,8 @@ Group destinations under headings. In the gallery, the selected destination dete
 ```pascal
 unit Docs.Tui.Widgets.Sidebar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Navigation as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.Navigation as W;
 
 // Builds the sidebar navigation example.
 // ## Parameters

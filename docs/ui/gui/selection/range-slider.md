@@ -9,7 +9,8 @@ Use a range slider for two ordered endpoints, such as a minimum and maximum pric
 ```pascal
 unit Docs.Ui.Selection.RangeSlider;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RangeSliders as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.RangeSliders as C;
 
 // Builds the range slider example.
 // ## Parameters

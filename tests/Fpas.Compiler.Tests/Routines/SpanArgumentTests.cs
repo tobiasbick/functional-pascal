@@ -13,7 +13,7 @@ public sealed class SpanArgumentTests
     {
         var result = TestCompilation.Compile("""
             unit Spans;
-            uses System as Sys, System.IO as IO, System.Buffers.Binary as Binary, System.Threading.Tasks as Tasks;
+            uses System as Sys; uses System.IO as IO; uses System.Buffers.Binary as Binary; uses System.Threading.Tasks as Tasks;
 
             async function Later(Value: int): Tasks.Task<int>;
             begin
@@ -62,7 +62,7 @@ public sealed class SpanArgumentTests
     public void Spans_stay_limited_to_call_arguments(string body, string code, string message)
     {
         var result = TestCompilation.CompileAgainstFramework(
-            "program Bad; uses System as Sys, System.Buffers.Binary as Binary; begin " + body + " end; end program;");
+            "program Bad; uses System as Sys; uses System.Buffers.Binary as Binary; begin " + body + " end; end program;");
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal(code, diagnostic.Code);
         Assert.Contains(message, diagnostic.Message);

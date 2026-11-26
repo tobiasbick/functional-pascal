@@ -191,7 +191,8 @@ their implementations own the executable contracts.
 ```pascal
 program Contracts;
 
-uses System as Sys, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
 
 function AddPositive(Left: int; Right: int): int;
 requires Left > 0;

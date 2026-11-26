@@ -2,15 +2,26 @@
 
 unit GuiGallery.Pages.EditingTools.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.EditingTools.State as M, GuiGallery.Pages.EditingTools.Samples as Sample,
-  GuiGallery.Pages.EditingTools.Capture as Capture, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Motion.Motion as Text,
-  Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Widgets.Containers.Cards as Card, Fpas.Ui.Widgets.Actions.IconButtons as Button,
-  Fpas.Ui.Widgets.Editors.PropertyInspectors as I, Fpas.Ui.Widgets.Editors.FlameGraphs as F, Fpas.Ui.Widgets.Editors.CurveEditors as C,
-  Fpas.Ui.Widgets.Editors.GradientEditors as Ramp, Fpas.Ui.Widgets.Editors.TimelineEditors as T,
-  System as Sys, System.Globalization as Locale, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Button;
+uses Fpas.Ui.Widgets.Containers.Cards as Card;
+uses Fpas.Ui.Widgets.Editors.CurveEditors as C;
+uses Fpas.Ui.Widgets.Editors.FlameGraphs as F;
+uses Fpas.Ui.Widgets.Editors.GradientEditors as Ramp;
+uses Fpas.Ui.Widgets.Editors.PropertyInspectors as I;
+uses Fpas.Ui.Widgets.Editors.TimelineEditors as T;
+uses Fpas.Ui.Widgets.Motion.Motion as Text;
+uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.EditingTools.Capture as Capture;
+uses GuiGallery.Pages.EditingTools.Samples as Sample;
+uses GuiGallery.Pages.EditingTools.State as M;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+uses System.Globalization as Locale;
 
 function Limited(Value: E.Element<M.Msg>; Width: int): E.Element<M.Msg>;
 begin

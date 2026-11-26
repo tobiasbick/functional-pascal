@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Actions.Buttons;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
 
 // Button sizes in CUI's native order.
 public type Size = enum: byte

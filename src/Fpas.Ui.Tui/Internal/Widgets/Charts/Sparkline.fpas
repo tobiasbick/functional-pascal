@@ -2,12 +2,16 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Charts.Sparkline;
 
-uses
-  Fpas.Ui.Widgets.Charts.Sparklines as Chart, Fpas.Ui.Layout as L,
-  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
-  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
-  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Charts.Sparklines as Chart;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // Resolves a sparkline into a terminal plot.
 // ## Type parameters

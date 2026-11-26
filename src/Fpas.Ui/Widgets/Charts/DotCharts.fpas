@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Charts.DotCharts;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Charts.Charts as C, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses System as Sys;
 
 // Format native axis labels.
 public type AxisUnits = enum: byte

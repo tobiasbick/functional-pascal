@@ -9,7 +9,8 @@ Use Select for one choice from a list. Enable search to filter a longer list ins
 ```pascal
 unit Docs.Ui.Inputs.Select;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Selects as W;
 
 // Builds the select example.
 // ## Parameters

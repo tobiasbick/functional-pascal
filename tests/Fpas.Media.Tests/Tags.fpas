@@ -2,9 +2,13 @@
 
 unit Fpas.Media.Tests.Tags;
 
-uses
-  ATL as A, Fpas.Media.Tags.AudioFiles as Files, Fpas.Media.Tags.Pictures as Pictures,
-  System as Sys, System.Collections.Generic as C, System.IO as IO, Xunit as X;
+uses ATL as A;
+uses Fpas.Media.Tags.AudioFiles as Files;
+uses Fpas.Media.Tags.Pictures as Pictures;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+uses Xunit as X;
 
 // Verifies detached tag records and embedded artwork through the public FPAS API.
 public type TagTests = record

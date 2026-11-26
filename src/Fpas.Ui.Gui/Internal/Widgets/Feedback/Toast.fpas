@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Toast;
 
-uses
-  Fpas.Ui.Gui.Toasts as T, Fpas.Ui.Gui.Cui.Widgets.Feedback as CuiFeedback,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Internal.Core.Context as C, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Feedback as CuiFeedback;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Toasts as T;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Submits queued notifications once, inside the accepted view's native frame.
 //

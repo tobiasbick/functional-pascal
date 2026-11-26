@@ -24,7 +24,7 @@ public sealed class CollectionsExecutionTests
     public Task Vectors_jagged_arrays_rectangles_and_utf16_characters_execute()
         => ProgramExecution.Output("""
             program Arrays;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             begin
               const Values: array of int := [1, 2, 3];
               const Alias: array of int := Values;
@@ -60,7 +60,7 @@ public sealed class CollectionsExecutionTests
     public Task Generic_methods_fields_indexers_nested_types_and_interface_variance_execute()
         => ProgramExecution.Output("""
             program Collections;
-            uses System.Collections.Generic as C, System.Console as Console;
+            uses System.Collections.Generic as C; uses System.Console as Console;
             begin
               const Values: C.List<string> := new C.List<string>();
               Values.Add('first'); Values.Add('second');
@@ -109,7 +109,7 @@ public sealed class CollectionsExecutionTests
     public Task Enumeration_preserves_collection_invalidation_and_loop_control()
         => ProgramExecution.Output("""
             program Loops;
-            uses System as Sys, System.Collections.Generic as C, System.Console as Console;
+            uses System as Sys; uses System.Collections.Generic as C; uses System.Console as Console;
             function Source(): array of int;
             begin Console.WriteLine('source'); return [1, 2, 3]; end function;
             begin

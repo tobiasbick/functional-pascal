@@ -2,10 +2,36 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
-uses
-  Fpas.Ui.Tui.Internal.Hosting.ControlReplies as Replies,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.NumberField as Number, Fpas.Ui.Tui.Internal.Widgets.Feedback.Alert as Alert,
-  Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as PickerState, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Hosting.InputDispatch as InputDispatch, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Theming.Themes as SharedThemes, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Processes.Terminal as Terminal;
+uses Fpas.Ui.Elements as Ui;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Session as Runtime;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Internal.Hosting.ControlReplies as Replies;
+uses Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids;
+uses Fpas.Ui.Tui.Internal.Hosting.InputDispatch as InputDispatch;
+uses Fpas.Ui.Tui.Internal.Hosting.Interaction as I;
+uses Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation;
+uses Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement;
+uses Fpas.Ui.Tui.Internal.Layout.Equivalence as Q;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Rendering.Decoration as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Lowering as Lower;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Feedback.Alert as Alert;
+uses Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as PickerState;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.NumberField as Number;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState;
+uses Fpas.Ui.Validation as Validation;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Theming.Themes as SharedThemes;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
+uses System.Diagnostics as Diag;
+uses System.Threading as Threads;
+uses System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   // The input receipt ID exposed by the terminal host.

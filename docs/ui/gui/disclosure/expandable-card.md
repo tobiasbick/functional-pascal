@@ -9,8 +9,8 @@ Use an expandable card for a summary with details that can open beneath its head
 ```pascal
 unit Docs.Ui.Disclosure.ExpandableCard;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Containers.ExpandableCards as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as W;
 
 // Builds the expandable card example.
 // ## Parameters

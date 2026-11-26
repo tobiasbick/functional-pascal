@@ -10,7 +10,9 @@ and a sparkline. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Overview.Metric;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Metrics as W, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Metrics as W;
+uses System as Sys;
 
 // Shows the measured frame time with a gallery trend.
 // ## Parameters

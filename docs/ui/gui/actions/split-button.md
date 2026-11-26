@@ -9,7 +9,8 @@ Put the primary action and related commands on the same control. Available in **
 ```pascal
 unit Docs.Ui.Actions.SplitButton;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.SplitButtons as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.SplitButtons as S;
 
 // Builds the example view.
 // ## Returns

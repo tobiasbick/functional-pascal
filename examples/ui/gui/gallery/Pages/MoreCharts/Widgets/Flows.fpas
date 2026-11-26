@@ -2,12 +2,20 @@
 
 unit GuiGallery.Pages.MoreCharts.Widgets.Flows;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.MoreCharts.Data as Data, GuiGallery.Pages.MoreCharts.Layout as Layout,
-  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Sankeys as Sk,
-  Fpas.Ui.Widgets.Charts.BarLists as Bars, Fpas.Ui.Widgets.Charts.ActivityRings as Rings, Fpas.Ui.Widgets.Charts.Charts as C,
-  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as S, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Charts.ActivityRings as Rings;
+uses Fpas.Ui.Widgets.Charts.BarLists as Bars;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.Sankeys as Sk;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.MoreCharts.Data as Data;
+uses GuiGallery.Pages.MoreCharts.Layout as Layout;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
 
 // Builds the original Sankey card.
 // ## Type parameters

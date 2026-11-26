@@ -128,7 +128,7 @@ public sealed class MemberAccessUsageTests(SdkPackageFixture sdk) : IClassFixtur
 
         File.WriteAllText(directory.File("Game/Index.fpas"), """
             unit Probe;
-            uses Storage as S, System as Sys;
+            uses Storage as S; uses System as Sys;
             public function Read(Shelf: S.Shelf; Key: Sys.DateTime): int;
             begin return Shelf[Key]; end function;
             end unit;

@@ -2,9 +2,11 @@
 
 unit FpasAmp.Persistence.PodcastSubscriptions;
 
-uses
-  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Ui.Podcasts.Model as Podcasts,
-  System as Sys, System.Collections.Generic as C, System.Text.Json as J;
+uses FpasAmp.Persistence.JsonFields as Fields;
+uses FpasAmp.Ui.Podcasts.Model as Podcasts;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Text.Json as J;
 
 function Read(Item: J.JsonElement; Name: string): string;
 begin

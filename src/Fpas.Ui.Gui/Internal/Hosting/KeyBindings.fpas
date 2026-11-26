@@ -2,9 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Hosting.KeyBindings;
 
-uses
-  Fpas.Ui.Gui.Shortcuts as S, Fpas.Ui.Gui.Cui as Cui, System as Sys,
-  System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Shortcuts as S;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Retained typed bindings and their ABI-ready native combinations.
 // ## Type parameters

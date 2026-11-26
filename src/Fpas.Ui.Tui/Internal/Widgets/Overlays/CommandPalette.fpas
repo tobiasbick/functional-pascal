@@ -2,12 +2,16 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Overlays.CommandPalette;
 
-uses
-  Fpas.Ui.Widgets.Overlays.CommandPalettes as P, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as State,
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup, Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
-  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
-  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
-  System.Globalization as Global, System.Collections.Generic as C;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as State;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as P;
+uses System.Collections.Generic as C;
+uses System.Globalization as Global;
 
 // Presents the searchable palette in a centered modal scope.
 // ## Type parameters

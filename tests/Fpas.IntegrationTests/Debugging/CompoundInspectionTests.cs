@@ -15,7 +15,7 @@ public sealed class CompoundInspectionTests
         var library = await Library(program);
         var source = """
             program Compound;
-            uses Fixture as F, System.Console as Console;
+            uses Fixture as F; uses System.Console as Console;
             procedure Observe();
             begin
               const Root: F.Node<int> := new F.Node<int>(42); const Derived: F.Derived := new F.Derived();
@@ -119,7 +119,7 @@ public sealed class CompoundInspectionTests
         var library = await Library(program);
         await program.Compile("""
             program ValueLimits;
-            uses Fixture as F, System.Console as Console;
+            uses Fixture as F; uses System.Console as Console;
             procedure Observe();
             begin
               const Pool: array of F.Node<int> := F.Arrays.Many(5000);

@@ -32,12 +32,11 @@ or timeout policy is invented by the compiler.
 ```pascal
 async program DownloadPage;
 
-uses
-  System as Sys,
-  System.Console as Console,
-  System.Net.Http as Http,
-  System.Threading as Threading,
-  System.Threading.Tasks as Tasks;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Net.Http as Http;
+uses System.Threading as Threading;
+uses System.Threading.Tasks as Tasks;
 
 async function Download(
   Address: string;

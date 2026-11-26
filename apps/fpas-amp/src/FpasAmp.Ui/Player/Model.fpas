@@ -3,9 +3,14 @@
 // Playback queue, transport, volume and equalizer state for the player strip.
 unit FpasAmp.Ui.Player.Model;
 
-uses
-  FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio, System.Collections.Immutable as I, FpasAmp.Ui.Albums.Music.Model as Music,
-  FpasAmp.Ui.Radio.Model as Radio, Fpas.Media.Images as Images;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Media.Images as Images;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Fingerprints as Fp;
+uses FpasAmp.Ui.Player.Presets as Presets;
+uses FpasAmp.Ui.Radio.Model as Radio;
+uses System.Collections.Immutable as I;
 
 // Equalizer band captions in ascending frequency, in hertz.
 public const Bands: array of string := [

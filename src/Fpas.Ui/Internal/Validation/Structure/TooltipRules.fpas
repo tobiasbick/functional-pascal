@@ -2,10 +2,12 @@
 
 unit Fpas.Ui.Internal.Validation.Structure.TooltipRules;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
-  Fpas.Ui.Widgets.Containers.Cards as Cards, System as Sys,
-  System.Collections.Generic as Lists, System.Text as Text;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+uses System.Text as Text;
 
 // Checks whether a node is a button or a button with a tooltip.
 //

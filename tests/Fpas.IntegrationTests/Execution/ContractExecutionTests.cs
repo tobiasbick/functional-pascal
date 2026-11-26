@@ -41,7 +41,7 @@ public sealed class ContractExecutionTests
     {
         var result = await ProgramExecution.Run("""
             program Contracts;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             function Check(Value: int; State: array of int): int;
             requires Value > 0;
             requires State[99] = 0;
@@ -96,7 +96,7 @@ public sealed class ContractExecutionTests
     public Task Body_and_condition_exceptions_skip_postconditions_and_are_not_wrapped()
         => ProgramExecution.Output("""
             program Exceptions;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             function Fail(State: array of int): int;
             ensures State[99] = 0;
             begin raise new Sys.ArgumentException('body'); end function;

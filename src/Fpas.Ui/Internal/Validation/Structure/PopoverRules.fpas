@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Internal.Validation.Structure.PopoverRules;
 
-uses
-  Fpas.Ui.Widgets.Overlays.Popovers as P, Fpas.Ui.Widgets.Overlays.ConfirmPopovers as C, Fpas.Ui.Widgets.Overlays.Menus as M,
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Structure.TooltipRules as Buttons, Fpas.Ui.Internal.Validation.Core.Checks as R,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Structure.TooltipRules as Buttons;
+uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as C;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Widgets.Overlays.Popovers as P;
+uses System as Sys;
 
 // Verifies that a popover has a native button anchor.
 //

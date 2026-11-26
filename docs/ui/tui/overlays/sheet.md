@@ -9,7 +9,8 @@ Dock a secondary view to an edge while retaining the current page in the backgro
 ```pascal
 unit Docs.Tui.Widgets.Sheet;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Sheets as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Sheets as W;
 
 // Builds the sheet and drawer example.
 // ## Parameters

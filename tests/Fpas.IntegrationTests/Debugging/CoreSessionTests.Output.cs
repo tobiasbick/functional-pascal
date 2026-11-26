@@ -15,7 +15,7 @@ public sealed partial class CoreSessionTests
         using var program = new Debuggee("own-core-output-limit");
         await program.Compile("""
             program OutputBound;
-            uses System as Sys, System.Console as Console, System.Text.UTF8Encoding as Utf8Encoding;
+            uses System as Sys; uses System.Console as Console; uses System.Text.UTF8Encoding as Utf8Encoding;
             begin
               Console.OutputEncoding := new Utf8Encoding(false);
               const Text: string := new Sys.String(#955, 600000);

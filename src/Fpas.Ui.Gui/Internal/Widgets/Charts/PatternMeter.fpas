@@ -2,11 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.PatternMeter;
 
-uses
-  Fpas.Ui.Widgets.Charts.PatternMeters as P, Fpas.Ui.Gui.Internal.Data.ChartData as Data,
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Layout.Sizing as Size, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Data;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Widgets.Charts.PatternMeters as P;
+uses System.Collections.Generic as Lists;
 
 // Draws the native CUI pattern-meter.
 // ## Type parameters

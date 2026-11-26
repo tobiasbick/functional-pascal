@@ -2,9 +2,11 @@
 
 unit GuiGallery.Pages.Files.Folders;
 
-uses
-  Gallery.Shared.FilePickerExample as Sample, Fpas.Ui.Widgets.Files.FileListings as Listings, System as Sys, System.IO as IO,
-  System.Collections.Generic as Lists;
+uses Fpas.Ui.Widgets.Files.FileListings as Listings;
+uses Gallery.Shared.FilePickerExample as Sample;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+uses System.IO as IO;
 
 function ExampleRoot(Path: string): Listings.Listing?;
 begin

@@ -2,9 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.WheelPicker;
 
-uses
-  Fpas.Ui.Widgets.Pickers.WheelPickers as W, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Pickers.WheelPickers as W;
 
 // Draws the native wheel and publishes selection proposals.
 // ## Type parameters

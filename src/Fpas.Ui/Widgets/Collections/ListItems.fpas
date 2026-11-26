@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Collections.ListItems;
 
-uses Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
 
 // Native list row appearance and input.
 public type Options = record

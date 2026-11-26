@@ -38,7 +38,7 @@ public sealed class GlobalExecutionTests
     [Fact]
     public Task Async_global_delegates_share_fields_after_suspension() => ProgramExecution.Output("""
         async program GlobalAsync;
-        uses System.Console as Console, System.Threading.Tasks as Tasks;
+        uses System.Console as Console; uses System.Threading.Tasks as Tasks;
         var Counter: int := 3;
         const Gate: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>();
         const Read: function(): Tasks.Task<int> := async function(): Tasks.Task<int>

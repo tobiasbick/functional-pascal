@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Mvu.Composition;
 
-uses
-  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as A, System as Sys,
-  System.Threading.Tasks as Tasks, System.Collections.Generic as Lists;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Ui.Mvu.Application as A;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+uses System.Threading.Tasks as Tasks;
 
 function EffectId(Scope: string; Id: string): string;
 begin

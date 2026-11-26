@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Ai.PromptSuggestions;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.PromptSuggestions as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.PromptSuggestions as W;
 
 // Offers example starting prompts.
 // ## Parameters

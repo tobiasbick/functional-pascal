@@ -2,7 +2,9 @@
 
 unit Diagnostics.MeasureOptions;
 
-uses System as Sys, System.IO as IO, System.Collections.Generic as Collections;
+uses System as Sys;
+uses System.Collections.Generic as Collections;
+uses System.IO as IO;
 
 // Inputs for an end-to-end measurement run.
 public type Options = record

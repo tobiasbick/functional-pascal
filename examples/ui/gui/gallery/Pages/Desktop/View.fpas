@@ -2,11 +2,16 @@
 
 unit GuiGallery.Pages.Desktop.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Desktop.State as S, GuiGallery.Pages.Desktop.Editor as Editor,
-  GuiGallery.Pages.Desktop.Workspace as Workspace, GuiGallery.Pages.Desktop.HostActions as HostActions, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Widgets.Desktop.SplitViews as Split;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Desktop.SplitViews as Split;
+uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Desktop.Editor as Editor;
+uses GuiGallery.Pages.Desktop.HostActions as HostActions;
+uses GuiGallery.Pages.Desktop.State as S;
+uses GuiGallery.Pages.Desktop.Workspace as Workspace;
+uses GuiGallery.Shared.Sections as G;
 
 // Builds the native desktop chrome page from CUI's reference examples.
 // ## Parameters

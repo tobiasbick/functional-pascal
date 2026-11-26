@@ -3,10 +3,15 @@
 // On-demand, content-addressed loudness envelopes in the reconstructible catalogue.
 unit FpasAmp.Library.Metadata.Waveforms;
 
-uses
-  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Metadata.Internal.Reading as Reading,
-  FpasAmp.Library.Persistence.Sql as Sql, Fpas.Media.Audio as Audio, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.IO as IO, System.Threading as T, System.Threading.Tasks as Tasks;
+uses Fpas.Media.Audio as Audio;
+uses FpasAmp.Library.Metadata.Internal.Reading as Reading;
+uses FpasAmp.Library.Metadata.Model as M;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // Number of equal-duration RMS intervals across the complete recording.
 public const Buckets: int := 1024;

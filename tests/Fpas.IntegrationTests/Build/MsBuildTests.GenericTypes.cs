@@ -58,7 +58,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
-            uses Demo.Models as M, System as Sys;
+            uses Demo.Models as M; uses System as Sys;
             public function Box<T>(Value: T): M.Box<T>; begin return new M.Box<T>(Value); end function;
             public function Copy<T>(Value: M.Box<T>; Next: T): M.Box<T>; begin return Value with Value := Next; end with; end function;
             public function Missing<T>(Value: T?): M.ValueBox<T>; where T: struct;

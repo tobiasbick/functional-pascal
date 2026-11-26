@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.Carousel;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Media.Carousels as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Media.Carousels as W;
 
 // Shows the current release-tour slide.
 // ## Parameters

@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Actions.IconButtons;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
 
 // Control sizes in CUI's native order.
 public type Size = enum: byte

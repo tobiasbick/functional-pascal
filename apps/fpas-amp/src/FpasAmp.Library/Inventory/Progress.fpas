@@ -3,7 +3,8 @@
 // Lightweight latest-value scan progress, independent of full inventory snapshots.
 unit FpasAmp.Library.Inventory.Progress;
 
-uses System.Collections.Immutable as I, FpasAmp.Library.Inventory.Model as M;
+uses FpasAmp.Library.Inventory.Model as M;
+uses System.Collections.Immutable as I;
 
 // Completed source summary without copying its path collection.
 public type Result = record

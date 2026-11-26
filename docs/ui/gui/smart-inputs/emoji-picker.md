@@ -10,11 +10,14 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SmartInputs.EmojiPicker;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Inputs.TextFields as F, Fpas.Ui.Widgets.Actions.IconButtons as B,
-  Fpas.Ui.Widgets.Pickers.EmojiPickers as W, Fpas.Ui.Widgets.Overlays.Popovers as P,
-  Fpas.Ui.Widgets.Overlays.Menus as M, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.IconButtons as B;
+uses Fpas.Ui.Widgets.Inputs.TextFields as F;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Widgets.Overlays.Popovers as P;
+uses Fpas.Ui.Widgets.Pickers.EmojiPickers as W;
+uses System as Sys;
 
 // Messages for the field and its emoji palette.
 public type Msg = variant

@@ -2,15 +2,16 @@
 
 unit Fpas.Ui.Internal.Validation.Structure.PlanningValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
-  Fpas.Ui.Internal.Validation.Structure.PlanningRules as PlanningRules,
-  Fpas.Ui.Widgets.Navigation.PathBars as PathBars,
-  Fpas.Ui.Widgets.Files.FileBrowsers as FileBrowsers,
-  Fpas.Ui.Widgets.Files.FilePickers as FilePickers,
-  Fpas.Ui.Widgets.Planning.WeekCalendars as WeekCalendars,
-  Fpas.Ui.Widgets.Planning.MonthCalendars as MonthCalendars,
-  Fpas.Ui.Widgets.Planning.Gantts as Gantts, Fpas.Ui.Widgets.Planning.Kanbans as Kanbans;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Structure.PlanningRules as PlanningRules;
+uses Fpas.Ui.Widgets.Files.FileBrowsers as FileBrowsers;
+uses Fpas.Ui.Widgets.Files.FilePickers as FilePickers;
+uses Fpas.Ui.Widgets.Navigation.PathBars as PathBars;
+uses Fpas.Ui.Widgets.Planning.Gantts as Gantts;
+uses Fpas.Ui.Widgets.Planning.Kanbans as Kanbans;
+uses Fpas.Ui.Widgets.Planning.MonthCalendars as MonthCalendars;
+uses Fpas.Ui.Widgets.Planning.WeekCalendars as WeekCalendars;
 
 // Validates planning, file and path widgets when matched.
 // ## Type parameters

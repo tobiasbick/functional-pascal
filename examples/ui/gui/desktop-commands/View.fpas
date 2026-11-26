@@ -2,12 +2,17 @@
 
 unit DesktopCommands.View;
 
-uses
-  DesktopCommands.State as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Desktop.SplitViews as Split,
-  Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  Fpas.Ui.Widgets.Feedback.ProgressBars as Progress, System as Sys, System.Collections.Generic as C;
+uses DesktopCommands.State as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Desktop.SplitViews as Split;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as Progress;
+uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 const Accents: array of Themes.Accent := Sys.Enum.GetValues<Themes.Accent>();
 

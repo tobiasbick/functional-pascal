@@ -9,8 +9,10 @@ Group placeholders that should share a loading animation. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Feedback.SkeletonGroup;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.SkeletonGroups as W,
-  Fpas.Ui.Widgets.Feedback.Skeletons as S, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Feedback.SkeletonGroups as W;
+uses Fpas.Ui.Widgets.Feedback.Skeletons as S;
 
 // Builds the skeleton group example.
 // ## Returns

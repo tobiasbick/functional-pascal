@@ -3,10 +3,14 @@
 // Formats the tagged values used by the track summary and its three detail panels.
 unit FpasAmp.Ui.Albums.Music.Details.Metadata;
 
-uses
-  Fpas.Media.Tags.AudioFiles as Tags, FpasAmp.Ui.Albums.Music.Model as M,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Display.Texts as Texts,
-  System as Sys, System.Collections.Generic as C, System.Globalization as G;
+uses Fpas.Media.Tags.AudioFiles as Tags;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses FpasAmp.Ui.Albums.Music.Model as M;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Globalization as G;
 
 const English: G.CultureInfo := G.CultureInfo.GetCultureInfo('en-US');
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);

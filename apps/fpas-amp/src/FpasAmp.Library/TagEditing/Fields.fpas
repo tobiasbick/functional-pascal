@@ -3,7 +3,9 @@
 // Shared field names and conversion between editable text and indexed metadata.
 unit FpasAmp.Library.TagEditing.Fields;
 
-uses Fpas.Media.Tags.AudioFiles as Media, System as Sys, System.Collections.Immutable as I;
+uses Fpas.Media.Tags.AudioFiles as Media;
+uses System as Sys;
+uses System.Collections.Immutable as I;
 
 // Prefix distinguishing an arbitrary tag key from a standard editor field.
 public const Custom: string := 'custom/';

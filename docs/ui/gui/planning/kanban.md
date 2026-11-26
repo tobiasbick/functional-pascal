@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Planning.Kanban;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Planning.Kanbans as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Planning.Kanbans as W;
 
 // Shows the current board.
 // ## Parameters

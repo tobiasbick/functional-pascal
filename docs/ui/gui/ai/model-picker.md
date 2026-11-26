@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Ai.ModelPicker;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.ModelPickers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.ModelPickers as W;
 
 // Shows the active model and available choices.
 // ## Parameters

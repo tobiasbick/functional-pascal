@@ -2,9 +2,10 @@
 
 unit GuiGallery.Pages.Instruments.Update;
 
-uses
-  GuiGallery.Pages.Instruments.State as S, Fpas.Ui.Widgets.Charts.EventTracks as E, Fpas.Ui.Widgets.Charts.DotCharts as D,
-  System as Sys;
+uses Fpas.Ui.Widgets.Charts.DotCharts as D;
+uses Fpas.Ui.Widgets.Charts.EventTracks as E;
+uses GuiGallery.Pages.Instruments.State as S;
+uses System as Sys;
 
 // Applies one native instrument interaction.
 // ## Parameters

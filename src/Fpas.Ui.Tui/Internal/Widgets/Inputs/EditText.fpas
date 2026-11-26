@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText;
 
-uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Globalization as Global, System.Text as Text;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses System as Sys;
+uses System.Globalization as Global;
+uses System.Text as Text;
 
 // Selected UTF-16 range, with an exclusive end.
 public type Range = record

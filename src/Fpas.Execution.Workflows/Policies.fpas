@@ -3,9 +3,10 @@
 // Deadlines and retries for deferred operations.
 unit Fpas.Execution.Workflows.Policies;
 
-uses
-  Fpas.Execution.Effects as Fx, System as Sys, System.Threading as Threads,
-  System.Threading.Tasks as Tasks;
+uses Fpas.Execution.Effects as Fx;
+uses System as Sys;
+uses System.Threading as Threads;
+uses System.Threading.Tasks as Tasks;
 
 // Applies a cooperative time limit to one workflow execution.
 //

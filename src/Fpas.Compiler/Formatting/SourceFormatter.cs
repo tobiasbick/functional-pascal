@@ -22,6 +22,12 @@ internal sealed class SourceFormatter
     internal string Format()
     {
         PreserveSections();
+        for (var index = 1; index < layout.Imports.Count; index++)
+        {
+            var current = layout.Imports[index];
+            if (current.IsStandard == layout.Imports[index - 1].IsStandard) layout.Line(current.Keyword);
+            else layout.Section(current.Keyword);
+        }
         foreach (var binary in layout.Binary)
         {
             var op = binary.Operator;

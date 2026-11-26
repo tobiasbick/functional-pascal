@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.Candlestick;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Candlesticks as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Candlesticks as W;
 
 // Builds the candlestick example.
 // ## Parameters

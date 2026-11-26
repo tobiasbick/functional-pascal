@@ -2,9 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.CodeBlock;
 
-uses
-  Fpas.Ui.Widgets.Developer.CodeBlocks as W, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Developer.CodeBlocks as W;
 
 // Presents the native CUI widget.
 // ## Type parameters

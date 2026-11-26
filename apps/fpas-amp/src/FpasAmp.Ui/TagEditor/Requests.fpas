@@ -2,14 +2,20 @@
 
 unit FpasAmp.Ui.TagEditor.Requests;
 
-uses
-  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Ui.TagEditor.MusicBrainz as MB,
-  FpasAmp.Ui.TagEditor.MusicBrainzTags as Tags, MetaBrainz.MusicBrainz.Interfaces.Entities as E,
-  FpasAmp.Ui.TagEditor.AcoustId as Acoust, FpasAmp.Ui.Providers.RequestPacing as Pacing,
-  FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Library.Metadata.Fingerprints.Calculator as Fingerprint,
-  Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Immutable as I,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Mvu.Application as A;
+uses FpasAmp.Library.Metadata.Fingerprints.Calculator as Fingerprint;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Ui.Providers.RequestPacing as Pacing;
+uses FpasAmp.Ui.TagEditor.AcoustId as Acoust;
+uses FpasAmp.Ui.TagEditor.Model as M;
+uses FpasAmp.Ui.TagEditor.MusicBrainz as MB;
+uses FpasAmp.Ui.TagEditor.MusicBrainzTags as Tags;
+uses MetaBrainz.MusicBrainz.Interfaces.Entities as E;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 function Failed(Error: Sys.Exception): M.Msg;
 begin

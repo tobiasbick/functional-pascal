@@ -2,7 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Layout.Sizing;
 
-uses Fpas.Ui.Layout as L, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Values as P, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Values as P;
+uses Fpas.Ui.Layout as L;
+uses System as Sys;
 
 // Resolves a graphical measure and rejects terminal distances.
 //

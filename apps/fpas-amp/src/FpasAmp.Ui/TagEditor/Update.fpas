@@ -3,16 +3,25 @@
 // Owns the draft and scopes file and MusicBrainz effects to the open editor.
 unit FpasAmp.Ui.TagEditor.Update;
 
-uses
-  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Ui.TagEditor.Changes as Changes,
-  FpasAmp.Ui.TagEditor.MusicBrainz as MB, FpasAmp.Library.TagEditing.Fields as F,
-  FpasAmp.Library.TagEditing.Files as Files, FpasAmp.Library.Metadata.Monitoring as Metadata,
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Ui.Providers.RequestPacing as Pacing, FpasAmp.Ui.TagEditor.CustomTags as Custom,
-  FpasAmp.Ui.TagEditor.Requests as Requests, FpasAmp.Ui.TagEditor.AcoustId as Acoust,
-  Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as A,
-  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as A;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Library.TagEditing.Fields as F;
+uses FpasAmp.Library.TagEditing.Files as Files;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Providers.RequestPacing as Pacing;
+uses FpasAmp.Ui.TagEditor.AcoustId as Acoust;
+uses FpasAmp.Ui.TagEditor.Changes as Changes;
+uses FpasAmp.Ui.TagEditor.CustomTags as Custom;
+uses FpasAmp.Ui.TagEditor.Model as M;
+uses FpasAmp.Ui.TagEditor.MusicBrainz as MB;
+uses FpasAmp.Ui.TagEditor.Requests as Requests;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
 begin

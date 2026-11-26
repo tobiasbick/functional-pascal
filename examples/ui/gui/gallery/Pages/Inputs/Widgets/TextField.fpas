@@ -2,19 +2,18 @@
 
 unit GuiGallery.Pages.Inputs.Widgets.TextField;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Inputs.Widgets.SearchField as Search,
-  GuiGallery.Pages.Inputs.Widgets.TextArea as Area,
-  GuiGallery.Pages.Inputs.State as State,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Containers.Grids as Grid,
-  Fpas.Ui.Widgets.Inputs.TextFields as F,
-  System as Sys,
-  System.Text as Text;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Grids as Grid;
+uses Fpas.Ui.Widgets.Inputs.TextFields as F;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Inputs.State as State;
+uses GuiGallery.Pages.Inputs.Widgets.SearchField as Search;
+uses GuiGallery.Pages.Inputs.Widgets.TextArea as Area;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
+uses System.Text as Text;
 
 // Builds the accepted text fields in the original responsive card.
 //

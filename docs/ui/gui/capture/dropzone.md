@@ -11,8 +11,10 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Capture.Dropzone;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Files.Dropzones as W,
-  Fpas.Ui.Gui.FileDialogs as Dialogs, Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.FileDialogs as Dialogs;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Files.Dropzones as W;
 
 const Accepted: string := 'png;jpg;jpeg;pdf';
 

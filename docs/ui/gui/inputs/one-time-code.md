@@ -9,7 +9,8 @@ Use a one-time code input for a short verification code made of ASCII letters or
 ```pascal
 unit Docs.Ui.Inputs.OneTimeCode;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.OneTimeCodes as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.OneTimeCodes as W;
 
 // Builds the one-time code input example.
 // ## Parameters

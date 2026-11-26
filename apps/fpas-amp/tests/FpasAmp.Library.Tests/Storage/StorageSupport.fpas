@@ -3,11 +3,17 @@
 // SQLite test primitives; every database and source belongs to an isolated test.
 unit FpasAmp.Library.Tests.StorageSupport;
 
-uses
-  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
-  FpasAmp.Library.Persistence.Locations as Locations, FpasAmp.Library.Persistence.Checkpoints as Checkpoints,
-  FpasAmp.Library.Inventory.Internal.Observations as O, FpasAmp.Library.Sources as S,
-  Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C, System.Threading as T, Xunit as X;
+uses FpasAmp.Library.Inventory.Internal.Observations as O;
+uses FpasAmp.Library.Persistence.Checkpoints as Checkpoints;
+uses FpasAmp.Library.Persistence.Locations as Locations;
+uses FpasAmp.Library.Persistence.Schema as Schema;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Sources as S;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Threading as T;
+uses Xunit as X;
 
 // Opens a current-schema database. `Path` is absolute or :memory:; caller disposes it.
 public function Open(Path: string): Db.SqliteConnection;

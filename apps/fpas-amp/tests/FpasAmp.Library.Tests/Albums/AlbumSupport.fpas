@@ -3,10 +3,13 @@
 // Synthetic audio/artwork shared by focused library and native album-view tests.
 unit FpasAmp.Library.Tests.AlbumSupport;
 
-uses
-  FpasAmp.Library.Tests.MetadataSupport as F, ATL as A,
-  System as Sys, System.IO as IO, System.IO.Compression as Zip,
-  System.Text as Text, System.Collections.Generic as C;
+uses ATL as A;
+uses FpasAmp.Library.Tests.MetadataSupport as F;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+uses System.IO.Compression as Zip;
+uses System.Text as Text;
 
 procedure Number(Stream: IO.Stream; Value: uint);
 begin

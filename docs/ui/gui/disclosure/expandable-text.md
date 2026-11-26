@@ -11,8 +11,8 @@ Use expandable text to collapse a long passage to a few lines with a fade. Avail
 ```pascal
 unit Docs.Ui.Disclosure.ExpandableText;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Containers.ExpandableTexts as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Containers.ExpandableTexts as W;
 
 // Builds the expandable text example.
 // ## Parameters

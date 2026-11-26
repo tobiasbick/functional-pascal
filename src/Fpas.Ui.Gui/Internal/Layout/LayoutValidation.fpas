@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Layout.LayoutValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Ui.Widgets.Planning.Kanbans as Boards, Fpas.Ui.Widgets.Desktop.Dockspaces as Dock,
-  Fpas.Ui.Validation as V, Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Desktop.Dockspaces as Dock;
+uses Fpas.Ui.Widgets.Planning.Kanbans as Boards;
 
 // Checks native-specific layout limits before issuing widget calls.
 //

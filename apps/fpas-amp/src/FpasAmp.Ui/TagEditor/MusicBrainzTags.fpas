@@ -2,10 +2,12 @@
 
 unit FpasAmp.Ui.TagEditor.MusicBrainzTags;
 
-uses
-  MetaBrainz.MusicBrainz as B, MetaBrainz.MusicBrainz.Interfaces.Entities as E,
-  FpasAmp.Library.TagEditing.Fields as F,
-  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I;
+uses FpasAmp.Library.TagEditing.Fields as F;
+uses MetaBrainz.MusicBrainz as B;
+uses MetaBrainz.MusicBrainz.Interfaces.Entities as E;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
 
 type Builder = I.ImmutableDictionary<string, string>.Builder;
 

@@ -37,7 +37,7 @@ public sealed class FrameworkExtensionTests(SdkPackageFixture sdk) : IClassFixtu
         var xml = XDocument.Load(project); xml.Root!.Add(new XElement("ItemGroup", new XElement("ProjectReference", new XAttribute("Include", "../Provider/Provider.csproj")))); xml.Save(project);
         File.WriteAllText(directory.File("Tests/Tests.fpas"), """
             unit FrameworkExtension;
-            uses Microsoft.VisualStudio.TestTools.UnitTesting as T, External as Data;
+            uses Microsoft.VisualStudio.TestTools.UnitTesting as T; uses External as Data;
             [T.TestClassAttribute]
             public type Tests = record
               [T.TestMethodAttribute]

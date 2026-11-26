@@ -2,18 +2,24 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Files.FilePicker;
 
-uses
-  Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Files.FileListings as F,
-  Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerListing as Data,
-  Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as S,
-  Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as List,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit,
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Modal,
-  Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.TerminalExtensions.SelectionLists as Rows, Fpas.Ui.Widgets.Inputs.TextFields as Field,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T,
-  Fpas.Ui.Styles as Styles, Fpas.Ui.Layout as L, System as Sys, System.IO as IO,
-  System.Collections.Generic as C;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.TerminalExtensions.SelectionLists as Rows;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as A;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as List;
+uses Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerListing as Data;
+uses Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as S;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Modal;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Files.FileListings as F;
+uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Field;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
 
 function SaveAllowed(Current: S.Cursor; Value: string; Comparison: Sys.StringComparison): bool;
 begin

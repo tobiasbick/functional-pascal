@@ -10,7 +10,10 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CreativeControls.StepSlider;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.StepSliders as W, Fpas.Ui.Widgets.Audio.ControlWells as Tools, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.ControlWells as Tools;
+uses Fpas.Ui.Widgets.Inputs.StepSliders as W;
+uses System as Sys;
 
 // Chooses the number of variations to generate.
 // ## Parameters

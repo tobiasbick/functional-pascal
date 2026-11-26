@@ -3,15 +3,26 @@
 // The whole-library song browser owns its catalogue subscription and only visible covers.
 unit FpasAmp.Ui.Music.LibraryPage;
 
-uses
-  FpasAmp.Ui.Albums.Music.Model as Songs, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Ui.Albums.Music.Update as Edit, FpasAmp.Ui.Albums.Music.Ratings as Ratings, FpasAmp.Ui.Albums.Artwork as Artwork,
-  FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Ui.Music.Playlist as Playlist, FpasAmp.Library.Playlists.Model as Lists,
-  FpasAmp.Ui.Navigation.Model as Nav,
-  FpasAmp.Library.Albums.Model as Albums, Fpas.Media.Images as Imaging,
-  Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as Composition, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks;
+uses Fpas.Media.Images as Imaging;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Mvu.Composition as Composition;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses FpasAmp.Library.Albums.Model as Albums;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Library.Playlists.Model as Lists;
+uses FpasAmp.Ui.Albums.Artwork as Artwork;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Model as Songs;
+uses FpasAmp.Ui.Albums.Music.Ratings as Ratings;
+uses FpasAmp.Ui.Albums.Music.Update as Edit;
+uses FpasAmp.Ui.Music.Playlist as Playlist;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // Detached catalogue and filter choices, prepared by the observer.
 public type Catalogue = record

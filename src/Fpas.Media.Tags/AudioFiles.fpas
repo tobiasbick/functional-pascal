@@ -3,10 +3,13 @@
 // ATL is the parser; this boundary selects fields and detaches mutable values.
 unit Fpas.Media.Tags.AudioFiles;
 
-uses
-  ATL as A, ATL.ChannelsArrangements.ChannelsArrangement as Channels,
-  System.IO as IO, System as Sys,
-  System.Collections.Generic as C, System.Globalization as G, System.Text.Encoding as Encoding;
+uses ATL as A;
+uses ATL.ChannelsArrangements.ChannelsArrangement as Channels;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Globalization as G;
+uses System.IO as IO;
+uses System.Text.Encoding as Encoding;
 
 // Selected audio tags; missing text is empty and missing numeric values are null.
 public type Info = record

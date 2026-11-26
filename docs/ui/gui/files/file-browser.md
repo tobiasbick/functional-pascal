@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Files.FileBrowser;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Files.FileBrowsers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Files.FileBrowsers as W;
 
 // Shows the currently open project folder.
 // ## Parameters

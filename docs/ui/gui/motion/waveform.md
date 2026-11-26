@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.Waveform;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.Waveforms as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.Waveforms as W;
 
 // Shows a seekable waveform.
 // ## Parameters

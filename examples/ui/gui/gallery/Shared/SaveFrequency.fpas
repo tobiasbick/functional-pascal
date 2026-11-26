@@ -2,11 +2,10 @@
 
 unit Gallery.Shared.SaveFrequency;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Widgets.Inputs.RadioGroups as R,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Inputs.RadioGroups as R;
+uses Gallery.Shared.Strings as Strings;
 
 // Initially select Every 5 minutes in both galleries.
 public const Initial: int := 1;

@@ -2,16 +2,29 @@
 
 unit FpasAmp.UiTests.NativeTrackRating;
 
-uses
-  Fpas.Ui.Mvu.Testing.EffectReplies as Effects, Fpas.Ui.Mvu.Application as Mvu,
-  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as Sources,
-  FpasAmp.Library.Inventory.Monitoring as Inventory, FpasAmp.Library.Metadata.Monitoring as Metadata,
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.App.Model as App,
-  FpasAmp.Ui.App.Controller as Controller, FpasAmp.Ui.Shell as Shell, FpasAmp.Ui.Music.LibraryPage as Page,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Player.Playback as Playback, FpasAmp.Ui.Settings.Model as Settings,
-  Fpas.Media.Audio as Audio, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host, System as Sys, System.Collections.Immutable as I,
-  System.Threading as T, System.Threading.Channels as Channels, Xunit as X;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Effects;
+uses FpasAmp.Library.Inventory.Monitoring as Inventory;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Library.Tests.MetadataSupport as Sources;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.App.Controller as Controller;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Music.LibraryPage as Page;
+uses FpasAmp.Ui.Player.Playback as Playback;
+uses FpasAmp.Ui.Settings.Model as Settings;
+uses FpasAmp.Ui.Shell as Shell;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.Threading as T;
+uses System.Threading.Channels as Channels;
+uses Xunit as X;
 
 function Stars(Session: Gui.Session<App.Msg>; Song: Tracks.Entry): Gui.Control;
 begin

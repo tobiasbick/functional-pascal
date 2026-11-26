@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DeveloperTools.DependencyGraph;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.DependencyGraphs as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.DependencyGraphs as W;
 
 // Shows a directed graph.
 // ## Parameters

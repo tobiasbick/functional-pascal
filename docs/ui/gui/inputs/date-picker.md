@@ -9,8 +9,9 @@ Use a date picker when a single date belongs in a form. The gallery shows the Du
 ```pascal
 unit Docs.Ui.Inputs.DatePicker;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.DatePickers as W,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.DatePickers as W;
+uses System as Sys;
 
 // Builds the date picker example.
 // ## Parameters

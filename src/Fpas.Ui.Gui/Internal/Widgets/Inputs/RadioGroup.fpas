@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.RadioGroup;
 
-uses
-  Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Layout.Sizing as Size, Fpas.Ui.Gui.Internal.Widgets.Inputs.RadioButton as Radio;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.RadioButton as Radio;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Inputs.RadioGroups as R;
 
 // Arranges native radio rows in a CUI column and proposes one selection.
 //

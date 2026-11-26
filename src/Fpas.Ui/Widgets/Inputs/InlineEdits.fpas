@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Inputs.InlineEdits;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Built-in text faces supported by native inline editing.
 public type Font = enum: byte

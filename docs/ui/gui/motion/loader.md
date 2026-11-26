@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.Loader;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.Loaders as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.Loaders as W;
 
 // Shows a loader for pending work.
 // ## Parameters

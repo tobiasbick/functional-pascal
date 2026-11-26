@@ -9,7 +9,8 @@ Use a sidebar for named destinations grouped under optional headings. Available 
 ```pascal
 unit Docs.Ui.Navigation.Sidebar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Navigation as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.Navigation as C;
 
 // Builds the sidebar navigation example.
 // ## Parameters

@@ -2,9 +2,9 @@
 
 unit Gallery.Shared.SwitchExamples;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Switches as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Switches as S;
+uses Gallery.Shared.Strings as Strings;
 
 // Identity and copy for one switch used by both galleries.
 public type Sample = record

@@ -2,39 +2,39 @@
 
 unit GuiGallery.App.State;
 
-uses
-  GuiGallery.Pages.Desktop.State as Desktop,
-  GuiGallery.Pages.EditingTools.State as Editing,
-  GuiGallery.Pages.Code.State as CodePage,
-  GuiGallery.Pages.Ai.State as Ai, GuiGallery.Pages.Voice.State as VoicePage,
-  GuiGallery.Pages.Feedback.State as Feedback,
-  GuiGallery.Pages.Social.State as Social,
-  GuiGallery.Pages.Instruments.State as Instruments,
-  GuiGallery.Pages.Motion.State as Motion,
-  GuiGallery.Pages.Creative.State as Creative,
-  GuiGallery.Pages.Canvas.State as Canvas,
-  GuiGallery.Pages.Files.State as Files,
-  GuiGallery.Pages.Developer.State as Developer,
-  GuiGallery.Pages.MoreDeveloper.State as MoreDeveloper,
-  GuiGallery.Pages.Planning.State as Planning,
-  GuiGallery.Pages.DataGrid.State as Grid,
-  GuiGallery.Pages.MoreCharts.State as MoreCharts,
-  GuiGallery.Pages.MoreCharts.Data as MoreChartsData,
-  GuiGallery.Pages.Charts.State as Charts,
-  GuiGallery.Pages.Overview.State as Overview,
-  GuiGallery.Pages.Buttons.State as Buttons,
-  GuiGallery.Pages.Inputs.State as Inputs,
-  GuiGallery.Pages.Selection.State as Selection,
-  GuiGallery.Pages.Navigation.State as Navigation,
-  GuiGallery.Pages.Lists.State as Lists,
-  GuiGallery.Pages.Overlays.State as Overlays,
-  GuiGallery.Pages.Actions.State as Actions,
-  GuiGallery.Pages.Capture.State as Capture,
-  GuiGallery.Pages.Audio.State as Audio,
-  GuiGallery.Pages.Pickers.State as Pickers,
-  GuiGallery.Pages.SmartInputs.State as SmartInputs,
-  GuiGallery.Pages.Disclosure.State as Disclosure,
-  GuiGallery.Shared.State as Demo;
+uses GuiGallery.Pages.Actions.State as Actions;
+uses GuiGallery.Pages.Ai.State as Ai;
+uses GuiGallery.Pages.Audio.State as Audio;
+uses GuiGallery.Pages.Buttons.State as Buttons;
+uses GuiGallery.Pages.Canvas.State as Canvas;
+uses GuiGallery.Pages.Capture.State as Capture;
+uses GuiGallery.Pages.Charts.State as Charts;
+uses GuiGallery.Pages.Code.State as CodePage;
+uses GuiGallery.Pages.Creative.State as Creative;
+uses GuiGallery.Pages.DataGrid.State as Grid;
+uses GuiGallery.Pages.Desktop.State as Desktop;
+uses GuiGallery.Pages.Developer.State as Developer;
+uses GuiGallery.Pages.Disclosure.State as Disclosure;
+uses GuiGallery.Pages.EditingTools.State as Editing;
+uses GuiGallery.Pages.Feedback.State as Feedback;
+uses GuiGallery.Pages.Files.State as Files;
+uses GuiGallery.Pages.Inputs.State as Inputs;
+uses GuiGallery.Pages.Instruments.State as Instruments;
+uses GuiGallery.Pages.Lists.State as Lists;
+uses GuiGallery.Pages.MoreCharts.Data as MoreChartsData;
+uses GuiGallery.Pages.MoreCharts.State as MoreCharts;
+uses GuiGallery.Pages.MoreDeveloper.State as MoreDeveloper;
+uses GuiGallery.Pages.Motion.State as Motion;
+uses GuiGallery.Pages.Navigation.State as Navigation;
+uses GuiGallery.Pages.Overlays.State as Overlays;
+uses GuiGallery.Pages.Overview.State as Overview;
+uses GuiGallery.Pages.Pickers.State as Pickers;
+uses GuiGallery.Pages.Planning.State as Planning;
+uses GuiGallery.Pages.Selection.State as Selection;
+uses GuiGallery.Pages.SmartInputs.State as SmartInputs;
+uses GuiGallery.Pages.Social.State as Social;
+uses GuiGallery.Pages.Voice.State as VoicePage;
+uses GuiGallery.Shared.State as Demo;
 
 // Pages from the CUI gallery with accepted FPAS previews.
 public type Page = enum: byte

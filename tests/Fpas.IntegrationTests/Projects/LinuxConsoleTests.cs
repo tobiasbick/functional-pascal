@@ -35,7 +35,7 @@ public sealed class LinuxConsoleTests(SdkPackageFixture sdk) : IClassFixture<Sdk
         var project = await ProjectCliFixture.Init(directory, sdk);
         File.WriteAllText(directory.File("App/main.fpas"), """
             program Waiting;
-            uses System as S, System.IO.File as File, System.Threading.Thread as Thread;
+            uses System as S; uses System.IO.File as File; uses System.Threading.Thread as Thread;
             begin
               File.WriteAllText(args[0] + '.tmp', S.Environment.ProcessId.ToString());
               File.Move(args[0] + '.tmp', args[0]);

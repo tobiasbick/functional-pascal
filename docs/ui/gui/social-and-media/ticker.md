@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.Ticker;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.Tickers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.Tickers as W;
 
 // Shows the current figures.
 // ## Parameters

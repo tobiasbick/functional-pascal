@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CanvasAndBars.SelectionRing;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Canvas.SelectionRings as W, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Canvas.SelectionRings as W;
 
 // Marks a selected object with its owner's name.
 // ## Parameters

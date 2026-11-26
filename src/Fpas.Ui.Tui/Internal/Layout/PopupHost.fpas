@@ -2,14 +2,18 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.PopupHost;
 
-uses
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P, Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup,
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown as Menu, Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.MultiSelect as MultiSelect,
-  Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar as Filters,
-  Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb,
-  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
-  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System.Collections.Generic as C;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar as Filters;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.MultiSelect as MultiSelect;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select;
+uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown as Menu;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P;
+uses System.Collections.Generic as C;
 
 // Presents an open popup while its trigger is visible in the current scope.
 // ## Type parameters

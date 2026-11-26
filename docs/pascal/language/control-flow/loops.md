@@ -67,7 +67,8 @@ ordinary async APIs; see [concurrency](../concurrency/README.md).
 ```pascal
 program LoopValues;
 
-uses System as Sys, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
 
 begin
   const Values: array of int := [2, 3];

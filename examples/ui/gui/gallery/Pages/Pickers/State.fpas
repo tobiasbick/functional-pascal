@@ -2,9 +2,10 @@
 
 unit GuiGallery.Pages.Pickers.State;
 
-uses
-  Gallery.Shared.LanguagesExample as LanguageSample, Fpas.Ui.Widgets.Pickers.DateRanges as R,
-  Fpas.Ui.Widgets.Inputs.RangeSliders as Range, System as Sys;
+uses Fpas.Ui.Widgets.Inputs.RangeSliders as Range;
+uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
+uses Gallery.Shared.LanguagesExample as LanguageSample;
+uses System as Sys;
 
 // State owned by the extended Pickers page.
 public type Model = record

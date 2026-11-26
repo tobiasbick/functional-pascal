@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Containers.EmptyStates;
 
-uses Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
 
 // Native empty-state settings.
 public type Options = record

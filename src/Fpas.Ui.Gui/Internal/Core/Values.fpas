@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Gui.Internal.Core.Values;
 
-uses Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Audio.ControlWells as Wells;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Audio.ControlWells as Wells;
 
 // Encodes a flag.
 // ## Parameters

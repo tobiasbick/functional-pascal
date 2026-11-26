@@ -2,10 +2,15 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Overlays.CommandPalette;
 
-uses
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Overlays as CuiOverlays,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.CommandPalettes as P, Fpas.Ui.Gui.Internal.Input.ModalFocus as F, System.Globalization as Culture;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Overlays as CuiOverlays;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Input.ModalFocus as F;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as P;
+uses System.Globalization as Culture;
 
 // Presents the native CommandPalette element.
 // ## Type parameters

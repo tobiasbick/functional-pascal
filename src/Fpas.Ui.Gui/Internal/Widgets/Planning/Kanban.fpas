@@ -2,9 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Planning.Kanban;
 
-uses
-  Fpas.Ui.Widgets.Planning.Kanbans as A, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Planning.Kanbans as A;
 
 // Presents the native Kanban board.
 // ## Type parameters

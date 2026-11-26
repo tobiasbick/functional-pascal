@@ -40,7 +40,7 @@ public sealed class FormatCorpusTests
     {
         const string input = """
             program RoundTrip;
-            uses System as Sys,System.Console as Console;
+            uses System as Sys;uses System.Console as Console;
             function Make():function():int;
             begin var Count:int:=1;return function():int begin Count:=Count+1;return Count;end function;end function;
             begin

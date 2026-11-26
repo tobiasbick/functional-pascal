@@ -57,7 +57,7 @@ public sealed class AttributeTests
     {
         const string text = """
             unit Marked;
-            uses System as Sys, System.Text.Json.Serialization as Json;
+            uses System as Sys; uses System.Text.Json.Serialization as Json;
             // A documented record.
             [Sys.ObsoleteAttribute('record')]
             public type R = record
@@ -95,7 +95,7 @@ public sealed class AttributeTests
 
     private static CompilationResult Compile(string declarations) => TestCompilation.Compile($$"""
         program Attributes;
-        uses System as Sys, System.Text.Json.Serialization as Json, System.Diagnostics.CodeAnalysis as Analysis;
+        uses System as Sys; uses System.Text.Json.Serialization as Json; uses System.Diagnostics.CodeAnalysis as Analysis;
         {{declarations}}
         begin end;
         end program;

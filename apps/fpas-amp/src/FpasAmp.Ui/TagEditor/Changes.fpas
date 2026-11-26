@@ -3,10 +3,12 @@
 // Calculates sparse edits so untouched tags are left as read.
 unit FpasAmp.Ui.TagEditor.Changes;
 
-uses
-  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Library.TagEditing.Files as Files,
-  FpasAmp.Library.TagEditing.Fields as F, System as Sys,
-  System.Collections.Generic as C, System.Collections.Immutable as I;
+uses FpasAmp.Library.TagEditing.Fields as F;
+uses FpasAmp.Library.TagEditing.Files as Files;
+uses FpasAmp.Ui.TagEditor.Model as M;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
 
 function Normalize(Key: string; Text: string): string;
 begin

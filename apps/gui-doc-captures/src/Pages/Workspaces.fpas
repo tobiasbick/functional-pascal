@@ -2,13 +2,17 @@
 
 unit GuiDocCaptures.Pages.Workspaces;
 
-uses
-  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
-  GuiGallery.App.State as Gallery, GuiGallery.Pages.Files.State as Files,
-  GuiGallery.Pages.Planning.State as Planning,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Widgets.Developer.Terminals as Terminal,
-  Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Navigation.PathBars as Paths,
-  System as Sys, System.IO as IO;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Widgets.Developer.Terminals as Terminal;
+uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
+uses Fpas.Ui.Widgets.Navigation.PathBars as Paths;
+uses GuiDocCaptures.Rendering.Presented as Presented;
+uses GuiDocCaptures.Rendering.Regions as Regions;
+uses GuiGallery.App.State as Gallery;
+uses GuiGallery.Pages.Files.State as Files;
+uses GuiGallery.Pages.Planning.State as Planning;
+uses System as Sys;
+uses System.IO as IO;
 
 procedure WriteSample(Path: string; Content: string);
 begin

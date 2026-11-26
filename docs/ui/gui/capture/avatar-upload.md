@@ -11,8 +11,10 @@ photo is selected. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Capture.AvatarUpload;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Files.AvatarUploads as W,
-  Fpas.Ui.Gui.FileDialogs as Dialogs, Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.FileDialogs as Dialogs;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Files.AvatarUploads as W;
 
 // Requests a new profile photo.
 public type Msg = variant

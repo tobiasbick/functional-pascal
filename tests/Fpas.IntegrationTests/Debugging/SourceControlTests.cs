@@ -30,7 +30,7 @@ public sealed partial class SourceControlTests
         using var program = new Debuggee("own-source-breakpoints");
         await program.Compile("""
             program MultiBreak;
-            uses System.Console as Console, System.IO.File as File;
+            uses System.Console as Console; uses System.IO.File as File;
             begin
               File.WriteAllText('started.txt', 'yes');
               var Value: int := 10;

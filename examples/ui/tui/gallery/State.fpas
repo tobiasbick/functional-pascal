@@ -2,17 +2,24 @@
 
 unit TuiGallery.State;
 
-uses
-  TuiGallery.ChoiceSamples as Choices,
-  TuiGallery.Catalog as Catalog, TuiGallery.FilePickerSample as Files,
-  TuiGallery.ListSample as ListSample, TuiGallery.ProfileSample as Profile, TuiGallery.ToolSamples as Tools,
-  Gallery.Shared.SecurityCard as Security, Gallery.Shared.AboutField as AboutSample,
-  Gallery.Shared.PickerChoices as Pickers, Gallery.Shared.SaveFrequency as Frequency,
-  Gallery.Shared.PeopleFilters as FilterSample, Fpas.Ui.Widgets.Collections.FilterBars as Filters,
-  Gallery.Shared.PaginationExample as Pagination,
-  Gallery.Shared.LanguagesExample as LanguageSample,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Layout as Layout, Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Layout as Layout;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Collections.FilterBars as Filters;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses Gallery.Shared.AboutField as AboutSample;
+uses Gallery.Shared.LanguagesExample as LanguageSample;
+uses Gallery.Shared.PaginationExample as Pagination;
+uses Gallery.Shared.PeopleFilters as FilterSample;
+uses Gallery.Shared.PickerChoices as Pickers;
+uses Gallery.Shared.SaveFrequency as Frequency;
+uses Gallery.Shared.SecurityCard as Security;
+uses TuiGallery.Catalog as Catalog;
+uses TuiGallery.ChoiceSamples as Choices;
+uses TuiGallery.FilePickerSample as Files;
+uses TuiGallery.ListSample as ListSample;
+uses TuiGallery.ProfileSample as Profile;
+uses TuiGallery.ToolSamples as Tools;
 
 // Messages produced by the terminal gallery.
 public type Msg = variant

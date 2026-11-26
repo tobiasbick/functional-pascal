@@ -10,10 +10,13 @@ The name and email also appear on Inputs and in Edit profile.
 ```pascal
 unit Docs.Ui.Overview.WorkspaceForm;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Containers.Cards as Card, Fpas.Ui.Widgets.Inputs.TextFields as F,
-  Fpas.Ui.Widgets.Inputs.Checkboxes as C, Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Containers.Cards as Card;
+uses Fpas.Ui.Widgets.Inputs.Checkboxes as C;
+uses Fpas.Ui.Widgets.Inputs.TextFields as F;
 
 // Messages from the workspace form.
 public type Msg = variant

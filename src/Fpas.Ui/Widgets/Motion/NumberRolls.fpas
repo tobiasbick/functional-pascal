@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Motion.NumberRolls;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Motion.Motion as Motion;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 
 // Draws the native CUI number roll. Values exceeding its animation capacity
 // appear as complete tabular text.

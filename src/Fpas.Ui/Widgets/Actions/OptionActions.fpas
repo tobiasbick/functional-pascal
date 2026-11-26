@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Actions.OptionActions;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.ControlWells as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.ControlWells as W;
 
 // Model-owned input.
 public type Value = record

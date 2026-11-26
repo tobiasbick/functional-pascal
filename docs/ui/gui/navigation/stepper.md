@@ -9,7 +9,8 @@ Use a stepper to show progress through an ordered workflow. Available in **GUI**
 ```pascal
 unit Docs.Ui.Navigation.Stepper;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Steppers as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.Steppers as C;
 
 // Builds the stepper example.
 // ## Parameters

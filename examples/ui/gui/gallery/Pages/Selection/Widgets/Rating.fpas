@@ -2,11 +2,10 @@
 
 unit GuiGallery.Pages.Selection.Widgets.Rating;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Selection.State as State,
-  Fpas.Ui.Widgets.Inputs.Ratings as R,
-  Fpas.Ui.Elements as E;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Ratings as R;
+uses GuiGallery.Pages.Selection.State as State;
+uses GuiGallery.Shared.State as Demo;
 
 // Builds the five-star example on the native Selection page.
 //

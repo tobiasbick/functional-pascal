@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CreativeControls.AspectRatioPicker;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.AspectPickers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.AspectPickers as W;
 
 // Shows the output ratio picker.
 // ## Parameters

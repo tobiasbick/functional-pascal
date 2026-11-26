@@ -2,9 +2,9 @@
 
 unit GuiDocCaptures.Pages.SelectionAndNavigation;
 
-uses
-  GuiDocCaptures.Rendering.Regions as Regions, GuiGallery.App.State as Gallery,
-  Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Application as Gui;
+uses GuiDocCaptures.Rendering.Regions as Regions;
+uses GuiGallery.App.State as Gallery;
 
 // Captures the Selection chapter's widgets from the presented gallery.
 // ## Parameters

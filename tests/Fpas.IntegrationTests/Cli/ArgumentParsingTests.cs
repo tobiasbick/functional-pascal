@@ -43,7 +43,7 @@ public sealed class ArgumentParsingTests
         Directory.CreateDirectory(emptyReferences);
         File.WriteAllText(Path.Combine(sourceDirectory, "--main.fpas"), """
             program App;
-            uses Helper as H, System.Console as Console;
+            uses Helper as H; uses System.Console as Console;
             begin Console.WriteLine(H.Value()); end;
             end program;
             """);

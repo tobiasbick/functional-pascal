@@ -2,13 +2,20 @@
 
 unit FpasAmp.UiTests.StatusCounts;
 
-uses
-  FpasAmp.Ui.Albums.Status as Footer, FpasAmp.Ui.Albums.Model as Albums,
-  FpasAmp.Ui.Albums.Update as Catalog, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Update as Songs,
-  FpasAmp.Library.Albums.Model as Library, FpasAmp.Library.Metadata.Model as Tracks,
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.StatusBars as Bars,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I, Xunit as X;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as Bars;
+uses FpasAmp.Library.Albums.Model as Library;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Albums.Model as Albums;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Music.Update as Songs;
+uses FpasAmp.Ui.Albums.Status as Footer;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses FpasAmp.Ui.Albums.Update as Catalog;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses Xunit as X;
 
 function Caption<TMsg>(Bar: E.Element<TMsg>): string;
 begin

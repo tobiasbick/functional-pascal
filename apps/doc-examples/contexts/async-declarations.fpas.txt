@@ -2,7 +2,9 @@
 
 unit Example;
 
-uses System.Threading as Threading, System.Threading.Tasks as Tasks, System.Net.Http as Http;
+uses System.Net.Http as Http;
+uses System.Threading as Threading;
+uses System.Threading.Tasks as Tasks;
 
 // @example
 

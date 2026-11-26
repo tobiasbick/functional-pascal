@@ -2,10 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Editors.PropertyInspector;
 
-uses
-  Fpas.Ui.Widgets.Editors.PropertyInspectors as D, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
-  System.Collections.Generic as Lists, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Widgets.Editors.PropertyInspectors as D;
+uses System.Collections.Generic as Lists;
 
 function Pack(Row: D.Property): CuiEditors.CuiProperty;
 begin

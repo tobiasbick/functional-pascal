@@ -2,9 +2,10 @@
 
 unit GuiGallery.Pages.Inputs.Update;
 
-uses
-  Fpas.Ui.Mvu.Application as Mvu,
-  GuiGallery.Pages.Inputs.State as S, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses GuiGallery.Pages.Inputs.State as S;
+uses System as Sys;
 
 // Applies a message to this feature and describes its effects.
 // ## Parameters

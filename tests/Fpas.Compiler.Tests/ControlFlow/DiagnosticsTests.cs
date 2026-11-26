@@ -7,7 +7,7 @@ namespace Fpas.Compiler.Tests.ControlFlow;
 
 public sealed class DiagnosticsTests
 {
-    private const string Header = "program Example; uses System.Console as Console, System.String as Text; begin ";
+    private const string Header = "program Example; uses System.Console as Console; uses System.String as Text; begin ";
 
     [Theory]
     [InlineData("const Message := 'hello';", "FP2002")]
@@ -79,7 +79,7 @@ public sealed class DiagnosticsTests
     [Fact]
     public void Duplicate_imports_are_rejected()
     {
-        var result = TestCompilation.CompileAgainstFramework("program Example; uses System.Console as First, System.Console as Second; begin end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Example; uses System.Console as First; uses System.Console as Second; begin end; end program;");
         Assert.Equal("FP3004", Assert.Single(result.Diagnostics).Code);
     }
 

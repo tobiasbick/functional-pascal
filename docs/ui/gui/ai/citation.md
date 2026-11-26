@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Ai.Citation;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.Citations as W, Fpas.Ui.Widgets.Ai.Sources as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.Citations as W;
+uses Fpas.Ui.Widgets.Ai.Sources as S;
 
 // Shows a source reference with an activation message.
 // ## Parameters

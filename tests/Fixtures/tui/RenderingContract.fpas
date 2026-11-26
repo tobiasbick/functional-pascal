@@ -2,10 +2,35 @@
 
 program RenderingContract;
 
-uses
-  Fpas.Ui.Widgets.Feedback.Spinners as Spin, Fpas.Ui.Widgets.Charts.Sparklines as Sparks,
-  Fpas.Ui.Widgets.Charts.Charts as Charts,
-  Fpas.Ui.Widgets.Inputs.Switches as Switches, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.TerminalExtensions.Input as Keys;
+uses Fpas.Ui.Tui.Application as Tui;
+uses Fpas.Ui.Tui.Headless as Headless;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Activation;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as Scene;
+uses Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs;
+uses Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Widgets.Charts.Sparklines as Sparks;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+uses Fpas.Ui.Widgets.Developer.Terminal as Terminal;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as Bars;
+uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
+uses Fpas.Ui.Widgets.Inputs.Switches as Switches;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses System as Sys;
+uses System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin

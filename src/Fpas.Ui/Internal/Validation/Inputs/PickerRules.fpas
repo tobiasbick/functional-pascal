@@ -2,9 +2,12 @@
 
 unit Fpas.Ui.Internal.Validation.Inputs.PickerRules;
 
-uses
-  Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Widgets.Pickers.TimePickers as P, Fpas.Ui.Widgets.Pickers.WheelPickers as W,
-  Fpas.Ui.Widgets.Pickers.EmojiPickers as E, System as Sys, System.Text as Text;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Widgets.Pickers.EmojiPickers as E;
+uses Fpas.Ui.Widgets.Pickers.TimePickers as P;
+uses Fpas.Ui.Widgets.Pickers.WheelPickers as W;
+uses System as Sys;
+uses System.Text as Text;
 
 // Checks that a time can be represented by native hour and minute controls.
 // ## Parameters

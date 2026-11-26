@@ -2,7 +2,9 @@
 
 program GuiInterop;
 
-uses Fpas.Ui.Gui.Cui as Cui, System as Sys, System.Console as Console;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses System as Sys;
+uses System.Console as Console;
 
 procedure Run(Arguments: array of string);
 requires Arguments.Length = 3;

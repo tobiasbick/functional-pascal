@@ -9,7 +9,8 @@ Use a slider to adjust one value between two bounds. The gallery shows continuou
 ```pascal
 unit Docs.Ui.Selection.Slider;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Sliders as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Sliders as C;
 
 // Builds the slider example.
 // ## Parameters

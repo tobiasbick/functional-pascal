@@ -2,9 +2,28 @@
 
 program HeadlessContract;
 
-uses
-  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, System.Threading.Channels as Channels,
-  Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Widgets.Theming.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
+uses Fpas.Ui.TerminalExtensions.Input as InputKeys;
+uses Fpas.Ui.TerminalExtensions.Views as Views;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Headless as Headless;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Rendering.Presentation as P;
+uses Fpas.Ui.Validation as Validation;
+uses Fpas.Ui.Widgets.Actions.Buttons as UiButtons;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Navigation.Navigation as Nav;
+uses Fpas.Ui.Widgets.Theming.Themes as TerminalThemes;
+uses System as Sys;
+uses System.Console as Console;
+uses System.IO as IO;
+uses System.Threading as Threads;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
 
 type Msg = variant
   Start;

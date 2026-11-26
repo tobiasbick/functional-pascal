@@ -9,8 +9,9 @@ Run a single action such as saving a document or opening a view. Available in **
 ```pascal
 unit Docs.Ui.Actions.Button;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // Builds the example view.
 // ## Returns

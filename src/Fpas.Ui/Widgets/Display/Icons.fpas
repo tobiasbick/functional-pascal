@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Display.Icons;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 
 // Creates a native CUI icon element.
 // ## Type parameters

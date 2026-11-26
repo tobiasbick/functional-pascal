@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Charts.Gauge;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Gauges as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Gauges as W;
 
 // Builds the gauge example.
 // ## Parameters

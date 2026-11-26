@@ -2,9 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Overlays.Dialog;
 
-uses
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Input.Modal as Modal, Fpas.Ui.Widgets.Overlays.Dialogs as D, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Input.Modal as Modal;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as D;
 
 // Draws a centered native dialog over its base view.
 //

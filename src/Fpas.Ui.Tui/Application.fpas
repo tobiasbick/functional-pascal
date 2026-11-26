@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Tui.Application;
 
-uses
-  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K,
-  System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses System as Sys;
+uses System.Threading as Threads;
+uses System.Threading.Tasks as Tasks;
 
 // An event to route against the current terminal view.
 public type Input = variant

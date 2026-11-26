@@ -2,16 +2,16 @@
 
 unit GuiGallery.Pages.Inputs.Widgets.PickerFields;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Inputs.State as State,
-  GuiGallery.Pages.Inputs.Widgets.BrandColor as BrandColor,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Containers.Grids as Grid,
-  Gallery.Shared.PickerChoices as Choices,
-  Fpas.Ui.Widgets.Inputs.NumberFields as N, Fpas.Ui.Widgets.Pickers.DatePickers as D;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Grids as Grid;
+uses Fpas.Ui.Widgets.Inputs.NumberFields as N;
+uses Fpas.Ui.Widgets.Pickers.DatePickers as D;
+uses Gallery.Shared.PickerChoices as Choices;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Inputs.State as State;
+uses GuiGallery.Pages.Inputs.Widgets.BrandColor as BrandColor;
+uses GuiGallery.Shared.Sections as G;
 
 // Builds the accepted fields in the original Pickers card.
 //

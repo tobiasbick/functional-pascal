@@ -2,21 +2,20 @@
 
 unit GuiGallery.Pages.Selection.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Selection.State as State,
-  Gallery.Shared.CheckboxExamples as Checkbox,
-  GuiGallery.Pages.Selection.Widgets.Switch as Switch,
-  Gallery.Shared.SaveFrequency as Frequency,
-  GuiGallery.Pages.Selection.Widgets.RadioCards as RadioCards,
-  GuiGallery.Pages.Selection.Widgets.Slider as Slider,
-  GuiGallery.Pages.Selection.Widgets.RangeSlider as RangeSlider,
-  GuiGallery.Pages.Selection.Widgets.Chip as Chip,
-  GuiGallery.Pages.Selection.Widgets.Rating as Rating,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Gallery.Shared.CheckboxExamples as Checkbox;
+uses Gallery.Shared.SaveFrequency as Frequency;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Selection.State as State;
+uses GuiGallery.Pages.Selection.Widgets.Chip as Chip;
+uses GuiGallery.Pages.Selection.Widgets.RadioCards as RadioCards;
+uses GuiGallery.Pages.Selection.Widgets.RangeSlider as RangeSlider;
+uses GuiGallery.Pages.Selection.Widgets.Rating as Rating;
+uses GuiGallery.Pages.Selection.Widgets.Slider as Slider;
+uses GuiGallery.Pages.Selection.Widgets.Switch as Switch;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
 
 // Builds the accepted controls in CUI's Selection page order.
 //

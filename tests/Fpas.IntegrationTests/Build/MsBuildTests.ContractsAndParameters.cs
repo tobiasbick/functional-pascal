@@ -24,7 +24,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
-            uses System as Sys, Demo as D;
+            uses System as Sys; uses Demo as D;
             public function Guard(Value: int): int;
             requires Value > 0;
             ensures (Returned: int): Returned = Value;

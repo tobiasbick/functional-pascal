@@ -2,10 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Overlays.Popover;
 
-uses
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Input.ModalFocus as F, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Widgets.Overlays.Popovers as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Input.ModalFocus as F;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Overlays.Popovers as P;
+uses System.Collections.Generic as Lists;
 
 // Draws a native panel after its in-flow trigger.
 //

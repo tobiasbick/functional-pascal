@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Planning.Gantt;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Planning.Gantts as W, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Planning.Gantts as W;
+uses System as Sys;
 
 // Shows a project schedule.
 // ## Parameters

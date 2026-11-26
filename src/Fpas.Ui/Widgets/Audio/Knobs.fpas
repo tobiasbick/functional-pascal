@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Audio.Knobs;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 
 // Presentation and input settings for a native rotary control.
 public type Options = record

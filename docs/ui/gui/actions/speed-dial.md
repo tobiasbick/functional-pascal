@@ -9,8 +9,9 @@ Group closely related commands behind one floating action button. Available in *
 ```pascal
 unit Docs.Ui.Actions.SpeedDial;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.SpeedDials as D,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.SpeedDials as D;
+uses System as Sys;
 
 // Builds the example view.
 // ## Returns

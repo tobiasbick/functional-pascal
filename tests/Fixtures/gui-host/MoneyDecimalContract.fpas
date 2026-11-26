@@ -2,12 +2,16 @@
 
 unit MoneyDecimalContract;
 
-uses
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Widgets.Inputs.MoneyFields as Money, Fpas.Ui.Elements as E,
-  Fpas.Ui.Composition as Composition, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L,
-  System as Sys;
+uses Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Inputs.MoneyFields as Money;
+uses System as Sys;
 
 type Model = record
   // Exact decimal amount most recently accepted by the model.

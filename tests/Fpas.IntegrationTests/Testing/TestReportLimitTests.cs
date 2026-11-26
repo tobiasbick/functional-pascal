@@ -16,7 +16,7 @@ public sealed class TestReportLimitTests(SdkPackageFixture sdk) : IClassFixture<
         var project = await TestProjectFixture.Create(directory, sdk, "nunit");
         File.WriteAllText(directory.File("Tests/Tests.fpas"), """
             unit LargeOutput;
-            uses NUnit.Framework as N, System as S;
+            uses NUnit.Framework as N; uses System as S;
             [N.TestFixtureAttribute]
             public type Tests = record
               [N.TestAttribute]

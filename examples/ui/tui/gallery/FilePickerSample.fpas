@@ -2,10 +2,12 @@
 
 unit TuiGallery.FilePickerSample;
 
-uses
-  Gallery.Shared.FilePickerExample as Sample, Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Files.FilePickers as Picker,
-  Fpas.Ui.Layout as L, Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
+uses Gallery.Shared.FilePickerExample as Sample;
 
 // Visibility and last result for the gallery file dialogs.
 public type State = record

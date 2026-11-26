@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.CalendarParts;
 
-uses
-  Fpas.Ui.Widgets.Pickers.Calendars as Calendar, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Core.Context as C, System as Sys, System.Globalization as Culture;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Pickers.Calendars as Calendar;
+uses System as Sys;
+uses System.Globalization as Culture;
 
 function Kind(Part: int): string;
 begin

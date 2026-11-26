@@ -2,7 +2,9 @@
 
 program UnitsDemo;
 
-uses Demo.Numbers as Numbers, Demo.Messages as Messages, System.Console as Console;
+uses Demo.Messages as Messages;
+uses Demo.Numbers as Numbers;
+uses System.Console as Console;
 
 begin
   const Sum: int := Numbers.SumTo(10);

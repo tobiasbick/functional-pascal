@@ -2,18 +2,38 @@
 
 unit FpasAmp.UiTests.NativeTrackLinks;
 
-uses
-  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as Sources,
-  FpasAmp.Library.Tests.AlbumSupport as Art, FpasAmp.Library.Inventory.Monitoring as Inventory,
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Sources as Input,
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller, FpasAmp.Ui.Shell as Shell,
-  FpasAmp.Ui.Settings.Model as Settings, FpasAmp.Ui.Navigation.Model as Nav,
-  FpasAmp.Ui.Music.LibraryPage as Music, FpasAmp.Ui.Albums.Music.Model as Songs, FpasAmp.Ui.Albums.Model as AlbumsPage,
-  FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Audio, ATL as Tags,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Testing.EffectReplies as Effects,
-  System as Sys, System.IO as IO, System.Text as Text, System.Collections.Immutable as I, System.Threading as T,
-  System.Threading.Channels as Channels, System.Threading.Tasks as Tasks, Xunit as X;
+uses ATL as Tags;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Effects;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses FpasAmp.Library.Albums.Model as Albums;
+uses FpasAmp.Library.Inventory.Monitoring as Inventory;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Sources as Input;
+uses FpasAmp.Library.Tests.AlbumSupport as Art;
+uses FpasAmp.Library.Tests.MetadataSupport as Sources;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Ui.Albums.Model as AlbumsPage;
+uses FpasAmp.Ui.Albums.Music.Model as Songs;
+uses FpasAmp.Ui.App.Controller as Controller;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Music.LibraryPage as Music;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Player.Playback as Playback;
+uses FpasAmp.Ui.Settings.Model as Settings;
+uses FpasAmp.Ui.Shell as Shell;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Text as Text;
+uses System.Threading as T;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
+uses Xunit as X;
 
 // Native presses open the exact indexed grouping, then restore the source table.
 public type TrackLinkTests = record

@@ -157,7 +157,7 @@ public sealed class SymbolContextTests
         }
         await program.Compile("""
             program ModuleFrames;
-            uses ExternalFrames as L, System.Console as Console;
+            uses ExternalFrames as L; uses System.Console as Console;
             function Probe(Input: int): int;
             begin
               const Result: int := Input + 2;

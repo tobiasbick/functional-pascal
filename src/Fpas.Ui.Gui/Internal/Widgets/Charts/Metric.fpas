@@ -2,7 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.Metric;
 
-uses Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Charts.Metrics as M, Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Widgets.Charts.Metrics as M;
 
 // Draws the native metric card, trend and sparkline.
 // ## Type parameters

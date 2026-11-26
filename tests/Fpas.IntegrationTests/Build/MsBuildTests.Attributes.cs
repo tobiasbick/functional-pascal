@@ -67,8 +67,8 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Marked;
-            uses Shared as S, System as Sys, System.Threading.Tasks as Tasks,
-              System.Collections.Generic as C, System.Text.Json.Serialization as Json, System.Runtime.CompilerServices as Compiler;
+            uses Shared as S; uses System as Sys; uses System.Threading.Tasks as Tasks;
+              uses System.Collections.Generic as C; uses System.Text.Json.Serialization as Json; uses System.Runtime.CompilerServices as Compiler;
             [Sys.FlagsAttribute]
             public type Local = enum : uint A = 1; B = 2; end enum;
             [S.GenericAttribute<int>(42)]

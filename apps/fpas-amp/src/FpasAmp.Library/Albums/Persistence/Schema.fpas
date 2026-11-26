@@ -3,11 +3,11 @@
 // Reconstructible, indexed album membership is derived from successful tag reads.
 unit FpasAmp.Library.Albums.Persistence.Schema;
 
-uses
-  FpasAmp.Library.Serialization.CatalogueJson as Codec,
-  Fpas.Media.Tags.AudioFiles as MediaTags,
-  FpasAmp.Library.Albums.Persistence.Store as Store, FpasAmp.Library.Persistence.Sql as Sql,
-  Microsoft.Data.Sqlite as Db;
+uses Fpas.Media.Tags.AudioFiles as MediaTags;
+uses FpasAmp.Library.Albums.Persistence.Store as Store;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Serialization.CatalogueJson as Codec;
+uses Microsoft.Data.Sqlite as Db;
 
 // Creates membership/indexes in `Transaction`; `Populate` derives existing cached
 // tags without rehashing or reopening media. All state belongs to `Connection`.

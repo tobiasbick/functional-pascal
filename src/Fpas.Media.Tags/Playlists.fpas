@@ -3,7 +3,13 @@
 // ATL's playlist extensions remain independent of audio-format selection.
 unit Fpas.Media.Tags.Playlists;
 
-uses ATL as Audio, ATL.Playlist as A, System as Sys, System.IO as IO, System.Text as Text, System.Threading as T, System.Collections.Generic as C;
+uses ATL as Audio;
+uses ATL.Playlist as A;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+uses System.Text as Text;
+uses System.Threading as T;
 
 // Checks an extension against the supported playlist readers.
 // ## Parameters

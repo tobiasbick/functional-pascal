@@ -3,13 +3,13 @@
 // Reads and replaces FPas-Amp's per-user JSON files.
 unit FpasAmp.Persistence.UserFiles;
 
-uses
-  FpasAmp.Persistence.JsonRecovery as Recovery, FpasAmp.Persistence.JsonOutput as Output,
-  System as Sys,
-  System.IO as IO,
-  System.Text as Text,
-  System.Text.Json as J,
-  System.Threading as Threads;
+uses FpasAmp.Persistence.JsonOutput as Output;
+uses FpasAmp.Persistence.JsonRecovery as Recovery;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Text as Text;
+uses System.Text.Json as J;
+uses System.Threading as Threads;
 
 const Utf8: Text.UTF8Encoding := new Text.UTF8Encoding(false, true);
 // An invalid byte produces a control character, so JSON cannot silently change

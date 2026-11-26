@@ -9,7 +9,8 @@ Use an empty state to explain an empty area and offer the next action when one i
 ```pascal
 unit Docs.Ui.Feedback.EmptyState;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Containers.EmptyStates as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Containers.EmptyStates as W;
 
 // Builds the empty state example.
 // ## Returns

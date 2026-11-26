@@ -25,7 +25,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Middle/Api.fpas"), """
             unit Demo.Middle;
-            uses Demo.Bridge as Bridge, GlobalValue as Value;
+            uses Demo.Bridge as Bridge; uses GlobalValue as Value;
             public function Read(): int;
             begin
               const Item: Value := new Value();
@@ -116,7 +116,7 @@ public sealed partial class MsBuildTests
     public async Task Interop_and_resource_lifetimes_match_CLR_semantics(string declarations, string body, string expected)
     {
         using var project = sdk.CreateProject();
-        var result = await RunInterop(project, "program App; uses Demo as Demo, Demo.Resource as Resource, System as Sys, System.Console as Console; " + declarations +
+        var result = await RunInterop(project, "program App; uses Demo as Demo; uses Demo.Resource as Resource; uses System as Sys; uses System.Console as Console; " + declarations +
             " begin Resource.Reset(); " + body + " end; end program;");
         Assert.True(result.ExitCode == 0, result.Output + result.Error);
         Assert.Equal(expected.Replace("\n", Environment.NewLine, StringComparison.Ordinal) + Environment.NewLine, result.Output);
@@ -128,7 +128,7 @@ public sealed partial class MsBuildTests
         using var project = sdk.CreateProject();
         var result = await RunInterop(project, """
             program Rethrow;
-            uses Demo.Resource as Resource, System as Sys, System.Console as Console;
+            uses Demo.Resource as Resource; uses System as Sys; uses System.Console as Console;
             procedure Wrap();
             begin try Resource.ThrowOriginal(); catch Failure: Sys.Exception do raise; end try; end procedure;
             begin
@@ -149,7 +149,7 @@ public sealed partial class MsBuildTests
     public async Task Nullable_metadata_does_not_allow_unsafe_dereferences_or_arguments(string body)
     {
         using var project = sdk.CreateProject();
-        File.WriteAllText(project.File("Game/Bridge.fpas"), "program Unsafe; uses Demo.Resource as Resource, System.Console as Console; begin " + body + " end; end program;");
+        File.WriteAllText(project.File("Game/Bridge.fpas"), "program Unsafe; uses Demo.Resource as Resource; uses System.Console as Console; begin " + body + " end; end program;");
         var path = project.File("Game/Game.fpasproj");
         File.WriteAllText(path, File.ReadAllText(path).Replace("<OutputType>Library</OutputType>", "<OutputType>Exe</OutputType>", StringComparison.Ordinal));
         var result = await sdk.Run(project, "build", "Game/Game.fpasproj");

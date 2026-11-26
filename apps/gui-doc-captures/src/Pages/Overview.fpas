@@ -2,11 +2,13 @@
 
 unit GuiDocCaptures.Pages.Overview;
 
-uses
-  GuiDocCaptures.Rendering.Presented as Presented, GuiDocCaptures.Rendering.Regions as Regions,
-  GuiGallery.App.State as Gallery, GuiGallery.Shared.State as Shared,
-  Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers, Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses GuiDocCaptures.Rendering.Presented as Presented;
+uses GuiDocCaptures.Rendering.Regions as Regions;
+uses GuiGallery.App.State as Gallery;
+uses GuiGallery.Shared.State as Shared;
 
 procedure CaptureAppearance(Session: Gui.Session<Gallery.Msg>; Output: string; Name: string);
 begin

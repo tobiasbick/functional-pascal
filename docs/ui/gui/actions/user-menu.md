@@ -9,8 +9,9 @@ Put account commands behind a trigger that shows the user name and initials. Ava
 ```pascal
 unit Docs.Ui.Actions.UserMenu;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M,
-  Fpas.Ui.Widgets.Overlays.UserMenus as U;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Widgets.Overlays.UserMenus as U;
 
 // Builds the example view.
 // ## Returns

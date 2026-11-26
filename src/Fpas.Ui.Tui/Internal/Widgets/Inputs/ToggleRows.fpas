@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.ToggleRows;
 
-uses Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as A;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
 
 function Row<TMsg>(
   Id: string; Name: string; Checked: bool; Change: function(bool): TMsg;

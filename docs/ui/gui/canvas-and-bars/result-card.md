@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CanvasAndBars.ResultCard;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Canvas.ResultCards as W, Fpas.Ui.Widgets.Media.MediaImages as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Canvas.ResultCards as W;
+uses Fpas.Ui.Widgets.Media.MediaImages as M;
 
 // Shows the output image and offers a preview.
 // ## Parameters

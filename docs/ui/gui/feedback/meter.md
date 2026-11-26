@@ -9,7 +9,8 @@ Use a meter for usage relative to a capacity. The gallery shows storage in gigab
 ```pascal
 unit Docs.Ui.Feedback.Meter;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Meters as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Meters as W;
 
 // Builds the meter example.
 // ## Parameters

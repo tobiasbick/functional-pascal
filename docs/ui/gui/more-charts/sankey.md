@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.Sankey;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Sankeys as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Sankeys as W;
 
 // Builds the sankey example.
 // ## Returns

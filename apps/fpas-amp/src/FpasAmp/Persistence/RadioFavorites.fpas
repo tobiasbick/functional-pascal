@@ -2,9 +2,11 @@
 
 unit FpasAmp.Persistence.RadioFavorites;
 
-uses
-  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Ui.Radio.Model as Radio,
-  System as Sys, System.Collections.Generic as C, System.Text.Json as J;
+uses FpasAmp.Persistence.JsonFields as Fields;
+uses FpasAmp.Ui.Radio.Model as Radio;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Text.Json as J;
 
 function Read(Item: J.JsonElement; Key: string): string;
 begin

@@ -2,9 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Planning.TimelineItem;
 
-uses
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Planning.TimelineItems as T;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Planning.TimelineItems as T;
 
 // Draws CUI's activity entry and exposes its literal text for inspection.
 // ## Type parameters

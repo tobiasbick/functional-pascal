@@ -16,8 +16,8 @@ public sealed partial class AsyncControlTests
         using var program = new Debuggee("own-async-await");
         await program.Compile("""
             async program AsyncControl;
-            uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks,
-              System.IO.File as File, System.Threading.Thread as Thread;
+            uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
+              uses System.IO.File as File; uses System.Threading.Thread as Thread;
             async function Work(Input: int; Gate: Tasks.Task<int>): Tasks.Task<int>;
             begin
               var Value: int := Input + 1;
@@ -103,7 +103,7 @@ public sealed partial class AsyncControlTests
         using var program = new Debuggee("own-completed-await");
         await program.Compile("""
             async program CompletedAwait;
-            uses System.Console as Console, System.Threading.Tasks as Tasks;
+            uses System.Console as Console; uses System.Threading.Tasks as Tasks;
             async function Work(Input: int): Tasks.Task<int>;
             begin
               var Value: int := Input + 1;
@@ -142,7 +142,7 @@ public sealed partial class AsyncControlTests
         using var program = new Debuggee("own-cancel-await");
         await program.Compile("""
             program CancelAwait;
-            uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks, System.Threading.Thread as Thread;
+            uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks; uses System.Threading.Thread as Thread;
             async function Work(Gate: Tasks.Task<int>): Tasks.Task<int>;
             begin
               const Value: int := await Gate;

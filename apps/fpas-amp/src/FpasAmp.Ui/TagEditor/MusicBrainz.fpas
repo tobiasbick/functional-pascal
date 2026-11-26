@@ -2,15 +2,21 @@
 
 unit FpasAmp.Ui.TagEditor.MusicBrainz;
 
-uses
-  MetaBrainz.MusicBrainz as B, MetaBrainz.MusicBrainz.Interfaces.Entities as E,
-  MetaBrainz.MusicBrainz.Interfaces.Searches as S,
-  Microsoft.Extensions.Http.Resilience as R, Polly as P, Polly.Retry as Retry,
-  FpasAmp.Ui.TagEditor.MusicBrainzTags as Tags,
-  FpasAmp.Ui.Providers.RequestPacing as Pacing,
-  System as Sys, System.Net.Http as H, System.Net.Http.Headers as Headers,
-  System.Collections.Generic as C, System.Reflection as Reflection,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses FpasAmp.Ui.Providers.RequestPacing as Pacing;
+uses FpasAmp.Ui.TagEditor.MusicBrainzTags as Tags;
+uses MetaBrainz.MusicBrainz as B;
+uses MetaBrainz.MusicBrainz.Interfaces.Entities as E;
+uses MetaBrainz.MusicBrainz.Interfaces.Searches as S;
+uses Microsoft.Extensions.Http.Resilience as R;
+uses Polly as P;
+uses Polly.Retry as Retry;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Net.Http as H;
+uses System.Net.Http.Headers as Headers;
+uses System.Reflection as Reflection;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // One selectable pairing of a recording with a release.
 public type Match = record

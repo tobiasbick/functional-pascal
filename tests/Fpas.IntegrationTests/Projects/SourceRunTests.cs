@@ -72,7 +72,7 @@ public sealed class SourceRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         using var timeoutJson = JsonDocument.Parse(timeout.Output);
         Assert.Equal("timeout", timeoutJson.RootElement.GetProperty("error").GetProperty("code").GetString());
         var source = directory.File("Loud.fpas");
-        File.WriteAllText(source, "program Loud; uses System as S, System.Console as Console; begin Console.Write(new S.String(#120, 1200000)); end; end program;");
+        File.WriteAllText(source, "program Loud; uses System as S; uses System.Console as Console; begin Console.Write(new S.String(#120, 1200000)); end; end program;");
         var loud = await ProjectCliFixture.Cli(directory, "run", source, "--sdk-version", sdk.Version, "--sdk-feed", sdk.Feed, "--report", "json");
         Assert.Equal(1, loud.ExitCode); Assert.Equal("", loud.Error);
         using var json = JsonDocument.Parse(loud.Output);

@@ -22,7 +22,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             program Localized;
-            uses System.Console as C, System.Globalization as G, System.Reflection as Refl, System.Resources as R;
+            uses System.Console as C; uses System.Globalization as G; uses System.Reflection as Refl; uses System.Resources as R;
             begin
               G.CultureInfo.CurrentUICulture := G.CultureInfo.GetCultureInfo(args[0]);
               const Strings: R.ResourceManager := new R.ResourceManager('Localized.Text.Strings', Refl.Assembly.GetExecutingAssembly());
@@ -105,7 +105,7 @@ public sealed partial class MsBuildTests
         File.WriteAllBytes(project.File("Game/payload, sample.bin"), [42, 17]);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Localized;
-            uses System.Globalization as G, System.IO as IO, System.Reflection as Refl, System.Resources as R;
+            uses System.Globalization as G; uses System.IO as IO; uses System.Reflection as Refl; uses System.Resources as R;
             public function Label(Culture: string): string;
             begin
               const Strings: R.ResourceManager := new R.ResourceManager('Sample.Labels', Refl.Assembly.GetExecutingAssembly());
@@ -130,7 +130,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Consumer/Main.fpas"), """
             program Consumer;
-            uses System.Console as C, Localized as L;
+            uses System.Console as C; uses Localized as L;
             begin
               C.WriteLine(L.Label('de-DE'));
               C.WriteLine(L.Label('fr-FR'));

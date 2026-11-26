@@ -2,10 +2,13 @@
 
 unit GuiGallery.Pages.Code.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Shared.Sections as G, Fpas.Ui.Widgets.Developer.CodeBlocks as Code, Fpas.Ui.Widgets.Developer.JsonViews as Json,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Developer.CodeBlocks as Code;
+uses Fpas.Ui.Widgets.Developer.JsonViews as Json;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
 
 // Builds the pinned CUI Code examples.
 // ## Type parameters

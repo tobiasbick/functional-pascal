@@ -9,7 +9,8 @@ Use a search field for a single-line query with a search icon and a built-in cle
 ```pascal
 unit Docs.Ui.Inputs.SearchField;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.SearchFields as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as W;
 
 // Builds the search field example.
 // ## Parameters

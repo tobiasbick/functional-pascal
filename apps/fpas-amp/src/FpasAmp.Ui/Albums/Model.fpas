@@ -3,11 +3,13 @@
 // Slice-owned album headers and only the thumbnails needed by the current viewport.
 unit FpasAmp.Ui.Albums.Model;
 
-uses
-  FpasAmp.Library.Albums.Model as Library, Fpas.Media.Images as Images,
-  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Browse as Browse,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Groups as Groups,
-  System.Collections.Immutable as I;
+uses Fpas.Media.Images as Images;
+uses FpasAmp.Library.Albums.Model as Library;
+uses FpasAmp.Ui.Albums.Browse as Browse;
+uses FpasAmp.Ui.Albums.Groups as Groups;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses System.Collections.Immutable as I;
 
 // Owner-thread album view state; pixels are never mutated after publication.
 public type State = record

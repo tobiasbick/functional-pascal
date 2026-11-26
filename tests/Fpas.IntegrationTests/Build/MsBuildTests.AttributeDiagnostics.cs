@@ -57,7 +57,7 @@ public sealed partial class MsBuildTests
         ];
         foreach (var (source, code) in cases)
         {
-            var text = "program Invalid; uses Shared as S, System as Sys, System.Collections.Generic as C, System.Threading.Tasks as Tasks, System.Runtime.CompilerServices as Compiler; " + source + " begin end; end program;";
+            var text = "program Invalid; uses Shared as S; uses System as Sys; uses System.Collections.Generic as C; uses System.Threading.Tasks as Tasks; uses System.Runtime.CompilerServices as Compiler; " + source + " begin end; end program;";
             var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", project.File("Invalid.dll"),
                 "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--report", "json"], text);
             Assert.True(result.ExitCode != 0, source);

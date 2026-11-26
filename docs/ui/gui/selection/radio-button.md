@@ -9,7 +9,8 @@ Use an individual radio button when your view lays out the choices itself. The s
 ```pascal
 unit Docs.Ui.Selection.RadioButton;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RadioButtons as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.RadioButtons as C;
 
 // Builds the radio button example.
 // ## Parameters

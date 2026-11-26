@@ -2,9 +2,18 @@
 
 unit Fpas.Ui.Gui.Internal.Input.CreativeFocus;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, System as Sys,
-  Fpas.Ui.Widgets.Feedback.StatusTags as StatusTags, Fpas.Ui.Widgets.Inputs.RatioSliders as RatioSliders, Fpas.Ui.Widgets.Inputs.GradientSliders as GradientSliders, Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders, Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips, Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers, Fpas.Ui.Widgets.Actions.OptionActions as OptionActions, Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Widgets.Actions.OptionActions as OptionActions;
+uses Fpas.Ui.Widgets.Feedback.StatusTags as StatusTags;
+uses Fpas.Ui.Widgets.Inputs.GradientSliders as GradientSliders;
+uses Fpas.Ui.Widgets.Inputs.RatioSliders as RatioSliders;
+uses Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields;
+uses Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders;
+uses Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers;
+uses Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips;
+uses System as Sys;
 
 function Pick(Id: string; Preferred: string?; Keys: array of string; Accept: array of bool; Initial: int): string?;
 begin

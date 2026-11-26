@@ -12,7 +12,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CanvasAndBars.Toolbar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.Toolbars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Desktop.Toolbars as W;
 
 // Shows a grouped toolbar with a Bold toggle.
 // ## Parameters

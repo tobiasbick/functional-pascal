@@ -3,10 +3,15 @@
 // Content addressing, invalidation and corruption recovery are independent of GUI state.
 unit FpasAmp.Library.Tests.ThumbnailCache;
 
-uses
-  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
-  PhotoSauce.MagicScaler as Magic,
-  FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging, System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+uses Fpas.Media.Images as Imaging;
+uses FpasAmp.Imaging as Thumbnails;
+uses FpasAmp.Library.Tests.AlbumSupport as Art;
+uses FpasAmp.Library.Tests.Support as H;
+uses PhotoSauce.MagicScaler as Magic;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
+uses Xunit as X;
 
 // Detached thumbnails remain reusable across album IDs and cache sessions.
 public type CacheTests = record

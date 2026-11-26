@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Canvas.SelectionRings;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Styles as S;
 
 // Selection ring appearance.
 public type Options = record

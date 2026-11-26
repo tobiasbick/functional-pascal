@@ -8,7 +8,7 @@ public sealed class ComparisonExecutionTests
     public async Task DateTime_TimeSpan_and_Guid_comparisons_use_their_CLR_value_semantics()
         => await ProgramExecution.Output("""
             program Compare;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             var Evaluations: long := 0L;
             function Date(Day: int): Sys.DateTime;
             begin Evaluations := Evaluations * 10 + Day; return new Sys.DateTime(2026, 1, Day); end function;

@@ -2,7 +2,8 @@
 
 unit Gallery.Shared.PaginationExample;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Paginations as P;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.Paginations as P;
 
 // First page of the original CUI example.
 public const Initial: int := 0;

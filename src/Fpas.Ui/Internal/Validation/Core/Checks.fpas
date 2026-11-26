@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Internal.Validation.Core.Checks;
 
-uses System as Sys, System.Text as Text, System.Collections.Generic as Generic;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
+uses System.Text as Text;
 
 const StrictUtf8: Sys.Text.UTF8Encoding := new Sys.Text.UTF8Encoding(false, true);
 

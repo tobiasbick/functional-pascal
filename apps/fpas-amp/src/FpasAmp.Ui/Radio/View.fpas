@@ -2,19 +2,28 @@
 
 unit FpasAmp.Ui.Radio.View;
 
-uses
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Radio.Model as M, FpasAmp.Ui.Radio.Toolbar as Controls,
-  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Player.Model as Player,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
-  Fpas.Ui.Widgets.Inputs.TextFields as Fields,
-  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
-  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
-  Fpas.Ui.Widgets.Display.Icons as Artwork,
-  Fpas.Ui.Widgets.Containers.Cards as Cards,
-  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Collections.DataGrids as Grid,
-  Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Ui.Widgets.Desktop.StatusBars as Status, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Collections.DataGrids as Grid;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Containers.EmptyStates as Empty;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+uses Fpas.Ui.Widgets.Display.Icons as Artwork;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Player.Model as Player;
+uses FpasAmp.Ui.Radio.Model as M;
+uses FpasAmp.Ui.Radio.Toolbar as Controls;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 

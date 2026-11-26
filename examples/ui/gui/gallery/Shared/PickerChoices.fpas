@@ -2,9 +2,9 @@
 
 unit Gallery.Shared.PickerChoices;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Selects as S;
+uses Gallery.Shared.Strings as Strings;
 
 const Countries: array of S.Item := [
   new S.Item(Strings.Get('Text.Canada')),

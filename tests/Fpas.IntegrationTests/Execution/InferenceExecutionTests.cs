@@ -7,7 +7,7 @@ public sealed class InferenceExecutionTests
     [Fact]
     public Task Routines_record_methods_and_CLR_methods_infer_from_typed_arguments() => ProgramExecution.Output("""
         program Inference;
-        uses System as Sys, System.Console as Console, System.Linq.Enumerable as Seq, System.Collections.Generic as C;
+        uses System as Sys; uses System.Console as Console; uses System.Linq.Enumerable as Seq; uses System.Collections.Generic as C;
         function Id<T>(Value: T): T; begin return Value; end function;
         function First<T>(Left: T; Right: T): T; begin return Left; end function;
         function Map<T, U>(Items: C.IEnumerable<T>; Transform: function(T): U): array of U;

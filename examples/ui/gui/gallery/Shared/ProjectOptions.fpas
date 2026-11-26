@@ -2,9 +2,10 @@
 
 unit Gallery.Shared.ProjectOptions;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Gallery.Shared.Strings as Strings;
+uses System as Sys;
 
 function Icon(Code: int): string;
 begin

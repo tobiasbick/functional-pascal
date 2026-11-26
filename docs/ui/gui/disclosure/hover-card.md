@@ -9,9 +9,9 @@ Use a hover card for a preview anchored to an interactive control. The gallery o
 ```pascal
 unit Docs.Ui.Disclosure.HoverCard;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.HoverCards as W,
-  Fpas.Ui.Widgets.Display.Links as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Display.Links as L;
+uses Fpas.Ui.Widgets.Overlays.HoverCards as W;
 
 // Builds the hover card example.
 // ## Parameters

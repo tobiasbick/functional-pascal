@@ -3,10 +3,13 @@
 // Read-only combined views of catalogue files and durable local lists.
 unit FpasAmp.Library.Playlists.Persistence.Queries;
 
-uses
-  FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
-  Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
-  System.Collections.Immutable as I, System.Threading as T;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Playlists.Model as M;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Threading as T;
 
 function Storage(Value: M.Origin): int;
 begin

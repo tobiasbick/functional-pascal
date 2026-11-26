@@ -2,10 +2,9 @@
 
 unit GuiGallery.Pages.Selection.State;
 
-uses
-  Gallery.Shared.SaveFrequency as Frequency,
-  Fpas.Ui.Widgets.Inputs.RangeSliders as R,
-  GuiGallery.Shared.State as Demo;
+uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
+uses Gallery.Shared.SaveFrequency as Frequency;
+uses GuiGallery.Shared.State as Demo;
 
 // State owned by this gallery feature.
 public type Model = record

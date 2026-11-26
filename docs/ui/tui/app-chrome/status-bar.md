@@ -9,7 +9,8 @@ Place short pieces of state and small actions along the bottom of a pane. A spac
 ```pascal
 unit Docs.Tui.Widgets.StatusBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.StatusBars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as W;
 
 // Builds the status bar example.
 // ## Parameters

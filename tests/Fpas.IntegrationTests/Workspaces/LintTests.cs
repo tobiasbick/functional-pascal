@@ -19,7 +19,7 @@ public sealed partial class LintTests(SdkPackageFixture sdk) : IClassFixture<Sdk
         AddLibrary(directory, "Rules");
         Write(directory, "Rules/A.fpas", """
             unit Demo.A;
-            uses Demo.B.Payload as Payload, System.Console as Console, System as Sys, System.Collections.Generic as Collections;
+            uses Demo.B.Payload as Payload; uses System.Console as Console; uses System as Sys; uses System.Collections.Generic as Collections;
             public function Size(): int;
             begin
               const Values: Collections.List<Payload> := new Collections.List<Payload>();
@@ -30,7 +30,7 @@ public sealed partial class LintTests(SdkPackageFixture sdk) : IClassFixture<Sdk
             """);
         Write(directory, "Rules/B.fpas", """
             unit Demo.B;
-            uses Demo as Units, System.Text as Text;
+            uses Demo as Units; uses System.Text as Text;
             public type Payload = record public Count: int; end record;
             public function Count(): int;
             begin
@@ -39,7 +39,7 @@ public sealed partial class LintTests(SdkPackageFixture sdk) : IClassFixture<Sdk
             end unit;
             """);
         Write(directory, "Rules/C.fpas", "unit Demo.C; uses Demo.D as Other; end unit;");
-        Write(directory, "Rules/D.fpas", "unit Demo.D; uses Demo.C as Other, Demo as Namespace; end unit;");
+        Write(directory, "Rules/D.fpas", "unit Demo.D; uses Demo.C as Other; uses Demo as Namespace; end unit;");
 
         var result = await Lint(directory, "Rules/Rules.fpasproj", "--report", "json");
         Assert.True(result.ExitCode == 1, result.Output + result.Error);
@@ -210,7 +210,7 @@ public sealed partial class LintTests(SdkPackageFixture sdk) : IClassFixture<Sdk
             """);
         Write(directory, "Rules/Consumer.fpas", """
             unit Arch.Consumer;
-            uses Arch.Records.Store as Store, Arch.Records.Data as Data;
+            uses Arch.Records.Store as Store; uses Arch.Records.Data as Data;
             public procedure Inspect(Value: Store; Plain: Data);
             begin
               Value.Items.Add(1);

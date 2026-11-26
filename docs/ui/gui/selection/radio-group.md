@@ -9,7 +9,8 @@ Use a radio group for exclusive choices in a vertical list. Available in **GUI**
 ```pascal
 unit Docs.Ui.Selection.RadioGroup;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RadioGroups as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.RadioGroups as C;
 
 // Builds the radio group example.
 // ## Parameters

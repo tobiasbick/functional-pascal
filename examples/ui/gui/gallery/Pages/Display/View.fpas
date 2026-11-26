@@ -2,14 +2,22 @@
 
 unit GuiGallery.Pages.Display.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.App.State as State, GuiGallery.Shared.Sections as G,
-  GuiGallery.Pages.Canvas.Picture as Picture,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme,
-  Fpas.Ui.Graphics as Color, Fpas.Ui.Widgets.Motion.Motion as M,
-  Fpas.Ui.Widgets.Display.Texts as T, Fpas.Ui.Widgets.Display.Icons as I, Fpas.Ui.Widgets.Display.Emojis as Em,
-  Fpas.Ui.Widgets.Display.Keycaps as K, Fpas.Ui.Widgets.Media.Images as Image, Fpas.Ui.Widgets.Canvas.Canvases as C, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Color;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Canvas.Canvases as C;
+uses Fpas.Ui.Widgets.Display.Emojis as Em;
+uses Fpas.Ui.Widgets.Display.Icons as I;
+uses Fpas.Ui.Widgets.Display.Keycaps as K;
+uses Fpas.Ui.Widgets.Display.Texts as T;
+uses Fpas.Ui.Widgets.Media.Images as Image;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.App.State as State;
+uses GuiGallery.Pages.Canvas.Picture as Picture;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
 
 const Swatches: array of Color.Color := [
   new Color.Color($55, $55, $55), new Color.Color($77, $47, $FF),

@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Audio.Waveforms;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses System as Sys;
 
 // Native options.
 public type Options = record

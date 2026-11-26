@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DeveloperTools.QueryBuilder;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.QueryBuilders as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.QueryBuilders as W;
 
 // Edits a filter over the available fields.
 // ## Parameters

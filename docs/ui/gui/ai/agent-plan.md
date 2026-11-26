@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Ai.AgentPlan;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.AgentPlans as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.AgentPlans as W;
 
 // Shows the current research plan.
 // ## Parameters

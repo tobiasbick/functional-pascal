@@ -11,8 +11,9 @@ Use a time picker for a clock time in a form. The gallery has a 24-hour field an
 ```pascal
 unit Docs.Ui.Pickers.TimePicker;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.TimePickers as W,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.TimePickers as W;
+uses System as Sys;
 
 // Builds the time picker example.
 // ## Parameters

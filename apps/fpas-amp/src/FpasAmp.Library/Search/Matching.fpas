@@ -4,9 +4,10 @@
 // sound-alike spellings, weighted by how rare a word is across the documents.
 unit FpasAmp.Library.Search.Matching;
 
-uses
-  FpasAmp.Library.Search.Text as Tokens, System as Sys, System.Collections.Generic as C,
-  System.Collections.Immutable as I;
+uses FpasAmp.Library.Search.Text as Tokens;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
 
 // Results below this share of the best score are noise from loose matches.
 const Cutoff: double := 0.2;

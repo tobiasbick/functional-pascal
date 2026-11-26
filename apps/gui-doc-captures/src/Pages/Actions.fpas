@@ -2,10 +2,13 @@
 
 unit GuiDocCaptures.Pages.Actions;
 
-uses
-  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
-  GuiDocCaptures.Rendering.Gestures as Gestures, GuiGallery.App.State as Gallery,
-  Fpas.Ui.Gui.Application as Gui, GuiGallery.Pages.Actions.State as Actions, Fpas.Ui.Widgets.Actions.StatusButtons as Status;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Status;
+uses GuiDocCaptures.Rendering.Gestures as Gestures;
+uses GuiDocCaptures.Rendering.Presented as Presented;
+uses GuiDocCaptures.Rendering.Regions as Regions;
+uses GuiGallery.App.State as Gallery;
+uses GuiGallery.Pages.Actions.State as Actions;
 
 // Captures the actions chapter from its presented gallery page.
 // ## Parameters

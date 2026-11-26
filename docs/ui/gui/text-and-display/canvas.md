@@ -10,9 +10,10 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.TextAndDisplay.Canvas;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Canvas.Canvases as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Canvas.Canvases as W;
 
 // Draws a swatch and reports the click in canvas coordinates.
 // ## Parameters

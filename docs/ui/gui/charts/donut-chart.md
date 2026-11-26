@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Charts.DonutChart;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.DonutCharts as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.DonutCharts as W;
 
 // Builds the donut chart example.
 // ## Returns

@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CreativeControls.StatusTag;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.StatusTags as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.StatusTags as W;
 
 // Displays a removable review status.
 // ## Parameters

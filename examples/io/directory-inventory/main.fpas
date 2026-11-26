@@ -2,9 +2,11 @@
 
 program DirectoryInventory;
 
-uses
-  System as Sys, System.IO as IO, System.Collections.Generic as Collections,
-  System.Linq.Enumerable as Seq, System.Console as Console;
+uses System as Sys;
+uses System.Collections.Generic as Collections;
+uses System.Console as Console;
+uses System.IO as IO;
+uses System.Linq.Enumerable as Seq;
 
 function CountLines(Path: string): int;
 begin

@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CreativeControls.RatioSlider;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RatioSliders as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.RatioSliders as W;
 
 // Sets the coffee fraction in a blend.
 // ## Parameters

@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Reader.TableOfContents;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.TableOfContents as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.TableOfContents as W;
 
 // Links an outline to the article viewport.
 // ## Returns

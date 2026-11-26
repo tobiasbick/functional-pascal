@@ -2,9 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.SelectionRing;
 
-uses
-  Fpas.Ui.Widgets.Canvas.SelectionRings as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Values as P,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Values as P;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Canvas.SelectionRings as D;
 
 // Adds the native decoration to the last completed component.
 // ## Parameters

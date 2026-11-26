@@ -2,8 +2,8 @@
 
 unit Fpas.Ui.Gui.Internal.Data.CurveData;
 
-uses
-  Fpas.Ui.Widgets.Editors.CurveEditors as W, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors;
+uses Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors;
+uses Fpas.Ui.Widgets.Editors.CurveEditors as W;
 
 // Converts one curve key for CUI.
 // ## Parameters

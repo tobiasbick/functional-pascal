@@ -2,9 +2,13 @@
 
 unit GuiGallery.Pages.Reader.View;
 
-uses
-  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Navigation.TableOfContents as T, Fpas.Ui.Widgets.Navigation.ScrollAnchors as A, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Navigation.ScrollAnchors as A;
+uses Fpas.Ui.Widgets.Navigation.TableOfContents as T;
+uses GuiGallery.Shared.Sections as G;
+uses System.Collections.Generic as Lists;
 
 const Paragraph: string := 'Components are functions. They draw themselves, handle input and return what happened. Your variables are the ' +
   'source of truth, so there is nothing to keep in sync, and conditional interface is just an if statement. ';

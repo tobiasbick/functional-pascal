@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.RegexTester;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.RegexTesters as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.RegexTesters as W;
 
 // Edits a pattern and its test text.
 // ## Parameters

@@ -2,9 +2,11 @@
 
 unit NativeTests;
 
-uses
-  NUnit.Framework as N, NUnit.Framework.Legacy as L, System as Sys,
-  System.Threading.Tasks as Tasks, System.IO.File as File;
+uses NUnit.Framework as N;
+uses NUnit.Framework.Legacy as L;
+uses System as Sys;
+uses System.IO.File as File;
+uses System.Threading.Tasks as Tasks;
 
 var Active: int := 0;
 

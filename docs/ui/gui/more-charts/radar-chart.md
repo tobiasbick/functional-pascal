@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.RadarChart;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.RadarCharts as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.RadarCharts as W;
 
 // Builds the radar chart example.
 // ## Returns

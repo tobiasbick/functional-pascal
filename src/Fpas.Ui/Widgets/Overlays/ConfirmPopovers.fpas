@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Overlays.ConfirmPopovers;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // Captions and placement of a native confirmation popover.
 public type Options = record

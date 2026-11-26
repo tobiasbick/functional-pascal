@@ -7,7 +7,7 @@ public sealed class LoopExecutionTests
     [Fact]
     public Task Repeat_iteration_cells_and_out_parameter_paths_are_preserved() => ProgramExecution.Output("""
         program RepeatState;
-        uses System.Console as Console, System as Sys, System.Collections.Generic as C;
+        uses System.Console as Console; uses System as Sys; uses System.Collections.Generic as C;
         procedure Parse(out Number: int); begin repeat until int.TryParse('42', out Number); end procedure;
         procedure Initialize(out Number: int);
         begin repeat try continue; finally Number := 7; end try; until Number = 7; end procedure;
@@ -29,7 +29,7 @@ public sealed class LoopExecutionTests
     [Fact]
     public Task Async_repeat_conditions_and_subrange_steps_survive_suspension() => ProgramExecution.Output("""
         async program AsyncLoops;
-        uses System.Console as Console, System.Threading.Tasks as Tasks;
+        uses System.Console as Console; uses System.Threading.Tasks as Tasks;
         type High = ulong range 18446744073709551614UL..18446744073709551615UL;
         async function Lower(): Tasks.Task<High>;
         begin await Tasks.Task.Delay(1); return new High(18446744073709551614UL); end function;
@@ -81,7 +81,7 @@ public sealed class LoopExecutionTests
     [Fact]
     public Task Subrange_counters_unwrap_step_and_preserve_per_iteration_captures() => ProgramExecution.Output("""
         program Domains;
-        uses System.Console as Console, System as Sys, System.Collections.Generic as C;
+        uses System.Console as Console; uses System as Sys; uses System.Collections.Generic as C;
         type Port = ushort range 65533..65535;
         type Wide = long range -9223372036854775808L..9223372036854775807L;
         begin

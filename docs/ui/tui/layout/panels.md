@@ -10,7 +10,9 @@ gallery caps the sidebar at 24 columns and gives the preview the remaining space
 ```pascal
 unit Docs.Tui.Widgets.Panels;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
 
 // Builds the panels and weighted layout example.
 // ## Parameters

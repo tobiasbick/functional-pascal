@@ -13,8 +13,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Charts.BarChart;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.BarCharts as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.BarCharts as W;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Builds the bar chart example.
 // ## Returns

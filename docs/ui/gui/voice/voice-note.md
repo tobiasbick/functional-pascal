@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Voice.VoiceNote;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.VoiceNotes as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.VoiceNotes as W;
 
 // Shows a voice note at the current playback position.
 // ## Parameters

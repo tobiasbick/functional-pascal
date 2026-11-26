@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Collections.VirtualLists;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses System as Sys;
 
 // Uses CUI to realize only the visible rows and its overscan.
 // ## Type parameters

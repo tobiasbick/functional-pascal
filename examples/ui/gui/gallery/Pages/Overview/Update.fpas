@@ -2,10 +2,10 @@
 
 unit GuiGallery.Pages.Overview.Update;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Overview.State as S, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Overview.State as S;
 
 // Updates the workspace preview and requests its native success toast.
 // ## Parameters

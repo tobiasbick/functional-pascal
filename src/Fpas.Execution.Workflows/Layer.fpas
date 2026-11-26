@@ -3,9 +3,11 @@
 // Acquisition and release of typed dependencies.
 unit Fpas.Execution.Workflows.Layers;
 
-uses
-  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Scopes as S, System as Sys,
-  System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Execution.Workflows.Scopes as S;
+uses System as Sys;
+uses System.Threading as Threads;
+uses System.Threading.Tasks as Tasks;
 
 // Builds a dependency for the lifetime of a scope.
 //

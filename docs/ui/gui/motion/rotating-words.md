@@ -10,7 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.RotatingWords;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Motion.WordRotations as W, Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Widgets.Motion.WordRotations as W;
 
 // Shows one of the current deployment target labels.
 // ## Parameters

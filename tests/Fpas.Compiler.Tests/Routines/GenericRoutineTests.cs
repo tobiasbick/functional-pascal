@@ -27,7 +27,7 @@ public sealed class GenericRoutineTests
     [InlineData("function F<T>(X: T): T; where T: array of string; begin return X; end function;", "FP3026")]
     public void Invalid_generic_declarations_and_unsafe_bodies_are_diagnosed(string declaration, string code)
     {
-        var result = TestCompilation.CompileAgainstFramework("program Example; uses System as Sys, System.Numerics as N; " + declaration + " begin end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Example; uses System as Sys; uses System.Numerics as N; " + declaration + " begin end; end program;");
         Assert.False(result.Success); Assert.Equal(code, Assert.Single(result.Diagnostics).Code);
     }
 

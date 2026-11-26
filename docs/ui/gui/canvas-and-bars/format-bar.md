@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CanvasAndBars.FormatBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Canvas.FormatBars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Canvas.FormatBars as W;
 
 // Shows formatting for the current text selection.
 // ## Parameters

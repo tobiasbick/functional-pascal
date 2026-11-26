@@ -9,8 +9,9 @@ Use timeline items in an activity feed to show an event, its time and optional d
 ```pascal
 unit Docs.Ui.Feedback.TimelineItem;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Planning.TimelineItems as W,
-  Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Planning.TimelineItems as W;
 
 // Builds the timeline item example.
 // ## Returns

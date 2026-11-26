@@ -2,12 +2,11 @@
 
 program GuiWidgetGallery;
 
-uses
-  GuiGallery.App.Sidebar as Sidebar,
-  GuiGallery.App.State as State,
-  GuiGallery.App.Update as Update,
-  GuiGallery.App.View as View,
-  Fpas.Ui.Gui.Desktop as Gui;
+uses Fpas.Ui.Gui.Desktop as Gui;
+uses GuiGallery.App.Sidebar as Sidebar;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as Update;
+uses GuiGallery.App.View as View;
 
 begin
   Gui.Run<State.Model, State.Msg>(

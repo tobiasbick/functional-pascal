@@ -3,16 +3,23 @@
 // Settings tabs, folder picker and source editor.
 unit FpasAmp.Ui.Settings.View;
 
-uses
-  FpasAmp.Library.Sources as Locations,
-  FpasAmp.Ui.Settings.Model as M, FpasAmp.Ui.Settings.Editor as Editor,
-  FpasAmp.Ui.Settings.General as General, FpasAmp.Ui.Settings.Library as LibraryView,
-  FpasAmp.Ui.Settings.Metadata as Metadata,
-  Fpas.Ui.Composition as Composition, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Files.FilePickers as Picker,
-  Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Theming.Themes as Themes,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
+uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses FpasAmp.Library.Sources as Locations;
+uses FpasAmp.Ui.Settings.Editor as Editor;
+uses FpasAmp.Ui.Settings.General as General;
+uses FpasAmp.Ui.Settings.Library as LibraryView;
+uses FpasAmp.Ui.Settings.Metadata as Metadata;
+uses FpasAmp.Ui.Settings.Model as M;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 function Body(Current: M.State; Tab: int; Theme: Themes.Theme; Width: int): E.Element<M.Msg>;
 begin

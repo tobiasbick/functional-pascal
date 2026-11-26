@@ -3,10 +3,15 @@
 // Album observation owns its read connection and never runs on the UI thread.
 unit FpasAmp.Library.Albums.Internal.Observing;
 
-uses
-  FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Albums.Persistence.Queries as Queries,
-  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.Collections.Immutable as I, System.Linq as L, System.Threading as T, System.Threading.Tasks as Tasks;
+uses FpasAmp.Library.Albums.Model as M;
+uses FpasAmp.Library.Albums.Persistence.Queries as Queries;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.Linq as L;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 function Same(A: I.ImmutableArray<M.Album>; B: I.ImmutableArray<M.Album>): bool;
 begin

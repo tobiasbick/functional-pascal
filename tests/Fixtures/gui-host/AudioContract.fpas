@@ -2,13 +2,20 @@
 
 unit GalleryAudioContract;
 
-uses
-  Fpas.Ui.Widgets.Overlays.Tours as Tours,
-  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
-  GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as App, System as Sys,
-  GuiGallery.Pages.Audio.Clock as Clock, Fpas.Ui.Mvu.Testing.EffectReplies as Replies,
-  System.Threading.Channels as Channels, System.Globalization as Culture;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Mvu.Application as App;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
+uses Fpas.Ui.Widgets.Overlays.Tours as Tours;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as G;
+uses GuiGallery.App.View as View;
+uses GuiGallery.Pages.Audio.Clock as Clock;
+uses System as Sys;
+uses System.Globalization as Culture;
+uses System.Threading.Channels as Channels;
 
 // Exercises the original synth and mixer in the published gallery.
 // ## Parameters

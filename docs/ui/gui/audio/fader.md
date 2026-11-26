@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Audio.Fader;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.Faders as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Audio.Faders as W;
 
 // Adjusts the Kick channel and shows its current signal peaks.
 // ## Parameters

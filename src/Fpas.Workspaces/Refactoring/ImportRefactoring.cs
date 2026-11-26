@@ -9,8 +9,9 @@ public static partial class CheckedRefactoring
 {
     private static IReadOnlyList<string> OrganizeImports(Draft draft, SourceDocument source)
     {
-        var imports = draft.Syntax(source).Imports();
-        if (imports is null) return ["The file has no import clause."];
+        var syntax = draft.Syntax(source);
+        var imports = syntax.Imports();
+        if (imports is null) return ["The file has no imports."];
         var owners = draft.Owners(source.Path).ToArray();
         var notes = new List<string>();
         var items = imports.Items;
@@ -18,25 +19,23 @@ public static partial class CheckedRefactoring
         foreach (var (_, snapshot) in owners)
             unused.IntersectWith(ImportUsage.UnusedClrAliases(snapshot, draft.Token)
                 .Where(alias => Paths.Equals(alias.Declaration!.Path, source.Path)).Select(alias => alias.Declaration!.Offset));
-        var removable = items.Select(item => unused.Contains(item.Alias)).ToArray();
-        if (removable.All(value => value) && !CommentIn(imports.Start, imports.End))
-            Remove(imports.Start, imports.End);
-        else
+        for (var index = 0; index < items.Count; index++)
         {
-            for (var first = 0; first < items.Count;)
+            var item = items[index];
+            if (!unused.Contains(item.Alias)) continue;
+            var prior = index == 0 ? syntax.ContainerHeaderEnd : items[index - 1].End;
+            var lineEnd = source.Text.IndexOfAny(['\r', '\n'], item.End);
+            if (lineEnd < 0) lineEnd = source.Text.Length;
+            var next = index + 1 < items.Count ? items[index + 1].Start : source.Text.Length;
+            if (CommentIn(prior, Math.Min(lineEnd, next)))
             {
-                if (!removable[first]) { first++; continue; }
-                var last = first + 1;
-                while (last < items.Count && removable[last]) last++;
-                var start = last < items.Count || first == 0 ? items[first].Start : items[first - 1].End;
-                var end = last < items.Count ? items[last].Start : items[last - 1].End;
-                if (last < items.Count || first > 0)
-                {
-                    if (!CommentIn(start, end)) Remove(start, end);
-                    else notes.Add("An unused import was retained to preserve an adjacent comment.");
-                }
-                first = last;
+                notes.Add("An unused import was retained to preserve an adjacent comment.");
+                continue;
             }
+            var end = item.End;
+            if (source.Text.AsSpan(end, lineEnd - end).Trim().IsEmpty && lineEnd < source.Text.Length)
+                end = lineEnd + LineEnding(source.Text, lineEnd).Length;
+            Remove(item.Start, end);
         }
         if (draft.Edits.Count == 0) notes.Add("No safely removable CLR imports were found.");
         else notes.Add("Remaining aliases, source-unit imports and import order are preserved.");

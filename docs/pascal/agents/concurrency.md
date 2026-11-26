@@ -71,9 +71,11 @@ normally and runs applicable postconditions.
 ```pascal
 async program AgentAsync;
 
-uses
-  System as Sys, System.Console as Console, System.IO as IO,
-  System.Threading as Threading, System.Threading.Tasks as Tasks;
+uses System as Sys;
+uses System.Console as Console;
+uses System.IO as IO;
+uses System.Threading as Threading;
+uses System.Threading.Tasks as Tasks;
 
 async function DoubleAfter(Value: int; Cancellation: Threading.CancellationToken): Tasks.Task<int>;
 requires Value >= 0;

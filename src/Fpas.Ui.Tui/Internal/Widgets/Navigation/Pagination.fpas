@@ -2,14 +2,20 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination;
 
-uses
-  Fpas.Ui.Internal.Navigation.PaginationPages as Pages, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Measurement as M,
-  Fpas.Ui.Tui.Internal.Layout.Scene as A,
-  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
-  Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Widgets.Developer.Terminal as Terminal,
-  Fpas.Ui.Styles as S, System.Collections.Generic as C, System.Globalization as Culture;
+uses Fpas.Ui.Internal.Navigation.PaginationPages as Pages;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Measurement as M;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Developer.Terminal as Terminal;
+uses System.Collections.Generic as C;
+uses System.Globalization as Culture;
 
 const SideWidth: int := 3;
 const Gap: int := 1;

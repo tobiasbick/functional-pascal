@@ -9,7 +9,8 @@ Use `Fpas.Ui.Widgets.Collections.Tables.Table` for rows with stable IDs and plai
 ```pascal
 unit Docs.Tui.Widgets.Table;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
 
 // Builds a table that sends the selected row ID to the application.
 // ## Parameters

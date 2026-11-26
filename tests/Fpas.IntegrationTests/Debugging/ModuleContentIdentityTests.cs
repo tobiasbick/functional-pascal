@@ -20,7 +20,7 @@ public sealed class ModuleContentIdentityTests
         using var program = new Debuggee("own-module-content-identity");
         File.WriteAllText(program.Source, """
             program SameSource;
-            uses ConstantFixture.Values as Values, System.IO.File as File;
+            uses ConstantFixture.Values as Values; uses System.IO.File as File;
             type Number = int range Values.Lower..100;
             begin
               const Numbers: array of Number := new Number[1];

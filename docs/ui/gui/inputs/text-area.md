@@ -9,7 +9,8 @@ Use a text area for wrapping multiline text, such as a profile description. Avai
 ```pascal
 unit Docs.Ui.Inputs.TextArea;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextAreas as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.TextAreas as W;
 
 // Builds the text area example.
 // ## Parameters

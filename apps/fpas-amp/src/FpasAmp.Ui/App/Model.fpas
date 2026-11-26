@@ -3,15 +3,16 @@
 // App state composed of the navigation, album and settings slices.
 unit FpasAmp.Ui.App.Model;
 
-uses
-  FpasAmp.Ui.Music.LibraryPage as LibrarySongs, FpasAmp.Ui.Navigation.Model as Nav,
-  FpasAmp.Ui.Albums.Model as AlbumView,
-  FpasAmp.Ui.Settings.Model as SettingsView,
-  FpasAmp.Ui.Player.Model as Player,
-  FpasAmp.Ui.TagEditor.Model as Tags, FpasAmp.Ui.Radio.Model as Radio,
-  FpasAmp.Ui.Podcasts.Model as Podcasts,
-  Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses FpasAmp.Ui.Albums.Model as AlbumView;
+uses FpasAmp.Ui.Music.LibraryPage as LibrarySongs;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Player.Model as Player;
+uses FpasAmp.Ui.Podcasts.Model as Podcasts;
+uses FpasAmp.Ui.Radio.Model as Radio;
+uses FpasAmp.Ui.Settings.Model as SettingsView;
+uses FpasAmp.Ui.TagEditor.Model as Tags;
 
 // Owner-thread app state; each slice owns its part.
 public type State = record

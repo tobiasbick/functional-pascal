@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.ControlReplies;
 
-uses
-  Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs,
-  Fpas.Processes.Terminal as Terminal, System as Sys, System.Threading.Tasks as Tasks;
+uses Fpas.Processes.Terminal as Terminal;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs;
+uses System as Sys;
+uses System.Threading.Tasks as Tasks;
 
 // Enqueues input from the terminal control pipe and returns its receipt.
 // ## Parameters

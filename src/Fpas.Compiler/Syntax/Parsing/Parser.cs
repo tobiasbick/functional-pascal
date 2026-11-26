@@ -27,27 +27,21 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         Expect(";");
         layout?.Section(position);
         var imports = new List<ImportSyntax>();
-        if (At("uses"))
+        while (At("uses"))
         {
-            var list = layout?.List(position, wrap: false, closeLine: false);
-            position++;
-            do
-            {
-                list?.Item(position);
-                var importStart = Current.Position;
-                var target = ReadName();
-                Expect("as");
-                var alias = Identifier();
-                using (var declaration = Declaration(alias, importStart)) declaration.Info.Kind = "alias";
-                imports.Add(new(target, alias));
-                if (!At(","))
-                    break;
-                position++;
-            } while (true);
+            var keyword = position++;
+            var importStart = Current.Position;
+            var target = ReadName();
+            Expect("as");
+            var alias = Identifier();
+            using (var declaration = Declaration(alias, importStart)) declaration.Info.Kind = "alias";
+            imports.Add(new(target, alias));
+            if (At(","))
+                throw Expected([";"], "A uses statement imports one name. Start a new uses statement for the next import.");
             Expect(";");
-            list?.End(position - 1);
-            layout?.Section(position);
+            layout?.Imports.Add(new(keyword, position - 1, target.Text));
         }
+        if (imports.Count != 0) layout?.Section(position);
         var routines = new List<RoutineSyntax>();
         var records = new List<RecordSyntax>();
         var interfaces = new List<InterfaceSyntax>();

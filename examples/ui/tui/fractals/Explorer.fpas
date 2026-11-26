@@ -2,10 +2,15 @@
 
 unit Fractals.Explorer;
 
-uses
-  Fractals.Camera as C, Fractals.Rendering as Render, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.TerminalExtensions.CellGrids as G, Fpas.Ui.TerminalExtensions.Input as K,
-  Fpas.Ui.Widgets.Navigation.Navigation as Nav, System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.TerminalExtensions.CellGrids as G;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Widgets.Navigation.Navigation as Nav;
+uses Fractals.Camera as C;
+uses Fractals.Rendering as Render;
+uses System as Sys;
+uses System.Threading as Threads;
+uses System.Threading.Tasks as Tasks;
 
 // View and input state for the two-pane explorer.
 public type Model = record

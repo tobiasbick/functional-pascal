@@ -2,10 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.EmojiPicker;
 
-uses
-  Fpas.Ui.Widgets.Pickers.EmojiPickers as P, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers,
-  Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Core.Context as C, System as Sys;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Pickers.EmojiPickers as P;
+uses System as Sys;
 
 const GroupNames: array of string := [
   'Recent', 'Smileys & emotion', 'People & body', 'Animals & nature', 'Food & drink',

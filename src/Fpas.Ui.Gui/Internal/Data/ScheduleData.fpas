@@ -2,9 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Data.ScheduleData;
 
-uses
-  Fpas.Ui.Widgets.Planning.WeekCalendars as W, Fpas.Ui.Widgets.Planning.MonthCalendars as M, Fpas.Ui.Widgets.Planning.Gantts as G,
-  Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning;
+uses Fpas.Ui.Widgets.Planning.Gantts as G;
+uses Fpas.Ui.Widgets.Planning.MonthCalendars as M;
+uses Fpas.Ui.Widgets.Planning.WeekCalendars as W;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Encodes an optional CLR date.
 // ## Parameters

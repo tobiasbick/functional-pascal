@@ -2,77 +2,109 @@
 
 unit Fpas.Ui.Validation;
 
-uses
-  Fpas.Ui.TerminalExtensions.SelectionLists as SelectionLists,
-  Fpas.Ui.Internal.Validation.Core.Checks as Rules,
-  Fpas.Ui.Internal.Validation.Core.LayoutRules as LayoutRules,
-  Fpas.Ui.Internal.Validation.Core.ContainerRules as ContainerRules,
-  Fpas.Ui.Internal.Validation.Core.ChartChecks as ChartChecks,
-  Fpas.Ui.Internal.Validation.Controls.ActionRules as ActionRules,
-  Fpas.Ui.Internal.Validation.Controls.AudioRules as AudioRules,
-  Fpas.Ui.Internal.Validation.Controls.DisclosureRules as DisclosureRules,
-  Fpas.Ui.Internal.Validation.Controls.FeedbackRules as FeedbackRules,
-  Fpas.Ui.Internal.Validation.Controls.SurfaceRules as SurfaceRules,
-  Fpas.Ui.Internal.Validation.Controls.CreativeValidation as CreativeValidation,
-  Fpas.Ui.Internal.Validation.Controls.MotionValidation as MotionValidation,
-  Fpas.Ui.Internal.Validation.Controls.MediaValidation as MediaValidation,
-  Fpas.Ui.Internal.Validation.Controls.ConversationValidation as ConversationValidation,
-  Fpas.Ui.Internal.Validation.Charts.ChartValidation as ChartValidation,
-  Fpas.Ui.Internal.Validation.Inputs.EditorRules as EditorRules,
-  Fpas.Ui.Internal.Validation.Inputs.OneTimeCodeRules as CodeRules,
-  Fpas.Ui.Internal.Validation.Inputs.SelectionRules as SelectionRules,
-  Fpas.Ui.Internal.Validation.Inputs.SliderRules as SliderRules,
-  Fpas.Ui.Internal.Validation.Inputs.TagInputRules as TagRules,
-  Fpas.Ui.Internal.Validation.Inputs.ToggleGroupRules as ToggleGroupRules,
-  Fpas.Ui.Internal.Validation.Inputs.PickerValidation as PickerValidation,
-  Fpas.Ui.Internal.Validation.Structure.CollectionRules as CollectionRules,
-  Fpas.Ui.Internal.Validation.Structure.GridRules as GridRules,
-  Fpas.Ui.Internal.Validation.Structure.MenuRules as MenuRules,
-  Fpas.Ui.Internal.Validation.Structure.NavigationRules as NavigationRules,
-  Fpas.Ui.Internal.Validation.Structure.PlanningValidation as PlanningValidation,
-  Fpas.Ui.Internal.Validation.Structure.PopoverRules as PopupRules,
-  Fpas.Ui.Internal.Validation.Structure.TooltipRules as TooltipRules,
-  Fpas.Ui.Internal.Validation.Dispatch.CanvasValidation as Canvas,
-  Fpas.Ui.Internal.Validation.Dispatch.ChromeValidation as Chrome,
-  Fpas.Ui.Internal.Validation.Dispatch.DeveloperValidation as Developer,
-  Fpas.Ui.Internal.Validation.Dispatch.DisplayValidation as Display,
-  Fpas.Ui.Internal.Validation.Dispatch.EditingToolValidation as EditingTools,
-  Fpas.Ui.Internal.Validation.Dispatch.FeedbackAndAudioValidation as FeedbackAndAudio,
-  Fpas.Ui.Internal.Validation.Dispatch.SourceToolValidation as SourceTools,
-  Fpas.Ui.Internal.Validation.Dispatch.VoiceAndAiValidation as VoiceAndAi,
-  Fpas.Ui.Widgets.Feedback.Spinners as Spinners, Fpas.Ui.Widgets.Motion.Motion as Motion,
-  Fpas.Ui.Widgets.Collections.ListItems as ListItems, Fpas.Ui.Widgets.Collections.Trees as Trees,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Collections.FilterBars as Filters,
-  Fpas.Ui.Widgets.Collections.DataGrids as DataGrids, Fpas.Ui.Widgets.Collections.TreeTables as TreeTables,
-  Fpas.Ui.Widgets.Collections.ReorderableLists as Reorders, Fpas.Ui.Widgets.Collections.VirtualLists as Virtuals,
-  Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Widgets.Overlays.Tours as Tours,
-  Fpas.Ui.Widgets.Containers.Grids as Grids, Fpas.Ui.Widgets.Containers.Cards as Cards,
-  Fpas.Ui.Widgets.Feedback.Badges as Badges, Fpas.Ui.Widgets.Charts.Metrics as Metrics,
-  Fpas.Ui.Widgets.Media.AvatarGroups as AvatarGroups, Fpas.Ui.Widgets.Containers.EmptyStates as EmptyStates,
-  Fpas.Ui.Widgets.Navigation.TableOfContents as Toc, Fpas.Ui.Widgets.Media.Avatars as Avatars,
-  Fpas.Ui.Widgets.Overlays.HoverCards as HoverCards, Fpas.Ui.Widgets.Audio.LevelMeters as Levels,
-  Fpas.Ui.Widgets.Actions.SpeedDials as Speed, Fpas.Ui.Widgets.Actions.SwipeActions as Swipe,
-  Fpas.Ui.Widgets.Planning.TimelineItems as Timeline, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
-  Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars,
-  Fpas.Ui.Widgets.Containers.ExpandableTexts as ExpandableTexts,
-  Fpas.Ui.Widgets.Containers.ExpandableCards as ExpandableCards,
-  Fpas.Ui.Widgets.Conversation.Reactions as Reactions, Fpas.Ui.Widgets.Overlays.UserMenus as UserMenus,
-  Fpas.Ui.Widgets.Inputs.TagInputs as TagInputs, Fpas.Ui.Widgets.Inputs.OneTimeCodes as OneTimeCodes,
-  Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields, Fpas.Ui.Widgets.Inputs.TextAreas as TextAreas,
-  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Inputs.TextFields as TextFields,
-  Fpas.Ui.Widgets.Overlays.Popovers as Popovers, Fpas.Ui.Widgets.Overlays.ConfirmPopovers as ConfirmPopovers,
-  Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Inputs.RadioCards as RadioCards,
-  Fpas.Ui.Widgets.Inputs.Sliders as Sliders, Fpas.Ui.Widgets.Inputs.RangeSliders as RangeSliders,
-  Fpas.Ui.Widgets.Inputs.RadioGroups as RadioGroups, Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups,
-  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented,
-  Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers,
-  Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms,
-  Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Widgets.Actions.HoldButtons as Holds,
-  Fpas.Ui.Elements as E, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
-  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G,
-  System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Internal.Validation.Charts.ChartValidation as ChartValidation;
+uses Fpas.Ui.Internal.Validation.Controls.ActionRules as ActionRules;
+uses Fpas.Ui.Internal.Validation.Controls.AudioRules as AudioRules;
+uses Fpas.Ui.Internal.Validation.Controls.ConversationValidation as ConversationValidation;
+uses Fpas.Ui.Internal.Validation.Controls.CreativeValidation as CreativeValidation;
+uses Fpas.Ui.Internal.Validation.Controls.DisclosureRules as DisclosureRules;
+uses Fpas.Ui.Internal.Validation.Controls.FeedbackRules as FeedbackRules;
+uses Fpas.Ui.Internal.Validation.Controls.MediaValidation as MediaValidation;
+uses Fpas.Ui.Internal.Validation.Controls.MotionValidation as MotionValidation;
+uses Fpas.Ui.Internal.Validation.Controls.SurfaceRules as SurfaceRules;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as ChartChecks;
+uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Internal.Validation.Core.ContainerRules as ContainerRules;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LayoutRules;
+uses Fpas.Ui.Internal.Validation.Dispatch.CanvasValidation as Canvas;
+uses Fpas.Ui.Internal.Validation.Dispatch.ChromeValidation as Chrome;
+uses Fpas.Ui.Internal.Validation.Dispatch.DeveloperValidation as Developer;
+uses Fpas.Ui.Internal.Validation.Dispatch.DisplayValidation as Display;
+uses Fpas.Ui.Internal.Validation.Dispatch.EditingToolValidation as EditingTools;
+uses Fpas.Ui.Internal.Validation.Dispatch.FeedbackAndAudioValidation as FeedbackAndAudio;
+uses Fpas.Ui.Internal.Validation.Dispatch.SourceToolValidation as SourceTools;
+uses Fpas.Ui.Internal.Validation.Dispatch.VoiceAndAiValidation as VoiceAndAi;
+uses Fpas.Ui.Internal.Validation.Inputs.EditorRules as EditorRules;
+uses Fpas.Ui.Internal.Validation.Inputs.OneTimeCodeRules as CodeRules;
+uses Fpas.Ui.Internal.Validation.Inputs.PickerValidation as PickerValidation;
+uses Fpas.Ui.Internal.Validation.Inputs.SelectionRules as SelectionRules;
+uses Fpas.Ui.Internal.Validation.Inputs.SliderRules as SliderRules;
+uses Fpas.Ui.Internal.Validation.Inputs.TagInputRules as TagRules;
+uses Fpas.Ui.Internal.Validation.Inputs.ToggleGroupRules as ToggleGroupRules;
+uses Fpas.Ui.Internal.Validation.Structure.CollectionRules as CollectionRules;
+uses Fpas.Ui.Internal.Validation.Structure.GridRules as GridRules;
+uses Fpas.Ui.Internal.Validation.Structure.MenuRules as MenuRules;
+uses Fpas.Ui.Internal.Validation.Structure.NavigationRules as NavigationRules;
+uses Fpas.Ui.Internal.Validation.Structure.PlanningValidation as PlanningValidation;
+uses Fpas.Ui.Internal.Validation.Structure.PopoverRules as PopupRules;
+uses Fpas.Ui.Internal.Validation.Structure.TooltipRules as TooltipRules;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.TerminalExtensions.SelectionLists as SelectionLists;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms;
+uses Fpas.Ui.Widgets.Actions.HoldButtons as Holds;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented;
+uses Fpas.Ui.Widgets.Actions.SpeedDials as Speed;
+uses Fpas.Ui.Widgets.Actions.SplitButtons as Split;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Status;
+uses Fpas.Ui.Widgets.Actions.SwipeActions as Swipe;
+uses Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups;
+uses Fpas.Ui.Widgets.Audio.LevelMeters as Levels;
+uses Fpas.Ui.Widgets.Charts.Metrics as Metrics;
+uses Fpas.Ui.Widgets.Collections.DataGrids as DataGrids;
+uses Fpas.Ui.Widgets.Collections.FilterBars as Filters;
+uses Fpas.Ui.Widgets.Collections.ListItems as ListItems;
+uses Fpas.Ui.Widgets.Collections.ReorderableLists as Reorders;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Collections.TreeTables as TreeTables;
+uses Fpas.Ui.Widgets.Collections.Trees as Trees;
+uses Fpas.Ui.Widgets.Collections.VirtualLists as Virtuals;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Containers.EmptyStates as EmptyStates;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as ExpandableCards;
+uses Fpas.Ui.Widgets.Containers.ExpandableTexts as ExpandableTexts;
+uses Fpas.Ui.Widgets.Containers.Grids as Grids;
+uses Fpas.Ui.Widgets.Conversation.Reactions as Reactions;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars;
+uses Fpas.Ui.Widgets.Feedback.Spinners as Spinners;
+uses Fpas.Ui.Widgets.Inputs.OneTimeCodes as OneTimeCodes;
+uses Fpas.Ui.Widgets.Inputs.RadioCards as RadioCards;
+uses Fpas.Ui.Widgets.Inputs.RadioGroups as RadioGroups;
+uses Fpas.Ui.Widgets.Inputs.RangeSliders as RangeSliders;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields;
+uses Fpas.Ui.Widgets.Inputs.Sliders as Sliders;
+uses Fpas.Ui.Widgets.Inputs.TagInputs as TagInputs;
+uses Fpas.Ui.Widgets.Inputs.TextAreas as TextAreas;
+uses Fpas.Ui.Widgets.Inputs.TextFields as TextFields;
+uses Fpas.Ui.Widgets.Media.AvatarGroups as AvatarGroups;
+uses Fpas.Ui.Widgets.Media.Avatars as Avatars;
+uses Fpas.Ui.Widgets.Motion.Motion as Motion;
+uses Fpas.Ui.Widgets.Navigation.Navigation as N;
+uses Fpas.Ui.Widgets.Navigation.TableOfContents as Toc;
+uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes;
+uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as ConfirmPopovers;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses Fpas.Ui.Widgets.Overlays.HoverCards as HoverCards;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses Fpas.Ui.Widgets.Overlays.Popovers as Popovers;
+uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+uses Fpas.Ui.Widgets.Overlays.Tours as Tours;
+uses Fpas.Ui.Widgets.Overlays.UserMenus as UserMenus;
+uses Fpas.Ui.Widgets.Planning.TimelineItems as Timeline;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
+uses System.Collections.ObjectModel as Collections;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte

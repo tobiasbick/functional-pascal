@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Inputs.GradientSliders;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Audio.ControlWells as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Audio.ControlWells as W;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Built-in native gradient tracks.
 public type Track = enum: byte

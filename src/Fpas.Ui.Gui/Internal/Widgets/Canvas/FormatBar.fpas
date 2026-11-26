@@ -2,9 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.FormatBar;
 
-uses
-  Fpas.Ui.Widgets.Canvas.FormatBars as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc,
-  Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas, Fpas.Ui.Styles as S, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Canvas.FormatBars as D;
+uses System.Collections.Generic as Lists;
 
 // Presents CUI's native FormatBar widget.
 // ## Type parameters

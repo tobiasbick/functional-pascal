@@ -2,11 +2,14 @@
 
 unit FpasAmp.Ui.Podcasts.Model;
 
-uses
-  Fpas.Media.Images as Images, FpasAmp.Ui.Radio.Model as Radio,
-  FpasAmp.Ui.Podcasts.Catalog as Catalog, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  System as Sys, System.Collections.Immutable as I,
-  System.Security.Cryptography as Crypto, System.Text as Text;
+uses Fpas.Media.Images as Images;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses FpasAmp.Ui.Podcasts.Catalog as Catalog;
+uses FpasAmp.Ui.Radio.Model as Radio;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.Security.Cryptography as Crypto;
+uses System.Text as Text;
 
 // A podcast identified by its canonical RSS address.
 public type Show = record

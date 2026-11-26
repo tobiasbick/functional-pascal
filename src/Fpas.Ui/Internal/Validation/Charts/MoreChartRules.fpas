@@ -2,11 +2,19 @@
 
 unit Fpas.Ui.Internal.Validation.Charts.MoreChartRules;
 
-uses
-  Fpas.Ui.Widgets.Charts.Sankeys as Sk, Fpas.Ui.Widgets.Charts.BarLists as B, Fpas.Ui.Widgets.Charts.ActivityRings as A,
-  Fpas.Ui.Widgets.Charts.ScatterCharts as Sc, Fpas.Ui.Widgets.Charts.RadialGauges as G, Fpas.Ui.Widgets.Charts.Candlesticks as Cs,
-  Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Internal.Validation.Core.ChartChecks as Common,
-  Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR, Fpas.Ui.Styles as Style, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Common;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Widgets.Charts.ActivityRings as A;
+uses Fpas.Ui.Widgets.Charts.BarLists as B;
+uses Fpas.Ui.Widgets.Charts.Candlesticks as Cs;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.RadialGauges as G;
+uses Fpas.Ui.Widgets.Charts.Sankeys as Sk;
+uses Fpas.Ui.Widgets.Charts.ScatterCharts as Sc;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Checks native Sankey data and layout.
 // ## Parameters

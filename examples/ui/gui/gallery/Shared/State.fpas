@@ -2,11 +2,10 @@
 
 unit GuiGallery.Shared.State;
 
-uses
-  Gallery.Shared.Profile as Profile,
-  Fpas.Ui.Gui.Toasts as Toasts,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses Gallery.Shared.Profile as Profile;
 
 // State owned by this gallery feature.
 public type Model = record

@@ -2,20 +2,23 @@
 
 unit Fpas.Ui.Internal.Validation.Dispatch.DeveloperInspectorValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as Rules, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
-  Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart, System as Sys, System.Text as Text,
-  Fpas.Ui.Widgets.Developer.ProblemsPanels as ProblemsPanels,
-  Fpas.Ui.Widgets.Developer.Pipelines as Pipelines,
-  Fpas.Ui.Widgets.Developer.Keymaps as Keymaps,
-  Fpas.Ui.Widgets.Developer.CommitGraphs as CommitGraphs,
-  Fpas.Ui.Widgets.Developer.DependencyGraphs as DependencyGraphs,
-  Fpas.Ui.Widgets.Developer.NetworkWaterfalls as NetworkWaterfalls,
-  Fpas.Ui.Widgets.Developer.TraceViewers as TraceViewers,
-  Fpas.Ui.Widgets.Developer.TestExplorers as TestExplorers,
-  Fpas.Ui.Widgets.Developer.StackTraces as StackTraces,
-  Fpas.Ui.Widgets.Developer.ResponseStatuses as ResponseStatuses,
-  Fpas.Ui.Widgets.Developer.Uptimes as Uptimes;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
+uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Widgets.Developer.CommitGraphs as CommitGraphs;
+uses Fpas.Ui.Widgets.Developer.DependencyGraphs as DependencyGraphs;
+uses Fpas.Ui.Widgets.Developer.Keymaps as Keymaps;
+uses Fpas.Ui.Widgets.Developer.NetworkWaterfalls as NetworkWaterfalls;
+uses Fpas.Ui.Widgets.Developer.Pipelines as Pipelines;
+uses Fpas.Ui.Widgets.Developer.ProblemsPanels as ProblemsPanels;
+uses Fpas.Ui.Widgets.Developer.ResponseStatuses as ResponseStatuses;
+uses Fpas.Ui.Widgets.Developer.StackTraces as StackTraces;
+uses Fpas.Ui.Widgets.Developer.TestExplorers as TestExplorers;
+uses Fpas.Ui.Widgets.Developer.TraceViewers as TraceViewers;
+uses Fpas.Ui.Widgets.Developer.Uptimes as Uptimes;
+uses System as Sys;
+uses System.Text as Text;
 
 procedure Fail(At: string);
 begin

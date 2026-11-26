@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Actions.StatusButtons;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // Model-owned work states in CUI's native order.
 public type Status = enum: byte

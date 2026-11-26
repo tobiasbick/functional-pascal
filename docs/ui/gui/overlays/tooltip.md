@@ -9,8 +9,8 @@ Attach a tooltip to one control to explain its action or show a shortcut hint. A
 ```pascal
 unit Docs.Ui.Overlays.Tooltip;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.Tooltips as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Tooltips as W;
 
 // Builds the tooltip example.
 // ## Parameters

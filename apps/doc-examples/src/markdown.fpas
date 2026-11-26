@@ -2,9 +2,12 @@
 
 unit DocExamples.Markdown;
 
-uses
-  DocExamples.Model as M, System as S, System.IO as IO,
-  System.Text as Text, System.Text.RegularExpressions as R, System.Collections.Generic as C;
+uses DocExamples.Model as M;
+uses System as S;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+uses System.Text as Text;
+uses System.Text.RegularExpressions as R;
 
 // Raises a malformed-document error at the supplied location.
 // ## Parameters

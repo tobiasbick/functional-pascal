@@ -3,11 +3,14 @@
 // Background observation of the initial playlist snapshot and committed changes.
 unit FpasAmp.Library.Playlists.Internal.Observing;
 
-uses
-  FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Playlists.Persistence.Queries as Queries,
-  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.Collections.Immutable as I,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Playlists.Model as M;
+uses FpasAmp.Library.Playlists.Persistence.Queries as Queries;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 function Version(Connection: Db.SqliteConnection; Pragma: string): long;
 begin

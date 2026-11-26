@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DeveloperTools.NetworkWaterfall;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W;
 
 // Displays timing data collected by the application.
 // ## Parameters

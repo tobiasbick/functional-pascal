@@ -11,7 +11,8 @@ Use a spinner to indicate work in progress when the total is unavailable. The ga
 ```pascal
 unit Docs.Ui.Feedback.Spinner;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.Spinners as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.Spinners as W;
 
 // Builds the spinner example.
 // ## Returns

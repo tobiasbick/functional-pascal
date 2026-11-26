@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.StatusTag;
 
-uses
-  Fpas.Ui.Widgets.Feedback.StatusTags as A, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Core.Parts as W, Fpas.Ui.Gui.Internal.Core.Values as Enc, System as Sys;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as W;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Widgets.Feedback.StatusTags as A;
+uses System as Sys;
 
 const DefaultLabels: array of string := [
   'Pending',

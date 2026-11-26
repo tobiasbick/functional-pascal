@@ -27,7 +27,7 @@ public sealed partial class DapDebuggerTests
         using var program = new Debuggee("dap-backpressure");
         await program.Compile($$"""
             program Flood;
-            uses System.IO.File as File, System.Threading.Thread as Thread, System.Console as Console;
+            uses System.IO.File as File; uses System.Threading.Thread as Thread; uses System.Console as Console;
             begin
               while not File.Exists('go') do Thread.Sleep(5); end while;
               for Index: int := 1 to 8192 do Console.Write('{{new string('x', 1024)}}'); end for;
@@ -52,7 +52,7 @@ public sealed partial class DapDebuggerTests
         using var program = new Debuggee("dap-other-thread");
         await program.Compile("""
             program Threads;
-            uses System.Threading.ManualResetEventSlim as Event, System.Threading.Thread as Thread, System.Threading.Tasks as Tasks, System.Console as Console;
+            uses System.Threading.ManualResetEventSlim as Event; uses System.Threading.Thread as Thread; uses System.Threading.Tasks as Tasks; uses System.Console as Console;
             begin
               const Ready: Event := new Event(false);
               const Worker: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int

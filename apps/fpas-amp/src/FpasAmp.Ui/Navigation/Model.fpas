@@ -3,7 +3,9 @@
 // Typed destinations and detached navigation data, independent of rendering.
 unit FpasAmp.Ui.Navigation.Model;
 
-uses FpasAmp.Library.Playlists.Model as Lists, System as Sys, System.Collections.Immutable as I;
+uses FpasAmp.Library.Playlists.Model as Lists;
+uses System as Sys;
+uses System.Collections.Immutable as I;
 
 // Fixed app destinations; the first four form the Library section.
 public type Page = enum

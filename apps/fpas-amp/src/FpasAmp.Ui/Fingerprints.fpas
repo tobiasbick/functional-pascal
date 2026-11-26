@@ -3,9 +3,12 @@
 // Background requests shared by playback and the two song-detail views.
 unit FpasAmp.Ui.Fingerprints;
 
-uses
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Monitoring as Metadata,
-  Fpas.Ui.Mvu.Application as A, System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Mvu.Application as A;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses System as Sys;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // One request or result, tied to the version of a library file.
 public type State = record

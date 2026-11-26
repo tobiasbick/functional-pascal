@@ -11,7 +11,7 @@ public sealed partial class DapDebuggerTests
         using var program = new Debuggee("dap-λ space");
         await program.Compile("""
             program DapTarget;
-            uses System.Console as Console, System.Threading.Thread as Thread;
+            uses System.Console as Console; uses System.Threading.Thread as Thread;
             procedure Observe();
             begin
               const Value: int := 42;

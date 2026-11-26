@@ -2,7 +2,12 @@
 
 unit Fpas.Ui.Widgets.Canvas.Canvases;
 
-uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, System as Sys, Fpas.Ui.Widgets.Canvas.Painting as Painting;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Canvas.Painting as Painting;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses System as Sys;
 
 // A drawing command in canvas-local logical points.
 public type Shape = variant

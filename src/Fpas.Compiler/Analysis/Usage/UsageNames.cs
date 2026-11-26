@@ -10,8 +10,9 @@ internal sealed class UsageNames
     private readonly Dictionary<string, string> imports = new(StringComparer.Ordinal);
     private readonly HashSet<string> used = new(StringComparer.Ordinal) { "ApiUsage", "Use", "Resource" };
 
-    internal string Imports => imports.Count == 0 ? "" : "uses " + string.Join(", ",
-        imports.Select(pair => FpasIdentifiers.SpellQualified(pair.Key) + " as " + pair.Value)) + ";\n\n";
+    internal string Imports => imports.Count == 0 ? "" : string.Join("\n",
+        imports.OrderBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => "uses " + FpasIdentifiers.SpellQualified(pair.Key) + " as " + pair.Value + ";")) + "\n\n";
 
     internal string Parameter(string name, int index)
     {

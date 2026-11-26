@@ -92,7 +92,7 @@ public sealed partial class MsBuildTests
         using var project = sdk.CreateProject();
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
-            uses Demo as D, System as Sys, System.Collections as Legacy;
+            uses Demo as D; uses System as Sys; uses System.Collections as Legacy;
             public function Run(Name: string; Mode: int): int;
             begin
               using const Outer: D.Resource := new D.Resource('outer');
@@ -148,7 +148,7 @@ public sealed partial class MsBuildTests
         using var project = sdk.CreateProject();
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
-            uses System.Collections.Generic as C, Demo as D;
+            uses System.Collections.Generic as C; uses Demo as D;
             public function Echo(Value: C.Dictionary<string, C.List<array of string?>>): C.Dictionary<string, C.List<array of string?>>;
             begin return D.CollectionApi.Echo(Value); end function;
             public function Maybe(Value: C.List<string?>?): C.List<string?>?;
@@ -223,7 +223,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Middle/Api.fpas"), """
             unit Demo.Middle;
-            uses Demo.Bridge as B, System.Collections.Generic as C;
+            uses Demo.Bridge as B; uses System.Collections.Generic as C;
             public function Read(): string;
             begin
               const Data: C.Dictionary<string, C.List<array of string?>> := new C.Dictionary<string, C.List<array of string?>>();

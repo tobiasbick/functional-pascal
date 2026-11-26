@@ -2,135 +2,358 @@
 
 unit Fpas.Ui.Gui.Internal.Presentation.Presentation;
 
-uses
-  Fpas.Ui.Gui.Internal.Presentation.EditingToolPresentation as EditingTools,
-  Fpas.Ui.Gui.Internal.Presentation.SourceToolPresentation as SourceTools,
-  Fpas.Ui.Gui.Internal.Presentation.DisplayPresentation as Display,
-  Fpas.Ui.Gui.Internal.Presentation.ChromePresentation as Chrome, Fpas.Ui.Gui.Internal.Presentation.CanvasPresentation as Canvas,
-  Fpas.Ui.Gui.Internal.Presentation.DeveloperPresentation as DeveloperPresentation,
-  Fpas.Ui.Widgets.Audio.VoiceWaves as VoiceWaves, Fpas.Ui.Widgets.Audio.VoiceNotes as VoiceNotes, Fpas.Ui.Widgets.Audio.VoiceSessions as VoiceSessions, Fpas.Ui.Widgets.Ai.Composers as Composers, Fpas.Ui.Widgets.Audio.VoiceOrbs as VoiceOrbs, Fpas.Ui.Widgets.Ai.Reasonings as Reasonings, Fpas.Ui.Widgets.Ai.ToolCalls as ToolCalls, Fpas.Ui.Widgets.Ai.AgentPlans as AgentPlans, Fpas.Ui.Widgets.Ai.AgentStatuses as AgentStatuses, Fpas.Ui.Widgets.Ai.SourceLists as SourceLists, Fpas.Ui.Widgets.Ai.Citations as Citations, Fpas.Ui.Widgets.Ai.ContextMeters as ContextMeters, Fpas.Ui.Widgets.Ai.ResponseActions as ResponseActions, Fpas.Ui.Widgets.Ai.PromptSuggestions as PromptSuggestions, Fpas.Ui.Widgets.Ai.ModelPickers as ModelPickers, Fpas.Ui.Widgets.Audio.Voice as Voice, Fpas.Ui.Widgets.Ai.Sources as Sources,
-  Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceWave as VoiceWaveWidget, Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceNote as VoiceNoteWidget, Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceSession as VoiceSessionWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.Composer as ComposerWidget, Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceOrb as VoiceOrbWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.Reasoning as ReasoningWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.ToolCall as ToolCallWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.AgentPlan as AgentPlanWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.AgentStatus as AgentStatusWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.SourceList as SourceListWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.Citation as CitationWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.ContextMeter as ContextMeterWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.ResponseActions as ResponseActionsWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.PromptSuggestions as PromptSuggestionsWidget, Fpas.Ui.Gui.Internal.Widgets.Ai.ModelPicker as ModelPickerWidget,
-  Fpas.Ui.Gui.Internal.Core.Values as CreativeParts, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Widgets.Media.Carousels as Carousels, Fpas.Ui.Widgets.Containers.CardStacks as CardStacks, Fpas.Ui.Widgets.Media.ImageViewers as ImageViewers, Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers, Fpas.Ui.Widgets.Media.ImageComparisons as ImageComparisons,
-  Fpas.Ui.Gui.Internal.Widgets.Media.Carousel as CarouselWidget, Fpas.Ui.Gui.Internal.Widgets.Containers.CardStack as CardStackWidget, Fpas.Ui.Gui.Internal.Widgets.Media.ImageViewer as ImageViewerWidget, Fpas.Ui.Gui.Internal.Widgets.Media.ImageCropper as ImageCropperWidget, Fpas.Ui.Gui.Internal.Widgets.Media.ImageCompare as ImageCompareWidget,
-  Fpas.Ui.Widgets.Feedback.Spinners as Spinners,
-  Fpas.Ui.Widgets.Conversation.ChatMessages as ChatMessages, Fpas.Ui.Widgets.Conversation.Comments as Comments, Fpas.Ui.Widgets.Conversation.Presences as Presences, Fpas.Ui.Widgets.Feedback.Counters as Counters, Fpas.Ui.Widgets.Feedback.Tickers as Tickers, Fpas.Ui.Widgets.Feedback.StatusSpinners as StatusSpinners, Fpas.Ui.Widgets.Feedback.SkeletonGroups as SkeletonGroups, Fpas.Ui.Widgets.Charts.Sparklines as Sparklines,
-  Fpas.Ui.Gui.Internal.Widgets.Conversation.ChatMessage as ChatMessageWidget, Fpas.Ui.Gui.Internal.Widgets.Conversation.ChatDivider as ChatDividerWidget, Fpas.Ui.Gui.Internal.Widgets.Conversation.TypingIndicator as TypingIndicatorWidget, Fpas.Ui.Gui.Internal.Widgets.Conversation.Comment as CommentWidget, Fpas.Ui.Gui.Internal.Widgets.Conversation.Presence as PresenceWidget, Fpas.Ui.Gui.Internal.Widgets.Feedback.Counter as CounterWidget, Fpas.Ui.Gui.Internal.Widgets.Feedback.Ticker as TickerWidget, Fpas.Ui.Gui.Internal.Widgets.Feedback.StatusSpinner as StatusSpinnerWidget, Fpas.Ui.Gui.Internal.Widgets.Feedback.SkeletonGroup as SkeletonGroupWidget, Fpas.Ui.Gui.Internal.Widgets.Charts.Sparkline as SparklineWidget,
-  Fpas.Ui.Widgets.Navigation.PathBars as PathBars, Fpas.Ui.Widgets.Files.FileBrowsers as FileBrowsers, Fpas.Ui.Widgets.Files.FilePickers as FilePickers, Fpas.Ui.Widgets.Planning.WeekCalendars as WeekCalendars, Fpas.Ui.Widgets.Planning.MonthCalendars as MonthCalendars, Fpas.Ui.Widgets.Planning.Gantts as Gantts, Fpas.Ui.Widgets.Planning.Kanbans as Kanbans,
-  Fpas.Ui.Gui.Internal.Widgets.Navigation.PathBar as PathBarWidget, Fpas.Ui.Gui.Internal.Widgets.Files.FileBrowser as FileBrowserWidget, Fpas.Ui.Gui.Internal.Widgets.Files.FilePicker as FilePickerWidget, Fpas.Ui.Gui.Internal.Widgets.Planning.WeekCalendar as WeekCalendarWidget, Fpas.Ui.Gui.Internal.Widgets.Planning.MonthCalendar as MonthCalendarWidget, Fpas.Ui.Gui.Internal.Widgets.Planning.Gantt as GanttWidget, Fpas.Ui.Gui.Internal.Widgets.Planning.Kanban as KanbanWidget,
-  Fpas.Ui.Widgets.Feedback.StatusTags as StatusTags, Fpas.Ui.Widgets.Inputs.RatioSliders as RatioSliders, Fpas.Ui.Widgets.Inputs.GradientSliders as GradientSliders, Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders, Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips, Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers, Fpas.Ui.Widgets.Actions.OptionActions as OptionActions, Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields,
-  Fpas.Ui.Gui.Internal.Widgets.Feedback.StatusTag as StatusTagWidget, Fpas.Ui.Gui.Internal.Widgets.Inputs.RatioSlider as RatioSliderWidget, Fpas.Ui.Gui.Internal.Widgets.Inputs.GradientSlider as GradientSliderWidget, Fpas.Ui.Gui.Internal.Widgets.Inputs.StepSlider as StepSliderWidget, Fpas.Ui.Gui.Internal.Widgets.Pickers.PaletteStrip as PaletteStripWidget, Fpas.Ui.Gui.Internal.Widgets.Pickers.AspectPicker as AspectPickerWidget, Fpas.Ui.Gui.Internal.Widgets.Actions.OptionAction as OptionActionWidget, Fpas.Ui.Gui.Internal.Widgets.Inputs.SeedField as SeedFieldWidget,
-  Fpas.Ui.Widgets.Motion.Motion as Motion, Fpas.Ui.Widgets.Motion.GradientTexts as GradientTexts, Fpas.Ui.Widgets.Motion.Spotlights as Spotlights, Fpas.Ui.Widgets.Feedback.Loaders as Loaders, Fpas.Ui.Widgets.Navigation.Docks as Docks, Fpas.Ui.Widgets.Audio.ControlTiles as ControlTiles, Fpas.Ui.Widgets.Audio.NowPlaying as NowPlaying, Fpas.Ui.Widgets.Audio.Waveforms as Waveforms, Fpas.Ui.Widgets.Navigation.TabBars as TabBars,
-  Fpas.Ui.Gui.Internal.Widgets.Motion.ShimmerText as ShimmerTextWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Motion.Typewriter as TypewriterWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Motion.TextReveal as TextRevealWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Motion.WordRotate as WordRotateWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Motion.NumberRoll as NumberRollWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Motion.GradientText as GradientTextWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Motion.Spotlight as SpotlightWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Feedback.Loader as LoaderWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Navigation.Dock as DockWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Audio.ControlTile as ControlTileWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Audio.NowPlaying as NowPlayingWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Audio.Waveform as WaveformWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Navigation.TabBar as TabBarWidget,
-  Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks, Fpas.Ui.Widgets.Developer.JsonViews as JsonViews, Fpas.Ui.Widgets.Display.Readouts as Readouts, Fpas.Ui.Widgets.Display.DotDisplays as DotDisplays, Fpas.Ui.Widgets.Charts.DotCharts as DotCharts, Fpas.Ui.Widgets.Charts.EventTracks as EventTracks,
-  Fpas.Ui.Gui.Internal.Widgets.Developer.CodeBlock as CodeBlockWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Developer.JsonView as JsonViewWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Display.Readout as ReadoutWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Display.DotDisplay as DotDisplayWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.DotChart as DotChartWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.EventTrack as EventTrackWidget,
-  Fpas.Ui.Widgets.Collections.ListItems as ListItems, Fpas.Ui.Widgets.Collections.Trees as Trees, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Ui.Widgets.Collections.FilterBars as Filters, Fpas.Ui.Widgets.Collections.DataGrids as DataGrids, Fpas.Ui.Widgets.Collections.TreeTables as TreeTables,
-  Fpas.Ui.Gui.Internal.Widgets.Collections.FilterBar as FilterWidget, Fpas.Ui.Gui.Internal.Widgets.Collections.DataGrid as GridDataWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Collections.TreeTable as TreeTableWidget,
-  Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes,
-  Fpas.Ui.Gui.Internal.Widgets.Collections.ListItem as ListItemWidget, Fpas.Ui.Gui.Internal.Widgets.Collections.Tree as TreeWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Collections.Table as TableWidget, Fpas.Ui.Gui.Internal.Widgets.Collections.VirtualList as VirtualWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Collections.ReorderableList as ReorderWidget, Fpas.Ui.Gui.Internal.Widgets.Overlays.CommandPalette as PaletteWidget,
-  Fpas.Ui.Widgets.Charts.Sankeys as Sankeys,
-  Fpas.Ui.Widgets.Charts.BarLists as BarLists,
-  Fpas.Ui.Widgets.Charts.ActivityRings as ActivityRings,
-  Fpas.Ui.Widgets.Charts.ScatterCharts as ScatterCharts,
-  Fpas.Ui.Widgets.Charts.RadialGauges as RadialGauges,
-  Fpas.Ui.Widgets.Charts.Candlesticks as Candlesticks,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.Sankey as SankeyWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.BarList as BarListWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.ActivityRings as ActivityRingsWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.ScatterChart as ScatterChartWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.RadialGauge as RadialGaugeWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.Candlestick as CandlestickWidget,
-  Fpas.Ui.Widgets.Charts.Heatmaps as Heatmaps,
-  Fpas.Ui.Widgets.Charts.CalendarHeatmaps as CalendarHeatmaps,
-  Fpas.Ui.Widgets.Charts.Treemaps as Treemaps,
-  Fpas.Ui.Widgets.Charts.RadarCharts as RadarCharts,
-  Fpas.Ui.Widgets.Charts.Funnels as Funnels,
-  Fpas.Ui.Widgets.Charts.SplitBars as SplitBars,
-  Fpas.Ui.Widgets.Charts.Waffles as Waffles,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.Heatmap as HeatmapWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.CalendarHeatmap as CalendarHeatmapWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.Treemap as TreemapWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.RadarChart as RadarChartWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.Funnel as FunnelWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.SplitBar as SplitBarWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.Waffle as WaffleWidget,
-  Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Widgets.Charts.DonutCharts as Donuts, Fpas.Ui.Widgets.Charts.PatternMeters as Patterns,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.LineChart as LineChartWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.BarChart as BarChartWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.DonutChart as DonutChartWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.Gauge as GaugeWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.PatternMeter as PatternMeterWidget,
-  Fpas.Ui.Widgets.Inputs.InlineEdits as InlineEdits, Fpas.Ui.Widgets.Inputs.ScrubFields as ScrubFields,
-  Fpas.Ui.Widgets.Inputs.MoneyFields as MoneyFields, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as RecorderKeys,
-  Fpas.Ui.Gui.Internal.Widgets.Inputs.InlineEdit as InlineWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Inputs.ScrubField as ScrubWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Inputs.MoneyField as MoneyWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Inputs.ShortcutRecorder as ShortcutWidget,
-  Fpas.Ui.Widgets.Overlays.Tours as Tours, Fpas.Ui.Gui.Internal.Widgets.Overlays.Tour as TourWidget,
-  Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis, Fpas.Ui.Gui.Internal.Widgets.Pickers.EmojiPicker as EmojiPickerWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Pickers.ColorPicker as ColorPickerWidget,
-  Fpas.Ui.Widgets.Pickers.DatePickers as DatePickers, Fpas.Ui.Gui.Internal.Widgets.Pickers.Calendar as CalendarWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Pickers.DatePicker as DatePickerWidget,
-  Fpas.Ui.Widgets.Feedback.Banners as Banners, Fpas.Ui.Widgets.Feedback.Countdowns as Countdowns, Fpas.Ui.Widgets.Feedback.Checklists as Checklists,
-  Fpas.Ui.Widgets.Files.Dropzones as Dropzones, Fpas.Ui.Widgets.Files.SignaturePads as Signatures,
-  Fpas.Ui.Widgets.Media.Avatars as Avatars, Fpas.Ui.Widgets.Overlays.HoverCards as HoverCards,
-  Fpas.Ui.Gui.Internal.Widgets.Feedback.Banner as BannerWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Feedback.Countdown as CountdownWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Feedback.Checklist as ChecklistWidget,
-  Fpas.Ui.Widgets.Containers.Grids as Grids, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Feedback.Badges as Badges,
-  Fpas.Ui.Widgets.Charts.Metrics as Metrics, Fpas.Ui.Widgets.Media.AvatarGroups as AvatarGroups, Fpas.Ui.Widgets.Containers.EmptyStates as EmptyStates,
-  Fpas.Ui.Gui.Internal.Widgets.Containers.Grid as GridWidget, Fpas.Ui.Gui.Internal.Widgets.Containers.Card as CardWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Feedback.Badge as BadgeWidget, Fpas.Ui.Gui.Internal.Widgets.Charts.Metric as MetricWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Media.AvatarGroup as AvatarGroupWidget, Fpas.Ui.Gui.Internal.Widgets.Containers.EmptyState as EmptyStateWidget,
-  Fpas.Ui.Widgets.Navigation.TableOfContents as Toc, Fpas.Ui.Gui.Internal.Widgets.Navigation.TableOfContents as TocWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Navigation.ScrollAnchor as AnchorWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Display.Link as LinkWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Media.Avatar as AvatarWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Overlays.HoverCard as HoverCardWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Files.Dropzone as DropzoneWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Files.AvatarUpload as AvatarUploadWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Files.SignaturePad as SignaturePadWidget,
-  Fpas.Ui.Widgets.Audio.Knobs as Knobs, Fpas.Ui.Widgets.Audio.Faders as Faders, Fpas.Ui.Widgets.Audio.LevelMeters as Levels,
-  Fpas.Ui.Gui.Internal.Widgets.Audio.Knob as KnobWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Audio.Fader as FaderWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Audio.LevelMeter as LevelMeterWidget,
-  Fpas.Ui.Widgets.Inputs.RulerSliders as Rulers, Fpas.Ui.Widgets.Inputs.HistogramSliders as Histograms,
-  Fpas.Ui.Gui.Internal.Widgets.Inputs.RulerSlider as RulerWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Inputs.HistogramSlider as HistogramWidget,
-  Fpas.Ui.Widgets.Pickers.TimePickers as TimePickers, Fpas.Ui.Widgets.Pickers.WheelPickers as WheelPickers,
-  Fpas.Ui.Gui.Internal.Widgets.Pickers.TimePicker as TimePickerWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Pickers.WheelPicker as WheelPickerWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Pickers.TimeDial as TimeDialWidget,
-  Fpas.Ui.Widgets.Pickers.DateRanges as Dates, Fpas.Ui.Widgets.Pickers.DateRangePickers as RangePickers,
-  Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangePicker as RangePickerWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangeCalendar as RangeCalendarWidget,
-  Fpas.Ui.Widgets.Actions.SpeedDials as Speed, Fpas.Ui.Gui.Internal.Widgets.Actions.SpeedDial as SpeedWidget,
-  Fpas.Ui.Widgets.Actions.SwipeActions as Swipe, Fpas.Ui.Gui.Internal.Widgets.Actions.SwipeItem as SwipeWidget,
-  Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Gui.Internal.Widgets.Inputs.MultiSelect as MultiWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Feedback.Skeleton as SkeletonWidget,
-  Fpas.Ui.Widgets.Planning.TimelineItems as Timeline, Fpas.Ui.Gui.Internal.Widgets.Planning.TimelineItem as TimelineWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Feedback.ProgressRing as RingWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Charts.Meter as MeterWidget, Fpas.Ui.Gui.Internal.Widgets.Feedback.Alert as AlertWidget, Fpas.Ui.Gui.Internal.Widgets.Feedback.ProgressBar as ProgressWidget, Fpas.Ui.Gui.Internal.Widgets.Feedback.Spinner as SpinnerWidget, Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Widgets.Containers.ExpandableTexts as ExpandableTexts, Fpas.Ui.Widgets.Containers.ExpandableCards as ExpandableCards, Fpas.Ui.Gui.Internal.Widgets.Containers.ExpandableText as ExpandableTextWidget, Fpas.Ui.Gui.Internal.Widgets.Containers.Disclosure as DisclosureWidget, Fpas.Ui.Widgets.Conversation.Reactions as Reactions, Fpas.Ui.Widgets.Overlays.UserMenus as UserMenus, Fpas.Ui.Gui.Internal.Widgets.Conversation.Reactions as ReactionsWidget, Fpas.Ui.Gui.Internal.Widgets.Overlays.UserMenu as UserMenuWidget, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields, Fpas.Ui.Gui.Internal.Widgets.Inputs.Select as SelectWidget, Fpas.Ui.Gui.Internal.Widgets.Inputs.NumberField as NumberWidget, Fpas.Ui.Widgets.Inputs.TagInputs as TagInputs, Fpas.Ui.Widgets.Inputs.OneTimeCodes as OneTimeCodes, Fpas.Ui.Gui.Internal.Widgets.Inputs.TagInput as TagWidget, Fpas.Ui.Gui.Internal.Widgets.Inputs.OneTimeCode as CodeWidget, Fpas.Ui.Gui.Internal.Widgets.Inputs.PasswordStrength as StrengthWidget, Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields, Fpas.Ui.Widgets.Inputs.TextAreas as TextAreas, Fpas.Ui.Gui.Internal.Widgets.Inputs.SearchField as SearchFieldWidget, Fpas.Ui.Gui.Internal.Widgets.Inputs.TextArea as TextAreaWidget, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Gui.Internal.Widgets.Overlays.Dialog as DialogWidget, Fpas.Ui.Gui.Internal.Widgets.Actions.ActionFooter as ActionFooterWidget, Fpas.Ui.Widgets.Inputs.TextFields as TextFields, Fpas.Ui.Gui.Internal.Widgets.Inputs.TextField as TextFieldWidget, Fpas.Ui.Widgets.Overlays.Popovers as Popovers, Fpas.Ui.Widgets.Overlays.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Gui.Internal.Widgets.Overlays.Popover as PopoverWidget, Fpas.Ui.Gui.Internal.Widgets.Overlays.ConfirmPopover as ConfirmPopoverWidget, Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip as TooltipWidget, Fpas.Ui.Gui.Internal.Widgets.Navigation.Stepper as Stepper, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Gui.Internal.Widgets.Navigation.Tabs as TabsWidget, Fpas.Ui.Gui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb, Fpas.Ui.Gui.Internal.Widgets.Navigation.Pagination as Pagination, Fpas.Ui.Gui.Internal.Widgets.Inputs.Chip as Chip, Fpas.Ui.Gui.Internal.Widgets.Inputs.Rating as Rating, Fpas.Ui.Widgets.Inputs.RadioCards as RadioCards, Fpas.Ui.Widgets.Inputs.Sliders as Sliders, Fpas.Ui.Widgets.Inputs.RangeSliders as RangeSliders, Fpas.Ui.Gui.Internal.Widgets.Inputs.RadioCards as RadioCardsWidget, Fpas.Ui.Gui.Internal.Widgets.Inputs.Slider as Slider, Fpas.Ui.Gui.Internal.Widgets.Inputs.RangeSlider as RangeSlider, Fpas.Ui.Widgets.Inputs.RadioGroups as RadioGroups, Fpas.Ui.Gui.Internal.Widgets.Inputs.Checkbox as Checkbox, Fpas.Ui.Gui.Internal.Widgets.Inputs.Switch as Switch, Fpas.Ui.Gui.Internal.Widgets.Inputs.RadioButton as RadioButton, Fpas.Ui.Gui.Internal.Widgets.Inputs.RadioGroup as RadioGroup, Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups, Fpas.Ui.Gui.Internal.Widgets.Actions.ToggleGroup as ToggleGroup, Fpas.Ui.Gui.Internal.Widgets.Overlays.ContextMenu as ContextMenu, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Gui.Internal.Widgets.Overlays.DropdownMenu as DropdownMenu, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Gui.Internal.Widgets.Actions.SegmentedControl as SegmentedWidget, Fpas.Ui.Gui.Internal.Widgets.Theming.ThemeToggle as ThemeToggle, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Gui.Internal.Widgets.Theming.ThemeSwitcher as ThemeSwitcher, Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Gui.Internal.Widgets.Actions.StatusButton as StatusButton, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms, Fpas.Ui.Gui.Internal.Widgets.Actions.ConfirmButton as ConfirmButton, Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Gui.Internal.Widgets.Actions.SplitButton as SplitButton, Fpas.Ui.Widgets.Actions.HoldButtons as Holds, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Gui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Gui.Internal.Widgets.Overlays.Sheet as Sheet, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Gui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Gui.Internal.Widgets.Actions.ButtonGroup as ButtonGroup, Fpas.Ui.Gui.Internal.Widgets.Actions.CopyButton as CopyButton, Fpas.Ui.Gui.Internal.Widgets.Actions.HoldButton as HoldButton, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Gui.Internal.Widgets.Actions.IconButton as IconButton, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Values as CreativeParts;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Gui.Internal.Presentation.CanvasPresentation as Canvas;
+uses Fpas.Ui.Gui.Internal.Presentation.ChromePresentation as Chrome;
+uses Fpas.Ui.Gui.Internal.Presentation.DeveloperPresentation as DeveloperPresentation;
+uses Fpas.Ui.Gui.Internal.Presentation.DisplayPresentation as Display;
+uses Fpas.Ui.Gui.Internal.Presentation.EditingToolPresentation as EditingTools;
+uses Fpas.Ui.Gui.Internal.Presentation.SourceToolPresentation as SourceTools;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.ActionFooter as ActionFooterWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.Button as Button;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.ButtonGroup as ButtonGroup;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.ConfirmButton as ConfirmButton;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.CopyButton as CopyButton;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.HoldButton as HoldButton;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.IconButton as IconButton;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.OptionAction as OptionActionWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.SegmentedControl as SegmentedWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.SpeedDial as SpeedWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.SplitButton as SplitButton;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.StatusButton as StatusButton;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.SwipeItem as SwipeWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Actions.ToggleGroup as ToggleGroup;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.AgentPlan as AgentPlanWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.AgentStatus as AgentStatusWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.Citation as CitationWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.Composer as ComposerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.ContextMeter as ContextMeterWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.ModelPicker as ModelPickerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.PromptSuggestions as PromptSuggestionsWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.Reasoning as ReasoningWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.ResponseActions as ResponseActionsWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.SourceList as SourceListWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.ToolCall as ToolCallWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Audio.ControlTile as ControlTileWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Audio.Fader as FaderWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Audio.Knob as KnobWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Audio.LevelMeter as LevelMeterWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Audio.NowPlaying as NowPlayingWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceNote as VoiceNoteWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceOrb as VoiceOrbWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceSession as VoiceSessionWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceWave as VoiceWaveWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Audio.Waveform as WaveformWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.ActivityRings as ActivityRingsWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.BarChart as BarChartWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.BarList as BarListWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.CalendarHeatmap as CalendarHeatmapWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.Candlestick as CandlestickWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.DonutChart as DonutChartWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.DotChart as DotChartWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.EventTrack as EventTrackWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.Funnel as FunnelWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.Gauge as GaugeWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.Heatmap as HeatmapWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.LineChart as LineChartWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.Meter as MeterWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.Metric as MetricWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.PatternMeter as PatternMeterWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.RadarChart as RadarChartWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.RadialGauge as RadialGaugeWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.Sankey as SankeyWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.ScatterChart as ScatterChartWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.Sparkline as SparklineWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.SplitBar as SplitBarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.Treemap as TreemapWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Charts.Waffle as WaffleWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Collections.DataGrid as GridDataWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Collections.FilterBar as FilterWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Collections.ListItem as ListItemWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Collections.ReorderableList as ReorderWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Collections.Table as TableWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Collections.Tree as TreeWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Collections.TreeTable as TreeTableWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Collections.VirtualList as VirtualWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Containers.Card as CardWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Containers.CardStack as CardStackWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Containers.Disclosure as DisclosureWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Containers.EmptyState as EmptyStateWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Containers.ExpandableText as ExpandableTextWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Containers.Grid as GridWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Conversation.ChatDivider as ChatDividerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Conversation.ChatMessage as ChatMessageWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Conversation.Comment as CommentWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Conversation.Presence as PresenceWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Conversation.Reactions as ReactionsWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Conversation.TypingIndicator as TypingIndicatorWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Developer.CodeBlock as CodeBlockWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Developer.JsonView as JsonViewWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Display.DotDisplay as DotDisplayWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Display.Link as LinkWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Display.Readout as ReadoutWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Alert as AlertWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Badge as BadgeWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Banner as BannerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Checklist as ChecklistWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Countdown as CountdownWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Counter as CounterWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Loader as LoaderWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.ProgressBar as ProgressWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.ProgressRing as RingWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Skeleton as SkeletonWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.SkeletonGroup as SkeletonGroupWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Spinner as SpinnerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.StatusSpinner as StatusSpinnerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.StatusTag as StatusTagWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Feedback.Ticker as TickerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Files.AvatarUpload as AvatarUploadWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Files.Dropzone as DropzoneWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Files.FileBrowser as FileBrowserWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Files.FilePicker as FilePickerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Files.SignaturePad as SignaturePadWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.Checkbox as Checkbox;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.Chip as Chip;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.GradientSlider as GradientSliderWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.HistogramSlider as HistogramWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.InlineEdit as InlineWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.MoneyField as MoneyWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.MultiSelect as MultiWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.NumberField as NumberWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.OneTimeCode as CodeWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.PasswordStrength as StrengthWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.RadioButton as RadioButton;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.RadioCards as RadioCardsWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.RadioGroup as RadioGroup;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.RangeSlider as RangeSlider;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.Rating as Rating;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.RatioSlider as RatioSliderWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.RulerSlider as RulerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.ScrubField as ScrubWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.SearchField as SearchFieldWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.SeedField as SeedFieldWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.Select as SelectWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.ShortcutRecorder as ShortcutWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.Slider as Slider;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.StepSlider as StepSliderWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.Switch as Switch;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.TagInput as TagWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.TextArea as TextAreaWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Inputs.TextField as TextFieldWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Media.Avatar as AvatarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Media.AvatarGroup as AvatarGroupWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Media.Carousel as CarouselWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Media.ImageCompare as ImageCompareWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Media.ImageCropper as ImageCropperWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Media.ImageViewer as ImageViewerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Motion.GradientText as GradientTextWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Motion.NumberRoll as NumberRollWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Motion.ShimmerText as ShimmerTextWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Motion.Spotlight as SpotlightWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Motion.TextReveal as TextRevealWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Motion.Typewriter as TypewriterWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Motion.WordRotate as WordRotateWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb;
+uses Fpas.Ui.Gui.Internal.Widgets.Navigation.Dock as DockWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Navigation.Pagination as Pagination;
+uses Fpas.Ui.Gui.Internal.Widgets.Navigation.PathBar as PathBarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Navigation.ScrollAnchor as AnchorWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Navigation.Sidebar as Sidebar;
+uses Fpas.Ui.Gui.Internal.Widgets.Navigation.Stepper as Stepper;
+uses Fpas.Ui.Gui.Internal.Widgets.Navigation.TabBar as TabBarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Navigation.TableOfContents as TocWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Navigation.Tabs as TabsWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.CommandPalette as PaletteWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.ConfirmPopover as ConfirmPopoverWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.ContextMenu as ContextMenu;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.Dialog as DialogWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.DropdownMenu as DropdownMenu;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.HoverCard as HoverCardWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.Popover as PopoverWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.Sheet as Sheet;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip as TooltipWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.Tour as TourWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.UserMenu as UserMenuWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.AspectPicker as AspectPickerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.Calendar as CalendarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.ColorPicker as ColorPickerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.DatePicker as DatePickerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangeCalendar as RangeCalendarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangePicker as RangePickerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.EmojiPicker as EmojiPickerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.PaletteStrip as PaletteStripWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.TimeDial as TimeDialWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.TimePicker as TimePickerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.WheelPicker as WheelPickerWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Planning.Gantt as GanttWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Planning.Kanban as KanbanWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Planning.MonthCalendar as MonthCalendarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Planning.TimelineItem as TimelineWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Planning.WeekCalendar as WeekCalendarWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Theming.ThemeSwitcher as ThemeSwitcher;
+uses Fpas.Ui.Gui.Internal.Widgets.Theming.ThemeToggle as ThemeToggle;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms;
+uses Fpas.Ui.Widgets.Actions.HoldButtons as Holds;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Actions.OptionActions as OptionActions;
+uses Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented;
+uses Fpas.Ui.Widgets.Actions.SpeedDials as Speed;
+uses Fpas.Ui.Widgets.Actions.SplitButtons as Split;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Status;
+uses Fpas.Ui.Widgets.Actions.SwipeActions as Swipe;
+uses Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups;
+uses Fpas.Ui.Widgets.Ai.AgentPlans as AgentPlans;
+uses Fpas.Ui.Widgets.Ai.AgentStatuses as AgentStatuses;
+uses Fpas.Ui.Widgets.Ai.Citations as Citations;
+uses Fpas.Ui.Widgets.Ai.Composers as Composers;
+uses Fpas.Ui.Widgets.Ai.ContextMeters as ContextMeters;
+uses Fpas.Ui.Widgets.Ai.ModelPickers as ModelPickers;
+uses Fpas.Ui.Widgets.Ai.PromptSuggestions as PromptSuggestions;
+uses Fpas.Ui.Widgets.Ai.Reasonings as Reasonings;
+uses Fpas.Ui.Widgets.Ai.ResponseActions as ResponseActions;
+uses Fpas.Ui.Widgets.Ai.SourceLists as SourceLists;
+uses Fpas.Ui.Widgets.Ai.Sources as Sources;
+uses Fpas.Ui.Widgets.Ai.ToolCalls as ToolCalls;
+uses Fpas.Ui.Widgets.Audio.ControlTiles as ControlTiles;
+uses Fpas.Ui.Widgets.Audio.Faders as Faders;
+uses Fpas.Ui.Widgets.Audio.Knobs as Knobs;
+uses Fpas.Ui.Widgets.Audio.LevelMeters as Levels;
+uses Fpas.Ui.Widgets.Audio.NowPlaying as NowPlaying;
+uses Fpas.Ui.Widgets.Audio.Voice as Voice;
+uses Fpas.Ui.Widgets.Audio.VoiceNotes as VoiceNotes;
+uses Fpas.Ui.Widgets.Audio.VoiceOrbs as VoiceOrbs;
+uses Fpas.Ui.Widgets.Audio.VoiceSessions as VoiceSessions;
+uses Fpas.Ui.Widgets.Audio.VoiceWaves as VoiceWaves;
+uses Fpas.Ui.Widgets.Audio.Waveforms as Waveforms;
+uses Fpas.Ui.Widgets.Charts.ActivityRings as ActivityRings;
+uses Fpas.Ui.Widgets.Charts.BarLists as BarLists;
+uses Fpas.Ui.Widgets.Charts.CalendarHeatmaps as CalendarHeatmaps;
+uses Fpas.Ui.Widgets.Charts.Candlesticks as Candlesticks;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Widgets.Charts.DonutCharts as Donuts;
+uses Fpas.Ui.Widgets.Charts.DotCharts as DotCharts;
+uses Fpas.Ui.Widgets.Charts.EventTracks as EventTracks;
+uses Fpas.Ui.Widgets.Charts.Funnels as Funnels;
+uses Fpas.Ui.Widgets.Charts.Heatmaps as Heatmaps;
+uses Fpas.Ui.Widgets.Charts.Metrics as Metrics;
+uses Fpas.Ui.Widgets.Charts.PatternMeters as Patterns;
+uses Fpas.Ui.Widgets.Charts.RadarCharts as RadarCharts;
+uses Fpas.Ui.Widgets.Charts.RadialGauges as RadialGauges;
+uses Fpas.Ui.Widgets.Charts.Sankeys as Sankeys;
+uses Fpas.Ui.Widgets.Charts.ScatterCharts as ScatterCharts;
+uses Fpas.Ui.Widgets.Charts.Sparklines as Sparklines;
+uses Fpas.Ui.Widgets.Charts.SplitBars as SplitBars;
+uses Fpas.Ui.Widgets.Charts.Treemaps as Treemaps;
+uses Fpas.Ui.Widgets.Charts.Waffles as Waffles;
+uses Fpas.Ui.Widgets.Collections.DataGrids as DataGrids;
+uses Fpas.Ui.Widgets.Collections.FilterBars as Filters;
+uses Fpas.Ui.Widgets.Collections.ListItems as ListItems;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Collections.TreeTables as TreeTables;
+uses Fpas.Ui.Widgets.Collections.Trees as Trees;
+uses Fpas.Ui.Widgets.Containers.CardStacks as CardStacks;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Containers.EmptyStates as EmptyStates;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as ExpandableCards;
+uses Fpas.Ui.Widgets.Containers.ExpandableTexts as ExpandableTexts;
+uses Fpas.Ui.Widgets.Containers.Grids as Grids;
+uses Fpas.Ui.Widgets.Conversation.ChatMessages as ChatMessages;
+uses Fpas.Ui.Widgets.Conversation.Comments as Comments;
+uses Fpas.Ui.Widgets.Conversation.Presences as Presences;
+uses Fpas.Ui.Widgets.Conversation.Reactions as Reactions;
+uses Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks;
+uses Fpas.Ui.Widgets.Developer.JsonViews as JsonViews;
+uses Fpas.Ui.Widgets.Display.DotDisplays as DotDisplays;
+uses Fpas.Ui.Widgets.Display.Readouts as Readouts;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
+uses Fpas.Ui.Widgets.Feedback.Banners as Banners;
+uses Fpas.Ui.Widgets.Feedback.Checklists as Checklists;
+uses Fpas.Ui.Widgets.Feedback.Countdowns as Countdowns;
+uses Fpas.Ui.Widgets.Feedback.Counters as Counters;
+uses Fpas.Ui.Widgets.Feedback.Loaders as Loaders;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars;
+uses Fpas.Ui.Widgets.Feedback.SkeletonGroups as SkeletonGroups;
+uses Fpas.Ui.Widgets.Feedback.Spinners as Spinners;
+uses Fpas.Ui.Widgets.Feedback.StatusSpinners as StatusSpinners;
+uses Fpas.Ui.Widgets.Feedback.StatusTags as StatusTags;
+uses Fpas.Ui.Widgets.Feedback.Tickers as Tickers;
+uses Fpas.Ui.Widgets.Files.Dropzones as Dropzones;
+uses Fpas.Ui.Widgets.Files.FileBrowsers as FileBrowsers;
+uses Fpas.Ui.Widgets.Files.FilePickers as FilePickers;
+uses Fpas.Ui.Widgets.Files.SignaturePads as Signatures;
+uses Fpas.Ui.Widgets.Inputs.GradientSliders as GradientSliders;
+uses Fpas.Ui.Widgets.Inputs.HistogramSliders as Histograms;
+uses Fpas.Ui.Widgets.Inputs.InlineEdits as InlineEdits;
+uses Fpas.Ui.Widgets.Inputs.MoneyFields as MoneyFields;
+uses Fpas.Ui.Widgets.Inputs.MultiSelects as Multi;
+uses Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields;
+uses Fpas.Ui.Widgets.Inputs.OneTimeCodes as OneTimeCodes;
+uses Fpas.Ui.Widgets.Inputs.RadioCards as RadioCards;
+uses Fpas.Ui.Widgets.Inputs.RadioGroups as RadioGroups;
+uses Fpas.Ui.Widgets.Inputs.RangeSliders as RangeSliders;
+uses Fpas.Ui.Widgets.Inputs.RatioSliders as RatioSliders;
+uses Fpas.Ui.Widgets.Inputs.RulerSliders as Rulers;
+uses Fpas.Ui.Widgets.Inputs.ScrubFields as ScrubFields;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields;
+uses Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields;
+uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as RecorderKeys;
+uses Fpas.Ui.Widgets.Inputs.Sliders as Sliders;
+uses Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders;
+uses Fpas.Ui.Widgets.Inputs.TagInputs as TagInputs;
+uses Fpas.Ui.Widgets.Inputs.TextAreas as TextAreas;
+uses Fpas.Ui.Widgets.Inputs.TextFields as TextFields;
+uses Fpas.Ui.Widgets.Media.AvatarGroups as AvatarGroups;
+uses Fpas.Ui.Widgets.Media.Avatars as Avatars;
+uses Fpas.Ui.Widgets.Media.Carousels as Carousels;
+uses Fpas.Ui.Widgets.Media.ImageComparisons as ImageComparisons;
+uses Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers;
+uses Fpas.Ui.Widgets.Media.ImageViewers as ImageViewers;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses Fpas.Ui.Widgets.Motion.GradientTexts as GradientTexts;
+uses Fpas.Ui.Widgets.Motion.Motion as Motion;
+uses Fpas.Ui.Widgets.Motion.Spotlights as Spotlights;
+uses Fpas.Ui.Widgets.Navigation.Docks as Docks;
+uses Fpas.Ui.Widgets.Navigation.Navigation as N;
+uses Fpas.Ui.Widgets.Navigation.PathBars as PathBars;
+uses Fpas.Ui.Widgets.Navigation.TabBars as TabBars;
+uses Fpas.Ui.Widgets.Navigation.TableOfContents as Toc;
+uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes;
+uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as ConfirmPopovers;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses Fpas.Ui.Widgets.Overlays.HoverCards as HoverCards;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses Fpas.Ui.Widgets.Overlays.Popovers as Popovers;
+uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+uses Fpas.Ui.Widgets.Overlays.Tours as Tours;
+uses Fpas.Ui.Widgets.Overlays.UserMenus as UserMenus;
+uses Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers;
+uses Fpas.Ui.Widgets.Pickers.DatePickers as DatePickers;
+uses Fpas.Ui.Widgets.Pickers.DateRangePickers as RangePickers;
+uses Fpas.Ui.Widgets.Pickers.DateRanges as Dates;
+uses Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis;
+uses Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips;
+uses Fpas.Ui.Widgets.Pickers.TimePickers as TimePickers;
+uses Fpas.Ui.Widgets.Pickers.WheelPickers as WheelPickers;
+uses Fpas.Ui.Widgets.Planning.Gantts as Gantts;
+uses Fpas.Ui.Widgets.Planning.Kanbans as Kanbans;
+uses Fpas.Ui.Widgets.Planning.MonthCalendars as MonthCalendars;
+uses Fpas.Ui.Widgets.Planning.TimelineItems as Timeline;
+uses Fpas.Ui.Widgets.Planning.WeekCalendars as WeekCalendars;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses System as Sys;
 
 // Draws a prepared tree and gathers messages without running Update or effects.
 //

@@ -2,7 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.CommitGraph;
 
-uses Fpas.Ui.Widgets.Developer.CommitGraphs as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Widgets.Developer.CommitGraphs as D;
+uses System.Collections.Generic as Lists;
 
 function PackCommit(Items: array of D.Commit): array of CuiDeveloper.CuiDevCommit;
 begin

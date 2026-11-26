@@ -2,7 +2,8 @@
 
 program GenericTree;
 
-uses Trees as Model, System.Console as Console;
+uses System.Console as Console;
+uses Trees as Model;
 
 begin
   const Input: Model.Tree<int> := Model.Tree.Branch(

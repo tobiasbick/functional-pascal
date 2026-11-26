@@ -2,10 +2,16 @@
 
 unit Fpas.Ui.Mvu.Tests.SnapshotTests;
 
-uses
-  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Diagnostics as D,
-  Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Mvu.Testing.EffectReplies as Replies, System as Sys,
-  System.Threading as T, System.Threading.Channels as Channels, System.Threading.Tasks as Tasks, Xunit as X;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Mvu.Diagnostics as D;
+uses Fpas.Ui.Mvu.Session as Runtime;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
+uses System as Sys;
+uses System.Threading as T;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
+uses Xunit as X;
 
 // Exercises diagnostic state while replacing a run and closing a busy session.
 public type SnapshotTests = record

@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.Comment;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Conversation.Comments as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Conversation.Comments as W;
 
 // Shows a reply with its current like state.
 // ## Parameters

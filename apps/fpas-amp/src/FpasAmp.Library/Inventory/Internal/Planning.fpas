@@ -3,9 +3,9 @@
 // Combines dirty directories into minimal active scan scopes.
 unit FpasAmp.Library.Inventory.Internal.Planning;
 
-uses
-  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Internal.Inbox as Q,
-  System.Collections.Generic as C;
+uses FpasAmp.Library.Inventory.Internal.Inbox as Q;
+uses FpasAmp.Library.Sources as S;
+uses System.Collections.Generic as C;
 
 // Returns minimal scopes from a detached batch and normalized active roots.
 public function Scopes(Batch: Q.Batch; Roots: array of string): array of string;

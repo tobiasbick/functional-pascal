@@ -9,7 +9,9 @@ Show how much of a task is complete. The terminal uses a cell track with an opti
 ```pascal
 unit Docs.Tui.Widgets.ProgressBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.ProgressBars as W, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as W;
 
 // Builds the progress bar example.
 // ## Parameters

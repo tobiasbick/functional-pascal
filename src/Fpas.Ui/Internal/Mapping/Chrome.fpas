@@ -2,10 +2,15 @@
 
 unit Fpas.Ui.Internal.Mapping.Chrome;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.MenuBars as M, Fpas.Ui.Widgets.Desktop.StatusBars as S,
-  Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.Dockspaces as Dock, Fpas.Ui.Widgets.Desktop.SplitViews as Split,
-  Fpas.Ui.Internal.Mapping.MessageMapping as Mapping, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Mapping.MessageMapping as Mapping;
+uses Fpas.Ui.Widgets.Desktop.Dockspaces as Dock;
+uses Fpas.Ui.Widgets.Desktop.DocumentTabs as D;
+uses Fpas.Ui.Widgets.Desktop.MenuBars as M;
+uses Fpas.Ui.Widgets.Desktop.SplitViews as Split;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as S;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Rebinds desktop chrome messages and maps its child controls.
 // ## Type parameters

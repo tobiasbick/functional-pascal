@@ -2,10 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangePicker;
 
-uses
-  Fpas.Ui.Widgets.Pickers.DateRanges as R, Fpas.Ui.Widgets.Pickers.DateRangePickers as P, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers,
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangeParts as Parts,
-  System as Sys;
+uses Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangeParts as Parts;
+uses Fpas.Ui.Widgets.Pickers.DateRangePickers as P;
+uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
+uses System as Sys;
 
 // Draws CUI's native date range picker and popup.
 // ## Type parameters

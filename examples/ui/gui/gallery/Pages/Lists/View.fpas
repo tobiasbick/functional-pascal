@@ -2,18 +2,18 @@
 
 unit GuiGallery.Pages.Lists.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Lists.State as State,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Containers.Accordions as A, Fpas.Ui.Widgets.Containers.Cards as Cards,
-  GuiGallery.Pages.Lists.Widgets.People as People,
-  GuiGallery.Pages.Lists.Widgets.TreeAndList as TreeAndList,
-  GuiGallery.Pages.Lists.Widgets.Tasks as Tasks,
-  GuiGallery.Pages.Lists.Widgets.Invoices as Invoices;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Containers.Accordions as A;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Lists.State as State;
+uses GuiGallery.Pages.Lists.Widgets.Invoices as Invoices;
+uses GuiGallery.Pages.Lists.Widgets.People as People;
+uses GuiGallery.Pages.Lists.Widgets.Tasks as Tasks;
+uses GuiGallery.Pages.Lists.Widgets.TreeAndList as TreeAndList;
+uses GuiGallery.Shared.Sections as G;
 
 function Question(Model: State.Model; Index: int; Title: string; Answer: string): E.Element<State.Msg>;
 begin

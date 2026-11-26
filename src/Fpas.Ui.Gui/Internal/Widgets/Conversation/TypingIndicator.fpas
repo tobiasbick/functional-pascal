@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Conversation.TypingIndicator;
 
-uses Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 
 // Draws the native typing indicator.
 // ## Type parameters

@@ -11,7 +11,8 @@ Available in **GUI and TUI**.
 ```pascal
 unit Docs.Ui.AppChrome.StatusBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.StatusBars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as W;
 
 // Shows background progress and an encoding action.
 // ## Parameters

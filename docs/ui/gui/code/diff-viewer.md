@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Code.DiffViewer;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.DiffViews as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.DiffViews as W;
 
 // Compares two versions of a file.
 // ## Parameters

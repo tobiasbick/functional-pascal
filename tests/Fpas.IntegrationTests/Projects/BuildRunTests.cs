@@ -17,8 +17,8 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         File.WriteAllText(directory.File("App/main.fpas"), """
             program EffectIo;
 
-            uses Fpas.Execution.Effects as Fx, System.Console as Console, System.IO as IO,
-              System.Threading as Threads, System.Threading.Tasks as Tasks;
+            uses Fpas.Execution.Effects as Fx; uses System.Console as Console; uses System.IO as IO;
+              uses System.Threading as Threads; uses System.Threading.Tasks as Tasks;
 
             async function Read(Path: string; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<string, string>>;
             begin
@@ -97,8 +97,8 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         var project = await ProjectCliFixture.Init(directory, sdk);
         File.WriteAllText(directory.File("App/main.fpas"), """
             program IO;
-            uses System.Console as Console, System.Environment as Env, System.IO.File as File,
-              System.Text.Encoding as Encoding;
+            uses System.Console as Console; uses System.Environment as Env; uses System.IO.File as File;
+              uses System.Text.Encoding as Encoding;
             begin
               Console.InputEncoding := Encoding.UTF8;
               Console.OutputEncoding := Encoding.UTF8;

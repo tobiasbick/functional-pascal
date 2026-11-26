@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Data.MoreChartData;
 
-uses
-  Fpas.Ui.Widgets.Charts.Sankeys as Sk, Fpas.Ui.Widgets.Charts.ScatterCharts as Sc, Fpas.Ui.Widgets.Charts.Candlesticks as Cs,
-  Fpas.Ui.Widgets.Charts.RadialGauges as R, Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts, System.Collections.Generic as Lists,
-  Fpas.Ui.Gui.Internal.Data.ChartData as Common;
+uses Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Common;
+uses Fpas.Ui.Widgets.Charts.Candlesticks as Cs;
+uses Fpas.Ui.Widgets.Charts.RadialGauges as R;
+uses Fpas.Ui.Widgets.Charts.Sankeys as Sk;
+uses Fpas.Ui.Widgets.Charts.ScatterCharts as Sc;
+uses System.Collections.Generic as Lists;
 
 // Converts named Sankey nodes.
 // ## Parameters

@@ -2,11 +2,10 @@
 
 unit GuiGallery.Pages.Actions.Widgets.ConfirmButton;
 
-uses
-  GuiGallery.Pages.Actions.State as State,
-  Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirm,
-  Fpas.Ui.Elements as E,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirm;
+uses GuiGallery.Pages.Actions.State as State;
+uses System as Sys;
 
 // Shows CUI's two-step destructive action.
 //

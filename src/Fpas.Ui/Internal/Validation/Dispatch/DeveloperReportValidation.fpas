@@ -2,19 +2,22 @@
 
 unit Fpas.Ui.Internal.Validation.Dispatch.DeveloperReportValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as Rules, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
-  Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart, System as Sys, System.Text as Text,
-  Fpas.Ui.Widgets.Charts.TimeHistograms as TimeHistograms,
-  Fpas.Ui.Widgets.Developer.Coverages as Coverages,
-  Fpas.Ui.Widgets.Developer.Blames as Blames,
-  Fpas.Ui.Widgets.Developer.ApiExplorers as ApiExplorers,
-  Fpas.Ui.Widgets.Developer.KeyValueEditors as KeyValueEditors,
-  Fpas.Ui.Widgets.Developer.QueryBuilders as QueryBuilders,
-  Fpas.Ui.Widgets.Pickers.SchedulePickers as SchedulePickers,
-  Fpas.Ui.Widgets.Developer.RegexTesters as RegexTesters,
-  Fpas.Ui.Widgets.Developer.RequestBars as RequestBars,
-  Fpas.Ui.Widgets.Developer.FeatureFlagEditors as FeatureFlagEditors;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
+uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Widgets.Charts.TimeHistograms as TimeHistograms;
+uses Fpas.Ui.Widgets.Developer.ApiExplorers as ApiExplorers;
+uses Fpas.Ui.Widgets.Developer.Blames as Blames;
+uses Fpas.Ui.Widgets.Developer.Coverages as Coverages;
+uses Fpas.Ui.Widgets.Developer.FeatureFlagEditors as FeatureFlagEditors;
+uses Fpas.Ui.Widgets.Developer.KeyValueEditors as KeyValueEditors;
+uses Fpas.Ui.Widgets.Developer.QueryBuilders as QueryBuilders;
+uses Fpas.Ui.Widgets.Developer.RegexTesters as RegexTesters;
+uses Fpas.Ui.Widgets.Developer.RequestBars as RequestBars;
+uses Fpas.Ui.Widgets.Pickers.SchedulePickers as SchedulePickers;
+uses System as Sys;
+uses System.Text as Text;
 
 procedure Fail(At: string);
 begin

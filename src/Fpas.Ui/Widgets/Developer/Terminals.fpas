@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Developer.Terminals;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Terminal input proposed by CUI.
 public type Event = variant

@@ -9,7 +9,8 @@ Put a password strength meter below a password field to display CUI's strength e
 ```pascal
 unit Docs.Ui.Inputs.PasswordStrength;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.PasswordStrengthMeters as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.PasswordStrengthMeters as W;
 
 // Builds the password strength meter example.
 // ## Parameters

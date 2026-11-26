@@ -2,7 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Containers.Card;
 
-uses Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Containers.Cards as K, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Layout.Sizing as Size, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Cards as K;
+uses System as Sys;
 
 // Draws a native card and presents its children inside it.
 // ## Type parameters

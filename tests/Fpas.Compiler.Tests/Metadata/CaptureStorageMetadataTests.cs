@@ -12,7 +12,7 @@ public sealed class CaptureStorageMetadataTests
     {
         const string source = """
             unit CaptureStorage;
-            uses System.Runtime.CompilerServices as Runtime, System.Threading.Tasks as Tasks;
+            uses System.Runtime.CompilerServices as Runtime; uses System.Threading.Tasks as Tasks;
             public function Factory(Seed: int): function(): int;
             begin
               var Value: int := Seed;

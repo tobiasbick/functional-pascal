@@ -29,7 +29,7 @@ public sealed class ParameterOrderTests(SdkPackageFixture sdk) : IClassFixture<S
             """;
         const string caller = """
             program Consumer;
-            uses Demo.Bridge as B, System.Console as Console;
+            uses Demo.Bridge as B; uses System.Console as Console;
             var Trace: int := 0;
 
             function Mark(Digit: int): int;

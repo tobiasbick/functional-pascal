@@ -6,7 +6,8 @@ names. Import each library namespace or type with an explicit alias.
 ```pascal
 program ConstructionAndMembers;
 
-uses System as Sys, System.Net.Http as Http;
+uses System as Sys;
+uses System.Net.Http as Http;
 
 begin
   using const Client: Http.HttpClient := new Http.HttpClient();

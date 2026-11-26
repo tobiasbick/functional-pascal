@@ -74,7 +74,7 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Shared/Math.cs"), GenericMathReference);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Math;
-            uses System.Numerics as N, System.Threading.Tasks as Tasks, Shared as S;
+            uses System.Numerics as N; uses System.Threading.Tasks as Tasks; uses Shared as S;
             public function Add<T>(Left: T; Right: T): T;
             where T: N.IAdditionOperators<T, T, T>;
             begin return Left + Right; end function;
@@ -154,7 +154,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
-            uses Demo.Math as M, System.Numerics as N;
+            uses Demo.Math as M; uses System.Numerics as N;
             public function Forward<T>(Left: T; Right: T): T;
             where T: N.INumber<T>;
             begin return M.Add(Left, Right); end function;
@@ -216,7 +216,7 @@ public sealed partial class MsBuildTests
         ];
         foreach (var (declaration, code) in cases)
         {
-            var source = "program Invalid; uses Shared as S, System.Numerics as N; " + declaration + " begin end; end program;";
+            var source = "program Invalid; uses Shared as S; uses System.Numerics as N; " + declaration + " begin end; end program;";
             var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", project.File("Invalid.dll"),
                 "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--report", "json"], source);
             Assert.NotEqual(0, result.ExitCode);

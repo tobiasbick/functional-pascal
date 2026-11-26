@@ -2,11 +2,10 @@
 
 unit GuiGallery.Pages.Selection.Widgets.Switch;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Selection.State as State,
-  Gallery.Shared.SwitchExamples as S,
-  Fpas.Ui.Elements as E;
+uses Fpas.Ui.Elements as E;
+uses Gallery.Shared.SwitchExamples as S;
+uses GuiGallery.Pages.Selection.State as State;
+uses GuiGallery.Shared.State as Demo;
 
 // Builds the three switches from the native Selection page.
 //

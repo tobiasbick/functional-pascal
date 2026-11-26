@@ -21,8 +21,8 @@ public sealed class FailureReportTests
         using var program = new Debuggee("run-failure-λ space");
         await program.Compile("""
             program FailureCapture;
-            uses System.Console as Console, System.InvalidOperationException as Failure,
-              System.IO.File as File, System.Text.Encoding as Encoding;
+            uses System.Console as Console; uses System.InvalidOperationException as Failure;
+              uses System.IO.File as File; uses System.Text.Encoding as Encoding;
             function Crash(Input: string): int;
             begin
               const Local: int := Input.Length + 34;
@@ -90,7 +90,7 @@ public sealed class FailureReportTests
         using var program = new Debuggee("run-completed");
         await program.Compile($$"""
             program Completed;
-            uses System.Console as Console, System.Environment as Env, System.InvalidOperationException as Failure;
+            uses System.Console as Console; uses System.Environment as Env; uses System.InvalidOperationException as Failure;
             begin
               try
                 raise new Failure('handled');
@@ -142,7 +142,7 @@ public sealed class FailureReportTests
         using var program = new Debuggee("run-failure-timeout");
         await program.Compile("""
             program Waiting;
-            uses System.IO.File as File, System.Environment as Env, System.Threading.Thread as Thread;
+            uses System.IO.File as File; uses System.Environment as Env; uses System.Threading.Thread as Thread;
             begin
               File.WriteAllText('target.pid', Env.ProcessId.ToString());
               while true do Thread.Sleep(20); end while;
@@ -166,7 +166,7 @@ public sealed class FailureReportTests
         using var program = new Debuggee("run-failure-terminal");
         await program.Compile("""
             program Interactive;
-            uses System.Console as Console, System.Environment as Env, System.Text.Encoding as Encoding;
+            uses System.Console as Console; uses System.Environment as Env; uses System.Text.Encoding as Encoding;
             begin
               Console.InputEncoding := Encoding.UTF8;
               Console.WriteLine('input:' + Console.IsInputRedirected.ToString());
@@ -211,7 +211,7 @@ public sealed class FailureReportTests
         using var program = new Debuggee("run-failure-output-limit");
         await program.Compile("""
             program LoudFailure;
-            uses System as S, System.Console as Console, System.InvalidOperationException as Failure;
+            uses System as S; uses System.Console as Console; uses System.InvalidOperationException as Failure;
             begin
               Console.Write(new S.String(#120, 1200000));
               raise new Failure('failure after output');

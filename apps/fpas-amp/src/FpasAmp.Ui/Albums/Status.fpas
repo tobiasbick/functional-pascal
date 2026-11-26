@@ -3,11 +3,13 @@
 // Status bars for library collection grids and song tables.
 unit FpasAmp.Ui.Albums.Status;
 
-uses
-  FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Library.Search.Text as Tokens, Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+uses FpasAmp.Library.Search.Text as Tokens;
+uses FpasAmp.Ui.Albums.Model as M;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
 
 function Caption(Shown: int; Total: long; Noun: string; Search: string; Filtered: bool): string;
 begin

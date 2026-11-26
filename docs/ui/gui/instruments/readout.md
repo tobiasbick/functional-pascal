@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Instruments.Readout;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Display.Readouts as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Display.Readouts as W;
 
 // Displays the caffeine estimate for bedtime.
 // ## Parameters

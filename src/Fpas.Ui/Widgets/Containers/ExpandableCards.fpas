@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Containers.ExpandableCards;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
 
 // Header decoration and input permission.
 public type Options = record

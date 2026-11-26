@@ -2,9 +2,12 @@
 
 unit GuiGallery.Pages.MoreCharts.Update;
 
-uses
-  GuiGallery.Pages.MoreCharts.Data as Data, GuiGallery.Pages.MoreCharts.State as State,
-  Fpas.Ui.Mvu.Application as M, Fpas.Ui.Widgets.Charts.Charts as C, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Mvu.Application as M;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses GuiGallery.Pages.MoreCharts.Data as Data;
+uses GuiGallery.Pages.MoreCharts.State as State;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Replaces model values while CUI retains keyed rank animations.
 // ## Parameters

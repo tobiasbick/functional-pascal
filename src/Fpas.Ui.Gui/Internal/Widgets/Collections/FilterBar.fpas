@@ -2,10 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Collections.FilterBar;
 
-uses
-  Fpas.Ui.Widgets.Collections.FilterBars as B, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections,
-  Fpas.Ui.Gui.Cui as Cui, System as Sys;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Collections.FilterBars as B;
+uses System as Sys;
 
 // Presents a native filter bar.
 // ## Type parameters

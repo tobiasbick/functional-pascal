@@ -2,13 +2,22 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup;
 
-uses
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupPlacement as Placement,
-  Fpas.Ui.Widgets.Overlays.Menus as M,
-  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
-  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
-  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Styles as Styles,
-  System as Sys, System.Collections.Generic as C, System.Globalization as Global;
+uses Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupPlacement as Placement;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Globalization as Global;
 
 function FitTailStart(Value: string; Width: int): int;
 begin

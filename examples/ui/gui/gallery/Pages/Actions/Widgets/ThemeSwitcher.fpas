@@ -2,15 +2,14 @@
 
 unit GuiGallery.Pages.Actions.Widgets.ThemeSwitcher;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  Fpas.Ui.Widgets.Theming.ThemeToggles as Toggles,
-  GuiGallery.Pages.Actions.State as State,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.ThemeToggles as Toggles;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses GuiGallery.Pages.Actions.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
 
 // Shows the original appearance selector with its System choice and light/dark toggle.
 //

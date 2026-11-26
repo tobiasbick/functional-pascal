@@ -2,9 +2,14 @@
 
 unit GuiGallery.Pages.Overlays.Widgets.Notifications;
 
-uses
-  GuiGallery.Shared.State as Demo, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Collections.ListItems as I, Fpas.Ui.Styles as Style, Gallery.Shared.SwitchExamples as S, Fpas.Ui.Widgets.Overlays.Sheets as Sheet, GuiGallery.Shared.Sections as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Widgets.Collections.ListItems as I;
+uses Fpas.Ui.Widgets.Overlays.Sheets as Sheet;
+uses Gallery.Shared.SwitchExamples as S;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
 
 // Presents the three original notification preferences in the native right sheet.
 // ## Type parameters

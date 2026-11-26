@@ -9,7 +9,9 @@ Run a command such as saving the current draft. Open **Components → Buttons** 
 ```pascal
 unit Docs.Tui.Actions.Button;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // Builds the button example.
 // ## Returns

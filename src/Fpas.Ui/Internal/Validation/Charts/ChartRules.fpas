@@ -2,11 +2,13 @@
 
 unit Fpas.Ui.Internal.Validation.Charts.ChartRules;
 
-uses
-  Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.DonutCharts as D,
-  Fpas.Ui.Widgets.Charts.PatternMeters as P, Fpas.Ui.Internal.Validation.Core.Checks as R,
-  Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
-  Fpas.Ui.Internal.Validation.Core.ChartChecks as Common, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Common;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.DonutCharts as D;
+uses Fpas.Ui.Widgets.Charts.PatternMeters as P;
+uses System as Sys;
 
 // Validates the data and options of native line and bar charts.
 // ## Parameters

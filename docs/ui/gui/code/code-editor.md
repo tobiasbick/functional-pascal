@@ -12,7 +12,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Code.CodeEditor;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Editors.CodeEditors as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Editors.CodeEditors as W;
 
 // Edits a query stored in the application model.
 // ## Parameters

@@ -10,7 +10,8 @@ implements demo commands for help, colors and progress. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Files.Terminal;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.Terminals as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.Terminals as W;
 
 // Builds a terminal for commands handled by the application.
 // ## Parameters

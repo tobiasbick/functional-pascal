@@ -2,9 +2,11 @@
 
 unit GuiGallery.Pages.Pickers.Update;
 
-uses
-  GuiGallery.Pages.Pickers.State as S, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Widgets.Pickers.DateRanges as R,
-  Fpas.Ui.Widgets.Inputs.RangeSliders as PriceRange, System as Sys;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Inputs.RangeSliders as PriceRange;
+uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
+uses GuiGallery.Pages.Pickers.State as S;
+uses System as Sys;
 
 // Applies the picker selection to its owning model.
 // ## Parameters

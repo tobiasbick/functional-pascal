@@ -2,16 +2,24 @@
 
 unit FpasAmp.Ui.App.Subscriptions;
 
-uses
-  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Settings.Model as SettingsModel,
-  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.App.Analysis as Analysis,
-  FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.Playback as Playback,
-  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
-  FpasAmp.Library.Inventory.Monitoring as Monitoring, FpasAmp.Library.Metadata.Monitoring as Metadata,
-  FpasAmp.Library.Playlists.Model as Playlists,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Composition as Composition,
-  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Composition as Composition;
+uses FpasAmp.Library.Inventory.Model as Inventory;
+uses FpasAmp.Library.Inventory.Monitoring as Monitoring;
+uses FpasAmp.Library.Inventory.Progress as Progress;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Library.Playlists.Model as Playlists;
+uses FpasAmp.Ui.App.Analysis as Analysis;
+uses FpasAmp.Ui.App.Model as M;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Player.Model as PlayerModel;
+uses FpasAmp.Ui.Player.Playback as Playback;
+uses FpasAmp.Ui.Settings.Model as SettingsModel;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 function Failure(Error: Sys.Exception): M.Msg;
 begin

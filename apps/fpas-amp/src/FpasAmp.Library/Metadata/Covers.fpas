@@ -3,12 +3,16 @@
 // Embedded artwork is loaded explicitly and cached independently of tag rows.
 unit FpasAmp.Library.Metadata.Covers;
 
-uses
-  FpasAmp.Library.Serialization.CatalogueJson as Codec,
-  Fpas.Media.Tags.Pictures as Pictures, FpasAmp.Library.Persistence.Sql as Sql,
-  FpasAmp.Library.Metadata.Internal.Reading as Reading, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.IO as IO, System.Text.Json as J,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses Fpas.Media.Tags.Pictures as Pictures;
+uses FpasAmp.Library.Metadata.Internal.Reading as Reading;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Serialization.CatalogueJson as Codec;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Text.Json as J;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // Returns the cover cache beside `UserDatabase`, outside the reconstructible index.
 public function DirectoryPath(UserDatabase: string): string;

@@ -2,12 +2,17 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Desktop.Dockspace;
 
-uses
-  Fpas.Ui.Widgets.Desktop.Dockspaces as D, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Layout as L, Fpas.Ui.Elements as E,
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size,
-  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop,
-  Fpas.Ui.Gui.Cui as Cui,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Desktop.Dockspaces as D;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses System as Sys;
 
 // Presents native docking and builds only the visible body of a leaf.
 // ## Type parameters

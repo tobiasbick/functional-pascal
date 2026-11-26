@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Code.HexViewer;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Developer.HexViews as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Developer.HexViews as W;
 
 // Displays an editable PNG byte buffer.
 // ## Parameters

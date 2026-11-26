@@ -2,20 +2,20 @@
 
 unit Fpas.Ui.Gui.Internal.Presentation.SourceToolPresentation;
 
-uses
-  Fpas.Ui.Widgets.Display.Markdowns as Markdowns,
-  Fpas.Ui.Widgets.Editors.CodeEditors as CodeEditors,
-  Fpas.Ui.Widgets.Developer.DiffViews as DiffViews,
-  Fpas.Ui.Widgets.Developer.HexViews as HexViews,
-  Fpas.Ui.Widgets.Developer.LogConsoles as LogConsoles,
-  Fpas.Ui.Widgets.Developer.Terminals as Terminals,
-  Fpas.Ui.Gui.Internal.Widgets.Display.Markdown as Markdown,
-  Fpas.Ui.Gui.Internal.Widgets.Editors.CodeEditor as CodeEditor,
-  Fpas.Ui.Gui.Internal.Widgets.Developer.DiffView as DiffView,
-  Fpas.Ui.Gui.Internal.Widgets.Developer.HexView as HexView,
-  Fpas.Ui.Gui.Internal.Widgets.Developer.LogConsole as LogConsole,
-  Fpas.Ui.Gui.Internal.Widgets.Developer.Terminal as Terminal,
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Elements as E;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Widgets.Developer.DiffView as DiffView;
+uses Fpas.Ui.Gui.Internal.Widgets.Developer.HexView as HexView;
+uses Fpas.Ui.Gui.Internal.Widgets.Developer.LogConsole as LogConsole;
+uses Fpas.Ui.Gui.Internal.Widgets.Developer.Terminal as Terminal;
+uses Fpas.Ui.Gui.Internal.Widgets.Display.Markdown as Markdown;
+uses Fpas.Ui.Gui.Internal.Widgets.Editors.CodeEditor as CodeEditor;
+uses Fpas.Ui.Widgets.Developer.DiffViews as DiffViews;
+uses Fpas.Ui.Widgets.Developer.HexViews as HexViews;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as LogConsoles;
+uses Fpas.Ui.Widgets.Developer.Terminals as Terminals;
+uses Fpas.Ui.Widgets.Display.Markdowns as Markdowns;
+uses Fpas.Ui.Widgets.Editors.CodeEditors as CodeEditors;
 
 // Presents graphical source tools.
 // ## Type parameters

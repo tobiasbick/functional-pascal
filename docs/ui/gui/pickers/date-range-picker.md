@@ -9,8 +9,9 @@ Use a date range picker for a start date and an end date. The first gallery fiel
 ```pascal
 unit Docs.Ui.Pickers.DateRangePicker;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.DateRangePickers as W,
-  Fpas.Ui.Widgets.Pickers.DateRanges as R;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.DateRangePickers as W;
+uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 
 // Builds the date range picker example.
 // ## Parameters

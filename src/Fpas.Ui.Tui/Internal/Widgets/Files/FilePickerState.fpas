@@ -2,10 +2,11 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState;
 
-uses
-  Fpas.Ui.Widgets.Files.FileListings as F, Fpas.Ui.Widgets.Files.FilePickers as Picker,
-  Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerListing as Data, System as Sys,
-  System.Collections.Generic as C;
+uses Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerListing as Data;
+uses Fpas.Ui.Widgets.Files.FileListings as F;
+uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // Transient browser state kept while the model holds one picker open.
 public type Cursor = record

@@ -2,11 +2,17 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.CanvasControls;
 
-uses
-  Fpas.Ui.Widgets.Canvas.CanvasControls as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Values as P,
-  Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas,
-  Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Editors.NodeEditors as N, Fpas.Ui.Gui.Internal.Data.CanvasData as Data, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas;
+uses Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Values as P;
+uses Fpas.Ui.Gui.Internal.Data.CanvasData as Data;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Canvas.CanvasControls as D;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
+uses System.Collections.Generic as Lists;
 
 function Bounds(Value: D.Bounds?): Cui.CuiRectangle;
 begin

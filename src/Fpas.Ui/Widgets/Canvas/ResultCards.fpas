@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Canvas.ResultCards;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 
 // Result card settings.
 public type Options = record

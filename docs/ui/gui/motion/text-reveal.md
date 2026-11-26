@@ -10,7 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.TextReveal;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Motion.TextReveals as W, Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Widgets.Motion.TextReveals as W;
 
 // Reveals the build report.
 // ## Parameters

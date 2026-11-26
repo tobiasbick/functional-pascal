@@ -2,7 +2,10 @@
 
 unit FpasAmp.Ui.Podcasts.Catalog;
 
-uses System as Sys, System.Collections.Generic as C, System.Globalization as G, System.Linq as Linq;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Globalization as G;
+uses System.Linq as Linq;
 
 // A storefront or genre option in the podcast directory.
 public type Choice = record

@@ -3,13 +3,19 @@
 // Native progress/status presentation without invented totals or percentages.
 unit FpasAmp.Ui.Settings.ScanStatus;
 
-uses
-  FpasAmp.Ui.Settings.Model as M, FpasAmp.Ui.Settings.InventoryState as State,
-  FpasAmp.Library.Sources as Sources, FpasAmp.Library.Inventory.Model as Inv,
-  FpasAmp.Library.Inventory.Progress as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars,
-  Fpas.Ui.Widgets.Feedback.StatusSpinners as Spinner, Fpas.Ui.Widgets.Actions.StatusButtons as Work,
-  System.Collections.Generic as C, System.Globalization as Culture;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Work;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as Bars;
+uses Fpas.Ui.Widgets.Feedback.StatusSpinners as Spinner;
+uses FpasAmp.Library.Inventory.Model as Inv;
+uses FpasAmp.Library.Inventory.Progress as P;
+uses FpasAmp.Library.Sources as Sources;
+uses FpasAmp.Ui.Settings.InventoryState as State;
+uses FpasAmp.Ui.Settings.Model as M;
+uses System.Collections.Generic as C;
+uses System.Globalization as Culture;
 
 function Count(Value: long): string;
 begin

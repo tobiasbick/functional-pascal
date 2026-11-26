@@ -10,8 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SmartInputs.MoneyField;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.MoneyFields as W,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.MoneyFields as W;
+uses System as Sys;
 
 // Displays a whole-euro salary field.
 // ## Parameters

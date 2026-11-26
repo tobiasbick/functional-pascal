@@ -2,12 +2,17 @@
 
 unit FpasAmp.UiTests.TrackRating;
 
-uses
-  FpasAmp.Ui.Music.LibraryPage as Page, FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Update as Edit,
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Albums.Model as Albums,
-  FpasAmp.Library.Tests.MetadataSupport as Sources, FpasAmp.Library.Tests.Support as H,
-  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Metadata.Monitoring as Metadata,
-  System.Collections.Immutable as I, Xunit as X;
+uses FpasAmp.Library.Albums.Model as Albums;
+uses FpasAmp.Library.Inventory.Monitoring as Monitor;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Library.Tests.MetadataSupport as Sources;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Music.Update as Edit;
+uses FpasAmp.Ui.Music.LibraryPage as Page;
+uses System.Collections.Immutable as I;
+uses Xunit as X;
 
 function Catalogue(Rating: int): Page.Catalogue;
 begin

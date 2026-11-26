@@ -10,7 +10,8 @@ walks through the Cutoff knob, master meter and Bass fader. Available in **GUI**
 ```pascal
 unit Docs.Ui.Overlays.GuidedTour;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Tours as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Tours as W;
 
 // Adds a tour to an audio panel.
 // ## Parameters

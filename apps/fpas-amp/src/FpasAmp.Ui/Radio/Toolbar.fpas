@@ -2,12 +2,15 @@
 
 unit FpasAmp.Ui.Radio.Toolbar;
 
-uses
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Radio.Model as M,
-  FpasAmp.Ui.Albums.Toolbar.View as Toolbar, FpasAmp.Ui.Albums.Toolbar.Filters as Filters,
-  FpasAmp.Ui.Collections.TableSort as Sort, Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Inputs.SearchFields as Search, Fpas.Ui.Widgets.Inputs.TextFields as Fields,
-  Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+uses FpasAmp.Ui.Albums.Toolbar.Filters as Filters;
+uses FpasAmp.Ui.Albums.Toolbar.View as Toolbar;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Collections.TableSort as Sort;
+uses FpasAmp.Ui.Radio.Model as M;
 
 function Action(Message: M.Msg): App.Msg;
 begin

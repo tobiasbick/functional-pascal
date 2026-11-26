@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.HttpRequestBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.RequestBars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.RequestBars as W;
 
 // Shows the current request draft and loading state.
 // ## Parameters

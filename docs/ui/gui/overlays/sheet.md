@@ -11,8 +11,8 @@ Use a sheet to open a modal panel from a window edge. The gallery uses a right s
 ```pascal
 unit Docs.Ui.Overlays.Sheet;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.Sheets as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Sheets as W;
 
 // Builds the sheet and drawer example.
 // ## Parameters

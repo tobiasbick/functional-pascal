@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Containers.ExpandableTexts;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses System as Sys;
 
 // Native text-clamping options.
 public type Options = record

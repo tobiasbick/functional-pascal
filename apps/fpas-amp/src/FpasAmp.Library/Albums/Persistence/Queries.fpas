@@ -3,12 +3,17 @@
 // Compact indexed album headers, without materializing audio tags or image data.
 unit FpasAmp.Library.Albums.Persistence.Queries;
 
-uses
-  FpasAmp.Library.Serialization.CatalogueJson as Codec,
-  FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
-  Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
-  System.Collections.Immutable as I, System.Security.Cryptography as Crypto, System.Text as Text, System.Text.Json as Json,
-  System.Threading as T;
+uses FpasAmp.Library.Albums.Model as M;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Serialization.CatalogueJson as Codec;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.Security.Cryptography as Crypto;
+uses System.Text as Text;
+uses System.Text.Json as Json;
+uses System.Threading as T;
 
 function Headers(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): M.Snapshot;
 begin

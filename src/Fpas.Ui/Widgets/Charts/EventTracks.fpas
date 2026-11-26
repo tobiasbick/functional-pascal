@@ -2,7 +2,11 @@
 
 unit Fpas.Ui.Widgets.Charts.EventTracks;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.DotCharts as D, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.DotCharts as D;
+uses System as Sys;
 
 // Model-owned events and selection.
 public type Value = record

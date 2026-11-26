@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreCharts.Funnel;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Funnels as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.Funnels as W;
 
 // Builds the funnel example.
 // ## Returns

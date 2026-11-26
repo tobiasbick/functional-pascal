@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Internal.Actions.StatusButtons;
 
-uses Fpas.Ui.Widgets.Actions.StatusButtons as B, System as Sys;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as B;
+uses System as Sys;
 
 // Resolves the same literal caption for native and terminal presentation.
 //

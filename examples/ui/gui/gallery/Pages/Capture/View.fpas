@@ -2,12 +2,17 @@
 
 unit GuiGallery.Pages.Capture.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Capture.State as C, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Files.Dropzones as D, Fpas.Ui.Widgets.Files.AvatarUploads as A, Fpas.Ui.Widgets.Files.SignaturePads as P,
-  System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Files.AvatarUploads as A;
+uses Fpas.Ui.Widgets.Files.Dropzones as D;
+uses Fpas.Ui.Widgets.Files.SignaturePads as P;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Capture.State as C;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 function Target(Id: string; Settings: D.Options): E.Element<C.Msg>;
 begin

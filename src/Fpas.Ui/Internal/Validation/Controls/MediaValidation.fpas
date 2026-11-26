@@ -2,16 +2,18 @@
 
 unit Fpas.Ui.Internal.Validation.Controls.MediaValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
-  Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
-  Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart,
-  Fpas.Ui.Internal.Validation.Controls.MediaRules as MediaRules,
-  Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Widgets.Media.Carousels as Carousels,
-  Fpas.Ui.Widgets.Containers.CardStacks as CardStacks,
-  Fpas.Ui.Widgets.Media.ImageViewers as ImageViewers,
-  Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers,
-  Fpas.Ui.Widgets.Media.ImageComparisons as ImageComparisons, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Controls.MediaRules as MediaRules;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Widgets.Containers.CardStacks as CardStacks;
+uses Fpas.Ui.Widgets.Media.Carousels as Carousels;
+uses Fpas.Ui.Widgets.Media.ImageComparisons as ImageComparisons;
+uses Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers;
+uses Fpas.Ui.Widgets.Media.ImageViewers as ImageViewers;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses System as Sys;
 
 // Validates media and card-stack widgets when matched.
 // ## Type parameters

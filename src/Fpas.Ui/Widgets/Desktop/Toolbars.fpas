@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Desktop.Toolbars;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
 
 // An ordinary, toggle or primary toolbar button.
 public type Button = record

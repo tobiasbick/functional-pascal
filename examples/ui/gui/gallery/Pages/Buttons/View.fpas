@@ -2,20 +2,19 @@
 
 unit GuiGallery.Pages.Buttons.View;
 
-uses
-  Gallery.Shared.ButtonExamples as Samples,
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Buttons.Widgets.DropdownMenu as Dropdown,
-  GuiGallery.Pages.Buttons.Widgets.SegmentedControl as Segmented,
-  GuiGallery.Pages.Buttons.State as State,
-  GuiGallery.Pages.Buttons.Widgets.ButtonGroup as Group,
-  GuiGallery.Pages.Buttons.Widgets.CopyButton as Copy,
-  GuiGallery.Pages.Buttons.Widgets.HoldButton as Hold,
-  Fpas.Ui.Widgets.Actions.IconButtons as I,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.IconButtons as I;
+uses Gallery.Shared.ButtonExamples as Samples;
+uses GuiGallery.Pages.Buttons.State as State;
+uses GuiGallery.Pages.Buttons.Widgets.ButtonGroup as Group;
+uses GuiGallery.Pages.Buttons.Widgets.CopyButton as Copy;
+uses GuiGallery.Pages.Buttons.Widgets.DropdownMenu as Dropdown;
+uses GuiGallery.Pages.Buttons.Widgets.HoldButton as Hold;
+uses GuiGallery.Pages.Buttons.Widgets.SegmentedControl as Segmented;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 const Row: L.Flow := new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center);
 const Card: L.Flow := new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(24)));

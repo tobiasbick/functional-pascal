@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.ImageCompare;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Media.ImageComparisons as W, Fpas.Ui.Widgets.Media.MediaImages as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Media.ImageComparisons as W;
+uses Fpas.Ui.Widgets.Media.MediaImages as M;
 
 // Displays two images at the current divider position.
 // ## Parameters

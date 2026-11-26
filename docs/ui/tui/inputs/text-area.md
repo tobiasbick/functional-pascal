@@ -9,7 +9,8 @@ Edit multiline text with the shared `TextAreas.TextArea` widget. The **About** f
 ```pascal
 unit Docs.Tui.Inputs.TextArea;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextAreas as Areas;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.TextAreas as Areas;
 
 // Builds a profile description field.
 // ## Parameters

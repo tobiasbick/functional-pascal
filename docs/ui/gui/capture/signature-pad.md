@@ -10,7 +10,8 @@ Use a signature pad to record handwritten strokes. The gallery uses a
 ```pascal
 unit Docs.Ui.Capture.SignaturePad;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Files.SignaturePads as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Files.SignaturePads as W;
 
 // Builds a pad that reports a snapshot of the ink.
 // ## Returns

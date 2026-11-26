@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Developer.NetworkWaterfalls;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Data for the native NetworkWaterfall widget.
 public type Request = record

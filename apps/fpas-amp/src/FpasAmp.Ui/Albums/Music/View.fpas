@@ -3,17 +3,28 @@
 // Native music table, toolbars and details for a selected album.
 unit FpasAmp.Ui.Albums.Music.View;
 
-uses
-  FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Ui.Albums.Music.Details.View as Dialog, FpasAmp.Ui.Player.Model as Player,
-  FpasAmp.Ui.Albums.Music.Filters as Filters, FpasAmp.Ui.Albums.Toolbar.View as LibraryToolbar,
-  FpasAmp.Ui.Collections.TableSort as TableSort,
-  FpasAmp.Ui.Albums.Status as Status, FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.TrackTable as TrackTable,
-  FpasAmp.Library.Metadata.Model as Tracks, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Inputs.SearchFields as Search,
-  Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
-  Fpas.Media.Images as Imaging, System.Collections.Immutable as I, System as Sys, System.Collections.Generic as C;
+uses Fpas.Media.Images as Imaging;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Albums.Artwork as Artwork;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Details.View as Dialog;
+uses FpasAmp.Ui.Albums.Music.Filters as Filters;
+uses FpasAmp.Ui.Albums.Music.Model as M;
+uses FpasAmp.Ui.Albums.Music.TrackTable as TrackTable;
+uses FpasAmp.Ui.Albums.Status as Status;
+uses FpasAmp.Ui.Albums.Toolbar.View as LibraryToolbar;
+uses FpasAmp.Ui.Collections.TableSort as TableSort;
+uses FpasAmp.Ui.Player.Model as Player;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 

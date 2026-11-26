@@ -3,17 +3,26 @@
 // Variant C. The scroll viewport contains only editable rows.
 unit FpasAmp.Ui.TagEditor.View;
 
-uses
-  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Ui.TagEditor.SearchView as SearchView,
-  FpasAmp.Library.TagEditing.Fields as F, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Library.TagEditing.Files as TagFiles,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Composition as Composition,
-  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Inputs.TextAreas as Areas,
-  Fpas.Ui.Widgets.Inputs.Checkboxes as Checks,
-  Fpas.Ui.Widgets.Navigation.Tabs as Tabs,
-  Fpas.Ui.Widgets.Overlays.Dialogs as Dialog, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
-  System as Sys, System.Collections.Generic as C, System.Text as Encoding;
+uses Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Inputs.Checkboxes as Checks;
+uses Fpas.Ui.Widgets.Inputs.TextAreas as Areas;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialog;
+uses FpasAmp.Library.TagEditing.Fields as F;
+uses FpasAmp.Library.TagEditing.Files as TagFiles;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.TagEditor.Model as M;
+uses FpasAmp.Ui.TagEditor.SearchView as SearchView;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Text as Encoding;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const TabItems: array of Tabs.Item := [

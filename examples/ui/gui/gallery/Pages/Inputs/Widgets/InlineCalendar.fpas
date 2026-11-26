@@ -2,10 +2,13 @@
 
 unit GuiGallery.Pages.Inputs.Widgets.InlineCalendar;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Inputs.State as State, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Widgets.Pickers.Calendars as C, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Pickers.Calendars as C;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Inputs.State as State;
+uses GuiGallery.Shared.Sections as G;
 
 // Shows the standalone calendar below the original Inputs sections.
 // ## Parameters

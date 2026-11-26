@@ -9,7 +9,8 @@ Use a wheel to pick one caption at the center of a scrolling list. The gallery j
 ```pascal
 unit Docs.Ui.Pickers.WheelPicker;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.WheelPickers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.WheelPickers as W;
 
 // Builds the wheel picker example.
 // ## Parameters

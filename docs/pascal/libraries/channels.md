@@ -14,9 +14,11 @@ after its final write; the reader drains the queue before awaiting Completion.
 ```pascal
 async program ChannelBackpressure;
 
-uses
-  System as Sys, System.Console as Console, System.Threading as Threading,
-  System.Threading.Tasks as Tasks, System.Threading.Channels as Channels;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Threading as Threading;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
 
 begin
   const Pipe: Channels.Channel<int> := Channels.Channel.CreateBounded<int>(1);
@@ -57,10 +59,12 @@ tasks before its linked cancellation source is disposed.
 // Application-local bounded aggregation of nonnegative inputs.
 unit Recipes.ChannelPipeline;
 
-uses
-  System as Sys, System.Collections.Generic as Generic, System.IO as IO,
-  System.Threading as Threading, System.Threading.Tasks as Tasks,
-  System.Threading.Channels as Channels;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
+uses System.IO as IO;
+uses System.Threading as Threading;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
 
 // Joins one producer and one consumer, including their failure paths.
 public async function Sum(
@@ -149,9 +153,9 @@ Place the unit and this program in one executable project:
 ```pascal project=channel-pipeline
 async program ChannelSum;
 
-uses
-  System.Console as Console, System.Threading as Threading,
-  Recipes.ChannelPipeline as Pipeline;
+uses Recipes.ChannelPipeline as Pipeline;
+uses System.Console as Console;
+uses System.Threading as Threading;
 
 begin
   const Values: array of int := [10, 20, 30];

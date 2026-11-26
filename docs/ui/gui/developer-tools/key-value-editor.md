@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DeveloperTools.KeyValueEditor;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.KeyValueEditors as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.KeyValueEditors as W;
 
 // Edits the headers for a request draft.
 // ## Parameters

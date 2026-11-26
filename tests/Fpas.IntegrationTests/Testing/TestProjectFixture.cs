@@ -13,7 +13,7 @@ internal static class TestProjectFixture
         var project = await Create(directory, sdk, "xunit");
         File.WriteAllText(directory.File("Tests/Tests.fpas"), $$"""
             unit Waiting;
-            uses Xunit as X, System as S, System.IO.File as File, System.Threading.Thread as Thread;
+            uses Xunit as X; uses System as S; uses System.IO.File as File; uses System.Threading.Thread as Thread;
             [X.FactAttribute]
             public procedure Wait();
             begin

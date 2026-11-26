@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Gui.Windows;
 
-uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu, System as Sys;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses System as Sys;
 
 // Live information read from the native window on its owner thread.
 public type Info = record

@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Feedback.ProgressBars;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
 
 // Native CUI progress-bar options.
 public type Options = record

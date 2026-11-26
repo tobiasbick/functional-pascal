@@ -2,13 +2,12 @@
 
 unit GuiGallery.Pages.Buttons.Widgets.ButtonGroup;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Buttons.State as State,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Actions.ButtonGroups as Groups,
-  Fpas.Ui.Elements as E,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.ButtonGroups as Groups;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses GuiGallery.Pages.Buttons.State as State;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 function FormatButton(
   Model: State.Model; Data: Demo.Model; Id: string; Label: string; Style: State.TextFormat; Icon: int

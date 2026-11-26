@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.OneTimeCode;
 
-uses
-  Fpas.Ui.Widgets.Inputs.OneTimeCodes as O, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Styles as S, System as Sys;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Inputs.OneTimeCodes as O;
+uses System as Sys;
 
 // Draws the code boxes and sends change before completion.
 //

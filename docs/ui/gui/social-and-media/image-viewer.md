@@ -10,7 +10,10 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.ImageViewer;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Media.ImageViewers as W, Fpas.Ui.Widgets.Media.MediaImages as M, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Media.ImageViewers as W;
+uses Fpas.Ui.Widgets.Media.MediaImages as M;
 
 // Shows an image at the current zoom and center.
 // ## Parameters

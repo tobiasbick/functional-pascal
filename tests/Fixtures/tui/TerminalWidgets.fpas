@@ -2,13 +2,22 @@
 
 program TerminalWidgetsContract;
 
-uses
-  Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Mvu.Application as M, Fpas.Ui.Elements as E,
-  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Developer.LogConsoles as Logs,
-  Fpas.Ui.Widgets.Overlays.CommandPalettes as Palette, Fpas.Ui.Widgets.Collections.Trees as Tree,
-  Fpas.Ui.Widgets.Collections.Tables as Table, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
-  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Inputs.NumberFields as Numbers,
-  System as Sys, System.Console as Console, System.Linq.Enumerable as Linq;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as M;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Headless as Headless;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Collections.Tables as Table;
+uses Fpas.Ui.Widgets.Collections.Trees as Tree;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as Logs;
+uses Fpas.Ui.Widgets.Inputs.NumberFields as Numbers;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as Palette;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Linq.Enumerable as Linq;
 
 type Model = record
   public PaletteOpen: bool := false;

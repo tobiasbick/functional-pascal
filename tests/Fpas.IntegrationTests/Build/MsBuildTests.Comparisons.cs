@@ -44,7 +44,7 @@ public sealed partial class MsBuildTests
             """);
         var result = await RunInterop(project, """
             program Comparisons;
-            uses Shared as S, System.Console as Console;
+            uses Shared as S; uses System.Console as Console;
             var Order: int := 0;
             function LeftValue(): S.Measure;
             begin Order := Order * 10 + 1; return new S.Measure(4); end function;

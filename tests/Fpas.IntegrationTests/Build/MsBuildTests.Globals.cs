@@ -37,7 +37,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.State;
-            uses Shared.Log as Log, System.Threading.Tasks as Tasks;
+            uses Shared.Log as Log; uses System.Threading.Tasks as Tasks;
             public const Maximum: int := Log.Mark(1);
             public var Count: long := 2L;
             public const Last: int := Log.Mark(2);
@@ -98,7 +98,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
-            uses Demo.State as S, Demo.Other as O, Shared.Log as Log;
+            uses Demo.State as S; uses Demo.Other as O; uses Shared.Log as Log;
             public const Initial: long := S.Count;
             public procedure Update();
             begin Log.Increment(ref S.Count); Log.Set(out S.Count); S.Count := S.Count + 1L; S.Label := 'updated'; end procedure;

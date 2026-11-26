@@ -2,11 +2,18 @@
 
 program CellGridContract;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.CellGrids as G,
-  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.TerminalExtensions.Views as Views,
-  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Headless as Headless,
-  System as Sys, System.Collections.Generic as C, System.Console as Console;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.TerminalExtensions.CellGrids as G;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.TerminalExtensions.Views as Views;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Headless as Headless;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin

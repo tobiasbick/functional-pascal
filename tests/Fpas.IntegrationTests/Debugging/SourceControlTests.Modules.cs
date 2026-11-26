@@ -24,7 +24,7 @@ public sealed partial class SourceControlTests
         await program.CompileFile(source, library, "--target", "library");
         await program.Compile("""
             program PendingModule;
-            uses Delayed as L, System.Console as Console;
+            uses Delayed as L; uses System.Console as Console;
             function InvokeLater(): int;
             begin
               return L.Compute(41);
@@ -60,7 +60,7 @@ public sealed partial class SourceControlTests
         using var program = new Debuggee("own-running-breakpoints");
         await program.Compile("""
             program RunningChanges;
-            uses System.Threading.Thread as Thread, System.Console as Console;
+            uses System.Threading.Thread as Thread; uses System.Console as Console;
             begin
               Thread.Sleep(60000);
               Console.WriteLine(42);

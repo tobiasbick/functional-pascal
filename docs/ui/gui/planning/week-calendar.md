@@ -10,8 +10,11 @@ shows overlapping meetings, calls and blocks of focus time. Available in **GUI**
 ```pascal
 unit Docs.Ui.Planning.WeekCalendar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Planning.WeekCalendars as W, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Planning.WeekCalendars as W;
+uses System as Sys;
 
 // Shows the supplied week and appointments.
 // ## Parameters

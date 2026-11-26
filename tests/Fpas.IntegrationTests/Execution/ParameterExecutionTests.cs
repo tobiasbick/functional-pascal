@@ -8,7 +8,7 @@ public sealed class ParameterExecutionTests
     public Task References_alias_fields_vectors_rectangles_and_forwarded_parameters()
         => ProgramExecution.Output("""
             program Parameters;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             procedure Change(ref Value: int; out Previous: int; in Delta: int);
             requires Delta > 0;
             ensures Value = Previous + Delta;
@@ -44,7 +44,7 @@ public sealed class ParameterExecutionTests
     public Task Optional_params_named_arguments_and_generic_inference_preserve_written_order()
         => ProgramExecution.Output("""
             program Arguments;
-            uses System.Console as Console, System.String as Text;
+            uses System.Console as Console; uses System.String as Text;
             function Next(State: array of int): int;
             begin State[0] := State[0] + 1; return State[0]; end function;
             function Pair(Left: int; Right: int := 2 * 3): int;

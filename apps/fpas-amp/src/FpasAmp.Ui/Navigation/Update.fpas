@@ -3,7 +3,9 @@
 // A stale saved playlist can never leave the app on an invalid destination.
 unit FpasAmp.Ui.Navigation.Update;
 
-uses FpasAmp.Ui.Navigation.Model as M, FpasAmp.Library.Playlists.Model as Lists, System.Collections.Immutable as I;
+uses FpasAmp.Library.Playlists.Model as Lists;
+uses FpasAmp.Ui.Navigation.Model as M;
+uses System.Collections.Immutable as I;
 
 function Valid(Current: M.State; Route: M.Route): M.Route;
 begin

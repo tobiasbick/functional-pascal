@@ -2,14 +2,20 @@
 
 unit PlanningInteractionContract;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Widgets.Planning.MonthCalendars as Month, Fpas.Ui.Widgets.Planning.WeekCalendars as Week,
-  Fpas.Ui.Widgets.Planning.Gantts as Gantt, Fpas.Ui.Widgets.Collections.TreeTables as Tree,
-  Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Collections.DataGrids as Grid;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Collections.TreeTables as Tree;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses Fpas.Ui.Widgets.Planning.Gantts as Gantt;
+uses Fpas.Ui.Widgets.Planning.MonthCalendars as Month;
+uses Fpas.Ui.Widgets.Planning.WeekCalendars as Week;
+uses System as Sys;
 
 type Page = enum: byte
   Calendar;

@@ -2,9 +2,12 @@
 
 unit Gallery.Shared.TabExamples;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Widgets.Navigation.Tabs as T, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Navigation.Tabs as T;
+uses Gallery.Shared.Strings as Strings;
+uses System as Sys;
 
 // Stable identity of the underline strip.
 public const UnderlineId: string := 'tabs';

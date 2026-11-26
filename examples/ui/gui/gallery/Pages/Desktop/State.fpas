@@ -2,7 +2,12 @@
 
 unit GuiGallery.Pages.Desktop.State;
 
-uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Developer.LogConsoles as Log, Fpas.Ui.Widgets.Editors.PropertyInspectors as P, Fpas.Ui.Graphics as Color;
+uses Fpas.Ui.Graphics as Color;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Widgets.Desktop.DocumentTabs as D;
+uses Fpas.Ui.Widgets.Desktop.Toolbars as T;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as Log;
+uses Fpas.Ui.Widgets.Editors.PropertyInspectors as P;
 
 // Editor and workspace sample state.
 public type Model = record

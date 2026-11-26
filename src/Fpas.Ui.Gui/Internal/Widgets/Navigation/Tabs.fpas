@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.Tabs;
 
-uses
-  Fpas.Ui.Widgets.Navigation.Tabs as T, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Core.Context as C, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Navigation.Tabs as T;
+uses System.Collections.Generic as Lists;
 
 // Presents the native tab strip and forwards changed selection.
 //

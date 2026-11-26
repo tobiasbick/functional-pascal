@@ -2,7 +2,8 @@
 
 unit NativePainting.State;
 
-uses Fpas.Ui.Gui.Cui.Resources as Resources, Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Gui.Cui.Resources as Resources;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
 
 // Application state; native font bytes are owned by the window after loading.
 public type Model = record

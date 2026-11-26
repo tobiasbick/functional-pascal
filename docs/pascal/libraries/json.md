@@ -13,11 +13,10 @@ renamed property. The collection and JSON operations use the original .NET APIs.
 ```pascal
 program Interop;
 
-uses
-  System.Console as Console,
-  System.Collections.Generic as Generic,
-  System.Text.Json as Json,
-  System.Text.Json.Serialization as Serialization;
+uses System.Collections.Generic as Generic;
+uses System.Console as Console;
+uses System.Text.Json as Json;
+uses System.Text.Json.Serialization as Serialization;
 
 type Measurement = record
   [Serialization.JsonPropertyNameAttribute('sample_name')]

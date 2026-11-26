@@ -1,18 +1,20 @@
 # Imports and companion sources
 
 ```pascal fragment context=imports
-uses
-  System as Sys,
-  System.Console as Console,
-  System.Collections.Generic as Collections,
-  Numerics.Geometry as Geometry;
+uses Numerics.Geometry as Geometry;
+uses System as Sys;
+uses System.Collections.Generic as Collections;
+uses System.Console as Console;
 ```
 
-Each import has an explicit alias. Its target may be a CLR namespace, a CLR
-non-generic type, or an FPAS unit container. Use `Console.WriteLine`,
-`Collections.List<int>`, and `Geometry.Translate`. Import a CLR namespace to
-access its generic types. An import does not expose unqualified members or
-acquire dependencies.
+Write one import per `uses` statement and give it an explicit alias. Its
+target may be a CLR namespace, a CLR non-generic type, or an FPAS unit container.
+Use `Console.WriteLine`, `Collections.List<int>`, and `Geometry.Translate`.
+Import a CLR namespace to access its generic types. An import does not expose
+unqualified members or acquire dependencies.
+
+The formatter sorts by target name and puts `Std` and `Std.*` in the first
+group. See [formatting rules](../tools/fmt-style.md#wrapping-and-comments).
 
 A public type or type alias declared in an FPAS companion unit can also be
 imported directly by its qualified name. For example, `uses Numerics.Geometry.Point as Point;`
@@ -39,7 +41,8 @@ and supply both sources to one compilation:
 ```pascal project=geometry context=geometry
 program MovePoint;
 
-uses Numerics.Geometry as Geometry, System.Console as Console;
+uses Numerics.Geometry as Geometry;
+uses System.Console as Console;
 
 begin
   const Start: Geometry.Point := new Geometry.Point(X := 1.0, Y := 2.0);

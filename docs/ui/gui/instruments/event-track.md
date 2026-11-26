@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Instruments.EventTrack;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.EventTracks as W,
-  Fpas.Ui.Widgets.Charts.DotCharts as D;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.DotCharts as D;
+uses Fpas.Ui.Widgets.Charts.EventTracks as W;
 
 // Builds the timeline for the cup editor.
 // ## Parameters

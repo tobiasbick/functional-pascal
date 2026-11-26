@@ -3,12 +3,17 @@
 // UI-independent control and lifetime for presence discovery and storage.
 unit FpasAmp.Library.Inventory.Monitoring;
 
-uses
-  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Model as M,
-  FpasAmp.Library.Inventory.Progress as P, FpasAmp.Library.Inventory.Internal.Inbox as Q,
-  FpasAmp.Library.Inventory.Internal.Runtime as Worker, System as Sys, System.IO as IO,
-  FpasAmp.Library.Metadata.Monitoring as Tags,
-  System.Threading as T, System.Threading.Tasks as Tasks, System.Threading.Channels as Channels;
+uses FpasAmp.Library.Inventory.Internal.Inbox as Q;
+uses FpasAmp.Library.Inventory.Internal.Runtime as Worker;
+uses FpasAmp.Library.Inventory.Model as M;
+uses FpasAmp.Library.Inventory.Progress as P;
+uses FpasAmp.Library.Metadata.Monitoring as Tags;
+uses FpasAmp.Library.Sources as S;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
 
 // Owned discovery lifetime. Control methods never access the filesystem or database.
 public type Session = record implements Sys.IAsyncDisposable

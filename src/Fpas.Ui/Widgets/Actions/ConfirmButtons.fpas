@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Actions.ConfirmButtons;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // Presentation and input options for a two-step confirmation.
 public type Options = record

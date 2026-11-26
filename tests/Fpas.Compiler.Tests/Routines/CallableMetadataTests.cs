@@ -12,7 +12,7 @@ public sealed class CallableMetadataTests
 {
     private const string Source = """
         program Metadata;
-        uses System.Linq.Enumerable as Seq, System.Collections.Generic as C;
+        uses System.Linq.Enumerable as Seq; uses System.Collections.Generic as C;
         function Mapper(Offset: int): function(int): int;
         begin
           var Calls: int := 0;

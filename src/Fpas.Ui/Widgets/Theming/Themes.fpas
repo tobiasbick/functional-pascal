@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Theming.Themes;
 
-uses Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics, System as Sys, System.Globalization as Global;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics;
+uses System as Sys;
+uses System.Globalization as Global;
 
 // Base appearance shared by graphical and terminal hosts.
 public type Mode = enum

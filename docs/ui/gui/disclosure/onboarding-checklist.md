@@ -9,8 +9,8 @@ Use a checklist for onboarding steps with model-owned completion flags. Availabl
 ```pascal
 unit Docs.Ui.Disclosure.OnboardingChecklist;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Feedback.Checklists as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.Checklists as W;
 
 // Messages proposed by the completion circle and the step action.
 public type Msg = variant

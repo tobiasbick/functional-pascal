@@ -2,10 +2,15 @@
 
 unit GuiGallery.Pages.Lists.Widgets.People;
 
-uses
-  Gallery.Shared.PeopleTable as People, GuiGallery.Pages.Lists.State as State, Fpas.Ui.Widgets.Collections.Tables as T,
-  Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Widgets.Feedback.Badges as B, Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Widgets.Feedback.Badges as B;
+uses Fpas.Ui.Widgets.Media.Avatars as A;
+uses Gallery.Shared.PeopleTable as People;
+uses GuiGallery.Pages.Lists.State as State;
+uses System.Collections.Generic as Lists;
 
 function Fixed(Points: int): L.Extent;
 begin

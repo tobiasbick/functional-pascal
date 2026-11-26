@@ -2,7 +2,9 @@
 
 unit GuiGallery.Pages.Inputs.Widgets.TextArea;
 
-uses GuiGallery.Pages.Inputs.State as State, Gallery.Shared.AboutField as About, Fpas.Ui.Elements as E;
+uses Fpas.Ui.Elements as E;
+uses Gallery.Shared.AboutField as About;
+uses GuiGallery.Pages.Inputs.State as State;
 
 // Builds the full-width About field under the Inputs grid.
 // ## Parameters

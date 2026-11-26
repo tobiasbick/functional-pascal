@@ -2,10 +2,12 @@
 
 unit TuiGallery.PlotSamples;
 
-uses
-  Gallery.Shared.Strings as Strings, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Feedback.Spinners as Spin, Fpas.Ui.Widgets.Charts.Sparklines as Charts,
-  System.Globalization as Culture;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Sparklines as Charts;
+uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
+uses Gallery.Shared.Strings as Strings;
+uses System.Globalization as Culture;
 
 // Shows a single activity indicator with the task it represents.
 // ## Type parameters

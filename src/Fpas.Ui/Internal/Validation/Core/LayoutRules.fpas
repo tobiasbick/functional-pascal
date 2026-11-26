@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Internal.Validation.Core.LayoutRules;
 
-uses Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Layout as L, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Layout as L;
+uses System as Sys;
 
 // Checks explicit units and a nonnegative distance.
 //

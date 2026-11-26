@@ -2,9 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Data.ChartData;
 
-uses
-  Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts, Fpas.Ui.Gui.Internal.Layout.Sizing as Size,
-  Fpas.Ui.Graphics as G, System.Collections.Generic as Lists;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses System.Collections.Generic as Lists;
 
 // Converts a semantic chart color without resolving theme tokens early.
 // ## Parameters

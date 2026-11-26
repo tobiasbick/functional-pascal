@@ -2,7 +2,10 @@
 
 unit Fpas.Media.Tags.Pictures;
 
-uses ATL as A, System as Sys, System.IO as IO, System.Collections.Generic as C;
+uses ATL as A;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
 
 // Detached original artwork; no image decoding or resizing occurs here.
 public type Cover = record

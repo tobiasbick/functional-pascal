@@ -13,7 +13,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Charts.PatternMeter;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.PatternMeters as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.PatternMeters as W;
 
 // Builds the pattern meter example.
 // ## Parameters

@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.TestExplorer;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.TestExplorers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.TestExplorers as W;
 
 // Displays the current test run.
 // ## Parameters

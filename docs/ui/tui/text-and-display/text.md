@@ -9,7 +9,9 @@ Use text, semantic roles and a column to distinguish a heading, body copy and a 
 ```pascal
 unit Docs.Tui.Widgets.Text;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
 
 // Builds the text example.
 // ## Returns

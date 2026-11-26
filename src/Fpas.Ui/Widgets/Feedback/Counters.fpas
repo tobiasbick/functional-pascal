@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Feedback.Counters;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // Native counter options.
 public type Options = record

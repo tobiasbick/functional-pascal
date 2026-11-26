@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Editors.NodeEditors;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Canvas.SelectionRings as Ring;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Canvas.SelectionRings as Ring;
 
 // Transform from canvas coordinates to the visible viewport.
 public type View = record

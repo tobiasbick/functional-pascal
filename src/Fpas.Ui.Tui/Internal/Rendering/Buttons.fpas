@@ -2,7 +2,15 @@
 
 unit Fpas.Ui.Tui.Internal.Rendering.Buttons;
 
-uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Graphics as Graphics, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Graphics as Graphics;
+uses Fpas.Ui.Styles as UiStyle;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
 
 // Resolves semantic button colors for the current input state.
 //

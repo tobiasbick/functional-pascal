@@ -9,9 +9,9 @@ Select Light, Dark or an application-provided System appearance. Available in **
 ```pascal
 unit Docs.Ui.Actions.ThemeSwitcher;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.ThemeSwitchers as T,
-  Fpas.Ui.Widgets.Theming.Themes as Palette;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as T;
+uses Fpas.Ui.Widgets.Theming.Themes as Palette;
 
 // Builds the example view.
 // ## Parameters

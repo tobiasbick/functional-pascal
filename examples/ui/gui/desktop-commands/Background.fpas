@@ -2,9 +2,12 @@
 
 unit DesktopCommands.Background;
 
-uses
-  DesktopCommands.State as S, Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as Mvu,
-  System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses DesktopCommands.State as S;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses System as Sys;
+uses System.Threading as Threads;
+uses System.Threading.Tasks as Tasks;
 
 // Stable identity shared by start and cancel.
 public const Id: string := 'desktop-background';

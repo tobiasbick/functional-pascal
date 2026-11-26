@@ -22,10 +22,10 @@ public sealed partial class SourceControlTests
         await program.CompileFile(source, library, "--target", "library");
         await program.Compile("""
             program UnloadModule;
-            uses System as Sys, System.Console as Console, System.Type as Type,
-              System.Reflection.Assembly as Assembly, System.Reflection.MethodInfo as MethodInfo,
-              System.Runtime.Loader.AssemblyLoadContext as LoadContext, System.IO.Path as Path,
-              System.Threading.Thread as Thread;
+            uses System as Sys; uses System.Console as Console; uses System.Type as Type;
+              uses System.Reflection.Assembly as Assembly; uses System.Reflection.MethodInfo as MethodInfo;
+              uses System.Runtime.Loader.AssemblyLoadContext as LoadContext; uses System.IO.Path as Path;
+              uses System.Threading.Thread as Thread;
             function LoadAndRelease(): Sys.WeakReference;
             begin
               const Context: LoadContext := new LoadContext('collectible-test', true);

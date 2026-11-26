@@ -2,11 +2,17 @@
 
 unit GuiGallery.Pages.Desktop.Update;
 
-uses
-  GuiGallery.Pages.Desktop.State as S, Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.Toolbars as T,
-  Fpas.Ui.Widgets.Editors.PropertyInspectors as P, GuiGallery.Pages.Desktop.HostActions as HostActions,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Clipboard as Clipboard, Fpas.Ui.Mvu.Application as Mvu,
-  System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Clipboard as Clipboard;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Windows as Windows;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Desktop.DocumentTabs as D;
+uses Fpas.Ui.Widgets.Desktop.Toolbars as T;
+uses Fpas.Ui.Widgets.Editors.PropertyInspectors as P;
+uses GuiGallery.Pages.Desktop.HostActions as HostActions;
+uses GuiGallery.Pages.Desktop.State as S;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 function Documents(Model: S.Model; Change: D.Change): S.Model;
 begin

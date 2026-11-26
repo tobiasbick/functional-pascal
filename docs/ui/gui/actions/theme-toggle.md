@@ -9,8 +9,9 @@ Switch between two concrete appearances with a single button. Available in **GUI
 ```pascal
 unit Docs.Ui.Actions.ThemeToggle;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.ThemeToggles as T,
-  Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Theming.ThemeToggles as T;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 // Builds the example view.
 // ## Parameters

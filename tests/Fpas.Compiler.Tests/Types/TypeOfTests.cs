@@ -24,7 +24,7 @@ public sealed class TypeOfTests
     {
         var result = TestCompilation.CompileAgainstFramework($$"""
             program Invalid;
-            uses System as Sys, System.Collections.Generic as C;
+            uses System as Sys; uses System.Collections.Generic as C;
             begin const Value: int := 1; discard {{expression}}; end;
             end program;
             """);

@@ -2,12 +2,11 @@
 
 unit GuiGallery.Pages.Buttons.Widgets.CopyButton;
 
-uses
-  GuiGallery.Pages.Buttons.State as State,
-  Fpas.Ui.Widgets.Actions.CopyButtons as Copy,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.CopyButtons as Copy;
+uses GuiGallery.Pages.Buttons.State as State;
 
 // Displays a command with a copy action.
 //

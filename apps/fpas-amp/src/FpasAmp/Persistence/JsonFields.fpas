@@ -3,7 +3,8 @@
 // Reads unambiguous fields from FPas-Amp JSON objects.
 unit FpasAmp.Persistence.JsonFields;
 
-uses System as Sys, System.Text.Json as J;
+uses System as Sys;
+uses System.Text.Json as J;
 
 // Looks up a property by its exact name.
 //

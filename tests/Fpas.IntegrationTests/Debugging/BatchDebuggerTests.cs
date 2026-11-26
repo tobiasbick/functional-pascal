@@ -12,7 +12,7 @@ public sealed partial class BatchDebuggerTests
         using var program = new Debuggee("batch-capture-λ space");
         await program.Compile("""
             program BatchCapture;
-            uses System.Console as Console, System.IO.File as File;
+            uses System.Console as Console; uses System.IO.File as File;
             begin
               const Answer: long := 9007199254740993L;
               const Numbers: array of int := [3, 7];
@@ -42,7 +42,7 @@ public sealed partial class BatchDebuggerTests
         using var program = new Debuggee("batch-exit");
         await program.Compile($$"""
             program BatchExit;
-            uses System.Console as Console, System.Environment as Environment, System.Text.Encoding as Encoding;
+            uses System.Console as Console; uses System.Environment as Environment; uses System.Text.Encoding as Encoding;
             begin
               Console.OutputEncoding := Encoding.UTF8;
               Console.WriteLine('λ😀'); Console.Error.WriteLine('error');

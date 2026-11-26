@@ -3,15 +3,17 @@
 // The settings slice: saved preferences, open dialogs and library status.
 unit FpasAmp.Ui.Settings.Model;
 
-uses
-  FpasAmp.Library.Sources as Locations, Fpas.Media.Audio as Audio,
-  FpasAmp.Ui.Radio.Model as Radio,
-  FpasAmp.Ui.Podcasts.Model as Podcasts,
-  FpasAmp.Library.Inventory.Model as Inv, FpasAmp.Library.Inventory.Progress as Work,
-  Fpas.Ui.Widgets.Files.FilePickers as Picker,
-  Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  System as Sys, System.Text as Text;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses FpasAmp.Library.Inventory.Model as Inv;
+uses FpasAmp.Library.Inventory.Progress as Work;
+uses FpasAmp.Library.Sources as Locations;
+uses FpasAmp.Ui.Podcasts.Model as Podcasts;
+uses FpasAmp.Ui.Radio.Model as Radio;
+uses System as Sys;
+uses System.Text as Text;
 
 // The capacity of a masked AcoustID field, in UTF-8 bytes.
 public const AcoustIdKeyCapacity: int := 255;

@@ -2,12 +2,15 @@
 
 async program DiagnosticsMeasure;
 
-uses
-  System as Sys, System.Diagnostics as Diag, System.Threading as Threading,
-  Diagnostics.MeasureOptions as Arguments, Fpas.Processes.Workflows.Capture as Capture,
-  Fpas.Execution.Effects as Fx, System.Threading.Tasks as Tasks,
-  System.Collections.Generic as C,
-  Diagnostics.Samples as Samples;
+uses Diagnostics.MeasureOptions as Arguments;
+uses Diagnostics.Samples as Samples;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Processes.Workflows.Capture as Capture;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Diagnostics as Diag;
+uses System.Threading as Threading;
+uses System.Threading.Tasks as Tasks;
 
 procedure Help();
 begin

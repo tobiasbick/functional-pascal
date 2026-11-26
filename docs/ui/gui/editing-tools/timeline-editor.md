@@ -11,8 +11,9 @@ editor for the selected track. Available in **GUI**.
 ```pascal
 unit Docs.Ui.EditingTools.TimelineEditor;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Editors.CurveEditors as C,
-  Fpas.Ui.Widgets.Editors.TimelineEditors as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Editors.CurveEditors as C;
+uses Fpas.Ui.Widgets.Editors.TimelineEditors as W;
 
 // Builds an editable track with two keys.
 // ## Returns

@@ -2,16 +2,26 @@
 
 unit GuiGallery.Pages.Feedback.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Gallery.Shared.ProgressExample as Samples,
-  GuiGallery.Pages.Feedback.State as Model, GuiGallery.Pages.Feedback.Widgets.Loading as Loading,
-  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Feedback.Alerts as A, Fpas.Ui.Widgets.Feedback.ProgressBars as P, Fpas.Ui.Widgets.Feedback.Spinners as Spin,
-  Fpas.Ui.Widgets.Charts.Meters as Meters, Fpas.Ui.Widgets.Feedback.ProgressRings as Rings,
-  Fpas.Ui.Widgets.Planning.TimelineItems as Timeline, Fpas.Ui.Widgets.Feedback.Skeletons as Skel, System as Sys,
-  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Containers.Grids as Grid, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
-  GuiGallery.Pages.Feedback.Widgets.BadgesAndAvatars as BadgesAndAvatars;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Charts.Meters as Meters;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Containers.EmptyStates as Empty;
+uses Fpas.Ui.Widgets.Containers.Grids as Grid;
+uses Fpas.Ui.Widgets.Feedback.Alerts as A;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as P;
+uses Fpas.Ui.Widgets.Feedback.ProgressRings as Rings;
+uses Fpas.Ui.Widgets.Feedback.Skeletons as Skel;
+uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
+uses Fpas.Ui.Widgets.Planning.TimelineItems as Timeline;
+uses Gallery.Shared.ProgressExample as Samples;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Feedback.State as Model;
+uses GuiGallery.Pages.Feedback.Widgets.BadgesAndAvatars as BadgesAndAvatars;
+uses GuiGallery.Pages.Feedback.Widgets.Loading as Loading;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
 
 // Reproduces the accepted native CUI Feedback examples.
 // ## Type parameters

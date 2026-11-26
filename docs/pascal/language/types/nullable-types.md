@@ -81,7 +81,8 @@ that a nullable reference is non-null; ordinary null tests retain their flow rul
 ```pascal
 program NullableArithmetic;
 
-uses System as Sys, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
 
 begin
   const Price: decimal? := 12.50M;
@@ -104,7 +105,8 @@ end program;
 ```pascal
 program NullableText;
 
-uses System.Environment as Environment, System.Console as Console;
+uses System.Console as Console;
+uses System.Environment as Environment;
 
 begin
   const OptionalName: string? := Environment.GetEnvironmentVariable('FPAS_PLAYER');

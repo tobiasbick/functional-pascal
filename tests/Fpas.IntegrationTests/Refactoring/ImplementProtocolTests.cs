@@ -139,7 +139,7 @@ public sealed class ImplementProtocolTests(SdkPackageFixture sdk) : IClassFixtur
             """;
         var source = """
             unit Demo.Adapters;
-            uses Demo.Contracts as Contracts, System as Sys;
+            uses Demo.Contracts as Contracts; uses System as Sys;
             type Writer = record
               private procedure Write(ref Value: Sys.Text.StringBuilder);
               begin
@@ -174,7 +174,7 @@ public sealed class ImplementProtocolTests(SdkPackageFixture sdk) : IClassFixtur
             """;
         const string source = """
             unit Demo.Adapters;
-            uses Demo.Contracts as Contracts, System.IO as Text;
+            uses Demo.Contracts as Contracts; uses System.IO as Text;
             type Writer = record end record;
             end unit;
             """;
@@ -185,7 +185,8 @@ public sealed class ImplementProtocolTests(SdkPackageFixture sdk) : IClassFixtur
         var prepared = CheckedRefactoring.Prepare(analysis, new("implement-protocol", at, at.Line, at.Column,
             Protocol: new("Contracts.IWriter", [new("Write", "return Value;")])));
         var result = Assert.Single(prepared.Edits.Documents).NewText;
-        Assert.Contains("System.IO as Text, System.Text as Text2;", result);
+        Assert.Contains("uses System.IO as Text;", result);
+        Assert.Contains("uses System.Text as Text2;", result);
         Assert.Contains("public function Write(Value: Text2.StringBuilder): Text2.StringBuilder;", result);
     }
 

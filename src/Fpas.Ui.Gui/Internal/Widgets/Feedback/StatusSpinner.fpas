@@ -2,7 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.StatusSpinner;
 
-uses Fpas.Ui.Widgets.Feedback.StatusSpinners as W, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Data.ChartData as Colors, Fpas.Ui.Widgets.Actions.StatusButtons as Buttons;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Buttons;
+uses Fpas.Ui.Widgets.Feedback.StatusSpinners as W;
 
 // Draws the native status spinner and its result transition.
 // ## Type parameters

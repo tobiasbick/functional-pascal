@@ -9,7 +9,8 @@ Edit one line of model-owned text. The **Components → Inputs → Text fields**
 ```pascal
 unit Docs.Tui.Widgets.TextField;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextFields as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.TextFields as W;
 
 // Builds the text field example.
 // ## Parameters

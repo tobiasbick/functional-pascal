@@ -2,9 +2,11 @@
 
 unit FpasAmp.Ui.Music.Playlist;
 
-uses
-  FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Library.Metadata.Model as Tracks,
-  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Playlists.Model as Lists;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
 
 // Resolves List against the current catalogue, keeping its order and repeated tracks.
 // Entries without a catalogue match remain in storage and are omitted from this queue.

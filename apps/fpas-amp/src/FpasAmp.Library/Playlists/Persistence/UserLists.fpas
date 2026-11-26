@@ -3,10 +3,14 @@
 // Durable ordered lists never share the lifetime of source-owned catalogue rows.
 unit FpasAmp.Library.Playlists.Persistence.UserLists;
 
-uses
-  FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Playlists.Formats.References as R,
-  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.UserData.Schema as Users,
-  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Threading as T;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Playlists.Formats.References as R;
+uses FpasAmp.Library.Playlists.Model as M;
+uses FpasAmp.Library.UserData.Schema as Users;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
 
 // Creates a local list, or replaces existing `Id`, in durable `Database`.
 // `Name` and `Items` are detached caller input. Unknown IDs/track UUIDs are rejected.

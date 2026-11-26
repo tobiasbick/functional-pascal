@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.ResponseStatus;
 
-uses Fpas.Ui.Widgets.Developer.ResponseStatuses as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Widgets.Developer.ResponseStatuses as D;
 
 // Presents the native ResponseStatus widget.
 // ## Type parameters

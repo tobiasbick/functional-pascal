@@ -2,11 +2,15 @@
 
 unit GalleryReaderContract;
 
-uses
-  GalleryHostAssertions as A, GuiGallery.App.State as State, GuiGallery.App.View as View,
-  GuiGallery.App.Update as G, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Widgets.Navigation.TableOfContents as T,
-  System as Sys;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Widgets.Navigation.TableOfContents as T;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as G;
+uses GuiGallery.App.View as View;
+uses System as Sys;
 
 // Drives the original Reader example with native pointer, wheel and keyboard input.
 // ## Parameters

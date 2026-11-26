@@ -11,8 +11,9 @@ threshold, peak and bedtime. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Instruments.DotChart;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.DotCharts as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.DotCharts as W;
 
 // Messages from the chart.
 public type Msg = variant

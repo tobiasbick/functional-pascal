@@ -2,10 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.SwipeItem;
 
-uses
-  Fpas.Ui.Widgets.Actions.SwipeActions as S, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.SwipeActions as S;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Draws the native swipe row and traverses its foreground.
 // ## Type parameters

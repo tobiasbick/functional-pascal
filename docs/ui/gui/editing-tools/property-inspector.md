@@ -10,7 +10,8 @@ a crate's transform, material and shadows. Available in **GUI**.
 ```pascal
 unit Docs.Ui.EditingTools.PropertyInspector;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Editors.PropertyInspectors as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Editors.PropertyInspectors as W;
 
 // Builds the inspector for the selected object.
 // ## Parameters

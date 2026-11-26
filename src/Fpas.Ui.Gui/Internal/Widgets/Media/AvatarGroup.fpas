@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Media.AvatarGroup;
 
-uses Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Media.AvatarGroups as A;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Media.AvatarGroups as A;
 
 // Draws native overlapping avatars and the overflow count.
 // ## Type parameters

@@ -2,15 +2,18 @@
 
 unit Fpas.Ui.Internal.Validation.Dispatch.SourceToolValidation;
 
-uses
-  Fpas.Ui.Widgets.Display.Markdowns as Markdowns,
-  Fpas.Ui.Widgets.Editors.CodeEditors as CodeEditors,
-  Fpas.Ui.Widgets.Developer.DiffViews as DiffViews,
-  Fpas.Ui.Widgets.Developer.HexViews as HexViews,
-  Fpas.Ui.Widgets.Developer.LogConsoles as LogConsoles,
-  Fpas.Ui.Widgets.Developer.Terminals as Terminals,
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
-  Fpas.Ui.Internal.Validation.Core.ChartChecks as C, Fpas.Ui.Styles as S, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as C;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Developer.DiffViews as DiffViews;
+uses Fpas.Ui.Widgets.Developer.HexViews as HexViews;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as LogConsoles;
+uses Fpas.Ui.Widgets.Developer.Terminals as Terminals;
+uses Fpas.Ui.Widgets.Display.Markdowns as Markdowns;
+uses Fpas.Ui.Widgets.Editors.CodeEditors as CodeEditors;
+uses System as Sys;
 
 procedure Height(Value: float; Path: string);
 begin

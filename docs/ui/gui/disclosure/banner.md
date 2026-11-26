@@ -9,8 +9,8 @@ Use a banner for an announcement that appears in the page layout. Available in *
 ```pascal
 unit Docs.Ui.Disclosure.Banner;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Feedback.Banners as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.Banners as W;
 
 // Builds the banner example.
 // ## Parameters

@@ -2,8 +2,7 @@
 
 unit GuiGallery.Pages.Buttons.State;
 
-uses
-  GuiGallery.Shared.State as Demo;
+uses GuiGallery.Shared.State as Demo;
 
 // Independent actions in the button group.
 public type TextFormat = enum: byte

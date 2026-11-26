@@ -2,8 +2,11 @@
 
 unit Fpas.Media.Tests.Images;
 
-uses
-  Fpas.Media.Images as Images, System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+uses Fpas.Media.Images as Images;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
+uses Xunit as X;
 
 // Exercises the JPEG codec through the public FPAS image library.
 public type ImageTests = record

@@ -2,9 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Planning.WeekCalendar;
 
-uses
-  Fpas.Ui.Widgets.Planning.WeekCalendars as A, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ScheduleData as D, System as Sys;
+uses Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Data.ScheduleData as D;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Widgets.Planning.WeekCalendars as A;
+uses System as Sys;
 
 // Presents the native week calendar.
 // ## Type parameters

@@ -9,8 +9,9 @@ Use an analog dial to select hours and minutes directly on a clock face. Availab
 ```pascal
 unit Docs.Ui.Pickers.TimeDial;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Pickers.TimeDials as W,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Pickers.TimeDials as W;
+uses System as Sys;
 
 // Builds the time dial example.
 // ## Parameters

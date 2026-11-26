@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Internal.Theming.ThemeSwitchers;
 
-uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers, System as Sys;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses System as Sys;
 
 // Provides stable snapshot keys independent of presentation glyphs.
 //

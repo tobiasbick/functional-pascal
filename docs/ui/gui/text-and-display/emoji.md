@@ -10,7 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.TextAndDisplay.Emoji;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Display.Emojis as W, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Display.Emojis as W;
 
 // Displays a celebration emoji and its count.
 // ## Parameters

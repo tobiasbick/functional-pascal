@@ -2,9 +2,13 @@
 
 unit Fpas.Ui.Internal.Validation.Controls.VoiceRules;
 
-uses
-  Fpas.Ui.Widgets.Audio.Voice as V, Fpas.Ui.Widgets.Ai.Composers as C, Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart,
-  Fpas.Ui.Internal.Validation.Controls.AiRules as Ai, System as Sys, System.Text as Text;
+uses Fpas.Ui.Internal.Validation.Controls.AiRules as Ai;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Widgets.Ai.Composers as C;
+uses Fpas.Ui.Widgets.Audio.Voice as V;
+uses System as Sys;
+uses System.Text as Text;
 
 // Checks normalized levels and the silence marker.
 // ## Parameters

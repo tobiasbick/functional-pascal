@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Gui.Clipboard;
 
-uses Fpas.Ui.Mvu.Application as Mvu, System as Sys;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses System as Sys;
 
 // Writes literal text to the owner window's clipboard.
 // ## Type parameters

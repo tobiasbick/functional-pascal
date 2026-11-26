@@ -2,7 +2,18 @@
 
 unit GuiGallery.Pages.Developer.State;
 
-uses GuiGallery.Pages.Developer.Samples as Samples, Fpas.Ui.Widgets.Developer.TraceViewers as T, Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W, Fpas.Ui.Widgets.Developer.DependencyGraphs as G, Fpas.Ui.Widgets.Developer.CommitGraphs as C, Fpas.Ui.Widgets.Developer.Pipelines as J, Fpas.Ui.Widgets.Developer.KeyValueEditors as K, Fpas.Ui.Widgets.Developer.QueryBuilders as Q, Fpas.Ui.Widgets.Pickers.SchedulePickers as S, Fpas.Ui.Widgets.Developer.Keymaps as Keys, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Shortcuts, Fpas.Ui.Widgets.Developer.ProblemsPanels as P;
+uses Fpas.Ui.Widgets.Developer.CommitGraphs as C;
+uses Fpas.Ui.Widgets.Developer.DependencyGraphs as G;
+uses Fpas.Ui.Widgets.Developer.KeyValueEditors as K;
+uses Fpas.Ui.Widgets.Developer.Keymaps as Keys;
+uses Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W;
+uses Fpas.Ui.Widgets.Developer.Pipelines as J;
+uses Fpas.Ui.Widgets.Developer.ProblemsPanels as P;
+uses Fpas.Ui.Widgets.Developer.QueryBuilders as Q;
+uses Fpas.Ui.Widgets.Developer.TraceViewers as T;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Shortcuts;
+uses Fpas.Ui.Widgets.Pickers.SchedulePickers as S;
+uses GuiGallery.Pages.Developer.Samples as Samples;
 
 // State of the Developer tools examples.
 public type Model = record

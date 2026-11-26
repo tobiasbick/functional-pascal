@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Checklist;
 
-uses
-  Fpas.Ui.Widgets.Feedback.Checklists as K, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui.Widgets.Feedback as CuiFeedback,
-  Fpas.Ui.Gui.Cui as Cui, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Feedback as CuiFeedback;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Feedback.Checklists as K;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 function PartToken(Id: string; Slot: int): string;
 begin

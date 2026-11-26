@@ -2,9 +2,42 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses
-  Fpas.Ui.Tui.Internal.Widgets.Feedback.Spinner as Spinner, Fpas.Ui.Tui.Internal.Widgets.Charts.Sparkline as Sparkline,
-  Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb, Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination as Pagination, Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Tui.Internal.Widgets.Overlays.CommandPalette as Palette, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as ChoiceStrip, Fpas.Ui.Tui.Internal.Layout.PopupHost as PopupHost, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as UiStyle;
+uses Fpas.Ui.TerminalExtensions.CellGrids as Grids;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as ChoiceStrip;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.PopupHost as PopupHost;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Layout.ScrollViews as V;
+uses Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks;
+uses Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Charts.Sparkline as Sparkline;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables;
+uses Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log;
+uses Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress;
+uses Fpas.Ui.Tui.Internal.Widgets.Feedback.Spinner as Spinner;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget;
+uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb;
+uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination as Pagination;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.CommandPalette as Palette;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as Logs;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes;
+uses System as Sys;
+uses System.Collections.Generic as Generic;
 
 // Places and paints a terminal view and gathers the control scene used by input routing.
 // ## Type parameters

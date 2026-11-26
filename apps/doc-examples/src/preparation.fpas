@@ -2,10 +2,13 @@
 
 unit DocExamples.Preparation;
 
-uses
-  DocExamples.Model as M, DocExamples.Markdown as Markdown,
-  System as S, System.IO as IO, System.Text as Text, System.Text.RegularExpressions as R,
-  System.Collections.Generic as C;
+uses DocExamples.Markdown as Markdown;
+uses DocExamples.Model as M;
+uses System as S;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+uses System.Text as Text;
+uses System.Text.RegularExpressions as R;
 
 function Raw(Item: M.Example; Path: string; Primary: bool): M.Source;
 begin

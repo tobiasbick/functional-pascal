@@ -16,7 +16,7 @@ public sealed record FormatResult(string? Text, IReadOnlyList<CompilerDiagnostic
 /// <summary>Formats one complete source without references, binding, or code generation.</summary>
 public static class FpasFormatter
 {
-    /// <summary>Formats a source and verifies that tokens, comments, and documentation are preserved.</summary>
+    /// <summary>Formats a source, sorts its imports, and verifies token and comment preservation.</summary>
     /// <param name="input">The source to format.</param>
     /// <param name="cancellationToken">Cancels formatting with an <see cref="OperationCanceledException"/>.</param>
     /// <returns>The formatted text, or the diagnostics that prevented formatting.</returns>
@@ -27,16 +27,62 @@ public static class FpasFormatter
         var source = new SourceText(input.Path, input.Text, cancellationToken);
         try
         {
-            var comments = new List<SourceComment>();
-            var tokens = new Lexer(source, comments).ReadTokens();
-            var layout = new SyntaxLayout(tokens.Count);
-            new Parser(source, tokens, layout).ParseCompilationUnit();
-            source.Diagnostics.ThrowIfErrors();
+            var (tokens, comments, layout) = Parse(source);
+            var ordered = OrderImports(source, tokens, comments, layout.Imports);
+            if (ordered != source.Text)
+            {
+                source = new SourceText(source.Path, ordered, cancellationToken);
+                var parsed = Parse(source);
+                if (parsed.Tokens.Count != tokens.Count || parsed.Comments.Count != comments.Count)
+                    throw PreservationFailure(source.Path);
+                (tokens, comments, layout) = parsed;
+            }
             var output = new SourceFormatter(source, tokens, comments, layout).Format();
             Validate(source, tokens, comments, output, layout.CompilationEnd);
             return new(output, []);
         }
         catch (CompilationFailure failure) { return new(null, failure.Diagnostics); }
+    }
+
+    private static (IReadOnlyList<Token> Tokens, List<SourceComment> Comments, SyntaxLayout Layout) Parse(SourceText source)
+    {
+        var comments = new List<SourceComment>();
+        var tokens = new Lexer(source, comments).ReadTokens();
+        var layout = new SyntaxLayout(tokens.Count);
+        new Parser(source, tokens, layout).ParseCompilationUnit();
+        source.Diagnostics.ThrowIfErrors();
+        return (tokens, comments, layout);
+    }
+
+    private static string OrderImports(SourceText source, IReadOnlyList<Token> tokens, IReadOnlyList<SourceComment> comments,
+        IReadOnlyList<SyntaxImport> imports)
+    {
+        if (imports.Count < 2) return source.Text;
+        var ordered = imports.OrderByDescending(import => import.IsStandard)
+            .ThenBy(import => import.Name, StringComparer.Ordinal).ToArray();
+        if (imports.SequenceEqual(ordered)) return source.Text;
+
+        var trivia = new SourceTrivia(source, tokens, comments);
+        var spans = imports.ToDictionary(import => import, ImportSpan);
+        var block = string.Join("\n", ordered.Select(import => source.Text[spans[import].Start..spans[import].End]));
+        return source.Text[..spans[imports[0]].Start].TrimEnd() + "\n\n" + block + "\n\n" +
+            source.Text[spans[imports[^1]].End..].TrimStart();
+
+        (int Start, int End) ImportSpan(SyntaxImport import)
+        {
+            source.CheckCancellation();
+            var start = tokens[import.Keyword].Position;
+            foreach (var comment in trivia.Comments[import.Keyword].Reverse())
+            {
+                if (!comment.Standalone || import == imports[0] && trivia.Newlines(comment.End, start) > 1) break;
+                start = comment.Start;
+            }
+            var semicolon = tokens[import.Semicolon];
+            var end = semicolon.Position + semicolon.Length;
+            if (trivia.Comments[import.Semicolon + 1].FirstOrDefault() is { Standalone: false } trailing)
+                end = trailing.End;
+            return (start, end);
+        }
     }
 
     private static void Validate(SourceText original, IReadOnlyList<Token> before, IReadOnlyList<SourceComment> comments,

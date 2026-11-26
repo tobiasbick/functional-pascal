@@ -10,9 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.AppChrome.MenuBar;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.MenuBars as W,
-  Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Desktop.MenuBars as W;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // Shows a File menu and its commands.
 // ## Returns

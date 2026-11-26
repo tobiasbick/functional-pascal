@@ -2,11 +2,17 @@
 
 unit TuiGallery.ToolSamples;
 
-uses
-  Gallery.Shared.BuildLog as BuildLog, Gallery.Shared.SourceTree as SourceTree, Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Styles as Style,
-  Fpas.Ui.Widgets.Developer.LogConsoles as Log, System as Sys, System.Linq.Enumerable as Linq;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as Log;
+uses Gallery.Shared.BuildLog as BuildLog;
+uses Gallery.Shared.SourceTree as SourceTree;
+uses Gallery.Shared.Strings as Strings;
+uses System as Sys;
+uses System.Linq.Enumerable as Linq;
 
 // State of the gallery's tree, command palette and build log.
 public type State = record

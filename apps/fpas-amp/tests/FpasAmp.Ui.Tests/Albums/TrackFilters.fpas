@@ -2,12 +2,17 @@
 
 unit FpasAmp.UiTests.TrackFilters;
 
-uses
-  Fpas.Media.Tags.AudioFiles as MediaTags,
-  FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Library.Metadata.Model as Tracks,
-  FpasAmp.Ui.Albums.Music.Update as Edit, FpasAmp.Ui.Music.LibraryPage as Songs,
-  FpasAmp.Library.Albums.Model as Albums,
-  System as Sys, System.Collections.Immutable as I, System.Threading as T, Xunit as X;
+uses Fpas.Media.Tags.AudioFiles as MediaTags;
+uses FpasAmp.Library.Albums.Model as Albums;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Music.Update as Edit;
+uses FpasAmp.Ui.Music.LibraryPage as Songs;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.Threading as T;
+uses Xunit as X;
 
 function Track(Genres: string): Tracks.Entry;
 begin

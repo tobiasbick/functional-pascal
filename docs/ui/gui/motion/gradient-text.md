@@ -10,7 +10,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.GradientText;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Motion.GradientTexts as W, Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Motion.GradientTexts as W;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
 
 // Draws a release heading.
 // ## Parameters

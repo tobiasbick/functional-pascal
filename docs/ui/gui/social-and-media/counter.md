@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.Counter;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.Counters as W, Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Feedback.Counters as W;
 
 // Shows current revenue.
 // ## Parameters

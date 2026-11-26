@@ -2,11 +2,12 @@
 
 unit GuiDocCaptures.Rendering.CropImages;
 
-uses
-  PhotoSauce.MagicScaler as Magic,
-  PhotoSauce.MagicScaler.Transforms as Transforms,
-  PhotoSauce.NativeCodecs.Libpng as Png,
-  System as Sys, System.Drawing as Drawing, System.IO as IO;
+uses PhotoSauce.MagicScaler as Magic;
+uses PhotoSauce.MagicScaler.Transforms as Transforms;
+uses PhotoSauce.NativeCodecs.Libpng as Png;
+uses System as Sys;
+uses System.Drawing as Drawing;
+uses System.IO as IO;
 
 function Bounds(Path: string; Width: int; Height: int): Drawing.Rectangle;
 begin

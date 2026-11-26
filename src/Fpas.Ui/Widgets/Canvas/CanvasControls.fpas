@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Canvas.CanvasControls;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Editors.NodeEditors as N;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
 
 // Bounds in canvas coordinates for the fit action.
 public type Bounds = record

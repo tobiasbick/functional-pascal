@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.AppChrome.DocumentTabs;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.DocumentTabs as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Desktop.DocumentTabs as W;
 
 // Shows the current documents.
 // ## Parameters

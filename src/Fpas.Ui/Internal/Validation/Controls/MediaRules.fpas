@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Internal.Validation.Controls.MediaRules;
 
-uses Fpas.Ui.Widgets.Media.MediaImages as M, Fpas.Ui.Internal.Validation.Core.Checks as R, System as Sys;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Widgets.Media.MediaImages as M;
+uses System as Sys;
 
 procedure Rgba(Width: int; Height: int; Pixels: array of byte; At: string);
 begin

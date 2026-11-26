@@ -11,7 +11,8 @@ Available in **GUI** and [**TUI**](../../tui/files/file-picker.md).
 ```pascal
 unit Docs.Ui.Files.FilePicker;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Files.FilePickers as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Files.FilePickers as W;
 
 // Opens the Save as picker over an existing view.
 // ## Parameters

@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.CopyButton;
 
-uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as C, System as Sys;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses System as Sys;
 
 // Draws a copy button and proposes its message after a clipboard request.
 //

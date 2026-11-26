@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Motion.GradientTexts;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Motion.Motion as Motion;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 
 // Native options.
 public type Options = record

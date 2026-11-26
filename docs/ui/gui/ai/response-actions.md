@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Ai.ResponseActions;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.ResponseActions as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.ResponseActions as W;
 
 // Adds actions to an answer.
 // ## Parameters

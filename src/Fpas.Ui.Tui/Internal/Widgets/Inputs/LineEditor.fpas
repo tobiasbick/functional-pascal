@@ -2,11 +2,14 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor;
 
-uses
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText as TextEdit, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.TerminalExtensions.Input as K,
-  Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
-  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Globalization as Global,
-  System.Text as Text;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText as TextEdit;
+uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+uses System as Sys;
+uses System.Globalization as Global;
+uses System.Text as Text;
 
 // Model-owned input and callbacks for one terminal field.
 // ## Type parameters

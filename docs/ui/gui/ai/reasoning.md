@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Ai.Reasoning;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Ai.Reasonings as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Ai.Reasonings as W;
 
 // Shows the current reasoning summary.
 // ## Parameters

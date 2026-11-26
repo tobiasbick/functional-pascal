@@ -9,7 +9,8 @@ Use a card to place related content on a native surface. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Feedback.Card;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Containers.Cards as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Containers.Cards as W;
 
 // Builds the card example.
 // ## Parameters

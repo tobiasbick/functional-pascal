@@ -9,8 +9,8 @@ Use a dialog for a focused task that blocks input to the underlying view. Availa
 ```pascal
 unit Docs.Ui.Overlays.Dialog;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Overlays.Dialogs as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as W;
 
 // Builds the dialog example.
 // ## Parameters

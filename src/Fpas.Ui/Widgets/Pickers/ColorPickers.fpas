@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Pickers.ColorPickers;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 
 // Gets the native saturation and value surface's identity.
 // ## Parameters

@@ -11,8 +11,9 @@ shows the selected items as chips and the popup shows checkboxes. Available in
 ```pascal
 unit Docs.Ui.Pickers.MultiSelect;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.MultiSelects as W,
-  Fpas.Ui.Widgets.Inputs.Selects as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.MultiSelects as W;
+uses Fpas.Ui.Widgets.Inputs.Selects as S;
 
 // Builds the multi-select example.
 // ## Parameters

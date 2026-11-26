@@ -2,28 +2,27 @@
 
 unit GuiGallery.App.Sidebar;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Graphics as G,
-  Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as Buttons,
-  Fpas.Ui.Widgets.Actions.SegmentedControls as Segments,
-  Fpas.Ui.Widgets.Canvas.Canvases as Canvases,
-  Fpas.Ui.Widgets.Containers.Stacks as Stacks,
-  Fpas.Ui.Widgets.Feedback.Badges as Badges,
-  Fpas.Ui.Widgets.Motion.Motion as Motion,
-  Fpas.Ui.Widgets.Navigation.Navigation as N,
-  Fpas.Ui.Widgets.Overlays.Tooltips as Tips,
-  Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  GuiGallery.App.State as State,
-  GuiGallery.App.Update as Update,
-  GuiGallery.Shared.Sections as Layout,
-  GuiGallery.Shared.State as Shared,
-  System as Sys,
-  System.Collections.Generic as Collections;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Actions.SegmentedControls as Segments;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvases;
+uses Fpas.Ui.Widgets.Containers.Stacks as Stacks;
+uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
+uses Fpas.Ui.Widgets.Motion.Motion as Motion;
+uses Fpas.Ui.Widgets.Navigation.Navigation as N;
+uses Fpas.Ui.Widgets.Overlays.Tooltips as Tips;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as Update;
+uses GuiGallery.Shared.Sections as Layout;
+uses GuiGallery.Shared.State as Shared;
+uses System as Sys;
+uses System.Collections.Generic as Collections;
 
 // The gallery brand used by the window, compact bar and drawer.
 public const Title: string := Strings.Get('Text.GalleryTitle');

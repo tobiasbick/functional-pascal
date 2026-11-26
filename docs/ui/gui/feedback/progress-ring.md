@@ -9,7 +9,8 @@ Use a progress ring for a percentage with a short label inside the indicator. Av
 ```pascal
 unit Docs.Ui.Feedback.ProgressRing;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.ProgressRings as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Feedback.ProgressRings as W;
 
 // Builds the progress ring example.
 // ## Parameters

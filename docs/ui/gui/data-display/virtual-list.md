@@ -9,8 +9,9 @@ Use a virtual list to show a large collection with rows of equal height. The gal
 ```pascal
 unit Docs.Ui.DataDisplay.VirtualList;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.VirtualLists as W,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Collections.VirtualLists as W;
 
 // Builds the virtual list example.
 // ## Parameters

@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Theming.ThemeSwitchers;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses System as Sys;
 
 // Model-owned appearance choices, in CUI's native order.
 public type Selection = enum: byte

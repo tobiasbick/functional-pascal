@@ -2,15 +2,14 @@
 
 unit GuiGallery.Pages.Overlays.Widgets.Toast;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Overlays.State as State,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Overlays.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
 
 // Builds the four toast triggers from CUI's Overlays page.
 //

@@ -3,9 +3,11 @@
 // A provider owns one gate for the lifetime of the application.
 unit FpasAmp.Ui.Providers.RequestPacing;
 
-uses
-  System as Sys, System.Net.Http as H, System.Net.Http.Headers as Headers,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses System as Sys;
+uses System.Net.Http as H;
+uses System.Net.Http.Headers as Headers;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // Returns the delay in milliseconds requested by Reply, or zero when no delay remains.
 public function RetryAfter(Reply: H.HttpResponseMessage): long;

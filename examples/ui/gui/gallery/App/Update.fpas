@@ -2,74 +2,84 @@
 
 unit GuiGallery.App.Update;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Desktop.State as Desktop, GuiGallery.Pages.Desktop.Update as DesktopUpdate,
-  GuiGallery.Pages.EditingTools.State as Editing, GuiGallery.Pages.EditingTools.Update as EditUpdate,
-  Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Widgets.Developer.Terminals as TerminalWidget,
-  GuiGallery.Pages.Code.State as CodePage, GuiGallery.Pages.Code.Update as CodeUpdate,
-  GuiGallery.Pages.Ai.State as Ai, GuiGallery.Pages.Ai.Update as AiUpdate,
-  GuiGallery.Pages.Voice.State as Voice, GuiGallery.Pages.Voice.Update as VoiceUpdate,
-  GuiGallery.Pages.Feedback.State as Feedback, GuiGallery.Pages.Feedback.Update as FeedbackUpdate,
-  GuiGallery.Pages.Social.State as Social, GuiGallery.Pages.Social.Update as SocialUpdate,
-  GuiGallery.Pages.Instruments.State as Instruments,
-  GuiGallery.Pages.Motion.State as Motion,
-  GuiGallery.Pages.Motion.Update as MotionUpdate,
-  GuiGallery.Pages.Motion.Clock as MotionClock,
-  GuiGallery.Pages.Creative.State as Creative,
-  GuiGallery.Pages.Creative.Update as CreativeUpdate,
-  GuiGallery.Pages.Canvas.State as Canvas, GuiGallery.Pages.Canvas.Update as CanvasUpdate,
-  GuiGallery.Pages.Files.State as Files,
-  GuiGallery.Pages.Developer.State as Developer, GuiGallery.Pages.Developer.Update as DeveloperUpdate,
-  GuiGallery.Pages.MoreDeveloper.State as MoreDeveloper, GuiGallery.Pages.MoreDeveloper.Update as MoreDeveloperUpdate,
-  GuiGallery.Pages.Files.Update as FileUpdate,
-  GuiGallery.Pages.Planning.State as Planning,
-  GuiGallery.Pages.Planning.Update as PlanningUpdate,
-  GuiGallery.Pages.Instruments.Update as InstrumentsUpdate,
-  GuiGallery.Pages.DataGrid.State as Grid,
-  GuiGallery.Pages.DataGrid.Update as GridUpdate,
-  GuiGallery.Pages.MoreCharts.Data as MoreChartsData,
-  GuiGallery.Pages.MoreCharts.State as MoreCharts,
-  GuiGallery.Pages.MoreCharts.Update as MoreChartsUpdate,
-  GuiGallery.Pages.Charts.State as Charts,
-  GuiGallery.Pages.Charts.Update as ChartsUpdate,
-  GuiGallery.Pages.Overview.State as Overview,
-  GuiGallery.Pages.Overview.Update as OverviewUpdate,
-  GuiGallery.Pages.Buttons.State as Buttons,
-  GuiGallery.Pages.Inputs.State as Inputs,
-  GuiGallery.Pages.Selection.State as Selection,
-  GuiGallery.Pages.Navigation.State as Navigation,
-  GuiGallery.Pages.Lists.State as Lists,
-  GuiGallery.Pages.Overlays.State as Overlays,
-  GuiGallery.Pages.Actions.State as Actions,
-  GuiGallery.Pages.Capture.State as Capture,
-  GuiGallery.Pages.Capture.Update as CaptureUpdate,
-  GuiGallery.Pages.Audio.State as Audio,
-  GuiGallery.Pages.Audio.Update as AudioUpdate,
-  GuiGallery.Pages.Audio.Clock as AudioClock,
-  System as Sys,
-  GuiGallery.Pages.Pickers.State as Pickers,
-  GuiGallery.Pages.Pickers.Update as PickersUpdate,
-  GuiGallery.Pages.SmartInputs.State as SmartInputs,
-  GuiGallery.Pages.Disclosure.State as Disclosure,
-  GuiGallery.Pages.Buttons.Update as ButtonsUpdate,
-  GuiGallery.Pages.Inputs.Update as InputsUpdate,
-  GuiGallery.Pages.Selection.Update as SelectionUpdate,
-  GuiGallery.Pages.Navigation.Update as NavigationUpdate,
-  GuiGallery.Pages.Lists.Update as ListsUpdate,
-  GuiGallery.Pages.Overlays.Update as OverlaysUpdate,
-  GuiGallery.Pages.Actions.Update as ActionsUpdate,
-  GuiGallery.Pages.SmartInputs.Update as SmartInputsUpdate,
-  GuiGallery.Pages.Disclosure.Clock as DisclosureClock,
-  System.Collections.Generic as Collections,
-  GuiGallery.Pages.Disclosure.Update as DisclosureUpdate,
-  GuiGallery.App.State as G,
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Shared.Update as DemoUpdate,
-  Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Mvu.Composition as C,
-  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
-  Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Composition as C;
+uses Fpas.Ui.Widgets.Developer.Terminals as TerminalWidget;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.App.State as G;
+uses GuiGallery.Pages.Actions.State as Actions;
+uses GuiGallery.Pages.Actions.Update as ActionsUpdate;
+uses GuiGallery.Pages.Ai.State as Ai;
+uses GuiGallery.Pages.Ai.Update as AiUpdate;
+uses GuiGallery.Pages.Audio.Clock as AudioClock;
+uses GuiGallery.Pages.Audio.State as Audio;
+uses GuiGallery.Pages.Audio.Update as AudioUpdate;
+uses GuiGallery.Pages.Buttons.State as Buttons;
+uses GuiGallery.Pages.Buttons.Update as ButtonsUpdate;
+uses GuiGallery.Pages.Canvas.State as Canvas;
+uses GuiGallery.Pages.Canvas.Update as CanvasUpdate;
+uses GuiGallery.Pages.Capture.State as Capture;
+uses GuiGallery.Pages.Capture.Update as CaptureUpdate;
+uses GuiGallery.Pages.Charts.State as Charts;
+uses GuiGallery.Pages.Charts.Update as ChartsUpdate;
+uses GuiGallery.Pages.Code.State as CodePage;
+uses GuiGallery.Pages.Code.Update as CodeUpdate;
+uses GuiGallery.Pages.Creative.State as Creative;
+uses GuiGallery.Pages.Creative.Update as CreativeUpdate;
+uses GuiGallery.Pages.DataGrid.State as Grid;
+uses GuiGallery.Pages.DataGrid.Update as GridUpdate;
+uses GuiGallery.Pages.Desktop.State as Desktop;
+uses GuiGallery.Pages.Desktop.Update as DesktopUpdate;
+uses GuiGallery.Pages.Developer.State as Developer;
+uses GuiGallery.Pages.Developer.Update as DeveloperUpdate;
+uses GuiGallery.Pages.Disclosure.Clock as DisclosureClock;
+uses GuiGallery.Pages.Disclosure.State as Disclosure;
+uses GuiGallery.Pages.Disclosure.Update as DisclosureUpdate;
+uses GuiGallery.Pages.EditingTools.State as Editing;
+uses GuiGallery.Pages.EditingTools.Update as EditUpdate;
+uses GuiGallery.Pages.Feedback.State as Feedback;
+uses GuiGallery.Pages.Feedback.Update as FeedbackUpdate;
+uses GuiGallery.Pages.Files.State as Files;
+uses GuiGallery.Pages.Files.Update as FileUpdate;
+uses GuiGallery.Pages.Inputs.State as Inputs;
+uses GuiGallery.Pages.Inputs.Update as InputsUpdate;
+uses GuiGallery.Pages.Instruments.State as Instruments;
+uses GuiGallery.Pages.Instruments.Update as InstrumentsUpdate;
+uses GuiGallery.Pages.Lists.State as Lists;
+uses GuiGallery.Pages.Lists.Update as ListsUpdate;
+uses GuiGallery.Pages.MoreCharts.Data as MoreChartsData;
+uses GuiGallery.Pages.MoreCharts.State as MoreCharts;
+uses GuiGallery.Pages.MoreCharts.Update as MoreChartsUpdate;
+uses GuiGallery.Pages.MoreDeveloper.State as MoreDeveloper;
+uses GuiGallery.Pages.MoreDeveloper.Update as MoreDeveloperUpdate;
+uses GuiGallery.Pages.Motion.Clock as MotionClock;
+uses GuiGallery.Pages.Motion.State as Motion;
+uses GuiGallery.Pages.Motion.Update as MotionUpdate;
+uses GuiGallery.Pages.Navigation.State as Navigation;
+uses GuiGallery.Pages.Navigation.Update as NavigationUpdate;
+uses GuiGallery.Pages.Overlays.State as Overlays;
+uses GuiGallery.Pages.Overlays.Update as OverlaysUpdate;
+uses GuiGallery.Pages.Overview.State as Overview;
+uses GuiGallery.Pages.Overview.Update as OverviewUpdate;
+uses GuiGallery.Pages.Pickers.State as Pickers;
+uses GuiGallery.Pages.Pickers.Update as PickersUpdate;
+uses GuiGallery.Pages.Planning.State as Planning;
+uses GuiGallery.Pages.Planning.Update as PlanningUpdate;
+uses GuiGallery.Pages.Selection.State as Selection;
+uses GuiGallery.Pages.Selection.Update as SelectionUpdate;
+uses GuiGallery.Pages.SmartInputs.State as SmartInputs;
+uses GuiGallery.Pages.SmartInputs.Update as SmartInputsUpdate;
+uses GuiGallery.Pages.Social.State as Social;
+uses GuiGallery.Pages.Social.Update as SocialUpdate;
+uses GuiGallery.Pages.Voice.State as Voice;
+uses GuiGallery.Pages.Voice.Update as VoiceUpdate;
+uses GuiGallery.Shared.State as Demo;
+uses GuiGallery.Shared.Update as DemoUpdate;
+uses System as Sys;
+uses System.Collections.Generic as Collections;
 
 // Resolves the application theme from its shared appearance state.
 // ## Parameters

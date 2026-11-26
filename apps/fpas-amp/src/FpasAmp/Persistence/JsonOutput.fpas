@@ -2,7 +2,9 @@
 
 unit FpasAmp.Persistence.JsonOutput;
 
-uses System.IO as IO, System.Text as Text, System.Text.Json as J;
+uses System.IO as IO;
+uses System.Text as Text;
+uses System.Text.Json as J;
 
 // Writes a JSON value using Encode and returns its UTF-8 bytes.
 public function Bytes(Encode: procedure(J.Utf8JsonWriter); Indented: bool := false): array of byte;

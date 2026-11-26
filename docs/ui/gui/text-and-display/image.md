@@ -10,9 +10,10 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.TextAndDisplay.Image;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Media.Images as W, Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Media.Images as W;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 
 // Displays a rounded picture.
 // ## Parameters

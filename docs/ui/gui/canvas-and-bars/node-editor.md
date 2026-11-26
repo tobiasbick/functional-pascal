@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CanvasAndBars.NodeEditor;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Editors.NodeEditors as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as W;
 
 // Shows a model-owned graph.
 // ## Parameters

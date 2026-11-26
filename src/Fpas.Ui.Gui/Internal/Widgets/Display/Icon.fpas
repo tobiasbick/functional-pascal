@@ -2,8 +2,9 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Display.Icon;
 
-uses
-  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Values as P, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Values as P;
 
 function OptionalColor(Color: G.Color?): uint;
 begin

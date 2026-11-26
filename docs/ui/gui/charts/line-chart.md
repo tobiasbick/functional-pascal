@@ -13,8 +13,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Charts.LineChart;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.LineCharts as W,
-  Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Charts.LineCharts as W;
 
 // Builds the line chart example.
 // ## Returns

@@ -3,22 +3,36 @@
 // Opens an exact release through native input and returns to the scrolled album grid.
 unit FpasAmp.UiTests.NativeAlbumMusic;
 
-uses
-  FpasAmp.Ui.Fingerprints as Fp,
-  Fpas.Media.Tags.AudioFiles as MediaTags,
-  FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Media,
-  FpasAmp.Ui.Player.Model as Player, FpasAmp.Persistence.PlayerState as Bookmark,
-  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Fixtures,
-  FpasAmp.Library.Tests.MetadataSupport as Sources, FpasAmp.Library.Inventory.Monitoring as Library,
-  FpasAmp.Library.Metadata.Model as Metadata,
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller,
-  FpasAmp.Ui.Settings.Model as Settings, FpasAmp.Ui.Navigation.Model as Nav,
-  FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Shell as Shell,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as A,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Inputs.Selects as Selects, ATL as Audio,
-  System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+uses ATL as Audio;
+uses Fpas.Media.Audio as Media;
+uses Fpas.Media.Tags.AudioFiles as MediaTags;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
+uses FpasAmp.Library.Inventory.Monitoring as Library;
+uses FpasAmp.Library.Metadata.Model as Metadata;
+uses FpasAmp.Library.Tests.AlbumSupport as Fixtures;
+uses FpasAmp.Library.Tests.MetadataSupport as Sources;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Persistence.PlayerState as Bookmark;
+uses FpasAmp.Ui.Albums.Model as Albums;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses FpasAmp.Ui.App.Controller as Controller;
+uses FpasAmp.Ui.App.Model as App;
+uses FpasAmp.Ui.Fingerprints as Fp;
+uses FpasAmp.Ui.Navigation.Model as Nav;
+uses FpasAmp.Ui.Player.Model as Player;
+uses FpasAmp.Ui.Player.Playback as Playback;
+uses FpasAmp.Ui.Settings.Model as Settings;
+uses FpasAmp.Ui.Shell as Shell;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
+uses Xunit as X;
 
 function Control(Session: Gui.Session<App.Msg>; Id: string; Key: string := ''): Gui.Control;
 begin

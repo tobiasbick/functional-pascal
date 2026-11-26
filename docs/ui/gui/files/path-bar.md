@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Files.PathBar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.PathBars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.PathBars as W;
 
 // Shows a path with alternate folders under project.
 // ## Returns

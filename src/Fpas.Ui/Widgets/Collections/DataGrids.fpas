@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Widgets.Collections.DataGrids;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Collections.Tables as T, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses System as Sys;
 
 // A column in a native data grid.
 public type Column = record

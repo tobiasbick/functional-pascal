@@ -9,8 +9,9 @@ Use a glyph for a compact, familiar action. Give it a tooltip that names the act
 ```pascal
 unit Docs.Ui.Actions.IconButton;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.IconButtons as B,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.IconButtons as B;
+uses System as Sys;
 
 // Builds the example view.
 // ## Returns

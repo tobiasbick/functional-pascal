@@ -2,10 +2,13 @@
 
 unit GuiGallery.App.Palette;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.App.State as G, GuiGallery.Pages.Overlays.State as O, GuiGallery.Shared.State as S,
-  Fpas.Ui.Widgets.Overlays.CommandPalettes as P, Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as P;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.App.State as G;
+uses GuiGallery.Pages.Overlays.State as O;
+uses GuiGallery.Shared.State as S;
+uses System as Sys;
 
 function Command(Title: string; Message: G.Msg; Icon: int; Group: string; Shortcut: string := ''): P.Command<G.Msg>;
 begin

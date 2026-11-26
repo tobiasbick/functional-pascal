@@ -3,14 +3,20 @@
 // Coordinates the two explicit save destinations for an indexed track.
 unit FpasAmp.Library.TagEditing.Access;
 
-uses
-  FpasAmp.Library.Serialization.CatalogueJson as Codec,
-  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Persistence.Store as Store,
-  FpasAmp.Library.TagEditing.Fields as F, FpasAmp.Library.TagEditing.Files as Files,
-  FpasAmp.Library.TagEditing.Overrides as Overrides, Fpas.Media.Tags.AudioFiles as Media,
-  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db, System as Sys,
-  System.Collections.Generic as C, System.Collections.Immutable as I, System.IO as IO,
-  System.Threading as T;
+uses Fpas.Media.Tags.AudioFiles as Media;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Metadata.Persistence.Store as Store;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Serialization.CatalogueJson as Codec;
+uses FpasAmp.Library.TagEditing.Fields as F;
+uses FpasAmp.Library.TagEditing.Files as Files;
+uses FpasAmp.Library.TagEditing.Overrides as Overrides;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Threading as T;
 
 function Attached(Database: string; Users: string): Db.SqliteConnection;
 begin

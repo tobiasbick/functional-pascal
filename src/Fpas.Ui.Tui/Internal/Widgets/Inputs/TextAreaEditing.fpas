@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing;
 
-uses
-  Fpas.Ui.Widgets.Inputs.TextAreas as A, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText as TextEdit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaRows as Lines,
-  System as Sys, System.Text as Text;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText as TextEdit;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaRows as Lines;
+uses Fpas.Ui.Widgets.Inputs.TextAreas as A;
+uses System as Sys;
+uses System.Text as Text;
 
 // Model bindings for a multiline field.
 // ## Type parameters

@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Internal.Navigation.PaginationPages;
 
-uses System as Sys, System.Globalization as Culture;
+uses System as Sys;
+uses System.Globalization as Culture;
 
 // Finds the directly selectable pages in the expanded pager.
 // ## Parameters

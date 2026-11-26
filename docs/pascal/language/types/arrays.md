@@ -52,7 +52,8 @@ snapshot semantics. Ordering and mutation during enumeration follow each API.
 ```pascal
 program Collections;
 
-uses System.Console as Console, System.Collections.Generic as Generic;
+uses System.Collections.Generic as Generic;
+uses System.Console as Console;
 
 begin
   const Values: array of int := [1, 2, 3];

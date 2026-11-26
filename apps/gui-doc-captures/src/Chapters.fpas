@@ -2,7 +2,8 @@
 
 unit GuiDocCaptures.Chapters;
 
-uses GuiGallery.App.State as Gallery, System as Sys;
+uses GuiGallery.App.State as Gallery;
+uses System as Sys;
 
 // Command-line selection of a capture output and a handbook chapter.
 public type Request = record

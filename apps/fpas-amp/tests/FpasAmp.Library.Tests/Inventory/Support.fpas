@@ -3,10 +3,13 @@
 // Temporary filesystem and bounded snapshot helpers for the focused library tests.
 unit FpasAmp.Library.Tests.Support;
 
-uses
-  FpasAmp.Library.Sources as S, FpasAmp.Library.Inventory.Model as M,
-  FpasAmp.Library.Inventory.Monitoring as Monitor, System as Sys, System.IO as IO,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+uses FpasAmp.Library.Inventory.Model as M;
+uses FpasAmp.Library.Inventory.Monitoring as Monitor;
+uses FpasAmp.Library.Sources as S;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // Isolated directory removed after its monitoring session has stopped.
 public type Folder = record implements Sys.IDisposable

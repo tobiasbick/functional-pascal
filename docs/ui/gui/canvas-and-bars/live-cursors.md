@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CanvasAndBars.LiveCursors;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Canvas.LiveCursors as W, Fpas.Ui.Widgets.Editors.NodeEditors as N;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Canvas.LiveCursors as W;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
 
 // Overlays collaborator positions on the current canvas.
 // ## Parameters

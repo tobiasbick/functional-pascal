@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Flexible;
 
-uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, System as Sys;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses System as Sys;
 
 // Resolves an explicit terminal distance.
 //

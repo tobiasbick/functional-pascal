@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Charts.Sparklines;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // Options for a compact graphical or terminal plot.
 public type Options = record

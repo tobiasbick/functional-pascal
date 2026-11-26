@@ -2,10 +2,12 @@
 
 unit Fpas.Ui.Tui.Headless;
 
-uses
-  Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Hosting.Session as SessionHost,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Widgets.Theming.Themes as Th,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as Ui;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Internal.Hosting.Session as SessionHost;
+uses Fpas.Ui.Widgets.Theming.Themes as Th;
 
 // Publishes the initial frame and returns a manually stepped session.
 //

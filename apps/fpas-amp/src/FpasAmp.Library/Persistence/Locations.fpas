@@ -3,10 +3,14 @@
 // Synchronizes source identity context without duplicating user settings.
 unit FpasAmp.Library.Persistence.Locations;
 
-uses
-  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
-  FpasAmp.Library.Sources as S, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.IO as IO, System.Collections.Generic as C, System.Threading as T;
+uses FpasAmp.Library.Persistence.Schema as Schema;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Sources as S;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+uses System.Threading as T;
 
 function Filter(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Source: S.MusicSource; Current: function(): bool; Cancellation: T.CancellationToken): bool;
 begin

@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Feedback.Checklists;
 
-uses Fpas.Ui.Elements as E, System as Sys, System.Globalization as Culture;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
+uses System.Globalization as Culture;
 
 // One model-owned onboarding step.
 public type Step = record

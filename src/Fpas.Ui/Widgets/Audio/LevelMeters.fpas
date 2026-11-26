@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Audio.LevelMeters;
 
-uses Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
 
 // Geometry, scale and ballistics for a native audio level meter.
 public type Options = record

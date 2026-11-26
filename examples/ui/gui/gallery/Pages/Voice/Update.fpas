@@ -2,11 +2,17 @@
 
 unit GuiGallery.Pages.Voice.Update;
 
-uses
-  GuiGallery.Pages.Voice.State as S, GuiGallery.Pages.Voice.Script as Script, Fpas.Ui.Widgets.Audio.Voice as V,
-  Fpas.Ui.Widgets.Audio.VoiceNotes as Notes, Fpas.Ui.Widgets.Audio.VoiceSessions as Calls, Fpas.Ui.Widgets.Ai.Composers as Editor,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Cui as Cui,
-  System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Ai.Composers as Editor;
+uses Fpas.Ui.Widgets.Audio.Voice as V;
+uses Fpas.Ui.Widgets.Audio.VoiceNotes as Notes;
+uses Fpas.Ui.Widgets.Audio.VoiceSessions as Calls;
+uses GuiGallery.Pages.Voice.Script as Script;
+uses GuiGallery.Pages.Voice.State as S;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 function Tick(Model: S.Model; Seconds: float): S.Model;
 begin

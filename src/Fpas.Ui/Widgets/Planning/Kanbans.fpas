@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Planning.Kanbans;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Colors;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as Colors;
 
 // One card, with native drag and application-defined contents.
 // ## Type parameters

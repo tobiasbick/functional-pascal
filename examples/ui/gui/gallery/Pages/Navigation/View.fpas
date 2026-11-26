@@ -2,16 +2,15 @@
 
 unit GuiGallery.Pages.Navigation.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Navigation.State as State,
-  GuiGallery.Shared.Sections as G,
-  GuiGallery.Pages.Navigation.Widgets.Tabs as Tabs,
-  GuiGallery.Pages.Navigation.Widgets.Breadcrumb as Breadcrumb,
-  GuiGallery.Pages.Navigation.Widgets.Pagination as Pagination,
-  GuiGallery.Pages.Navigation.Widgets.Stepper as Stepper,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Navigation.State as State;
+uses GuiGallery.Pages.Navigation.Widgets.Breadcrumb as Breadcrumb;
+uses GuiGallery.Pages.Navigation.Widgets.Pagination as Pagination;
+uses GuiGallery.Pages.Navigation.Widgets.Stepper as Stepper;
+uses GuiGallery.Pages.Navigation.Widgets.Tabs as Tabs;
+uses GuiGallery.Shared.Sections as G;
 
 // Builds the accepted controls in the original Navigation page order.
 //

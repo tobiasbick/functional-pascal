@@ -35,7 +35,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
-            uses Demo as D, System.Collections.Generic as Collections;
+            uses Demo as D; uses System.Collections.Generic as Collections;
             public type Api<T> = record implements D.IApi<T>
               public Name: string;
               public Value: T;
@@ -109,7 +109,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), $$"""
             unit Demo.Bridge;
-            uses Demo as D, System.Collections.Generic as Collections;
+            uses Demo as D; uses System.Collections.Generic as Collections;
             public type Invalid = record implements D.{{contract}} {{members}} end record;
             end unit;
             """);

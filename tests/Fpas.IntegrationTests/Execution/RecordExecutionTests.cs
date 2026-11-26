@@ -7,7 +7,7 @@ public sealed class RecordExecutionTests
     [Fact]
     public Task Records_have_value_equality_hashing_immutable_updates_and_instance_closures() => ProgramExecution.Output("""
         program Records;
-        uses System.Console as Console, System.Collections.Generic as Collections, System.Double as Real;
+        uses System.Console as Console; uses System.Collections.Generic as Collections; uses System.Double as Real;
         type Point = record
           public X: double;
           public Y: double := 0.0;

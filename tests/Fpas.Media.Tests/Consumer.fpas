@@ -3,10 +3,15 @@
 // Uses the public media projects from FPAS without an application or UI reference.
 unit Fpas.Media.Tests.Consumer;
 
-uses
-  Fpas.Media.Tags.AudioFiles as Tags, Fpas.Media.Tags.Pictures as Pictures,
-  Fpas.Media.Tags.Playlists as Lists, Fpas.Media.Images as Images, Fpas.Media.Audio as Audio,
-  System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Media.Images as Images;
+uses Fpas.Media.Tags.AudioFiles as Tags;
+uses Fpas.Media.Tags.Pictures as Pictures;
+uses Fpas.Media.Tags.Playlists as Lists;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
+uses Xunit as X;
 
 // Checks the FPAS-facing boundary with actual files, codecs and immutable record fields.
 public type ConsumerTests = record

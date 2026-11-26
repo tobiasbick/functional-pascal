@@ -2,12 +2,17 @@
 
 unit GuiGallery.Pages.Lists.Widgets.TreeAndList;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Lists.State as State, GuiGallery.Shared.Sections as G,
-  Gallery.Shared.SourceTree as SourceTree, Gallery.Shared.ListEntries as List,
-  Fpas.Ui.Widgets.Collections.ListItems as I, Fpas.Ui.Widgets.Containers.Grids as Grid,
-  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Collections.ListItems as I;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Containers.Grids as Grid;
+uses Gallery.Shared.ListEntries as List;
+uses Gallery.Shared.SourceTree as SourceTree;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Lists.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
 
 // Builds the original tree and list examples side by side when space allows.
 // ## Parameters

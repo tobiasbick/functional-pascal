@@ -58,7 +58,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
-            uses Demo.InferenceLibrary as L, Demo.InferenceApi as Api, Demo as D;
+            uses Demo.InferenceLibrary as L; uses Demo.InferenceApi as Api; uses Demo as D;
             public function Run(): array of string;
             begin
               const Tree: L.Tree<int> := L.Tree.Branch(L.Tree.Empty, L.Tree.Leaf(L.Identity(42)));
@@ -91,7 +91,7 @@ public sealed partial class MsBuildTests
         Assert.Equal("Inference matches C#" + Environment.NewLine, run.Output);
         foreach (var (expression, code) in new[] { ("Api.Ref(1)", "FP3018"), ("Api.Ambiguous(1)", "FP3003"), ("Api.View(new D.Dual())", "FP3026"), ("L.RefChoice.Value(1)", "FP3018"), ("D.Collision.Make(1)", "FP4002") })
         {
-            File.WriteAllText(project.File("Consumer/Invalid.fpas"), "unit Demo.Invalid; uses Demo.InferenceApi as Api, Demo.InferenceLibrary as L, Demo as D; public procedure Test(); begin discard " + expression + "; end procedure; end unit;");
+            File.WriteAllText(project.File("Consumer/Invalid.fpas"), "unit Demo.Invalid; uses Demo.InferenceApi as Api; uses Demo.InferenceLibrary as L; uses Demo as D; public procedure Test(); begin discard " + expression + "; end procedure; end unit;");
             var invalid = await sdk.Run(project, "build", "Consumer/Consumer.fpasproj", "--no-restore");
             Assert.NotEqual(0, invalid.ExitCode); Assert.Contains(code, invalid.Output + invalid.Error);
         }

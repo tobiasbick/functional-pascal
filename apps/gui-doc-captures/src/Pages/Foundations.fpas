@@ -2,11 +2,14 @@
 
 unit GuiDocCaptures.Pages.Foundations;
 
-uses
-  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
-  GuiGallery.App.State as Gallery, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  GuiGallery.Pages.Overlays.State as Overlays,
-  Fpas.Ui.Widgets.Navigation.TableOfContents as Toc, System as Sys;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Widgets.Navigation.TableOfContents as Toc;
+uses GuiDocCaptures.Rendering.Presented as Presented;
+uses GuiDocCaptures.Rendering.Regions as Regions;
+uses GuiGallery.App.State as Gallery;
+uses GuiGallery.Pages.Overlays.State as Overlays;
+uses System as Sys;
 
 procedure CaptureDisplay(Session: Gui.Session<Gallery.Msg>; Output: string; Click: procedure(string));
   procedure Specimen(Name: string; Above: int; Width: int; Height: int);

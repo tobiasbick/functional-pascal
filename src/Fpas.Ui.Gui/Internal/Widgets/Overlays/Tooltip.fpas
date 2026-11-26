@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Overlays.Tooltip;
 
-uses Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Cui.Widgets.Overlays as CuiOverlays, Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui.Widgets.Overlays as CuiOverlays;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
 
 // Attaches pointer help to the just-drawn anchor.
 //

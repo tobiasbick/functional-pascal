@@ -2,7 +2,8 @@
 
 program GameActions;
 
-uses System.Console as Console, Dungeon.Model as Model;
+uses Dungeon.Model as Model;
+uses System.Console as Console;
 
 function Coordinates(Position: Model.Position): string;
 begin

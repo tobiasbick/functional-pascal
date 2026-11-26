@@ -3,13 +3,15 @@
 // Album memberships are replaced atomically with their corresponding tag rows.
 unit FpasAmp.Library.Albums.Persistence.Store;
 
-uses
-  FpasAmp.Library.Serialization.CatalogueJson as Codec,
-  Fpas.Media.Tags.AudioFiles as MediaTags,
-  FpasAmp.Library.Persistence.Sql as Sql,
-  Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO,
-  System.Security.Cryptography as Crypto, System.Text as Text,
-  System.Text.RegularExpressions as Regex;
+uses Fpas.Media.Tags.AudioFiles as MediaTags;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.Serialization.CatalogueJson as Codec;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Security.Cryptography as Crypto;
+uses System.Text as Text;
+uses System.Text.RegularExpressions as Regex;
 
 // Replaces album membership for tag `Value` at indexed `Id`, inside `Transaction`.
 // Path/directory facts are read from `Connection`; no music/image file is opened.

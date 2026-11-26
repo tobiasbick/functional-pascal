@@ -2,9 +2,10 @@
 
 unit NativeTests;
 
-uses
-  Microsoft.VisualStudio.TestTools.UnitTesting as T, System as Sys,
-  System.Threading.Tasks as Tasks, System.IO.File as File;
+uses Microsoft.VisualStudio.TestTools.UnitTesting as T;
+uses System as Sys;
+uses System.IO.File as File;
+uses System.Threading.Tasks as Tasks;
 
 var Active: int := 0;
 

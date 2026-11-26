@@ -2,11 +2,13 @@
 
 unit DesktopCommandMappingContract;
 
-uses
-  Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Gui.Closing as Closing,
-  Fpas.Ui.Gui.Frames as Frames, Fpas.Ui.Gui.Windows as Windows,
-  Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Mvu.Composition as Composition, System as Sys;
+uses Fpas.Ui.Gui.Closing as Closing;
+uses Fpas.Ui.Gui.FileDialogs as Files;
+uses Fpas.Ui.Gui.Frames as Frames;
+uses Fpas.Ui.Gui.Windows as Windows;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Composition as Composition;
+uses System as Sys;
 
 function Payload(Value: Mvu.Command<string>): Sys.Object;
 begin

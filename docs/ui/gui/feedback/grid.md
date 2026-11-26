@@ -9,8 +9,9 @@ Use a grid for equal-width columns that can wrap as the window narrows. The gall
 ```pascal
 unit Docs.Ui.Feedback.Grid;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Containers.Grids as W,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Grids as W;
 
 // Builds the grid example.
 // ## Parameters

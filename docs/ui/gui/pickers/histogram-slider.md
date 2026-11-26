@@ -9,8 +9,9 @@ Use a histogram slider to show a data distribution behind two range handles. Ava
 ```pascal
 unit Docs.Ui.Pickers.HistogramSlider;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.HistogramSliders as W,
-  Fpas.Ui.Widgets.Inputs.RangeSliders as R;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.HistogramSliders as W;
+uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
 
 // Builds the histogram slider example.
 // ## Parameters

@@ -3,10 +3,11 @@
 // Bounded, ordered event streams with structured producer lifetime.
 unit Fpas.Execution.Workflows.Streams;
 
-uses
-  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Scopes as S,
-  System.Threading as Threads, System.Threading.Channels as Channels,
-  System.Threading.Tasks as Tasks;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Execution.Workflows.Scopes as S;
+uses System.Threading as Threads;
+uses System.Threading.Channels as Channels;
+uses System.Threading.Tasks as Tasks;
 
 // Describes a producer. Each subscription creates a fresh bounded channel.
 //

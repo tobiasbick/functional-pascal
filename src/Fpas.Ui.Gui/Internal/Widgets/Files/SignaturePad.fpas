@@ -2,10 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Files.SignaturePad;
 
-uses
-  Fpas.Ui.Widgets.Files.SignaturePads as S, Fpas.Ui.Graphics as G, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles,
-  Fpas.Ui.Gui.Cui as Cui, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Files.SignaturePads as S;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 function Snapshot(Value: CuiFiles.CuiSignature): S.Signature;
 begin

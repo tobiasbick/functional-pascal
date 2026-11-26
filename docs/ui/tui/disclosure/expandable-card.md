@@ -9,7 +9,8 @@ Keep a summary visible while showing details on demand. Under **Extended → Dis
 ```pascal
 unit Docs.Tui.Disclosure.ExpandableCard;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
 
 // Builds a card whose expansion state is owned by the model.
 // ## Parameters

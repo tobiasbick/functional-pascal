@@ -2,13 +2,24 @@
 
 unit Fpas.Ui.Internal.Validation.Dispatch.CanvasValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
-  Fpas.Ui.Internal.Validation.Controls.MediaRules as MediaRules, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Internal.Validation.Core.ChartChecks as C,
-  Fpas.Ui.Widgets.Canvas.LiveCursors as Live, Fpas.Ui.Widgets.Canvas.FormatBars as Format, Fpas.Ui.Widgets.Canvas.CanvasControls as Rail,
-  Fpas.Ui.Widgets.Canvas.PresencePills as Presence, Fpas.Ui.Widgets.Canvas.SelectionRings as Ring, Fpas.Ui.Widgets.Canvas.ResultCards as Card,
-  Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk, Fpas.Ui.Widgets.Desktop.Toolbars as Tools, Fpas.Ui.Widgets.Editors.NodeEditors as Nodes,
-  Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Controls.MediaRules as MediaRules;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as C;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Canvas.CanvasControls as Rail;
+uses Fpas.Ui.Widgets.Canvas.FormatBars as Format;
+uses Fpas.Ui.Widgets.Canvas.LiveCursors as Live;
+uses Fpas.Ui.Widgets.Canvas.PresencePills as Presence;
+uses Fpas.Ui.Widgets.Canvas.ResultCards as Card;
+uses Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk;
+uses Fpas.Ui.Widgets.Canvas.SelectionRings as Ring;
+uses Fpas.Ui.Widgets.Desktop.Toolbars as Tools;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as Nodes;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 procedure Text(Value: string?; At: string);
 begin

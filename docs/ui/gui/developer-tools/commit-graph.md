@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DeveloperTools.CommitGraph;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.CommitGraphs as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.CommitGraphs as W;
 
 // Displays a repository history already loaded by the application.
 // ## Parameters

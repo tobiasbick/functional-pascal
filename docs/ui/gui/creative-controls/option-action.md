@@ -11,7 +11,10 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CreativeControls.OptionAction;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.OptionActions as W, Fpas.Ui.Widgets.Audio.ControlWells as Tools, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.OptionActions as W;
+uses Fpas.Ui.Widgets.Audio.ControlWells as Tools;
+uses System as Sys;
 
 // Chooses an export format and offers Download.
 // ## Parameters

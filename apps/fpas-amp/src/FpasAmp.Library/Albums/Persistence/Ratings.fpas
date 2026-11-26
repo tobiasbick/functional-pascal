@@ -3,9 +3,11 @@
 // Album ratings are explicit user data, independent of individual track ratings.
 unit FpasAmp.Library.Albums.Persistence.Ratings;
 
-uses
-  FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.UserData.Schema as Users,
-  Microsoft.Data.Sqlite as Db, System as Sys, System.Threading as T;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Library.UserData.Schema as Users;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.Threading as T;
 
 // Saves `Value` (one through ten, or null to clear) for an existing album `Id`.
 // `Database` is the catalogue and `UserDatabase` owns durable ratings. Cancellation

@@ -14,7 +14,7 @@ public sealed class MultiSourceCliTests
         var odd = directory.File("first-name.fpas");
         File.WriteAllText(even, """
             unit Numbers.Even;
-            uses Numbers.Odd as Other, Numbers.Even as Own;
+            uses Numbers.Odd as Other; uses Numbers.Even as Own;
             private function Zero(N: int): bool;
             begin return N = 0; end function;
             public function Test(N: int): bool;
@@ -28,7 +28,7 @@ public sealed class MultiSourceCliTests
             begin if N = 0 then return false; else return Other.Test(N - 1); end if; end function;
             end unit;
             """);
-        const string program = "program App; uses Numbers.Even as E, Numbers.Odd as O, System.Console as Console; begin Console.WriteLine(E.Test(10)); Console.WriteLine(O.Test(10)); end; end program;";
+        const string program = "program App; uses Numbers.Even as E; uses Numbers.Odd as O; uses System.Console as Console; begin Console.WriteLine(E.Test(10)); Console.WriteLine(O.Test(10)); end; end program;";
         foreach (var sources in new[] { new[] { even, "-", odd }, new[] { odd, even, "-" } })
         {
             var compiled = await Compile(directory, sources, program);

@@ -15,6 +15,7 @@ internal sealed class SyntaxLayout(int tokenCount)
     internal Dictionary<int, int> ConditionalEnds { get; } = [];
     internal HashSet<int> SingleElementBranchArrays { get; } = [];
     internal List<(int Start, int End)> Bodies { get; } = [];
+    internal List<SyntaxImport> Imports { get; } = [];
     internal int CompilationEnd { get; private set; } = -1;
 
     internal void Line(int index) => Breaks[index] = Math.Max(Breaks[index], 1);
@@ -56,4 +57,8 @@ internal sealed class SyntaxLayout(int tokenCount)
 }
 
 internal sealed record SyntaxList(int Open, int Close, IReadOnlyList<int> Items, bool Wrap, bool CloseLine);
+internal sealed record SyntaxImport(int Keyword, int Semicolon, string Name)
+{
+    internal bool IsStandard => Name == "Std" || Name.StartsWith("Std.", StringComparison.Ordinal);
+}
 internal sealed record SyntaxBinary(int Start, int End, int Operator, int Right);

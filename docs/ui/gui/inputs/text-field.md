@@ -9,7 +9,8 @@ Use a text field for a single line of editable text. The gallery shows a name fi
 ```pascal
 unit Docs.Ui.Inputs.TextField;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextFields as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.TextFields as W;
 
 // Builds the text field example.
 // ## Parameters

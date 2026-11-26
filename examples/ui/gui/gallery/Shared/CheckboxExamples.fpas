@@ -2,9 +2,9 @@
 
 unit Gallery.Shared.CheckboxExamples;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Checkboxes as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Checkboxes as C;
+uses Gallery.Shared.Strings as Strings;
 
 // Builds the notification checkboxes in gallery order.
 // ## Type parameters

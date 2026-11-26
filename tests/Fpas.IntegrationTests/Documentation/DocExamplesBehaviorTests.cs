@@ -130,7 +130,7 @@ public sealed class DocExamplesBehaviorTests(DocExamplesFixture checker)
         static string Literal(string value) => value.Replace("'", "''", StringComparison.Ordinal);
         var source = $$"""
             program Waiting;
-            uses System as S, System.IO as IO, System.Diagnostics as P, System.Threading as T;
+            uses System as S; uses System.IO as IO; uses System.Diagnostics as P; uses System.Threading as T;
             procedure Ready(Path: string);
             begin IO.File.WriteAllText(Path + '.tmp', S.Environment.ProcessId.ToString()); IO.File.Move(Path + '.tmp', Path); end procedure;
             begin
@@ -207,7 +207,7 @@ public sealed class DocExamplesBehaviorTests(DocExamplesFixture checker)
         File.WriteAllText(root.File("NuGet.Config"), new System.Xml.Linq.XDocument(new System.Xml.Linq.XElement("configuration", new System.Xml.Linq.XElement("packageSources",
             new System.Xml.Linq.XElement("clear"), new System.Xml.Linq.XElement("add", new System.Xml.Linq.XAttribute("key", "fpas"), new System.Xml.Linq.XAttribute("value", checker.Feed))))).ToString());
         const string unit = "unit Values; public const Answer: int := 42; end unit;";
-        const string program = "program Answer; uses Values as V, System.Console as Console; begin Console.WriteLine(V.Answer); end; end program;";
+        const string program = "program Answer; uses Values as V; uses System.Console as Console; begin Console.WriteLine(V.Answer); end; end program;";
         File.WriteAllText(root.File("project.md"), Fence("xml project=demo file=Demo.fpasproj", project) +
             Fence("pascal project=demo file=values.fpas manifest=Demo.fpasproj", unit) +
             Fence("pascal project=demo file=main.fpas manifest=Demo.fpasproj run stdout=expected.txt", program) + Fence("text project=demo file=expected.txt", "42"));

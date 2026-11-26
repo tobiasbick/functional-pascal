@@ -5,7 +5,8 @@ Mark the program async to await APIs before the process completes.
 ```pascal
 async program AsyncHello;
 
-uses System.Console as Console, System.Threading.Tasks as Tasks;
+uses System.Console as Console;
+uses System.Threading.Tasks as Tasks;
 
 begin
   await Tasks.Task.Delay(10);

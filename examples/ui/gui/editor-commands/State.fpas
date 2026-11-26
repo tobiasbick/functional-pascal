@@ -2,9 +2,9 @@
 
 unit EditorCommands.State;
 
-uses
-  Fpas.Ui.Widgets.Editors.CodeEditors as Editor,
-  Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk, Fpas.Ui.Widgets.Overlays.Tours as Tours;
+uses Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk;
+uses Fpas.Ui.Widgets.Editors.CodeEditors as Editor;
+uses Fpas.Ui.Widgets.Overlays.Tours as Tours;
 
 // Model-owned text and native interaction proposals.
 public type Model = record

@@ -28,7 +28,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Factory;
-            uses System as Sys, Shared as S, System.Threading.Tasks as Tasks;
+            uses System as Sys; uses Shared as S; uses System.Threading.Tasks as Tasks;
             public function Counter(Start: int): Sys.Func<int>;
               function Read(): int; begin return Next(); end function;
               function Next(): int; begin Value := Value + 1; return Value; end function;

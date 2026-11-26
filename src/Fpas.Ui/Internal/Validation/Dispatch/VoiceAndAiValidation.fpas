@@ -2,12 +2,32 @@
 
 unit Fpas.Ui.Internal.Validation.Dispatch.VoiceAndAiValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Internal.Validation.Core.Checks as Rules, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR, Fpas.Ui.Internal.Validation.Core.ChartChecks as ChartRules,
-  Fpas.Ui.Internal.Validation.Controls.VoiceRules as VoiceRules, Fpas.Ui.Internal.Validation.Controls.AiRules as AiRules,
-  Fpas.Ui.Widgets.Overlays.Menus as Menus, System as Sys,
-  Fpas.Ui.Widgets.Audio.VoiceWaves as VoiceWaves, Fpas.Ui.Widgets.Audio.VoiceNotes as VoiceNotes, Fpas.Ui.Widgets.Audio.VoiceSessions as VoiceSessions, Fpas.Ui.Widgets.Ai.Composers as Composers, Fpas.Ui.Widgets.Audio.VoiceOrbs as VoiceOrbs, Fpas.Ui.Widgets.Ai.Reasonings as Reasonings, Fpas.Ui.Widgets.Ai.ToolCalls as ToolCalls, Fpas.Ui.Widgets.Ai.AgentPlans as AgentPlans, Fpas.Ui.Widgets.Ai.AgentStatuses as AgentStatuses, Fpas.Ui.Widgets.Ai.SourceLists as SourceLists, Fpas.Ui.Widgets.Ai.Citations as Citations, Fpas.Ui.Widgets.Ai.ContextMeters as ContextMeters, Fpas.Ui.Widgets.Ai.ResponseActions as ResponseActions, Fpas.Ui.Widgets.Ai.PromptSuggestions as PromptSuggestions, Fpas.Ui.Widgets.Ai.ModelPickers as ModelPickers, Fpas.Ui.Widgets.Audio.Voice as Voice, Fpas.Ui.Widgets.Ai.Sources as Sources;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Controls.AiRules as AiRules;
+uses Fpas.Ui.Internal.Validation.Controls.VoiceRules as VoiceRules;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as ChartRules;
+uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Ai.AgentPlans as AgentPlans;
+uses Fpas.Ui.Widgets.Ai.AgentStatuses as AgentStatuses;
+uses Fpas.Ui.Widgets.Ai.Citations as Citations;
+uses Fpas.Ui.Widgets.Ai.Composers as Composers;
+uses Fpas.Ui.Widgets.Ai.ContextMeters as ContextMeters;
+uses Fpas.Ui.Widgets.Ai.ModelPickers as ModelPickers;
+uses Fpas.Ui.Widgets.Ai.PromptSuggestions as PromptSuggestions;
+uses Fpas.Ui.Widgets.Ai.Reasonings as Reasonings;
+uses Fpas.Ui.Widgets.Ai.ResponseActions as ResponseActions;
+uses Fpas.Ui.Widgets.Ai.SourceLists as SourceLists;
+uses Fpas.Ui.Widgets.Ai.Sources as Sources;
+uses Fpas.Ui.Widgets.Ai.ToolCalls as ToolCalls;
+uses Fpas.Ui.Widgets.Audio.Voice as Voice;
+uses Fpas.Ui.Widgets.Audio.VoiceNotes as VoiceNotes;
+uses Fpas.Ui.Widgets.Audio.VoiceOrbs as VoiceOrbs;
+uses Fpas.Ui.Widgets.Audio.VoiceSessions as VoiceSessions;
+uses Fpas.Ui.Widgets.Audio.VoiceWaves as VoiceWaves;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+uses System as Sys;
 
 // Checks a prepared Voice or AI widget and queues any composed children.
 // ## Type parameters

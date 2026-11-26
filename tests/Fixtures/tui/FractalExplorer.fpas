@@ -2,12 +2,18 @@
 
 program FractalExplorerContract;
 
-uses
-  Fractals.Explorer as X, Fractals.View as V, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Headless as Headless,
-  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Widgets.Developer.Terminal as T,
-  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Testing.EffectReplies as Replies,
-  System as Sys, System.Console as Console, System.Threading as Threads,
-  System.Threading.Channels as Channels;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Application as App;
+uses Fpas.Ui.Tui.Headless as Headless;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fractals.Explorer as X;
+uses Fractals.View as V;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Threading as Threads;
+uses System.Threading.Channels as Channels;
 
 procedure Check(Value: bool; Reason: string);
 begin

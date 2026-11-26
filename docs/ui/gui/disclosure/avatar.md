@@ -9,8 +9,8 @@ Use an avatar to identify a person with initials or an image. Available in **GUI
 ```pascal
 unit Docs.Ui.Disclosure.Avatar;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Media.Avatars as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Media.Avatars as W;
 
 // Builds the avatar example.
 // ## Returns

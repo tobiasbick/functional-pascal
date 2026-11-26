@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Editors.GradientEditors;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
 
 // Color at a ramp position.
 public type Stop = record

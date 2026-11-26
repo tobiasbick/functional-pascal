@@ -15,7 +15,9 @@ and finiteness checks remain separate.
 ```pascal
 program NumericUtilities;
 
-uses System as Sys, System.Console as Console, System.Globalization as Global;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Globalization as Global;
 
 function ReadPercent(Text: string): int;
 begin
@@ -98,7 +100,9 @@ Next(min, max) and GetInt32(min, max) include the lower bound and exclude the up
 ```pascal
 program RandomValues;
 
-uses System as Sys, System.Console as Console, System.Security.Cryptography as Crypto;
+uses System as Sys;
+uses System.Console as Console;
+uses System.Security.Cryptography as Crypto;
 
 begin
   const Replay: Sys.Random := new Sys.Random(1729);

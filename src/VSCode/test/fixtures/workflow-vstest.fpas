@@ -2,7 +2,8 @@
 
 unit Vstest;
 
-uses System as Sys, Xunit as X;
+uses System as Sys;
+uses Xunit as X;
 
 // Checks addition against inline test data.
 //

@@ -2,7 +2,11 @@
 
 unit Fpas.Ui.Widgets.Charts.Sankeys;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses System as Sys;
 
 // One input node in a native Sankey diagram.
 public type Node = record

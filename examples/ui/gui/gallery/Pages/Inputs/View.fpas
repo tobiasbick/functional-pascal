@@ -2,16 +2,15 @@
 
 unit GuiGallery.Pages.Inputs.View;
 
-uses
-  GuiGallery.Pages.Inputs.State as S,
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Inputs.Widgets.TextField as Fields,
-  GuiGallery.Pages.Inputs.Widgets.CredentialFields as Credentials,
-  GuiGallery.Pages.Inputs.Widgets.PickerFields as Pickers,
-  GuiGallery.Pages.Inputs.Widgets.InlineCalendar as InlineCalendar,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses GuiGallery.Pages.Inputs.State as S;
+uses GuiGallery.Pages.Inputs.Widgets.CredentialFields as Credentials;
+uses GuiGallery.Pages.Inputs.Widgets.InlineCalendar as InlineCalendar;
+uses GuiGallery.Pages.Inputs.Widgets.PickerFields as Pickers;
+uses GuiGallery.Pages.Inputs.Widgets.TextField as Fields;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
 
 // Builds the native input sections.
 // ## Parameters

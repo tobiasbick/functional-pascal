@@ -60,7 +60,7 @@ public sealed class DebugSymbolsCliTests
         var source = directory.File("Trace.fpas"); var output = directory.File("Trace.dll"); var pdb = Path.ChangeExtension(output, ".pdb");
         File.WriteAllText(source, """
             async program Trace;
-            uses System as Sys, System.Threading.Tasks as Tasks;
+            uses System as Sys; uses System.Threading.Tasks as Tasks;
             async function Crash(): Tasks.Task;
             begin
               await Tasks.Task.Delay(1);

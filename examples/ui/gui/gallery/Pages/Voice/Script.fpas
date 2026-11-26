@@ -2,7 +2,8 @@
 
 unit GuiGallery.Pages.Voice.Script;
 
-uses Fpas.Ui.Widgets.Audio.Voice as V, System as Sys;
+uses Fpas.Ui.Widgets.Audio.Voice as V;
+uses System as Sys;
 
 type Turn = record
   // Side of the conversation represented by this turn.

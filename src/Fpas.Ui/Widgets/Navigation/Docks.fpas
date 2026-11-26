@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Navigation.Docks;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // An item or separator in a native dock.
 // ## Type parameters

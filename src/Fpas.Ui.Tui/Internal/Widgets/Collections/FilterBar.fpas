@@ -2,14 +2,19 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar;
 
-uses
-  Fpas.Ui.Widgets.Collections.FilterBars as Filters, Fpas.Ui.Widgets.Inputs.TextFields as TextFields,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P,
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup,
-  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
-  Fpas.Ui.Styles as Style, Fpas.Ui.Layout as Layout, System as Sys, System.Globalization as Culture,
-  System.Collections.Generic as C;
+uses Fpas.Ui.Layout as Layout;
+uses Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P;
+uses Fpas.Ui.Widgets.Collections.FilterBars as Filters;
+uses Fpas.Ui.Widgets.Inputs.TextFields as TextFields;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Globalization as Culture;
 
 function Segment(Index: int): string;
 begin

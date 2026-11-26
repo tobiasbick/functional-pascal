@@ -58,12 +58,15 @@ public static partial class SyntaxAnalysis
         var folds = declarations.Select(item => item.Span).Concat(bodies).Distinct()
             .Where(span => document.Span(span.Offset + span.Length, 0).Line > span.Line).ToArray();
         var selections = folds.Concat(declarations.Select(item => item.Span))
-            .Concat(layout.Lists.Select(list => Span(tokens[list.Open].Position, tokens[list.Close].Position + tokens[list.Close].Length)))
+            .Concat(layout.Imports.Select(import => TokenSpan(import.Keyword, import.Semicolon)))
+            .Concat(layout.Imports.Count > 1 ? [TokenSpan(layout.Imports[0].Keyword, layout.Imports[^1].Semicolon)] : [])
+            .Concat(layout.Lists.Select(list => TokenSpan(list.Open, list.Close)))
             .Concat(tokens.Where(item => item.Length > 0).Select(item => document.Span(item.Position, item.Length)))
             .Concat(comments.Select(comment => Span(comment.Start, comment.End))).Distinct().ToArray();
         token.ThrowIfCancellationRequested();
         return new(document, Array.AsReadOnly(declarations), Array.AsReadOnly(folds), Array.AsReadOnly(selections)) { Diagnostics = diagnostics };
 
+        SourceSpan TokenSpan(int first, int last) => Span(tokens[first].Position, tokens[last].Position + tokens[last].Length);
         SourceSpan Span(int start, int end) => document.Span(start, Math.Max(0, end - start));
     }
 }

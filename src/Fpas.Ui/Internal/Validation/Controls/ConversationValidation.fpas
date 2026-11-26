@@ -2,18 +2,20 @@
 
 unit Fpas.Ui.Internal.Validation.Controls.ConversationValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
-  Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
-  Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart,
-  Fpas.Ui.Widgets.Actions.StatusButtons as Status,
-  Fpas.Ui.Widgets.Conversation.ChatMessages as ChatMessages,
-  Fpas.Ui.Widgets.Conversation.Comments as Comments,
-  Fpas.Ui.Widgets.Conversation.Presences as Presences,
-  Fpas.Ui.Widgets.Feedback.Counters as Counters, Fpas.Ui.Widgets.Feedback.Tickers as Tickers,
-  Fpas.Ui.Widgets.Feedback.StatusSpinners as StatusSpinners,
-  Fpas.Ui.Widgets.Feedback.SkeletonGroups as SkeletonGroups,
-  Fpas.Ui.Widgets.Charts.Sparklines as Sparklines, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as Status;
+uses Fpas.Ui.Widgets.Charts.Sparklines as Sparklines;
+uses Fpas.Ui.Widgets.Conversation.ChatMessages as ChatMessages;
+uses Fpas.Ui.Widgets.Conversation.Comments as Comments;
+uses Fpas.Ui.Widgets.Conversation.Presences as Presences;
+uses Fpas.Ui.Widgets.Feedback.Counters as Counters;
+uses Fpas.Ui.Widgets.Feedback.SkeletonGroups as SkeletonGroups;
+uses Fpas.Ui.Widgets.Feedback.StatusSpinners as StatusSpinners;
+uses Fpas.Ui.Widgets.Feedback.Tickers as Tickers;
+uses System as Sys;
 
 // Validates conversation, counter, ticker, spinner and sparkline widgets when matched.
 // ## Type parameters

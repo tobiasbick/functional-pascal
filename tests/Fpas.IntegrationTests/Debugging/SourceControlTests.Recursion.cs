@@ -76,7 +76,7 @@ public sealed partial class SourceControlTests
         using var program = new Debuggee("own-step-exception");
         await program.Compile("""
             program StepFailure;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             procedure Fail();
             begin
               raise new Sys.InvalidOperationException('step failure');

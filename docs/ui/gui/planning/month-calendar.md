@@ -11,8 +11,9 @@ count of additional appointments when a day is full. Available in **GUI**.
 ```pascal
 unit Docs.Ui.Planning.MonthCalendar;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Planning.MonthCalendars as W,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Planning.MonthCalendars as W;
+uses System as Sys;
 
 // Shows the current month and its appointments.
 // ## Parameters

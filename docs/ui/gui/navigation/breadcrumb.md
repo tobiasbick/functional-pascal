@@ -10,7 +10,8 @@ ancestor. Available in **GUI** and [TUI](../../tui/navigation/breadcrumb.md).
 ```pascal
 unit Docs.Ui.Navigation.Breadcrumb;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Breadcrumbs as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.Breadcrumbs as C;
 
 // Builds the breadcrumb example.
 // ## Returns

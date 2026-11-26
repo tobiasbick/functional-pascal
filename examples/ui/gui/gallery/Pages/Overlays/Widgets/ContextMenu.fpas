@@ -2,15 +2,14 @@
 
 unit GuiGallery.Pages.Overlays.Widgets.ContextMenu;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Overlays.Widgets.Popover as Filter,
-  GuiGallery.Pages.Overlays.State as State,
-  Fpas.Ui.Widgets.Overlays.Menus as M,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses GuiGallery.Pages.Overlays.State as State;
+uses GuiGallery.Pages.Overlays.Widgets.Popover as Filter;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 function Icon(Code: int): string;
 begin

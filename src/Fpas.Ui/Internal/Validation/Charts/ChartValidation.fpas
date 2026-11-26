@@ -2,29 +2,36 @@
 
 unit Fpas.Ui.Internal.Validation.Charts.ChartValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
-  Fpas.Ui.Internal.Validation.Core.ChartChecks as Common,
-  Fpas.Ui.Internal.Validation.Charts.ChartRules as ChartRules,
-  Fpas.Ui.Internal.Validation.Charts.MoreChartRules as MoreRules,
-  Fpas.Ui.Internal.Validation.Charts.VisualizationRules as VizRules,
-  Fpas.Ui.Internal.Validation.Charts.InstrumentRules as InstrumentRules,
-  Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Widgets.Charts.DonutCharts as Donuts,
-  Fpas.Ui.Widgets.Charts.PatternMeters as Patterns, Fpas.Ui.Widgets.Charts.Sankeys as Sankeys,
-  Fpas.Ui.Widgets.Charts.BarLists as BarLists,
-  Fpas.Ui.Widgets.Charts.ActivityRings as ActivityRings,
-  Fpas.Ui.Widgets.Charts.ScatterCharts as ScatterCharts,
-  Fpas.Ui.Widgets.Charts.RadialGauges as RadialGauges,
-  Fpas.Ui.Widgets.Charts.Candlesticks as Candlesticks,
-  Fpas.Ui.Widgets.Charts.Heatmaps as Heatmaps,
-  Fpas.Ui.Widgets.Charts.CalendarHeatmaps as CalendarHeatmaps,
-  Fpas.Ui.Widgets.Charts.Treemaps as Treemaps,
-  Fpas.Ui.Widgets.Charts.RadarCharts as RadarCharts, Fpas.Ui.Widgets.Charts.Funnels as Funnels,
-  Fpas.Ui.Widgets.Charts.SplitBars as SplitBars, Fpas.Ui.Widgets.Charts.Waffles as Waffles,
-  Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks,
-  Fpas.Ui.Widgets.Developer.JsonViews as JsonViews, Fpas.Ui.Widgets.Display.Readouts as Readouts,
-  Fpas.Ui.Widgets.Display.DotDisplays as DotDisplays, Fpas.Ui.Widgets.Charts.DotCharts as DotCharts,
-  Fpas.Ui.Widgets.Charts.EventTracks as EventTracks, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Charts.ChartRules as ChartRules;
+uses Fpas.Ui.Internal.Validation.Charts.InstrumentRules as InstrumentRules;
+uses Fpas.Ui.Internal.Validation.Charts.MoreChartRules as MoreRules;
+uses Fpas.Ui.Internal.Validation.Charts.VisualizationRules as VizRules;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Common;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Widgets.Charts.ActivityRings as ActivityRings;
+uses Fpas.Ui.Widgets.Charts.BarLists as BarLists;
+uses Fpas.Ui.Widgets.Charts.CalendarHeatmaps as CalendarHeatmaps;
+uses Fpas.Ui.Widgets.Charts.Candlesticks as Candlesticks;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Widgets.Charts.DonutCharts as Donuts;
+uses Fpas.Ui.Widgets.Charts.DotCharts as DotCharts;
+uses Fpas.Ui.Widgets.Charts.EventTracks as EventTracks;
+uses Fpas.Ui.Widgets.Charts.Funnels as Funnels;
+uses Fpas.Ui.Widgets.Charts.Heatmaps as Heatmaps;
+uses Fpas.Ui.Widgets.Charts.PatternMeters as Patterns;
+uses Fpas.Ui.Widgets.Charts.RadarCharts as RadarCharts;
+uses Fpas.Ui.Widgets.Charts.RadialGauges as RadialGauges;
+uses Fpas.Ui.Widgets.Charts.Sankeys as Sankeys;
+uses Fpas.Ui.Widgets.Charts.ScatterCharts as ScatterCharts;
+uses Fpas.Ui.Widgets.Charts.SplitBars as SplitBars;
+uses Fpas.Ui.Widgets.Charts.Treemaps as Treemaps;
+uses Fpas.Ui.Widgets.Charts.Waffles as Waffles;
+uses Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks;
+uses Fpas.Ui.Widgets.Developer.JsonViews as JsonViews;
+uses Fpas.Ui.Widgets.Display.DotDisplays as DotDisplays;
+uses Fpas.Ui.Widgets.Display.Readouts as Readouts;
+uses System as Sys;
 
 // Validates charts, visualizations and instrument displays when matched.
 // ## Type parameters

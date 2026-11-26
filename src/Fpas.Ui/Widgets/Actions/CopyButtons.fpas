@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Actions.CopyButtons;
 
-uses Fpas.Ui.Elements as E, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses System as Sys;
 
 // Builds a copy button with a stable ID and a brief confirmation after a clipboard request.
 //

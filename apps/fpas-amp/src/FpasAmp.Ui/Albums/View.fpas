@@ -3,21 +3,33 @@
 // CUI's virtual rows contain ordinary native grids of cover/title cards.
 unit FpasAmp.Ui.Albums.View;
 
-uses
-  FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Grid as Grid, FpasAmp.Library.Albums.Model as Library,
-  FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Details as Details,
-  FpasAmp.Ui.Albums.Status as Status, FpasAmp.Ui.Albums.RatingStyle as RatingStyle,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.View as Songs,
-  FpasAmp.Ui.Player.Model as Player,
-  FpasAmp.Ui.Albums.Toolbar.View as ToolbarView, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
-  Fpas.Ui.Composition as Composition, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
-  Fpas.Media.Images as Imaging, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Collections.VirtualLists as Virtual,
-  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Overlays.HoverCards as Hover,
-  Fpas.Ui.Widgets.Inputs.Ratings as Ratings,
-  Fpas.Ui.Widgets.Containers.EmptyStates as Empty, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Media.Images as Imaging;
+uses Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
+uses Fpas.Ui.Widgets.Collections.VirtualLists as Virtual;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Containers.EmptyStates as Empty;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
+uses Fpas.Ui.Widgets.Inputs.Ratings as Ratings;
+uses Fpas.Ui.Widgets.Overlays.HoverCards as Hover;
+uses FpasAmp.Library.Albums.Model as Library;
+uses FpasAmp.Ui.Albums.Artwork as Artwork;
+uses FpasAmp.Ui.Albums.Details as Details;
+uses FpasAmp.Ui.Albums.Grid as Grid;
+uses FpasAmp.Ui.Albums.Model as M;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Albums.Music.View as Songs;
+uses FpasAmp.Ui.Albums.RatingStyle as RatingStyle;
+uses FpasAmp.Ui.Albums.Status as Status;
+uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
+uses FpasAmp.Ui.Albums.Toolbar.View as ToolbarView;
+uses FpasAmp.Ui.Player.Model as Player;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // Returns the native viewport identity for the cover grid in Current.
 public function GridId(Current: M.State): string;

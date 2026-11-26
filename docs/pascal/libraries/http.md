@@ -17,10 +17,12 @@ two units. An oversized response fails instead of returning partial text.
 // Application-local HTTP text reading.
 unit Recipes.HttpText;
 
-uses
-  System as Sys, System.IO as IO, System.Net.Http as Http,
-  System.Text as Text, System.Threading as Threading,
-  System.Threading.Tasks as Tasks;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Net.Http as Http;
+uses System.Text as Text;
+uses System.Threading as Threading;
+uses System.Threading.Tasks as Tasks;
 
 // Reads a successful UTF-8 response using a caller-owned reusable client.
 public async function GetUtf8(
@@ -105,10 +107,13 @@ link a per-request deadline with the caller's cancellation token.
 ```pascal project=http-text
 async program FetchUtf8;
 
-uses
-  System as Sys, System.Console as Console, System.IO as IO,
-  System.Net.Http as Http, System.Text as Text, System.Threading as Threading,
-  Recipes.HttpText as Fetch;
+uses Recipes.HttpText as Fetch;
+uses System as Sys;
+uses System.Console as Console;
+uses System.IO as IO;
+uses System.Net.Http as Http;
+uses System.Text as Text;
+uses System.Threading as Threading;
 
 begin
   using const Client: Http.HttpClient := new Http.HttpClient();

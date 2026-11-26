@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.CardStack;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Containers.CardStacks as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Containers.CardStacks as W;
 
 // Shows a deck with the top card first.
 // ## Parameters

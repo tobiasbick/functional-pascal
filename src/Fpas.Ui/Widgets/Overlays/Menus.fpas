@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Overlays.Menus;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
 
 // Popup placement relative to its trigger. Hosts fit it to the viewport.
 public type Placement = enum: byte

@@ -9,7 +9,8 @@ Ask for a second activation before carrying out a destructive action. Available 
 ```pascal
 unit Docs.Ui.Actions.ConfirmButton;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.ConfirmButtons as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.ConfirmButtons as C;
 
 // Builds the example view.
 // ## Returns

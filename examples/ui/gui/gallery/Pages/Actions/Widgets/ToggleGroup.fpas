@@ -2,14 +2,13 @@
 
 unit GuiGallery.Pages.Actions.Widgets.ToggleGroup;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Actions.State as State,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Actions.ToggleGroups as T,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.ToggleGroups as T;
+uses GuiGallery.Pages.Actions.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 // Shows CUI's icon formatting group and exclusive alignment group.
 //

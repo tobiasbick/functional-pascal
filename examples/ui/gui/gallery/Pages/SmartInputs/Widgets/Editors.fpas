@@ -2,11 +2,14 @@
 
 unit GuiGallery.Pages.SmartInputs.Widgets.Editors;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.SmartInputs.State as S, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Inputs.InlineEdits as I,
-  Fpas.Ui.Widgets.Inputs.ScrubFields as Scrubs, Fpas.Ui.Widgets.Inputs.MoneyFields as M;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Inputs.InlineEdits as I;
+uses Fpas.Ui.Widgets.Inputs.MoneyFields as M;
+uses Fpas.Ui.Widgets.Inputs.ScrubFields as Scrubs;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.SmartInputs.State as S;
+uses GuiGallery.Shared.Sections as G;
 
 // Builds the original inline title and owner examples.
 // ## Parameters

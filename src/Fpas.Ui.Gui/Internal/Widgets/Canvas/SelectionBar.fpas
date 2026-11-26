@@ -2,9 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.SelectionBar;
 
-uses
-  Fpas.Ui.Widgets.Canvas.SelectionBars as D, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Canvas.SelectionBars as D;
+uses System.Collections.Generic as Lists;
 
 // Presents CUI's native SelectionBar widget.
 // ## Type parameters

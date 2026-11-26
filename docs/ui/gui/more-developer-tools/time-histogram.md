@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.TimeHistogram;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.TimeHistograms as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.TimeHistograms as W;
 
 // Shows counts over a 24-hour window.
 // ## Parameters

@@ -2,13 +2,21 @@
 
 unit GuiGallery.Pages.Social.Media;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Social.State as S, GuiGallery.Pages.Social.Scenes as Scene,
-  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Graphics as Color, Fpas.Ui.Widgets.Motion.Motion as M, Fpas.Ui.Widgets.Media.Carousels as Carousels,
-  Fpas.Ui.Widgets.Containers.CardStacks as Stacks, Fpas.Ui.Widgets.Media.ImageViewers as Viewers, Fpas.Ui.Widgets.Media.ImageCroppers as Croppers,
-  Fpas.Ui.Widgets.Media.ImageComparisons as Comparisons, Fpas.Ui.Widgets.Media.MediaImages as Images, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Color;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.CardStacks as Stacks;
+uses Fpas.Ui.Widgets.Media.Carousels as Carousels;
+uses Fpas.Ui.Widgets.Media.ImageComparisons as Comparisons;
+uses Fpas.Ui.Widgets.Media.ImageCroppers as Croppers;
+uses Fpas.Ui.Widgets.Media.ImageViewers as Viewers;
+uses Fpas.Ui.Widgets.Media.MediaImages as Images;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Social.Scenes as Scene;
+uses GuiGallery.Pages.Social.State as S;
+uses GuiGallery.Shared.Sections as G;
+uses System.Collections.Generic as Lists;
 
 function Points(Amount: int): L.Extent;
 begin

@@ -2,11 +2,16 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown;
 
-uses
-  Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P,
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
-  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Styles as Styles, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // Trigger and current model commands for an anchored menu.
 // ## Type parameters

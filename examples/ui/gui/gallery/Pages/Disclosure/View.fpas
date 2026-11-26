@@ -2,26 +2,25 @@
 
 unit GuiGallery.Pages.Disclosure.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Gallery.Shared.SecurityCard as Security,
-  GuiGallery.Pages.Disclosure.State as State,
-  GuiGallery.Shared.Sections as G,
-  GuiGallery.Pages.Disclosure.Widgets.Banner as Banner,
-  GuiGallery.Pages.Disclosure.Widgets.Countdown as Countdown,
-  GuiGallery.Pages.Disclosure.Widgets.Checklist as Checklist,
-  GuiGallery.Pages.Disclosure.Widgets.UndoToast as UndoToast,
-  GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover as Confirm,
-  GuiGallery.Pages.Disclosure.Widgets.HoverCard as Hover,
-  GuiGallery.Pages.Disclosure.Widgets.Veil as Veil,
-  Fpas.Ui.Widgets.Theming.Themes as Theme,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Containers.ExpandableTexts as T,
-  Fpas.Ui.Widgets.Containers.ExpandableCards as C,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Containers.ExpandableCards as C;
+uses Fpas.Ui.Widgets.Containers.ExpandableTexts as T;
+uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+uses Gallery.Shared.SecurityCard as Security;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Disclosure.State as State;
+uses GuiGallery.Pages.Disclosure.Widgets.Banner as Banner;
+uses GuiGallery.Pages.Disclosure.Widgets.Checklist as Checklist;
+uses GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover as Confirm;
+uses GuiGallery.Pages.Disclosure.Widgets.Countdown as Countdown;
+uses GuiGallery.Pages.Disclosure.Widgets.HoverCard as Hover;
+uses GuiGallery.Pages.Disclosure.Widgets.UndoToast as UndoToast;
+uses GuiGallery.Pages.Disclosure.Widgets.Veil as Veil;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
 
 function Cards(Model: State.Model): E.Element<State.Msg>;
 begin

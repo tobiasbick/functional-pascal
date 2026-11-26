@@ -71,7 +71,7 @@ public sealed class RectangularInteropTests
         var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", assembly,
             "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", library, "--report", "json"], """
             program Consumer;
-            uses ShapeFixture.Producer as Producer, System.Console as Console, System as Sys;
+            uses ShapeFixture.Producer as Producer; uses System.Console as Console; uses System as Sys;
             begin
               const Grid: array[,] of int := new int[1, 2];
               Grid[0, 1] := 42;

@@ -2,11 +2,15 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows;
 
-uses
-  Fpas.Ui.Elements as Ui, Fpas.Ui.Widgets.Collections.Trees as Trees, Fpas.Ui.Styles as S,
-  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Elements as Ui;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as A;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Collections.Trees as Trees;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 type Toggle<TMsg> = record implements A.IActivatable<TMsg>
   // Whether this branch is expanded.

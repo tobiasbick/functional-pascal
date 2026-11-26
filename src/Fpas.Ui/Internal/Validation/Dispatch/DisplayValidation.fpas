@@ -2,11 +2,17 @@
 
 unit Fpas.Ui.Internal.Validation.Dispatch.DisplayValidation;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
-  Fpas.Ui.Internal.Validation.Core.ChartChecks as C, Fpas.Ui.Internal.Validation.Controls.MediaRules as M, Fpas.Ui.Widgets.Media.MediaImages as Media,
-  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Media.Images as Images, Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Overlays.Veils as Veil,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Controls.MediaRules as M;
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as C;
+uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Media.Images as Images;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses Fpas.Ui.Widgets.Overlays.Veils as Veil;
+uses System as Sys;
 
 procedure Coordinates(X: float; Y: float; Path: string);
 begin

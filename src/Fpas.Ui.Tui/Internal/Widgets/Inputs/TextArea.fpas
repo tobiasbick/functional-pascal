@@ -2,13 +2,20 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea;
 
-uses
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaRows as Lines,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as Chrome, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
-  Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
-  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
-  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+uses Fpas.Ui.Tui.Internal.Layout.ScrollViews as V;
+uses Fpas.Ui.Tui.Internal.Rendering.Drawing as D;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as Edit;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaRows as Lines;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as Chrome;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // Composes an editor and its optional caption and supporting text.
 // ## Type parameters

@@ -3,7 +3,8 @@
 // Reconstructible tag rows and indexed multi-value relationships.
 unit FpasAmp.Library.Metadata.Persistence.Schema;
 
-uses FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses Microsoft.Data.Sqlite as Db;
 
 // Creates metadata tables inside the caller's schema transaction.
 // `Connection` owns `Transaction`; user ratings live in a separate database.

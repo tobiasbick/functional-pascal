@@ -3,9 +3,11 @@
 // Full-file fingerprints assist identity recovery without merging extant copies.
 unit FpasAmp.Library.UserData.Identity;
 
-uses
-  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.IO as IO, System.Threading as T;
+uses FpasAmp.Library.Persistence.Sql as Sql;
+uses Microsoft.Data.Sqlite as Db;
+uses System as Sys;
+uses System.IO as IO;
+uses System.Threading as T;
 
 function Absent(Path: string): bool;
 begin

@@ -1,4 +1,5 @@
 // [Documentation](../../../docs/pascal/tools/fmt-style.md)
+using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Formatting;
 using Fpas.Compiler.Tests.Support;
 using System.Reflection.PortableExecutable;
@@ -61,6 +62,93 @@ public sealed class FormatterTests
             end program;
             """;
         Assert.Equal(expected.Replace("\r\n", "\n", StringComparison.Ordinal) + "\n", Format(input));
+    }
+
+    [Fact]
+    public void Uses_statements_put_standard_units_first_and_sort_each_group_by_target()
+    {
+        const string input = """
+            unit Demo;
+            uses System.Console as Console; uses Std.Ui.Gui.Widgets as Widgets;
+            uses
+              Std.Host.Cui.Controls as Controls;
+            uses System as Sys;
+            uses Std.Host.Cui.Actions as Actions;
+            uses Std.Host.Cui as Cui;
+            uses App.Settings as Settings;
+            end unit;
+            """;
+        const string expected = """
+            unit Demo;
+
+            uses Std.Host.Cui as Cui;
+            uses Std.Host.Cui.Actions as Actions;
+            uses Std.Host.Cui.Controls as Controls;
+            uses Std.Ui.Gui.Widgets as Widgets;
+
+            uses App.Settings as Settings;
+            uses System as Sys;
+            uses System.Console as Console;
+
+            end unit;
+            """;
+        var formatted = Format(input);
+        Assert.Equal(expected.ReplaceLineEndings("\n") + "\n", formatted);
+        Assert.Equal(formatted, Format(formatted));
+
+        var first = formatted.IndexOf("uses ", StringComparison.Ordinal);
+        var firstEnd = formatted.IndexOf(';', first) + 1;
+        var lastEnd = formatted.LastIndexOf("as Console;", StringComparison.Ordinal) + "as Console;".Length;
+        var structure = SyntaxAnalysis.Structure(new("input.fpas", formatted));
+        Assert.Contains(structure.Selections, span => span.Offset == first && span.Length == firstEnd - first);
+        Assert.Contains(structure.Selections, span => span.Offset == first && span.Length == lastEnd - first);
+    }
+
+    [Fact]
+    public void Uses_rejects_a_comma_separated_import_list()
+    {
+        const string input = "unit Demo; uses System as Sys, System.Console as Console; end unit;";
+        var result = FpasFormatter.Format(new("input.fpas", input));
+        Assert.False(result.Success);
+        Assert.Contains("Start a new uses statement", Assert.Single(result.Diagnostics).Message);
+    }
+
+    [Fact]
+    public void Uses_leaves_an_overlong_import_intact()
+    {
+        var name = new string('A', 110);
+        var formatted = Format($"unit Demo; uses {name} as A; uses System as Sys; end unit;");
+        Assert.Contains($"uses {name} as A;\nuses System as Sys;", formatted);
+        Assert.Equal(formatted, Format(formatted));
+    }
+
+    [Fact]
+    public void Uses_moves_attached_comments_with_their_import()
+    {
+        const string input = """
+            unit Demo; // Unit header
+            // All imports
+
+            uses System.Text as Text; // Text access
+            // Console access
+            uses System.Console as Console;
+            // Standard unit
+            uses Std.Controls as Controls;
+            end unit;
+            """;
+        var formatted = Format(input);
+        Assert.Contains("""
+            // All imports
+
+            // Standard unit
+            uses Std.Controls as Controls;
+
+            // Console access
+            uses System.Console as Console;
+            uses System.Text as Text; // Text access
+            """.ReplaceLineEndings("\n"), formatted);
+        Assert.Contains("unit Demo; // Unit header", formatted);
+        Assert.Equal(formatted, Format(formatted));
     }
 
     [Fact]

@@ -2,20 +2,24 @@
 
 unit Fpas.Ui.Gui.Internal.Presentation.DisplayPresentation;
 
-uses
-  Fpas.Ui.Widgets.Canvas.Painting as Painting,
-  Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Media.Images as Images,
-  Fpas.Ui.Widgets.Canvas.Canvases as Canvases,
-  Fpas.Ui.Widgets.Overlays.Veils as Veils, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Layout as L,
-  Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Widgets.Display.NativeText as NativeTextWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Display.Icon as IconWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Display.Emoji as EmojiWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Display.Keycap as KeycapWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Media.Image as ImageWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Canvas.Canvas as CanvasWidget,
-  Fpas.Ui.Gui.Internal.Widgets.Overlays.Veil as VeilWidget, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Widgets.Canvas.Canvas as CanvasWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Display.Emoji as EmojiWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Display.Icon as IconWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Display.Keycap as KeycapWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Display.NativeText as NativeTextWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Media.Image as ImageWidget;
+uses Fpas.Ui.Gui.Internal.Widgets.Overlays.Veil as VeilWidget;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvases;
+uses Fpas.Ui.Widgets.Canvas.Painting as Painting;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Media.Images as Images;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
+uses Fpas.Ui.Widgets.Overlays.Veils as Veils;
+uses System as Sys;
 
 // Presents the native display elements.
 // ## Type parameters

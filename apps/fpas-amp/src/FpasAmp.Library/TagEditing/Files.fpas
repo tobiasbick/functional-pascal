@@ -3,10 +3,14 @@
 // Reads native tags and stages a verified replacement beside the original.
 unit FpasAmp.Library.TagEditing.Files;
 
-uses
-  ATL as A, Fpas.Media.Tags.AudioFiles as Media, FpasAmp.Library.TagEditing.Fields as F,
-  System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Collections.Generic as C,
-  System.Text.Encoding as Encoding;
+uses ATL as A;
+uses Fpas.Media.Tags.AudioFiles as Media;
+uses FpasAmp.Library.TagEditing.Fields as F;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses System.Text.Encoding as Encoding;
 
 // Prefix used by uncommitted edits, which inventory discovery ignores.
 public const StagingPrefix: string := '.fpas-tags-';

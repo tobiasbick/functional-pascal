@@ -2,11 +2,15 @@
 
 unit FpasAmp.Ui.Radio.Update;
 
-uses
-  FpasAmp.Ui.Radio.Model as M, FpasAmp.Ui.Radio.Directory as Directory,
-  FpasAmp.Ui.Collections.TableRows as Rows, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Ui.Mvu.Application as A, System as Sys, System.Threading as T,
-  System.Threading.Tasks as Tasks, System.Diagnostics as D;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses FpasAmp.Ui.Collections.TableRows as Rows;
+uses FpasAmp.Ui.Radio.Directory as Directory;
+uses FpasAmp.Ui.Radio.Model as M;
+uses System as Sys;
+uses System.Diagnostics as D;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 function Ordered(Items: array of M.Station; Order: Tables.Sort): array of M.Station;
   function Compare(Left: M.Station; Right: M.Station): int;

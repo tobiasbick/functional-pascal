@@ -2,23 +2,22 @@
 
 unit GuiGallery.Pages.Actions.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Actions.Widgets.ToggleGroup as ToggleGroup,
-  GuiGallery.Pages.Actions.Widgets.SpeedDial as SpeedDial,
-  GuiGallery.Pages.Actions.Widgets.SwipeActions as SwipeActions,
-  GuiGallery.Pages.Actions.Widgets.ThemeSwitcher as Theme,
-  GuiGallery.Pages.Actions.State as State,
-  GuiGallery.Pages.Actions.Widgets.SplitButton as Split,
-  GuiGallery.Pages.Actions.Widgets.ConfirmButton as Confirm,
-  GuiGallery.Pages.Actions.Widgets.StatusButton as Status,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S,
-  GuiGallery.Pages.Actions.Widgets.Reactions as Reactions,
-  GuiGallery.Pages.Actions.Widgets.UserMenu as UserMenu;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Actions.State as State;
+uses GuiGallery.Pages.Actions.Widgets.ConfirmButton as Confirm;
+uses GuiGallery.Pages.Actions.Widgets.Reactions as Reactions;
+uses GuiGallery.Pages.Actions.Widgets.SpeedDial as SpeedDial;
+uses GuiGallery.Pages.Actions.Widgets.SplitButton as Split;
+uses GuiGallery.Pages.Actions.Widgets.StatusButton as Status;
+uses GuiGallery.Pages.Actions.Widgets.SwipeActions as SwipeActions;
+uses GuiGallery.Pages.Actions.Widgets.ThemeSwitcher as Theme;
+uses GuiGallery.Pages.Actions.Widgets.ToggleGroup as ToggleGroup;
+uses GuiGallery.Pages.Actions.Widgets.UserMenu as UserMenu;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
 
 // Composes the accepted examples from CUI's extended Actions page.
 //

@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaRows;
 
-uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Globalization as Global, System.Collections.Generic as C;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Globalization as Global;
 
 // UTF-16 span of one displayed line, excluding the hard line separator.
 public type Line = record

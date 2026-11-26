@@ -3,12 +3,12 @@
 // Extracts complete JSON values from damaged FPas-Amp files.
 unit FpasAmp.Persistence.JsonRecovery;
 
-uses
-  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Persistence.JsonOutput as Output,
-  System as Sys,
-  System.Collections.Generic as C,
-  System.Text.Json as J,
-  System.Text.RegularExpressions as R;
+uses FpasAmp.Persistence.JsonFields as Fields;
+uses FpasAmp.Persistence.JsonOutput as Output;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Text.Json as J;
+uses System.Text.RegularExpressions as R;
 
 // A quoted token consumes its escapes and runs to the end of the input if cut short.
 const Tokens: R.Regex := new R.Regex(

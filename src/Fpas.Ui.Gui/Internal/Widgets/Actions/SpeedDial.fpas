@@ -2,10 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.SpeedDial;
 
-uses
-  Fpas.Ui.Widgets.Actions.SpeedDials as S, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui.Widgets.Actions as CuiActions,
-  Fpas.Ui.Gui.Cui as Cui, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Actions as CuiActions;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Actions.SpeedDials as S;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Draws CUI's speed dial and its floating action rows.
 // ## Type parameters

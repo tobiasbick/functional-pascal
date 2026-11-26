@@ -3,7 +3,10 @@
 // Language-independent search keys: folded words, phonetic codes and typo distance.
 unit FpasAmp.Library.Search.Text;
 
-uses System as Sys, System.Collections.Generic as C, System.Globalization as G, System.Text as Text;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Globalization as G;
+uses System.Text as Text;
 
 // Appends lower-case `Letter` to `Word`, spelling out letters that have no
 // accent-free decomposition.

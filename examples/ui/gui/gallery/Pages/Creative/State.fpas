@@ -2,10 +2,12 @@
 
 unit GuiGallery.Pages.Creative.State;
 
-uses
-  Fpas.Ui.Widgets.Inputs.GradientSliders as Gradient,
-  Fpas.Ui.Widgets.Inputs.StepSliders as Steps, Fpas.Ui.Widgets.Pickers.PaletteStrips as Palette, Fpas.Ui.Graphics as G,
-  Fpas.Ui.Widgets.Actions.OptionActions as Options, Fpas.Ui.Widgets.Inputs.SeedFields as Seeds;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Actions.OptionActions as Options;
+uses Fpas.Ui.Widgets.Inputs.GradientSliders as Gradient;
+uses Fpas.Ui.Widgets.Inputs.SeedFields as Seeds;
+uses Fpas.Ui.Widgets.Inputs.StepSliders as Steps;
+uses Fpas.Ui.Widgets.Pickers.PaletteStrips as Palette;
 
 function DefaultPalette(): array of Palette.Swatch;
 begin

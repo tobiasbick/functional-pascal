@@ -55,7 +55,7 @@ public sealed partial class MsBuildTests
         {
             var text = $$"""
                 program InvalidEvent;
-                uses Shared as S, System as Sys, System.Threading.Tasks as Tasks;
+                uses Shared as S; uses System as Sys; uses System.Threading.Tasks as Tasks;
                 {{declarations}}
                 begin
                   const Handler: Sys.Action := procedure() begin end procedure;

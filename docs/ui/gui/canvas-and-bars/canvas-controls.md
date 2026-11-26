@@ -11,7 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CanvasAndBars.CanvasControls;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Canvas.CanvasControls as W, Fpas.Ui.Widgets.Editors.NodeEditors as N;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Canvas.CanvasControls as W;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
 
 // Adds zoom and fit controls to a canvas child.
 // ## Parameters

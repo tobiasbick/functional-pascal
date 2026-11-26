@@ -11,8 +11,9 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.DataGrid.DataGrid;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Collections.DataGrids as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Collections.DataGrids as W;
 
 // Builds a virtual grid for two text columns.
 // ## Parameters

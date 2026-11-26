@@ -2,12 +2,21 @@
 
 unit GuiGallery.Pages.Voice.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Voice.State as S, GuiGallery.Pages.Voice.Script as Script, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Audio.Voice as V,
-  Fpas.Ui.Widgets.Audio.VoiceNotes as Notes, Fpas.Ui.Widgets.Audio.VoiceSessions as Calls, Fpas.Ui.Widgets.Audio.VoiceWaves as Waves, Fpas.Ui.Widgets.Audio.VoiceOrbs as Orbs,
-  Fpas.Ui.Widgets.Ai.Composers as Editor, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Ai.Composers as Editor;
+uses Fpas.Ui.Widgets.Audio.Voice as V;
+uses Fpas.Ui.Widgets.Audio.VoiceNotes as Notes;
+uses Fpas.Ui.Widgets.Audio.VoiceOrbs as Orbs;
+uses Fpas.Ui.Widgets.Audio.VoiceSessions as Calls;
+uses Fpas.Ui.Widgets.Audio.VoiceWaves as Waves;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Voice.Script as Script;
+uses GuiGallery.Pages.Voice.State as S;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 const Clip: array of float := Script.Clip();
 

@@ -2,16 +2,29 @@
 
 unit GuiGallery.Pages.Canvas.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Canvas.State as State, GuiGallery.Pages.Canvas.Picture as Picture,
-  GuiGallery.Pages.Canvas.SampleBounds as SampleBounds, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Motion.Motion as M,
-  Fpas.Ui.Widgets.Canvas.FormatBars as F, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Canvas.CanvasControls as C, Fpas.Ui.Widgets.Canvas.LiveCursors as Live,
-  Fpas.Ui.Widgets.Canvas.PresencePills as P, Fpas.Ui.Widgets.Canvas.SelectionRings as R, Fpas.Ui.Widgets.Editors.NodeEditors as N,
-  Fpas.Ui.Widgets.Canvas.ResultCards as Result, Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk, Fpas.Ui.Widgets.Inputs.Checkboxes as Check,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Theming.Themes as Theme, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Canvas.CanvasControls as C;
+uses Fpas.Ui.Widgets.Canvas.FormatBars as F;
+uses Fpas.Ui.Widgets.Canvas.LiveCursors as Live;
+uses Fpas.Ui.Widgets.Canvas.PresencePills as P;
+uses Fpas.Ui.Widgets.Canvas.ResultCards as Result;
+uses Fpas.Ui.Widgets.Canvas.SelectionBars as Bulk;
+uses Fpas.Ui.Widgets.Canvas.SelectionRings as R;
+uses Fpas.Ui.Widgets.Desktop.Toolbars as T;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
+uses Fpas.Ui.Widgets.Inputs.Checkboxes as Check;
+uses Fpas.Ui.Widgets.Motion.Motion as M;
+uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Canvas.Picture as Picture;
+uses GuiGallery.Pages.Canvas.SampleBounds as SampleBounds;
+uses GuiGallery.Pages.Canvas.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 function Glyph(Code: int): string;
 begin

@@ -2,9 +2,12 @@
 
 unit Fpas.Ui.Widgets.Collections.TreeTables;
 
-uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.DataGrids as G,
-  Fpas.Ui.Widgets.Overlays.Menus as M, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Collections.DataGrids as G;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses System as Sys;
 
 // A node in the tree table's model array.
 public type Node = record

@@ -2,12 +2,18 @@
 
 unit GuiGallery.Pages.Planning.View;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Planning.State as M, GuiGallery.Pages.Planning.Board as Board,
-  GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Planning.WeekCalendars as W, Fpas.Ui.Widgets.Planning.Gantts as Timeline,
-  Fpas.Ui.Widgets.Planning.MonthCalendars as Month, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Planning.Gantts as Timeline;
+uses Fpas.Ui.Widgets.Planning.MonthCalendars as Month;
+uses Fpas.Ui.Widgets.Planning.WeekCalendars as W;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Planning.Board as Board;
+uses GuiGallery.Pages.Planning.State as M;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 // Original month appointments positioned relative to the current month.
 // ## Parameters

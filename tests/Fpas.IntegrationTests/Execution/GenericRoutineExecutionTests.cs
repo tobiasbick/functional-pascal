@@ -7,7 +7,7 @@ public sealed class GenericRoutineExecutionTests
     [Fact]
     public Task Generic_routines_delegates_arrays_and_CLR_collections_execute() => ProgramExecution.Output("""
         program Generics;
-        uses System.Console as Console, System.Collections.Generic as Collections;
+        uses System.Console as Console; uses System.Collections.Generic as Collections;
         function Identity<T>(Value: T): T; begin return Value; end function;
         function Map<T, U>(Items: array of T; Transform: function(T): U): array of U;
         begin
@@ -54,7 +54,7 @@ public sealed class GenericRoutineExecutionTests
     [Fact]
     public Task Constraints_generic_construction_null_validation_and_nullable_values_execute() => ProgramExecution.Output("""
         program Constraints;
-        uses System as Sys, System.IO as IO, System.Console as Console;
+        uses System as Sys; uses System.IO as IO; uses System.Console as Console;
         function Compare<T>(Left: T; Right: T): int;
         where T: Sys.IComparable<T>;
         begin return Left.CompareTo(Right); end function;

@@ -40,7 +40,7 @@ public sealed class NestedRoutineExecutionTests
     [Fact]
     public Task Async_generic_nested_methods_keep_their_receiver_and_captures_after_suspension() => ProgramExecution.Output("""
         async program AsyncNested;
-        uses System.Console as Console, System.Threading.Tasks as Tasks;
+        uses System.Console as Console; uses System.Threading.Tasks as Tasks;
         function Create<T>(Value: T): Tasks.Task<T>;
           async function Run<U>(Other: U): Tasks.Task<T>;
           where U: struct;
@@ -56,7 +56,7 @@ public sealed class NestedRoutineExecutionTests
     [Fact]
     public Task Iteration_scopes_and_contract_only_captures_keep_their_values() => ProgramExecution.Output("""
         program Scoped;
-        uses System.Console as Console, System as Sys, System.Collections.Generic as C;
+        uses System.Console as Console; uses System as Sys; uses System.Collections.Generic as C;
         begin
           const Actions: C.List<Sys.Func<int>> := new C.List<Sys.Func<int>>();
           for Index: int := 0 to 2 do

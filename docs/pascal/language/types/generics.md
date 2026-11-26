@@ -27,7 +27,8 @@ and coverage. Public metadata preserves those CLR types across assembly boundari
 ```pascal
 program TypeRules;
 
-uses System as Sys, System.Console as Console;
+uses System as Sys;
+uses System.Console as Console;
 
 type Direction = enum: byte
   North = 0;

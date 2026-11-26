@@ -72,7 +72,8 @@ built-in Numeric/Printable constraints or runtime reflection fallback.
 ```pascal
 program GenericArithmetic;
 
-uses System.Numerics as N, System.Console as Console;
+uses System.Console as Console;
+uses System.Numerics as N;
 
 function Sum<T>(Values: array of T): T;
 where T: N.INumber<T>;

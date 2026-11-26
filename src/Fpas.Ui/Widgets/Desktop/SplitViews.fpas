@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Desktop.SplitViews;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Native allocation and orientation of a split view.
 public type Options = record

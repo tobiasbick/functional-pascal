@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Conversation.Presences;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // One user in a presence strip.
 public type User = record

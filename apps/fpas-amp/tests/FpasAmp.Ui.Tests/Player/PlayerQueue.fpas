@@ -3,15 +3,24 @@
 // Queue availability, offline skipping and bookmark persistence.
 unit FpasAmp.UiTests.PlayerQueue;
 
-uses
-  Fpas.Media.Tags.AudioFiles as MediaTags,
-  FpasAmp.Ui.Player.Availability as Availability, FpasAmp.Ui.Settings.Model as Settings,
-  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Sources as Sources,
-  FpasAmp.Ui.Player.Model as M, FpasAmp.Ui.Player.Update as Update,
-  Fpas.Media.Audio as Audio, System as Sys, System.IO as IO,
-  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Browse as Browse,
-  FpasAmp.Persistence.PlayerState as Bookmark, FpasAmp.AppState as Storage, FpasAmp.Library.Tests.Support as H,
-  FpasAmp.Library.Metadata.Model as Tracks, System.Collections.Immutable as I, Xunit as X;
+uses Fpas.Media.Audio as Audio;
+uses Fpas.Media.Tags.AudioFiles as MediaTags;
+uses FpasAmp.AppState as Storage;
+uses FpasAmp.Library.Inventory.Model as Inventory;
+uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Library.Sources as Sources;
+uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Persistence.PlayerState as Bookmark;
+uses FpasAmp.Ui.Albums.Music.Browse as Browse;
+uses FpasAmp.Ui.Albums.Music.Model as Music;
+uses FpasAmp.Ui.Player.Availability as Availability;
+uses FpasAmp.Ui.Player.Model as M;
+uses FpasAmp.Ui.Player.Update as Update;
+uses FpasAmp.Ui.Settings.Model as Settings;
+uses System as Sys;
+uses System.Collections.Immutable as I;
+uses System.IO as IO;
+uses Xunit as X;
 
 function Song(Id: long; Seconds: double): Tracks.Entry;
 begin

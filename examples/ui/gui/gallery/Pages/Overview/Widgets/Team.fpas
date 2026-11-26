@@ -2,12 +2,19 @@
 
 unit GuiGallery.Pages.Overview.Widgets.Team;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  GuiGallery.Pages.Overview.State as State, GuiGallery.Shared.State as Demo, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Feedback.Badges as Badges, Fpas.Ui.Widgets.Media.Avatars as Avatars,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B,
-  System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
+uses Fpas.Ui.Widgets.Media.Avatars as Avatars;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Overview.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
 
 type Person = record
   // Display name for the team row and avatar initials.

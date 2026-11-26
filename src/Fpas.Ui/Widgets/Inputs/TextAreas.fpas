@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Inputs.TextAreas;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses System as Sys;
 
 // Presentation and input options for a multiline editor.
 public type Options = record

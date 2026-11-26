@@ -2,10 +2,11 @@
 
 unit GuiDocCaptures.Pages.InstrumentsAndCapture;
 
-uses
-  GuiDocCaptures.Rendering.Regions as Regions, GuiDocCaptures.Rendering.Presented as Presented,
-  GuiGallery.App.State as Gallery, Fpas.Ui.Gui.Application as Gui,
-  Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses GuiDocCaptures.Rendering.Presented as Presented;
+uses GuiDocCaptures.Rendering.Regions as Regions;
+uses GuiGallery.App.State as Gallery;
 
 // Captures the readouts, dot-matrix widgets and event track on Instruments.
 // ## Parameters

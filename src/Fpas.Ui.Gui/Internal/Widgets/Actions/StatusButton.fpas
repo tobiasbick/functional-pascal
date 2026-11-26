@@ -2,7 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.StatusButton;
 
-uses Fpas.Ui.Widgets.Actions.StatusButtons as B, Fpas.Ui.Internal.Actions.StatusButtons as Text, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Internal.Actions.StatusButtons as Text;
+uses Fpas.Ui.Widgets.Actions.StatusButtons as B;
 
 // Draws native work feedback and proposes a message only for idle activation.
 //

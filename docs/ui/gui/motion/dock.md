@@ -10,7 +10,10 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.Motion.Dock;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Docks as W, Fpas.Ui.Widgets.Charts.Charts as C, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Navigation.Docks as W;
+uses System as Sys;
 
 // Shows a small application dock.
 // ## Parameters

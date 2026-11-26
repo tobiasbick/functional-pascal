@@ -2,9 +2,13 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup;
 
-uses
-  Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Styles as S, Fpas.Ui.TerminalExtensions.Input as K,
-  Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as A;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Inputs.RadioGroups as R;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 type Choice<TMsg> = record implements A.IActivatable<TMsg>
   public Group: string;

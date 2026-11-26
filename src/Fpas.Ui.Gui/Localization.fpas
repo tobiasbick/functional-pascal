@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Gui.Localization;
 
-uses Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Gui.Cui.Resources as Resources;
+uses Fpas.Ui.Gui.Cui.Resources as Resources;
+uses Fpas.Ui.Mvu.Application as Mvu;
 
 // An owned native caption-table replacement.
 // ## Type parameters

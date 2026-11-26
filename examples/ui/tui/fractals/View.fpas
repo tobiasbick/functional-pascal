@@ -2,12 +2,21 @@
 
 unit Fractals.View;
 
-uses
-  Fractals.Camera as C, Fractals.Explorer as X, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.TerminalExtensions.Views as V,
-  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.TerminalExtensions.CellGrids as G,
-  Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars,
-  Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.Globalization as Culture;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.TerminalExtensions.CellGrids as G;
+uses Fpas.Ui.TerminalExtensions.Input as K;
+uses Fpas.Ui.TerminalExtensions.Views as V;
+uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as Bars;
+uses Fpas.Ui.Widgets.Navigation.Navigation as Nav;
+uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+uses Fractals.Camera as C;
+uses Fractals.Explorer as X;
+uses System as Sys;
+uses System.Globalization as Culture;
 
 function Fixed(Cells: int): L.Flex;
 begin

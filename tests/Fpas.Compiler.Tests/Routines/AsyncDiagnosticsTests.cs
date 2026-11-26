@@ -18,7 +18,7 @@ public sealed class AsyncDiagnosticsTests
     [InlineData("async function F(): Tasks.Task; begin const Points: array of Drawing.Point := [new Drawing.Point(0, 0)]; Points[0].X := await Tasks.Task.FromResult<int>(1); end function;")]
     public void Unsupported_async_forms_report_diagnostics(string declarations)
     {
-        var result = TestCompilation.CompileAgainstFramework($"program AsyncErrors; uses System as Sys, System.Drawing as Drawing, System.Threading.Tasks as Tasks; {declarations} begin end; end program;");
+        var result = TestCompilation.CompileAgainstFramework($"program AsyncErrors; uses System as Sys; uses System.Drawing as Drawing; uses System.Threading.Tasks as Tasks; {declarations} begin end; end program;");
         Assert.False(result.Success);
         Assert.Equal("FP3030", Assert.Single(result.Diagnostics).Code);
     }

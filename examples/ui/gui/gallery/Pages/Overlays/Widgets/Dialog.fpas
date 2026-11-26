@@ -2,21 +2,20 @@
 
 unit GuiGallery.Pages.Overlays.Widgets.Dialog;
 
-uses
-  Gallery.Shared.Strings as Strings,
-  Fpas.Ui.Composition as U,
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Overlays.State as State,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Overlays.Dialogs as D,
-  Fpas.Ui.Widgets.Actions.ActionFooters as F,
-  Fpas.Ui.Widgets.Inputs.TextFields as TextFields,
-  Gallery.Shared.SwitchExamples as Switches,
-  System as Sys;
+uses Fpas.Ui.Composition as U;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.ActionFooters as F;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Inputs.TextFields as TextFields;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as D;
+uses Gallery.Shared.Strings as Strings;
+uses Gallery.Shared.SwitchExamples as Switches;
+uses GuiGallery.Pages.Overlays.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 // Shows the original dialog and sheet triggers on Overlays.
 //

@@ -2,11 +2,14 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Feedback.Alert;
 
-uses
-  Fpas.Ui.Widgets.Feedback.Alerts as A, Fpas.Ui.Styles as S,
-  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T,
-  System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as Actions;
+uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Feedback.Alerts as A;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // Dismissal state retained for alerts that remain in the terminal view.
 public type State = record

@@ -2,9 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.Knob;
 
-uses
-  Fpas.Ui.Widgets.Audio.Knobs as W, Fpas.Ui.Graphics as G, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Core.Context as C, System.Globalization as Culture;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Widgets.Audio.Knobs as W;
+uses System.Globalization as Culture;
 
 // Draws the native rotary control and forwards proposed values.
 // ## Type parameters

@@ -10,7 +10,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.SocialAndMedia.TypingIndicator;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Conversation.TypingIndicators as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Conversation.TypingIndicators as W;
 
 // Shows that a participant is typing.
 // ## Parameters

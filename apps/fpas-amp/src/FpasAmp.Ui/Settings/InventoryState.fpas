@@ -3,10 +3,12 @@
 // Pure source lookup and UI state updates for background library publications.
 unit FpasAmp.Ui.Settings.InventoryState;
 
-uses
-  FpasAmp.Ui.Settings.Model as M, FpasAmp.Library.Sources as S,
-  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as P,
-  System.Collections.Generic as C, System.Collections.Immutable as I;
+uses FpasAmp.Library.Inventory.Model as Inventory;
+uses FpasAmp.Library.Inventory.Progress as P;
+uses FpasAmp.Library.Sources as S;
+uses FpasAmp.Ui.Settings.Model as M;
+uses System.Collections.Generic as C;
+uses System.Collections.Immutable as I;
 
 // Finds a configured source by `Id`, returning null after removal.
 public function Source(Current: M.State; Id: string): S.MusicSource?;

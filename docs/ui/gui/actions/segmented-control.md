@@ -9,7 +9,8 @@ Choose one view or filter from a compact row of alternatives. See also the [term
 ```pascal
 unit Docs.Ui.Actions.SegmentedControl;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.SegmentedControls as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.SegmentedControls as S;
 
 // Builds the example view.
 // ## Parameters

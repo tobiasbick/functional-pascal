@@ -8,7 +8,7 @@ public sealed class InteropExecutionTests
     public Task Namespace_imports_constructors_chains_properties_and_structs_execute()
         => ProgramExecution.Output("""
             program Objects;
-            uses System as Sys, System.Text as Text, System.Console as Console;
+            uses System as Sys; uses System.Text as Text; uses System.Console as Console;
             begin
               const Builder: Text.StringBuilder := new Text.StringBuilder();
               discard Builder.Append('Hello').Append(' CLR');
@@ -59,7 +59,7 @@ public sealed class InteropExecutionTests
     public Task Using_return_filters_and_finally_execute_against_real_BCL_types()
         => ProgramExecution.Output("""
             program Errors;
-            uses System as Sys, System.IO as IO, System.Console as Console;
+            uses System as Sys; uses System.IO as IO; uses System.Console as Console;
             function ReadText(): string;
             begin
               using const Reader: IO.StringReader := new IO.StringReader('Read through .NET');

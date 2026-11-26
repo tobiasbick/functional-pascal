@@ -2,7 +2,11 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Conversation.Presence;
 
-uses Fpas.Ui.Widgets.Conversation.Presences as W, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Cui.Widgets.Conversation as CuiConversation, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Gui.Cui.Widgets.Conversation as CuiConversation;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Widgets.Conversation.Presences as W;
 
 // Draws an overlapping native group of active and away users.
 // ## Type parameters

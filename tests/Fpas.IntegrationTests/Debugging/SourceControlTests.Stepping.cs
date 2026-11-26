@@ -71,7 +71,7 @@ public sealed partial class SourceControlTests
         using var program = new Debuggee("own-step-through");
         await program.Compile("""
             program StepThrough;
-            uses System.Console as Console, System.Diagnostics.DebuggerStepThroughAttribute as StepThroughAttribute;
+            uses System.Console as Console; uses System.Diagnostics.DebuggerStepThroughAttribute as StepThroughAttribute;
             [StepThroughAttribute]
             function Hidden(Value: int): int;
             begin

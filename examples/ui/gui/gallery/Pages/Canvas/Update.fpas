@@ -2,10 +2,14 @@
 
 unit GuiGallery.Pages.Canvas.Update;
 
-uses
-  GuiGallery.Pages.Canvas.State as M, Fpas.Ui.Widgets.Canvas.FormatBars as F, Fpas.Ui.Widgets.Editors.NodeEditors as N,
-  Fpas.Ui.Widgets.Canvas.CanvasControls as C, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Canvas.SelectionBars as B,
-  Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Gui.FileDialogs as Files;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Canvas.CanvasControls as C;
+uses Fpas.Ui.Widgets.Canvas.FormatBars as F;
+uses Fpas.Ui.Widgets.Canvas.SelectionBars as B;
+uses Fpas.Ui.Widgets.Desktop.Toolbars as T;
+uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
+uses GuiGallery.Pages.Canvas.State as M;
 
 function Tools(Model: M.Model; Value: T.Event): M.Model;
 begin

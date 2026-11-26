@@ -9,7 +9,8 @@ Use a switch for a setting with two states. Open **Components → Selection → 
 ```pascal
 unit Docs.Tui.Selection.Switch;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Switches as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Switches as S;
 
 // Builds the Wi-Fi setting.
 // ## Parameters

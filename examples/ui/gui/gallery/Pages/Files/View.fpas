@@ -2,12 +2,23 @@
 
 unit GuiGallery.Pages.Files.View;
 
-uses
-  Gallery.Shared.Strings as Strings, Gallery.Shared.FilePickerExample as PickerSample,
-  GuiGallery.Pages.Files.State as M, GuiGallery.Pages.Files.Folders as Directory, Fpas.Ui.Widgets.Developer.Terminals as Terminal, GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Files.FileBrowsers as Browser, Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Navigation.PathBars as Paths,
-  Fpas.Ui.Widgets.Files.FileListings as Listings, System as Sys, System.IO as IO, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Developer.Terminals as Terminal;
+uses Fpas.Ui.Widgets.Files.FileBrowsers as Browser;
+uses Fpas.Ui.Widgets.Files.FileListings as Listings;
+uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
+uses Fpas.Ui.Widgets.Navigation.PathBars as Paths;
+uses Gallery.Shared.FilePickerExample as PickerSample;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Files.Folders as Directory;
+uses GuiGallery.Pages.Files.State as M;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+uses System.IO as IO;
 
 function Controls(Model: M.Model): E.Element<M.Msg>;
 begin

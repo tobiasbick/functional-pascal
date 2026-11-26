@@ -18,7 +18,7 @@ internal sealed class WaitingBuild : IDisposable
             var source = helper.directory.File("Wait.fpas"); var assembly = helper.directory.File("Wait.dll");
             File.WriteAllText(source, """
                 program Wait;
-                uses System as S, System.IO.File as File, System.Threading.Thread as Thread;
+                uses System as S; uses System.IO.File as File; uses System.Threading.Thread as Thread;
                 begin
                   const Ready: string := S.Environment.GetCommandLineArgs()[1];
                   File.WriteAllText(Ready + '.tmp', S.Environment.ProcessId.ToString());

@@ -9,8 +9,8 @@ Use an inline link to send a navigation message from inside text or a row. Avail
 ```pascal
 unit Docs.Ui.Disclosure.Link;
 
-uses Fpas.Ui.Elements as E,
-  Fpas.Ui.Widgets.Display.Links as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Display.Links as W;
 
 // Builds the link example.
 // ## Returns

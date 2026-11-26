@@ -9,7 +9,8 @@ Use tabs to switch the content within one page. The gallery shows an underline s
 ```pascal
 unit Docs.Ui.Navigation.Tabs;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Tabs as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Navigation.Tabs as C;
 
 // Builds the tabs example.
 // ## Parameters

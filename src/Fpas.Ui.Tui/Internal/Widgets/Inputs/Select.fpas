@@ -2,11 +2,16 @@
 
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.Select;
 
-uses
-  Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P, Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup,
-  Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys, System.Collections.Generic as C,
-  Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A,
-  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.Styles as Styles;
+uses Fpas.Ui.Tui.Internal.Controls.Activation as A;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+uses Fpas.Ui.Tui.Internal.View.Tree as E;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P;
+uses Fpas.Ui.Widgets.Inputs.Selects as S;
+uses System as Sys;
+uses System.Collections.Generic as C;
 
 // The select trigger and current model bindings.
 // ## Type parameters

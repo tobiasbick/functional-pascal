@@ -2,7 +2,11 @@
 
 unit Fpas.Ui.Widgets.Audio.VoiceWaves;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Audio.Voice as Voice, Fpas.Ui.Widgets.Charts.Charts as Charts, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Audio.Voice as Voice;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses System as Sys;
 
 // Native presentation and interaction options.
 public type Options = record

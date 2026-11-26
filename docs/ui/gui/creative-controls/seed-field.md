@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.CreativeControls.SeedField;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.SeedFields as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.SeedFields as W;
 
 // Edits an image generation seed.
 // ## Parameters

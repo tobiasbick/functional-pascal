@@ -2,9 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.GradientSlider;
 
-uses
-  Fpas.Ui.Widgets.Inputs.GradientSliders as A, Fpas.Ui.Gui.Internal.Core.Context as C,
-  Fpas.Ui.Gui.Internal.Core.Parts as W, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Widgets.Audio.ControlWells as Wells, Fpas.Ui.Gui.Internal.Data.ChartData as Chart, System as Sys;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as W;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Chart;
+uses Fpas.Ui.Widgets.Audio.ControlWells as Wells;
+uses Fpas.Ui.Widgets.Inputs.GradientSliders as A;
+uses System as Sys;
 
 // Presents the native gradient slider.
 // ## Type parameters

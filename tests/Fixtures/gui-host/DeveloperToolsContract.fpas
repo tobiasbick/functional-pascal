@@ -2,12 +2,19 @@
 
 unit GalleryDeveloperToolsContract;
 
-uses
-  GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as Gallery,
-  GuiGallery.Pages.MoreDeveloper.State as More, GuiGallery.Pages.MoreDeveloper.Update as MoreUpdate,
-  GalleryHostAssertions as A, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Gui.Internal.Core.Context as Context, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Developer.RequestBars as Requests,
-  Fpas.Ui.Widgets.Developer.KeyValueEditors as Pairs, System as Sys;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as Context;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Widgets.Developer.KeyValueEditors as Pairs;
+uses Fpas.Ui.Widgets.Developer.RequestBars as Requests;
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as Update;
+uses GuiGallery.App.View as Gallery;
+uses GuiGallery.Pages.MoreDeveloper.State as More;
+uses GuiGallery.Pages.MoreDeveloper.Update as MoreUpdate;
+uses System as Sys;
 
 procedure Parameters();
 begin

@@ -9,7 +9,8 @@ Use a switch for an on/off setting such as Wi-Fi. Available in **GUI and TUI**.
 ```pascal
 unit Docs.Ui.Selection.Switch;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Switches as C;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Inputs.Switches as C;
 
 // Builds the switch example.
 // ## Parameters

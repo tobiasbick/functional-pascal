@@ -2,7 +2,14 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceWave;
 
-uses Fpas.Ui.Widgets.Audio.VoiceWaves as VoiceWaves, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Widgets.Audio.Voice as Voice, System as Sys, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Widgets.Audio.Voice as Voice;
+uses Fpas.Ui.Widgets.Audio.VoiceWaves as VoiceWaves;
+uses System as Sys;
 
 // Presents CUI's native VoiceWave.
 // ## Type parameters

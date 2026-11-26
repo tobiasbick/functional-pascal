@@ -57,8 +57,8 @@ public sealed partial class PublishingTests(SdkPackageFixture sdk) : IClassFixtu
         var xml = XDocument.Load(project); xml.Root!.Add(new XElement("ItemGroup", new XElement("ProjectReference", new XAttribute("Include", "../Shared/Shared.csproj")))); xml.Save(project);
         File.WriteAllText(directory.File("App/main.fpas"), """
             async program App;
-            uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks, Shared.Value as Foreign,
-              Fpas.Core.RecordAttribute as RecordMarker;
+            uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks; uses Shared.Value as Foreign;
+              uses Fpas.Core.RecordAttribute as RecordMarker;
             type Id = distinct int;
             type Box<T> = record
               public Value: T;

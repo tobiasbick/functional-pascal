@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Planning.TimelineItems;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
 
 // Native activity-item text, decoration and connector options.
 public type Options = record

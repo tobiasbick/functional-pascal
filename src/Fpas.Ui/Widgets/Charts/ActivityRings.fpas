@@ -2,7 +2,11 @@
 
 unit Fpas.Ui.Widgets.Charts.ActivityRings;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses System as Sys;
 
 // Native activity-rings presentation.
 public type Options = record

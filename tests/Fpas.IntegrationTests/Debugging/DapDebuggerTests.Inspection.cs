@@ -11,7 +11,7 @@ public sealed partial class DapDebuggerTests
         using var program = new Debuggee("dap-page-bytes");
         await program.Compile("""
             program PageBytes;
-            uses System as Sys, System.Console as Console;
+            uses System as Sys; uses System.Console as Console;
             begin
               const Items: array of string? := new string?[128];
               const Text: string := new Sys.String(#120, 4096);

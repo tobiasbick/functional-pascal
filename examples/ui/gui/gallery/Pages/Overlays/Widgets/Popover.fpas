@@ -2,18 +2,17 @@
 
 unit GuiGallery.Pages.Overlays.Widgets.Popover;
 
-uses
-  GuiGallery.Shared.State as Demo,
-  GuiGallery.Pages.Overlays.State as State,
-  GuiGallery.Shared.Sections as G,
-  Fpas.Ui.Elements as E,
-  Fpas.Ui.Layout as L,
-  Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Inputs.Checkboxes as Checks,
-  Fpas.Ui.Widgets.Inputs.Sliders as Sliders,
-  Fpas.Ui.Widgets.Overlays.Popovers as P,
-  System as Sys;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Inputs.Checkboxes as Checks;
+uses Fpas.Ui.Widgets.Inputs.Sliders as Sliders;
+uses Fpas.Ui.Widgets.Overlays.Popovers as P;
+uses GuiGallery.Pages.Overlays.State as State;
+uses GuiGallery.Shared.Sections as G;
+uses GuiGallery.Shared.State as Demo;
+uses System as Sys;
 
 // Builds the Filters button and the CUI gallery's filter controls.
 //

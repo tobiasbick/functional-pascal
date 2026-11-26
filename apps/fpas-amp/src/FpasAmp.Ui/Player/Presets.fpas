@@ -3,7 +3,8 @@
 // Ten-band equalizer curves, ordered from 31 Hz to 16 kHz.
 unit FpasAmp.Ui.Player.Presets;
 
-uses System.Collections.Immutable as I, System.Linq as Linq;
+uses System.Collections.Immutable as I;
+uses System.Linq as Linq;
 
 // One selectable curve.
 public type Curve = record

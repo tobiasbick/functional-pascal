@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Widgets.Feedback.Badges;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // Appearance of a native badge.
 public type Options = record

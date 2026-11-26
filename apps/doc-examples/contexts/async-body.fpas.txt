@@ -2,7 +2,8 @@
 
 async program Example;
 
-uses System.Console as Console, System.IO as IO;
+uses System.Console as Console;
+uses System.IO as IO;
 
 begin
   // @example

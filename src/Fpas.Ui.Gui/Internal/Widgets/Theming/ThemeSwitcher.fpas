@@ -2,7 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Theming.ThemeSwitcher;
 
-uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as S, Fpas.Ui.Internal.Theming.ThemeSwitchers as Parts, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as C, System.Collections.Generic as Lists;
+uses Fpas.Ui.Gui.Application as App;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Internal.Theming.ThemeSwitchers as Parts;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as S;
+uses System.Collections.Generic as Lists;
 
 // Draws the native selector and publishes controlled group/segment snapshots.
 //

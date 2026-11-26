@@ -2,13 +2,24 @@
 
 unit GuiGallery.Pages.DataGrid.View;
 
-uses
-  Gallery.Shared.Strings as Strings, Gallery.Shared.PeopleFilters as Filters,
-  GuiGallery.Pages.DataGrid.State as S, GuiGallery.Pages.DataGrid.People as P,
-  GuiGallery.Shared.Sections as H, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.TreeTables as TT,
-  Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Widgets.Feedback.Badges as B, Fpas.Ui.Widgets.Feedback.ProgressBars as Progress, Fpas.Ui.Styles as Style,
-  System as Sys, System.Globalization as Culture, System.Collections.Generic as Lists;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Styles as Style;
+uses Fpas.Ui.Widgets.Collections.DataGrids as D;
+uses Fpas.Ui.Widgets.Collections.Tables as T;
+uses Fpas.Ui.Widgets.Collections.TreeTables as TT;
+uses Fpas.Ui.Widgets.Feedback.Badges as B;
+uses Fpas.Ui.Widgets.Feedback.ProgressBars as Progress;
+uses Fpas.Ui.Widgets.Media.Avatars as A;
+uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Gallery.Shared.PeopleFilters as Filters;
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.DataGrid.People as P;
+uses GuiGallery.Pages.DataGrid.State as S;
+uses GuiGallery.Shared.Sections as H;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+uses System.Globalization as Culture;
 
 function Points(Value: int): L.Extent;
 begin

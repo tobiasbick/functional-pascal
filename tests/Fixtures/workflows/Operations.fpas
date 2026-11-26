@@ -2,11 +2,14 @@
 
 async program WorkflowOperations;
 
-uses
-  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Policies as Policy,
-  Fpas.Execution.Workflows.Parallel as Parallel, Fpas.Execution.Workflows.Tracing as Trace,
-  System as Sys, System.Diagnostics as Diagnostics, System.Threading as T,
-  System.Threading.Tasks as Tasks;
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Execution.Workflows.Parallel as Parallel;
+uses Fpas.Execution.Workflows.Policies as Policy;
+uses Fpas.Execution.Workflows.Tracing as Trace;
+uses System as Sys;
+uses System.Diagnostics as Diagnostics;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 procedure Check(Condition: bool; Message: string);
 begin

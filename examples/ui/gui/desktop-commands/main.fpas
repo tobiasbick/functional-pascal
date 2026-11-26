@@ -2,10 +2,11 @@
 
 program DesktopCommandsExample;
 
-uses
-  DesktopCommands.State as S, DesktopCommands.Update as Update,
-  DesktopCommands.View as View, DesktopCommands.Preferences as Preferences,
-  Fpas.Ui.Gui.Desktop as Gui;
+uses DesktopCommands.Preferences as Preferences;
+uses DesktopCommands.State as S;
+uses DesktopCommands.Update as Update;
+uses DesktopCommands.View as View;
+uses Fpas.Ui.Gui.Desktop as Gui;
 
 begin
   Gui.RunThemed<S.Model, S.Msg>(

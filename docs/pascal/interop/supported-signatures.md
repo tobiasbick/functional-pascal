@@ -27,7 +27,9 @@ converted to spans; use the API's string or offset/count overloads.
 ```pascal
 program SpanArguments;
 
-uses System.Buffers.Binary as Binary, System.Console as Console, System.IO as IO;
+uses System.Buffers.Binary as Binary;
+uses System.Console as Console;
+uses System.IO as IO;
 
 begin
   const Header: array of byte := [$00, $00, $01, $02];

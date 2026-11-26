@@ -15,7 +15,7 @@ public sealed partial class SourceControlTests
         File.WriteAllText(Path.ChangeExtension(library, ".pdb"), "This is not a portable PDB.");
         await program.Compile("""
             program ForeignSymbols;
-            uses Foreign as F, System.Console as Console;
+            uses Foreign as F; uses System.Console as Console;
             function Work(): int;
             begin
               return F.Number() + 2;
@@ -43,8 +43,8 @@ public sealed partial class SourceControlTests
         using var program = new Debuggee("own-entry-once");
         await program.Compile("""
             program EntryOnce;
-            uses System.Console as Console, System.IO.File as File, System.Reflection.Assembly as Assembly,
-              System.Reflection.MethodInfo as MethodInfo, System.Runtime.Loader.AssemblyLoadContext as LoadContext;
+            uses System.Console as Console; uses System.IO.File as File; uses System.Reflection.Assembly as Assembly;
+              uses System.Reflection.MethodInfo as MethodInfo; uses System.Runtime.Loader.AssemblyLoadContext as LoadContext;
             begin
               if File.Exists('called-again.txt') then
                 Console.WriteLine('second');

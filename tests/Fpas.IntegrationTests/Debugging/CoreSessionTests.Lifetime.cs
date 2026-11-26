@@ -132,7 +132,7 @@ public sealed partial class CoreSessionTests
     {
         await program.Compile("""
             program Held;
-            uses System.Console as Console, System.Threading.Thread as Thread;
+            uses System.Console as Console; uses System.Threading.Thread as Thread;
             begin
               var Value: int := 20;
               Console.WriteLine(Value);

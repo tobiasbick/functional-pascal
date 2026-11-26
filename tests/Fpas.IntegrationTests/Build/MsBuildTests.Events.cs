@@ -76,7 +76,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Events;
-            uses Shared as S, System as Sys;
+            uses Shared as S; uses System as Sys;
             public procedure Wire();
             begin
               subscribe S.Log.Receiver().Changed with S.Log.ReadHandler();
@@ -180,7 +180,7 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Events;
-            uses Shared as S, System as Sys, System.Threading.Tasks as Tasks;
+            uses Shared as S; uses System as Sys; uses System.Threading.Tasks as Tasks;
             public async function Wire(Source: Tasks.Task<S.Publisher>; Handler: Tasks.Task<Sys.Action>): Tasks.Task;
             begin subscribe (await Source).Changed with await Handler; end function;
             public async function Cleanup(Source: S.Publisher; Handler: Sys.Action; Gate: Tasks.Task): Tasks.Task;

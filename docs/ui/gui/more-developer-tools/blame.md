@@ -11,7 +11,8 @@ Available in **GUI**.
 ```pascal
 unit Docs.Ui.MoreDeveloperTools.Blame;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Developer.Blames as W;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Developer.Blames as W;
 
 // Displays source with the revision that last changed each line.
 // ## Parameters

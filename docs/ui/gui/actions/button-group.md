@@ -9,8 +9,9 @@ Join related actions in a single horizontal frame with dividers. Available in **
 ```pascal
 unit Docs.Ui.Actions.ButtonGroup;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.ButtonGroups as G,
-  Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Actions.ButtonGroups as G;
+uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // Builds the example view.
 // ## Returns

@@ -2,7 +2,8 @@
 
 unit Fpas.Ui.Widgets.Canvas.SelectionBars;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Styles as S;
 
 // An action offered for selected items.
 public type Action = record

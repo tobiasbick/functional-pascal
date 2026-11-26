@@ -3,10 +3,13 @@
 // Small coalescing control queue shared by callers, watcher callbacks and one worker.
 unit FpasAmp.Library.Inventory.Internal.Inbox;
 
-uses
-  FpasAmp.Library.Sources as S, System as Sys, System.Collections.Generic as C,
-  FpasAmp.Library.Inventory.Model as M,
-  System.Threading as T, System.Threading.Tasks as Tasks, System.Runtime.CompilerServices as R;
+uses FpasAmp.Library.Inventory.Model as M;
+uses FpasAmp.Library.Sources as S;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.Runtime.CompilerServices as R;
+uses System.Threading as T;
+uses System.Threading.Tasks as Tasks;
 
 // Accepted clear operation, completed only after the worker commits and publishes it.
 public type ClearRequest = record

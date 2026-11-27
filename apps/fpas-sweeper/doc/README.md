@@ -38,7 +38,10 @@ a cancellable clock that starts on the first reveal and stops when the round
 ends or resets. A flag placed before the first reveal leaves the clock at zero.
 
 [View.fpas](../src/FpasSweeper/View.fpas) uses native CUI controls for difficulty,
-dimensions, actions and appearance.
-[BoardView.fpas](../src/FpasSweeper/BoardView.fpas) paints the tiles and maps
-pointer positions using the same grid geometry. The canvas also accepts keyboard
-actions when focused.
+dimensions, actions and appearance. Native metric tiles display the round
+clock and estimated mines left. CUI sizes the board beside the settings pane.
+
+[BoardView.fpas](../src/FpasSweeper/BoardView.fpas) paints the tiles with native
+theme colors and CUI glyphs. The board uses the same grid geometry for painting
+and pointer input. The canvas sends reveal on a left click and toggles a flag
+on a right click. Focus the canvas to use the keyboard controls.

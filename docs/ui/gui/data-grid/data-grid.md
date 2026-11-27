@@ -42,7 +42,7 @@ end unit;
 | `Columns` | Supply one to 32 columns. Each column has a heading, initial width, alignment, and options for sorting, resizing, and hiding. |
 | `Cell` | Supply one Text, Content or Editable cell per column. Editable capacity is at most 256 UTF-8 bytes including the terminator. |
 | `Selected / Order` | Both null. Provide a selection mask or sort record to enable each feature. |
-| `Cursor / Anchor` | Both minus one. When set, they index the displayed order. Setting a cursor reveals its row. |
+| `Cursor / Anchor` | Both minus one. When set, they index the displayed order. Setting a cursor reveals its row. An explicit scroll target takes precedence over the first cursor reveal. |
 | `Scroll` | Null for native scrolling. Supply a nonnegative vertical target in logical points to restore it and receive changes through the grid's proposal mapper. |
 | `Width / Height` | `Fill`. CUI treats `Content` as `Fill` for both dimensions. |
 | `RowHeight` | 40 logical units. The minimum is one logical unit. |

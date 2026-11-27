@@ -28,9 +28,11 @@ public sealed partial class CuiWindow
     /// <param name="cursor">Hover cursor ordinal, or -1 for the default.</param>
     /// <param name="onInput">Receives ordered component input after an enabled canvas is submitted.</param>
     /// <param name="enabledDuringResize">Keep an enabled canvas eligible for focus during passive resize if it was previously eligible.</param>
-    /// <returns>Whether the user activated this canvas by pointer or keyboard.</returns>
+    /// <param name="onRightClick">Optional notification for a right-button press on this canvas.</param>
+    /// <returns>Whether the user activated this canvas by primary pointer or keyboard.</returns>
     public unsafe bool DrawingCanvas(string id, int widthKind, float width, int heightKind, float height, CuiDrawingShape[] shapes, bool enabled, out float x, out float y, out float w, out float h, bool wheel, out float wheelX, out float wheelY, Action<CuiCanvasPainter>? paint = null, Action<CuiCanvasPointer>? onPointer = null,
-        bool focusable = false, bool focus = false, int cursor = -1, Action<CuiCanvasInput>? onInput = null, bool enabledDuringResize = false)
+        bool focusable = false, bool focus = false, int cursor = -1, Action<CuiCanvasInput>? onInput = null, bool enabledDuringResize = false,
+        Action<CuiCanvasClick>? onRightClick = null)
     {
         CheckFrame();
         CheckExtent(widthKind, width, nameof(width));
@@ -57,6 +59,7 @@ public sealed partial class CuiWindow
         if ((flags & 16) != 0 && onInput is not null)
             canvasHandlers[NativeMethods.LastId(context)] = onInput;
         if ((flags & 2) != 0) onPointer!(new((flags & 4) != 0, (flags & 8) != 0, x, y, w, h));
+        if ((flags & 32) != 0) onRightClick?.Invoke(new(x, y, w, h));
         return (flags & 1) != 0;
     }
 }

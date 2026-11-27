@@ -51,8 +51,6 @@ public type State = record
   public Playing: bool := false;
   // The restored track is paused and will open on its first explicit play.
   public NeedsOpen: bool := false;
-  // Whether the equalizer preset dropdown is visible.
-  public PresetsOpen: bool := false;
   // Elapsed time in the current track, in milliseconds.
   public Position: double := 0.0;
   // Metadata estimate until the decoder reports its presentation length, in milliseconds.
@@ -117,8 +115,6 @@ public type Msg = variant
   Volume(Value: float);
   // Set one equalizer band's gain in dB.
   Gain(Band: int; Value: float);
-  // Open or dismiss the compact preset selector.
-  ShowPresets(Open: bool);
   // Apply all ten gains of the chosen preset in one mixer update.
   Preset(Index: int);
   // Reset every equalizer band to zero dB.

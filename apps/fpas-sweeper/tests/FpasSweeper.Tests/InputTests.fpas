@@ -1,0 +1,67 @@
+// [Documentation](../README.md)
+
+unit FpasSweeper.Tests.InputTests;
+
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+
+uses FpasSweeper.Game as Game;
+uses FpasSweeper.State as S;
+uses FpasSweeper.Update as Update;
+uses Xunit as X;
+
+function Key(Model: S.Model; Code: Keys.Key; Down: bool; Repeated: bool := false): S.Model;
+begin
+  return Update.Apply(
+    Model,
+    S.Msg.BoardInput(Canvas.Input.Key(Code, Keys.Modifier.None, Down, Repeated))
+  ).Model;
+end function;
+
+// Verifies the independent game actions that the CUI canvas routes.
+public type InputTests = record
+  // Flagging updates the cursor and leaves timers idle until a successful reveal.
+  [X.FactAttribute]
+  public procedure PointerActionsAreIndependent();
+  begin
+    const Initial: S.Model := S.Initial(2);
+    const Flagged: S.Model := Update.Apply(Initial, S.Msg.ToggleFlag(27)).Model;
+    X.Assert.Equal of Game.Cell(Game.Cell.Flagged, Flagged.Board.At(27));
+    X.Assert.Equal of int(27, Flagged.Cursor);
+    X.Assert.Equal of Game.Phase(Game.Phase.Ready, Flagged.Board.State);
+    X.Assert.Equal of long(0L, Flagged.StartedAt);
+    const Blocked: S.Model := Update.Apply(Flagged, S.Msg.Reveal(27)).Model;
+    X.Assert.Equal of Game.Cell(Game.Cell.Flagged, Blocked.Board.At(27));
+    X.Assert.Equal of Game.Phase(Game.Phase.Ready, Blocked.Board.State);
+    const Cleared: S.Model := Update.Apply(Blocked, S.Msg.ToggleFlag(27)).Model;
+    X.Assert.Equal of Game.Cell(Game.Cell.Covered, Cleared.Board.At(27));
+    const Opened: S.Model := Update.Apply(Cleared, S.Msg.Reveal(27)).Model;
+    X.Assert.Equal of Game.Cell(Game.Cell.Open(0), Opened.Board.At(27));
+    X.Assert.Equal of Game.Cell(
+      Game.Cell.Open(0), Update.Apply(Opened, S.Msg.ToggleFlag(27)).Model.Board.At(27)
+    );
+  end procedure;
+
+  // Focused keyboard input reveals with Enter or Space and toggles flags with F.
+  [X.FactAttribute]
+  public procedure KeyboardActionsIgnoreReleasesAndRepeats();
+  begin
+    const Initial: S.Model := S.Initial(2) with
+      Cursor := 27;
+    end with;
+    const Flagged: S.Model := Key(Initial, Keys.Key.F, true);
+    X.Assert.Equal of Game.Cell(Game.Cell.Flagged, Flagged.Board.At(27));
+    X.Assert.Equal of int(1, Key(Flagged, Keys.Key.F, true, true).Board.FlagCount);
+    X.Assert.Equal of int(1, Key(Flagged, Keys.Key.F, false).Board.FlagCount);
+    X.Assert.Equal of int(1, Key(Flagged, Keys.Key.Enter, true).Board.FlagCount);
+    const Cleared: S.Model := Key(Flagged, Keys.Key.F, true);
+    X.Assert.Equal of Game.Cell(
+      Game.Cell.Covered,
+      Key(Cleared, Keys.Key.Space, true, true).Board.At(27)
+    );
+    X.Assert.Equal of Game.Cell(Game.Cell.Open(0), Key(Cleared, Keys.Key.Space, true).Board.At(27));
+    X.Assert.Equal of Game.Cell(Game.Cell.Open(0), Key(Cleared, Keys.Key.Enter, true).Board.At(27));
+  end procedure;
+end record;
+
+end unit;

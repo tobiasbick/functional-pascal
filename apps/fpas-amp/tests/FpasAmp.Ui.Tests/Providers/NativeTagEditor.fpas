@@ -8,6 +8,7 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Mvu.Testing.EffectReplies as Effects;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields;
 
 uses ATL as Atl;
 uses FpasAmp.Library.Inventory.Monitoring as Library;
@@ -61,6 +62,8 @@ begin
     Mvu.FromWorker of App.Msg(
       async function(Post: function(App.Msg): Tasks.Task; _Stop: T.CancellationToken): Tasks.Task begin
         case Message of
+          when Editor.Msg.Search:
+            await Post(App.Msg.TagEditor(Editor.Msg.Found([])));
           when Editor.Msg.Scan:
             await Post(
               App.Msg.TagEditor(
@@ -132,6 +135,12 @@ procedure Exercise(Store: Library.Session; Path: string);
       Window.InputText(Typed);
       Typed := '';
     end if;
+
+    if Submit then
+      Window.SetKey(2, true);
+      Window.SetKey(2, false);
+      Submit := false;
+    end if;
   end procedure;
   procedure Click(Session: Gui.Session of App.Msg; Bounds: Cui.CuiRectangle);
   begin
@@ -193,6 +202,7 @@ begin
   var Left: int := -1;
   var Wheel: float := 0.0F;
   var Typed: string := '';
+  var Submit: bool := false;
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'Edit tags',
     1540,
@@ -235,6 +245,26 @@ begin
   Click(Session, Control(Session, Menu + '/edit-tags').Bounds);
   X.Assert.Contains of string('Reading tags…', Session.Snapshot().Text);
   Deliver(Session, Loaded);
+  const Search: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
+    'tag-editor/provider'
+  );
+  X.Assert.Equal of string('search-field', Control(Session, 'tag-query').Role);
+  Click(Session, Control(Session, SearchFields.ClearId('tag-query')).Bounds);
+  X.Assert.Equal of string('', State().Query);
+  X.Assert.False(Control(Session, 'tag-search').Enabled);
+  Click(Session, Control(Session, 'tag-query').Bounds);
+  Typed := 'Native search';
+  Step(Session);
+  Step(Session);
+  X.Assert.Equal of string('Native search', State().Query);
+  Submit := true;
+  Step(Session);
+  Step(Session);
+  X.Assert.True(State().Searching);
+  Deliver(Session, Search);
+  X.Assert.Contains of string(
+    'MusicBrainz found no matching recordings.', Session.Snapshot().Text
+  );
   const Scan: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
     'tag-editor/provider'
   );

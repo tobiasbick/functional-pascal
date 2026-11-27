@@ -4,13 +4,10 @@
 unit FpasAmp.Ui.Settings.General;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Widgets.Actions.SegmentedControls as Segments;
-uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
-uses Fpas.Ui.Widgets.Overlays.Tooltips as Tips;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
@@ -18,29 +15,24 @@ uses FpasAmp.Ui.Settings.Model as M;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-function Swatch(Theme: Themes.Theme; Accent: Themes.Accent): E.Element of M.Msg;
+function Swatch(Selected: Themes.Accent; Accent: Themes.Accent): E.Element of M.Msg;
 begin
   const Name: string := Accent.ToString();
-  const Color: G.Color := Themes.Light(Accent).Colors.Accent;
-  const Dot: Canvas.Shape := Canvas.Shape.Circle(14.0F, 14.0F, 10.0F, Color);
-  const Shapes: array of Canvas.Shape := if Theme.AccentFamily = Accent then
-    [
-      Canvas.Shape.Circle(14.0F, 14.0F, 14.0F, Theme.Colors.Foreground),
-      Canvas.Shape.Circle(14.0F, 14.0F, 12.0F, Theme.Colors.Surface),
-      Dot
-    ]
-  else
-    [Dot]
-  end if;
-  const Side: L.Extent := L.Extent.Fixed(L.Measure.Logical(28));
-  return Tips.Tooltip of M.Msg(
-    Canvas.Canvas of M.Msg(
-      'accent-' + Name.ToLowerInvariant(),
-      Shapes,
-      function(_Event: Canvas.Event): M.Msg => M.Msg.SetAccent(Accent),
-      new Canvas.Options(Width := Side, Height := Side)
+  const Active: bool := Selected = Accent;
+  return Icons.IconButton of M.Msg(
+    'accent-' + Name.ToLowerInvariant(),
+    Sys.Char.ConvertFromUtf32(
+      if Active then
+        $E345
+      else
+        $E076
+      end if
     ),
-    Name
+    Name, M.Msg.SetAccent(Accent),
+    new Icons.Options(
+      ControlSize := Icons.Size.Small, Selected := Active,
+      Color := Themes.Light(Accent).Colors.Accent
+    )
   );
 end function;
 
@@ -55,7 +47,7 @@ public function View(Current: M.State; Theme: Themes.Theme): E.Element of M.Msg;
 begin
   const Colors: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   for Accent: Themes.Accent in Sys.Enum.GetValues of Themes.Accent() do
-    Colors.Add(Swatch(Theme, Accent));
+    Colors.Add(Swatch(Theme.AccentFamily, Accent));
   end for;
   const Options: Cards.Options := new Cards.Options(
     Width := L.Extent.Fill,
@@ -68,15 +60,9 @@ begin
       'appearance-card',
       [
         Texts.Text of M.Msg('Appearance', Texts.Appearance.HeadingThree),
-        Segments.SegmentedControl of M.Msg(
-          'appearance',
-          [
-            new Segments.Item('Light', Sys.Char.ConvertFromUtf32($E178)),
-            new Segments.Item('Dark', Sys.Char.ConvertFromUtf32($E11E)),
-            new Segments.Item('System', Sys.Char.ConvertFromUtf32($E11D))
-          ],
-          cast M.Appearance(Current.Saved) as int,
-          function(Index: int): M.Msg => M.Msg.SetAppearance(cast Index as Switchers.Selection)
+        Switchers.ThemeSwitcher of M.Msg(
+          'appearance', M.Appearance(Current.Saved), M.Msg.SetAppearance,
+          new Switchers.Options(WithSystem := true)
         )
       ],
       Options

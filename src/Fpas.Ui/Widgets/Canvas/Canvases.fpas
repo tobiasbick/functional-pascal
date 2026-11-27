@@ -110,6 +110,7 @@ end record;
 // - `Paint`: Optional direct CUI drawing after layout, following Drawing; owner-thread only.
 // - `OnPointer`: Optional changed-state hover/press mapper; disabling emits a final leave.
 // - `OnInput`: Optional ordered keyboard/text mapper. Enables component focus and leaves Tab navigation to CUI.
+// - `OnRightClick`: Optional right-button mapper. Uses the same local coordinates as primary activation.
 // ## Returns
 // A graphical element.
 public function Canvas of TMsg(
@@ -120,7 +121,8 @@ public function Canvas of TMsg(
   OnWheel: Sys.Func of (Wheel, TMsg)? := null;
   Paint: (Sys.Action of Painting.Surface)? := null;
   OnPointer: Sys.Func of (Pointer, TMsg)? := null;
-  OnInput: Sys.Func of (Input, TMsg)? := null
+  OnInput: Sys.Func of (Input, TMsg)? := null;
+  OnRightClick: Sys.Func of (Event, TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin
@@ -131,7 +133,7 @@ begin
     Settings ?? new Options(),
     OnWheel,
     Paint,
-    OnPointer, OnInput
+    OnPointer, OnInput, OnRightClick
   );
 end function;
 

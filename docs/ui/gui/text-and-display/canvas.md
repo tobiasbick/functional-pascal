@@ -42,6 +42,7 @@ end unit;
 | `OnWheel / OnPointer` | Both null. Opt in to wheel ownership or changed hover and press notifications. |
 | `Focusable / HoverCursor` | false / null. Opt in to native keyboard activation and choose a pointer shape while hovered. |
 | `OnInput` | null. Supplying a handler makes the canvas focusable and routes component input to it. |
+| `OnRightClick` | null. Maps a right-button press on the enabled canvas to a separate message. |
 
 ## Keyboard and pane focus
 
@@ -69,6 +70,11 @@ logical units. Use the preceding frame's canvas origin to recover window
 coordinates. The paint callback receives the final size from the current layout.
 Capture callback data in the view's paint closure.
 
+Pass `OnRightClick` for a secondary action, such as marking a cell on a
+game board. CUI sends the press to the hovered canvas using native hit testing.
+The event uses the same local coordinates and size as the primary click message.
+Holding the right button produces one message per press.
+
 In the gallery, each swatch maps its click to an accent. The update stores the
 accent and the next view draws its ring.
 
@@ -87,6 +93,8 @@ and register local rectangles for the existing wheel callback.
 - [Chapter index](README.md)
 
 ## Source files
+
+- [Canvas click tests](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiCanvasClickTests.cs)
 
 - `src/Fpas.Ui.Gui/Internal/Widgets/Canvas/`
   - [Canvas.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Canvas/Canvas.fpas)

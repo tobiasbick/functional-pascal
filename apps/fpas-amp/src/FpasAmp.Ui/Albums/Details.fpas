@@ -54,17 +54,14 @@ begin
         ), new L.Flex(Basis := L.Extent.Fill)
       )
     ),
-    E.Size of M.Msg(
-      E.Styled of M.Msg(E.Column of M.Msg(), S.Role.Divider),
-      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
-    ),
+    E.Divider of M.Msg(),
     E.Row of M.Msg(
       new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
       Ratings.Rating of M.Msg(
         'album-detail-rating-' + Album.Id, Kind + ' rating', Album.Rating ?? 0,
         function(Value: int): M.Msg => M.Msg.Rate(Album.Id, Value), Maximum := 10, Enabled := false
       ),
-      E.Size of M.Msg(E.Column of M.Msg(), new L.Flex(Basis := L.Extent.Fill)),
+      E.Spacer of M.Msg(),
       Texts.Text of M.Msg(
         if Album.Rating = null then
           'Not rated'

@@ -61,7 +61,8 @@ begin
       const OnWheel: Sys.Func of (Canvases.Wheel, TChild)?,
       const Paint: (Sys.Action of Painting.Surface)?,
       const OnPointer: Sys.Func of (Canvases.Pointer, TChild)?,
-      const OnInput: Sys.Func of (Canvases.Input, TChild)?
+      const OnInput: Sys.Func of (Canvases.Input, TChild)?,
+      const OnRightClick: Sys.Func of (Canvases.Event, TChild)?
     ):
       return (E.Element of TParent).Canvas(
         Id,
@@ -71,7 +72,8 @@ begin
         Mapping.Callback of (Canvases.Wheel, TChild, TParent)(OnWheel, Messages),
         Paint,
         Mapping.Callback of (Canvases.Pointer, TChild, TParent)(OnPointer, Messages),
-        Mapping.Callback of (Canvases.Input, TChild, TParent)(OnInput, Messages)
+        Mapping.Callback of (Canvases.Input, TChild, TParent)(OnInput, Messages),
+        Mapping.Callback of (Canvases.Event, TChild, TParent)(OnRightClick, Messages)
       );
     when E.Element.Veil(
       const Id: string,

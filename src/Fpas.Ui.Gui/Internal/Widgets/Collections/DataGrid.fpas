@@ -136,6 +136,11 @@ begin
       8
     else
       0
+    end if) +
+    (if Current.Scroll <> null then
+      16
+    else
+      0
     end if);
   if Current.Scroll <> null then
     discard Frame.Window.DataGridScroll(Token, Current.Scroll);

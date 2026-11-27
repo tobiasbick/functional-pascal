@@ -15,7 +15,7 @@ begin
   return new M.Transition(
     new M.State(
       Playing := true, Station := Station, Buffering := true, Revision := Revision,
-      Volume := Current.Volume, Gains := Current.Gains, PresetsOpen := Current.PresetsOpen
+      Volume := Current.Volume, Gains := Current.Gains
     ),
     M.Request.Stream(Station.Url, Revision)
   );

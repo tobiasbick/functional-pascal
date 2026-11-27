@@ -17,10 +17,10 @@ public type Msg = variant
   Height(Value: int);
   // Start a new round using the selected settings.
   NewGame;
-  // Choose whether activation marks or reveals a cell.
-  FlagMode(Value: bool);
-  // Activate a cell using the current mode.
-  Play(Index: int);
+  // Open a covered cell.
+  Reveal(Index: int);
+  // Add or remove a flag on a covered cell.
+  ToggleFlag(Index: int);
   // Receive a keyboard or focus event for the board.
   BoardInput(Value: Canvas.Input);
   // Change the application's color scheme.
@@ -43,8 +43,6 @@ public type Model = record
   public CustomWidth: int := 8;
   // Editable custom height.
   public CustomHeight: int := 8;
-  // Whether ordinary activation toggles a flag.
-  public FlagMode: bool := false;
   // Selected appearance.
   public Theme: Appearance.Selection := Appearance.Selection.Light;
   // Position used by keyboard moves.

@@ -132,7 +132,7 @@ begin
   return new M.Transition(
     new M.State(
       Revision := Current.Revision + 1L, Volume := Current.Volume,
-      Gains := Current.Gains, PresetsOpen := Current.PresetsOpen
+      Gains := Current.Gains
     ), M.Request.Unload
   );
 end function;
@@ -419,18 +419,11 @@ begin
       end if;
     when M.Msg.Flatten:
       return Apply(Current, M.Msg.Preset(0), Allowed);
-    when M.Msg.ShowPresets(const Open: bool):
-      return new M.Transition(
-        Current with
-          PresetsOpen := Open;
-        end with
-      );
     when M.Msg.Preset(const Index: int):
       if Index >= 0 and Index < Presets.Choices.Length then
         return Mix(
           Current with
             Gains := Presets.Choices[Index].Gains;
-            PresetsOpen := false;
           end with
         );
       end if;

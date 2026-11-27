@@ -6,8 +6,8 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Inputs.SearchFields as Fields;
 uses Fpas.Ui.Widgets.Inputs.Selects as Select;
-uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
 
 uses FpasAmp.Ui.TagEditor.Model as M;
 uses FpasAmp.Ui.TagEditor.MusicBrainz as MB;
@@ -42,7 +42,7 @@ begin
       Enabled := Current.Matches.Length > 0 and MusicReady
     )
   );
-  const Query: E.Element of M.Msg := Fields.TextField of M.Msg(
+  const Query: E.Element of M.Msg := Fields.SearchField of M.Msg(
     'tag-query', Current.Query, M.Msg.Query,
     new Fields.Options(Enabled := not Current.Saving, MaxUtf8Bytes := 4095),
     OnSubmit := function(_Value: string): M.Msg => M.Msg.Search

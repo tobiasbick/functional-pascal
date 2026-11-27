@@ -7,6 +7,7 @@ uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
 uses Fpas.Ui.Widgets.Canvas.Painting as P;
+uses Fpas.Ui.Widgets.Display.IconGlyphs as Icons;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses FpasSweeper.Game as Game;
@@ -59,36 +60,19 @@ begin
   return Y * Board.Width + X;
 end function;
 
-function CountColor(Adjacent: int; Colors: Themes.Palette): G.Color;
+function CountColor(Adjacent: int): Themes.ColorToken;
 begin
   return case Adjacent of
-    when 1: Colors.Info;
-    when 2: Colors.Success;
-    when 3: Colors.Danger;
-    when 4: Colors.Series4;
-    when 5: Colors.Warning;
-    when 6: Colors.Series3;
-    when 7: Colors.Series6;
-    else Colors.Foreground;
+    when 1: Themes.ColorToken.Info;
+    when 2: Themes.ColorToken.Success;
+    when 3: Themes.ColorToken.Danger;
+    when 4: Themes.ColorToken.Series4;
+    when 5: Themes.ColorToken.Warning;
+    when 6: Themes.ColorToken.Series3;
+    when 7: Themes.ColorToken.Series6;
+    else Themes.ColorToken.Foreground;
   end case;
 end function;
-
-procedure Flag(Surface: P.Surface; X: float; Y: float; Size: float; Color: G.Color);
-begin
-  const Pole: float := X + Size * 0.36F;
-  const Top: float := Y + Size * 0.26F;
-  const Foot: float := Y + Size * 0.74F;
-  const Stroke: float := Sys.MathF.Max(1.0F, Size * 0.035F);
-  Surface.Line(Pole, Top, Pole, Foot, Stroke, Color);
-  Surface.Line(X + Size * 0.26F, Foot, X + Size * 0.48F, Foot, Stroke, Color);
-  Surface.Polygon(
-    [
-      new P.Point(Pole, Top),
-      new P.Point(X + Size * 0.73F, Y + Size * 0.38F),
-      new P.Point(Pole, Y + Size * 0.50F)
-    ], Color
-  );
-end procedure;
 
 procedure Mine(Surface: P.Surface; X: float; Y: float; Size: float; Color: G.Color);
 begin
@@ -118,14 +102,7 @@ begin
   );
 end procedure;
 
-procedure Mark(
-  Surface: P.Surface;
-  Cell: Game.Cell;
-  X: float;
-  Y: float;
-  Size: float;
-  Colors: Themes.Palette
-);
+procedure Mark(Surface: P.Surface; Cell: Game.Cell; X: float; Y: float; Size: float);
 begin
   case Cell of
     when Game.Cell.Open(const Count: int) if Count > 0:
@@ -134,24 +111,39 @@ begin
       const Bounds: P.TextMetrics := Surface.Measure(Label, G.Font.Medium, Scale);
       Surface.Text(
         X + (Size - Bounds.Width) * 0.5F, Y + (Size - Bounds.Height) * 0.5F,
-        Label, G.Font.Medium, Scale, CountColor(Count, Colors)
+        Label, G.Font.Medium, Scale, Surface.Color(CountColor(Count))
       );
     when Game.Cell.Flagged:
-      Flag(Surface, X, Y, Size, Colors.AccentStrong);
+      Surface.Icon(
+        X,
+        Y,
+        Size,
+        Size,
+        Icons.Flag,
+        Size * 0.57F,
+        Surface.Color(Themes.ColorToken.AccentStrong)
+      );
     when Game.Cell.Mine(const Triggered: bool):
       Mine(
-        Surface, X, Y, Size, if Triggered then
-          Colors.Danger
-        else
-          Colors.Foreground
-        end if
+        Surface, X, Y, Size,
+        Surface.Color(
+          if Triggered then
+            Themes.ColorToken.Danger
+          else
+            Themes.ColorToken.Foreground
+          end if
+        )
       );
     when Game.Cell.WrongFlag:
-      const Inset: float := Size * 0.30F;
-      const Edge: float := Size - Inset;
-      const Stroke: float := Sys.MathF.Max(1.0F, Size * 0.045F);
-      Surface.Line(X + Inset, Y + Inset, X + Edge, Y + Edge, Stroke, Colors.Danger);
-      Surface.Line(X + Inset, Y + Edge, X + Edge, Y + Inset, Stroke, Colors.Danger);
+      Surface.Icon(
+        X,
+        Y,
+        Size,
+        Size,
+        Icons.X,
+        Size * 0.57F,
+        Surface.Color(Themes.ColorToken.Danger)
+      );
     else
       return;
   end case;
@@ -160,33 +152,19 @@ end procedure;
 // Draws the grid and maps native pointer and keyboard input to game messages.
 // ## Parameters
 // - `Model`: Board and keyboard cursor.
-// - `Width`: Canvas width in logical units.
-// - `Height`: Canvas height in logical units.
-// - `Theme`: Active palette.
 // ## Returns
-// The board canvas.
-public function Build(
-  Model: S.Model;
-  Width: int;
-  Height: int;
-  Theme: Themes.Theme
-): E.Element of S.Msg;
+// The board canvas, sized by CUI.
+public function Build(Model: S.Model): E.Element of S.Msg;
   procedure Paint(Surface: P.Surface);
   begin
     const Layout: Grid := Arrange(Model.Board, Surface.Width(), Surface.Height());
     const Tile: float := Layout.Tile;
     const Radius: float := Sys.MathF.Min(5.0F, Tile * 0.11F);
-    const Colors: Themes.Palette := Theme.Colors;
-    const Covered: G.Color := if Theme.Appearance = Themes.Mode.Dark then
-      new G.Color(46, 51, 60)
-    else
-      new G.Color(222, 226, 232)
-    end if;
-    const Edge: G.Color := if Theme.Appearance = Themes.Mode.Dark then
-      new G.Color(66, 71, 81)
-    else
-      new G.Color(197, 204, 214)
-    end if;
+    const Covered: G.Color := Surface.Color(Themes.ColorToken.ControlTrack);
+    const Edge: G.Color := Surface.Color(Themes.ColorToken.ControlTrackHover);
+    const Open: G.Color := Surface.Color(Themes.ColorToken.Surface);
+    const Border: G.Color := Surface.Color(Themes.ColorToken.Border);
+    const Focus: G.Color := Surface.Color(Themes.ColorToken.FocusRing);
 
     const OuterWidth: float := Layout.Step * (cast (Model.Board.Width - 1) as float) + Tile + 12.0F;
     const OuterHeight: float := Layout.Step * (cast (Model.Board.Height - 1) as float) + Tile +
@@ -197,8 +175,8 @@ public function Build(
       OuterWidth,
       OuterHeight,
       10.0F,
-      Colors.SurfaceMuted,
-      Colors.Border,
+      Surface.Color(Themes.ColorToken.SurfaceMuted),
+      Border,
       1.0F
     );
     const Focused: bool := Surface.FocusVisible();
@@ -213,33 +191,35 @@ public function Build(
       const Fill: G.Color := if IsCovered then
         Covered
       else
-        Colors.Surface
+        Open
       end if;
       const Stroke: G.Color := if IsCovered then
         Edge
       else
-        Colors.Border
+        Border
       end if;
       if Index = Model.Cursor and Focused then
-        Surface.Border(X, Y, Tile, Tile, Radius, Fill, Colors.AccentStrong, 2.0F);
+        Surface.Border(X, Y, Tile, Tile, Radius, Fill, Focus, 2.0F);
       else
         Surface.Border(X, Y, Tile, Tile, Radius, Fill, Stroke, 1.0F);
       end if;
 
-      Mark(Surface, Cell, X, Y, Tile, Colors);
+      Mark(Surface, Cell, X, Y, Tile);
     end for;
   end procedure;
 begin
   return Canvas.Canvas of S.Msg(
     'board', [],
-    function(Event: Canvas.Event): S.Msg => S.Msg.Play(Hit(Model.Board, Event)),
+    function(Event: Canvas.Event): S.Msg => S.Msg.Reveal(Hit(Model.Board, Event)),
     new Canvas.Options(
-      Width := L.Extent.Fixed(L.Measure.Logical(Width)),
-      Height := L.Extent.Fixed(L.Measure.Logical(Height)),
+      Height := L.Extent.Fill,
       Focusable := true,
       HoverCursor := Canvas.Cursor.Hand
     ),
-    Paint := Paint, OnInput := S.Msg.BoardInput
+    Paint := Paint, OnInput := S.Msg.BoardInput,
+    OnRightClick := function(Event: Canvas.Event): S.Msg => S.Msg.ToggleFlag(
+      Hit(Model.Board, Event)
+    )
   );
 end function;
 

@@ -6,6 +6,7 @@ uses Fpas.Media.Images as Images;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.ActionFooters as Footers;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
 uses Fpas.Ui.Widgets.Collections.DataGrids as Grid;
@@ -164,8 +165,7 @@ begin
         'podcast-feed-url', Draft, function(Value: string): App.Msg => Action(M.Msg.EditUrl(Value)),
         new Fields.Options(Label := 'RSS feed URL', MaxUtf8Bytes := 2047)
       ),
-      E.Row of App.Msg(
-        new L.Flow(Gap := Points(8), Justify := L.Justification.End),
+      Footers.ActionFooter of App.Msg(
         B.Button of App.Msg('podcast-feed-cancel', 'Cancel', Action(M.Msg.Cancel)),
         B.Button of App.Msg(
           'podcast-feed-add', 'Subscribe', Action(M.Msg.AddFeed),
@@ -473,7 +473,7 @@ begin
         E.Column of App.Msg(new L.Flow(Padding := Points(Padding), Gap := Points(12)), Cover, Info),
         Fixed(Inset)
       ),
-      E.Size of App.Msg(E.Styled of App.Msg(E.Column of App.Msg(), S.Role.Divider), Fixed(1)),
+      E.Divider of App.Msg(),
       E.Size of App.Msg(EpisodePane, Fill)
     )
   end if;
@@ -499,7 +499,7 @@ begin
       ),
       Texts.Text of App.Msg('Podcasts', Texts.Appearance.HeadingThree)
     ),
-    E.Size of App.Msg(E.Styled of App.Msg(E.Row of App.Msg(), S.Role.Divider), Fixed(1)),
+    E.Divider of App.Msg(),
     E.Size of App.Msg(Content, Fill),
     Status.StatusBar of App.Msg(
       'podcast-status',

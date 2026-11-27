@@ -143,8 +143,7 @@ begin
       _,
       const Options: Canvas.Options,
       _, _,
-      _,
-      _
+      _, _, _
     ):
       const Path: string := Identify(Id, Location + '/canvas');
       LR.CheckExtent(Options.Width, Profile, Path);

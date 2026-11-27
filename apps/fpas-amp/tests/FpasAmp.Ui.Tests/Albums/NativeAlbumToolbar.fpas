@@ -10,6 +10,7 @@ uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
 uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
 
 uses FpasAmp.Imaging as Thumbnails;
@@ -141,12 +142,29 @@ public type ToolbarTests = record
       Press(Session, Selects.OptionId(Id, Index));
     end procedure;
 
-    procedure Preview(Session: Gui.Session of App.Msg; Message: Toolbar.Msg);
+    procedure RatingKey(Session: Gui.Session of App.Msg; Code: Keys.Key);
     begin
-      discard Session.Post(App.Msg.Albums(Albums.Msg.Toolbar(Message)));
+      Key := cast Code as int;
+      Step(Session);
       Step(Session);
     end procedure;
+
+    procedure ChooseRating(Session: Gui.Session of App.Msg; Value: int);
+    begin
+      const Track: Gui.Control := Find(Session, RatingTrack);
+      X.Assert.Equal of string('step-slider', Track.Role);
+      X.Assert.True(Track.Enabled);
+      Press(Session, RatingTrack);
+      RatingKey(Session, Keys.Key.Home);
+      X.Assert.Equal of int(0, Last.Albums.Toolbar.Draft.MinimumRating);
+      for Index: int := 1 to Value do
+        RatingKey(Session, Keys.Key.Right);
+      end for;
+
+      X.Assert.Equal of int(Value, Last.Albums.Toolbar.Draft.MinimumRating);
+    end procedure;
   begin
+    const RatingTrack: string := 'album-filter-rating/track';
     using const Root: H.Folder := H.Folder.Create();
     const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
     const Image: Imaging.Bitmap := Cache.Store(
@@ -225,15 +243,27 @@ public type ToolbarTests = record
     Press(Session, 'album-filters');
     X.Assert.True(Last.Albums.Toolbar.Open);
     X.Assert.True(Has(Session, 'album-filter-panel'));
+    const ResetButton: Cui.CuiRectangle := Find(Session, 'album-filter-reset').Bounds;
+    const ApplyButton: Cui.CuiRectangle := Find(Session, 'album-filter-apply').Bounds;
+    X.Assert.True(
+      ResetButton.X + ResetButton.Width <= ApplyButton.X and ResetButton.Y = ApplyButton.Y
+    );
+    Press(Session, 'album-filter-unrated');
+    X.Assert.Equal of int(-1, Last.Albums.Toolbar.Draft.MinimumRating);
+    X.Assert.False(Find(Session, RatingTrack).Enabled);
+    Press(Session, RatingTrack);
+    X.Assert.Equal of int(-1, Last.Albums.Toolbar.Draft.MinimumRating);
+    Press(Session, 'album-filter-unrated');
+    X.Assert.Equal of int(0, Last.Albums.Toolbar.Draft.MinimumRating);
     Pick(Session, 'album-filter-artist', 2);
     X.Assert.Equal of string('Example artist', Last.Albums.Toolbar.Draft.Artist);
-    Preview(Session, Toolbar.Msg.MinimumRating(7));
+    ChooseRating(Session, 7);
     X.Assert.Equal of int(0, Toolbar.Count(Last.Albums.Toolbar.Applied));
     X.Assert.Equal of int(3, Last.Albums.Shown.Length);
     Press(Session, 'album-filter-reset');
     X.Assert.Equal of int(0, Toolbar.Count(Last.Albums.Toolbar.Draft));
     Pick(Session, 'album-filter-artist', 2);
-    Preview(Session, Toolbar.Msg.MinimumRating(7));
+    ChooseRating(Session, 7);
     Press(Session, 'album-filter-apply');
     X.Assert.False(Last.Albums.Toolbar.Open);
     X.Assert.Equal of int(2, Toolbar.Count(Last.Albums.Toolbar.Applied));

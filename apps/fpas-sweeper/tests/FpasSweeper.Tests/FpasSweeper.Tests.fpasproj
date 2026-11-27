@@ -9,6 +9,6 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
-    <ProjectReference Include="../../src/FpasSweeper.Game/FpasSweeper.Game.fpasproj" />
+    <ProjectReference Include="../../src/FpasSweeper/FpasSweeper.fpasproj" />
   </ItemGroup>
 </Project>

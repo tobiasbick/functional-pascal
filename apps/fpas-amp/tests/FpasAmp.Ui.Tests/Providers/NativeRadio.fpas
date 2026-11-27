@@ -230,6 +230,8 @@ public type NativeRadioTests = record
       Send(Session, App.Msg.Radio(Radio.Msg.SetFilters(false)));
       Send(Session, App.Msg.Radio(Radio.Msg.Add));
       X.Assert.True(Has(Session, 'radio-url'));
+      X.Assert.True(Has(Session, 'radio-cancel'));
+      X.Assert.True(Has(Session, 'radio-save'));
       Send(Session, App.Msg.Radio(Radio.Msg.EditUrl('file:///private/file.mp3')));
       Send(Session, App.Msg.Radio(Radio.Msg.Save));
       X.Assert.True(Has(Session, 'radio-url'));

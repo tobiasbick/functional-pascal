@@ -7,6 +7,7 @@ uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as Styles;
 uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
 uses Fpas.Ui.Widgets.Actions.SegmentedControls as Segments;
+uses Fpas.Ui.Widgets.Charts.Metrics as Metrics;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Inputs.NumberFields as Numbers;
@@ -16,7 +17,6 @@ uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 uses FpasSweeper.BoardView as Board;
 uses FpasSweeper.Game as Game;
 uses FpasSweeper.State as S;
-uses System as Sys;
 uses System.Globalization as Culture;
 
 const Margin: int := 24;
@@ -31,16 +31,6 @@ end function;
 function Fixed(Units: int): L.Extent;
 begin
   return L.Extent.Fixed(L.Measure.Logical(Units));
-end function;
-
-function Stat(Id: string; Name: string; Value: string): E.Element of S.Msg;
-begin
-  return Cards.Card of S.Msg(
-    Id, [
-      Texts.Text of S.Msg(Name, Texts.Appearance.Secondary),
-      Texts.Text of S.Msg(Value, Texts.Appearance.HeadingTwo)
-    ], new Cards.Options(Width := L.Extent.Fill, Padding := 14.0F, Gap := 5.0F, Muted := true)
-  );
 end function;
 
 function ClockText(Model: S.Model): string;
@@ -116,17 +106,12 @@ begin
   return E.Column of S.Msg(Flow, Title, Select);
 end function;
 
-function ModeChanged(Index: int): S.Msg;
-begin
-  return S.Msg.FlagMode(Index = 1);
-end function;
-
 function Status(Model: S.Model): string;
 begin
   return case Model.Board.State of
     when Game.Phase.Won: 'You cleared the board!';
     when Game.Phase.Lost: 'Mine hit. Start a new game to try again.';
-    else 'Reveal the safe cells. Flag suspected mines.';
+    else 'Left-click to reveal. Right-click to flag.';
   end case;
 end function;
 
@@ -137,29 +122,16 @@ begin
   else
     Model.Board.MineCount - Model.Board.FlagCount
   end if;
-  const Selected: int := if Model.FlagMode then
-    1
-  else
-    0
-  end if;
   return Cards.Card of S.Msg(
     'settings',
     [
       E.Row of S.Msg(
         new L.Flow(Gap := Space(10), Align := L.Alignment.Stretch),
-        Stat('time', 'Time', ClockText(Model)),
-        Stat('mines', 'Mines left', MinesLeft.ToString())
+        Metrics.Metric of S.Msg('time', 'Time', ClockText(Model)),
+        Metrics.Metric of S.Msg('mines', 'Mines left', MinesLeft.ToString())
       ),
       E.Divider of S.Msg(),
       Difficulty(Model),
-      E.Column of S.Msg(
-        new L.Flow(Gap := Space(8)),
-        Texts.Text of S.Msg('Cell action', Texts.Appearance.Label),
-        Segments.SegmentedControl of S.Msg(
-          'mode', [new Segments.Item('Reveal'), new Segments.Item('Flag')],
-          Selected, ModeChanged, new Segments.Options(FullWidth := true)
-        )
-      ),
       Buttons.Button of S.Msg(
         'new-game', 'New game', S.Msg.NewGame,
         new Buttons.Options(
@@ -204,31 +176,30 @@ end function;
 // Builds the two-pane game screen.
 // ## Parameters
 // - `Model`: The current round and settings.
-// - `Viewport`: Available native logical size.
-// - `Theme`: Active palette.
+// - `_Viewport`: The host's responsive dimensions. CUI sizes the panes.
+// - `_Theme`: The active theme, applied by the host.
 // ## Returns
 // Board, statistics and settings controls.
 public function Build(
   Model: S.Model;
-  Viewport: L.Viewport;
-  Theme: Themes.Theme
+  _Viewport: L.Viewport;
+  _Theme: Themes.Theme
 ): E.Element of S.Msg;
 begin
-  const Width: int := Sys.Math.Max(
-    220,
-    (cast (Viewport.LogicalWidth ?? 1120.0F) as int) - Margin * 2 - PaneGap - SettingsWidth
-  );
-  const Height: int := Sys.Math.Max(
-    300,
-    (cast (Viewport.LogicalHeight ?? 760.0F) as int) - Margin * 2 - 63
-  );
-  return E.Column of S.Msg(
-    new L.Flow(Gap := Space(18), Padding := Space(Margin)),
-    Texts.Text of S.Msg('fpas-sweeper', Texts.Appearance.HeadingOne),
-    E.Row of S.Msg(
-      new L.Flow(Gap := Space(PaneGap), Align := L.Alignment.Start),
-      Board.Build(Model, Width, Height, Theme), Settings(Model)
-    )
+  const FillHeight: L.Flex := new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fill));
+  return E.Size of S.Msg(
+    E.Column of S.Msg(
+      new L.Flow(Gap := Space(18), Padding := Space(Margin)),
+      Texts.Text of S.Msg('fpas-sweeper', Texts.Appearance.HeadingOne),
+      E.Size of S.Msg(
+        E.Row of S.Msg(
+          new L.Flow(Gap := Space(PaneGap), Align := L.Alignment.Start),
+          Board.Build(Model), Settings(Model)
+        ),
+        FillHeight
+      )
+    ),
+    FillHeight
   );
 end function;
 

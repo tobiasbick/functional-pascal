@@ -250,13 +250,9 @@ begin
     ), Parts.ToArray()
   );
   const Stretch: L.Flow := new L.Flow(Align := L.Alignment.Stretch);
-  const Rule: E.Element of M.Msg := E.Size of M.Msg(
-    E.Styled of M.Msg(E.Column of M.Msg(), S.Role.Divider),
-    Fixed(1)
-  );
   const Columns: E.Element of M.Msg := E.Row of M.Msg(
     Stretch,
-    E.Size of M.Msg(Sleeve, Fixed(Inset + Edge + Gutter)), Rule,
+    E.Size of M.Msg(Sleeve, Fixed(Inset + Edge + Gutter)), E.Divider of M.Msg(),
     E.Size of M.Msg(
       E.Column of M.Msg(
         Stretch,
@@ -268,7 +264,7 @@ begin
   );
   return Dialog.Build(
     Current, Playback, Width, Current.Cover,
-    E.Column of M.Msg(Stretch, Heading, Rule, E.Size of M.Msg(Columns, Fill))
+    E.Column of M.Msg(Stretch, Heading, E.Divider of M.Msg(), E.Size of M.Msg(Columns, Fill))
   );
 end function;
 

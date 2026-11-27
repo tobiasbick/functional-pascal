@@ -17,10 +17,10 @@ dotnet build fpas-sweeper.slnx
 dotnet run --project src/FpasSweeper/FpasSweeper.fpasproj --no-build
 ```
 
-Select a difficulty and press **New game**. Click a tile in **Reveal** mode to
-open it or in **Flag** mode to mark it. With the board focused, use the arrow
-keys to move, Enter or Space to use the selected action, and F to toggle a flag
-directly. Open every safe tile to win.
+Select a difficulty and press **New game**. Left-click a tile to reveal it.
+Right-click a tile to add or remove a flag. With the board focused, use the
+arrow keys to move, Enter or Space to reveal, and F to toggle a flag. Open every
+safe tile to win.
 
 See the [app documentation](doc/README.md) for rules and source layout, and the
 [test guide](tests/README.md) to run the game tests.

@@ -5,6 +5,7 @@ unit FpasAmp.Ui.Radio.View;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.ActionFooters as Footers;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
 uses Fpas.Ui.Widgets.Collections.DataGrids as Grid;
@@ -239,8 +240,7 @@ begin
         new Fields.Options(Label := 'Name (optional)')
       ),
       Error(Draft.Error, 'radio-save-error'),
-      E.Row of App.Msg(
-        new L.Flow(Gap := Points(8), Justify := L.Justification.End),
+      Footers.ActionFooter of App.Msg(
         B.Button of App.Msg('radio-cancel', 'Cancel', Action(M.Msg.Cancel)),
         B.Button of App.Msg(
           'radio-save', 'Add station', Action(M.Msg.Save),
@@ -341,10 +341,7 @@ begin
         ),
         Texts.Text of App.Msg('Stations', Texts.Appearance.HeadingThree)
       ),
-      E.Size of App.Msg(
-        E.Styled of App.Msg(E.Row of App.Msg(), S.Role.Divider),
-        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
-      ),
+      E.Divider of App.Msg(),
       E.Row of App.Msg(
         new L.Flow(Gap := Points(18), Align := L.Alignment.Center),
         Cards.Card of App.Msg(

@@ -87,10 +87,6 @@ public function Build(
 requires Item.Path <> '';
 begin
   const Row: L.Flow := new L.Flow(Gap := Points(6), Align := L.Alignment.Center);
-  const Rule: E.Element of M.Msg := E.Size of M.Msg(
-    E.Styled of M.Msg(E.Column of M.Msg(), S.Role.Divider),
-    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
-  );
   return Cards.Card of M.Msg(
     'track-detail-source',
     [
@@ -106,7 +102,7 @@ begin
         ),
         Copy.CopyButton of M.Msg('track-copy-path', Item.Path)
       ),
-      Rule,
+      E.Divider of M.Msg(),
       Texts.Text of M.Msg('Acoustic fingerprint', Texts.Appearance.Label),
       Fingerprint(Current, Playback, Item)
     ],

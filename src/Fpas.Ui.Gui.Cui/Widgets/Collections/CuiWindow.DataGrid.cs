@@ -22,7 +22,7 @@ public sealed partial class CuiWindow
     /// <param name="heightKind">Encoded viewport extent kind.</param>
     /// <param name="height">Height or percentage.</param>
     /// <param name="rowHeight">Logical row height.</param>
-    /// <param name="options">Native input, striping, checkbox and focus bits.</param>
+    /// <param name="options">Native input, striping, checkbox, focus and controlled scroll bits.</param>
     /// <param name="headerId">Optional inspection key by column index.</param>
     /// <param name="widthKind">Encoded viewport width kind.</param>
     /// <param name="width">Fixed width or percentage.</param>

@@ -68,7 +68,7 @@ begin
   case Node of
     when E.Element.Card(_, _, const Settings: Cards.Options, const Activate: (Sys.Func of TMsg)?):
       return Settings.Hoverable or Activate <> null;
-    when E.Element.LinkAction(_, _, _, _), E.Element.Canvas(_, _, _, _, _, _, _, _):
+    when E.Element.LinkAction(_, _, _, _), E.Element.Canvas(_, _, _, _, _, _, _, _, _):
       return true;
     when E.Element.CheckboxAction(
       _,

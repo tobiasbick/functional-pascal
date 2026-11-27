@@ -113,6 +113,22 @@ public type NativeMetadataSettingsTests = record
         Last, Apply, Shell.View, Window, 128, Inject, App.Theme(Last, null), App.Theme, false
       );
       Step(Session);
+      X.Assert.Equal of string('theme-switcher', Control(Session, 'appearance').Role);
+      X.Assert.Equal of string('light', Control(Session, 'appearance').Value);
+      X.Assert.Equal of string('icon-button', Control(Session, 'accent-blue').Role);
+      X.Assert.True(Sys.Boolean.Parse(Control(Session, 'accent-blue').Value));
+      Click(Session, Control(Session, 'appearance', 'dark').Bounds);
+      X.Assert.Equal of string('dark', Control(Session, 'appearance').Value);
+      Click(Session, Control(Session, 'accent-green').Bounds);
+      X.Assert.True(Sys.Boolean.Parse(Control(Session, 'accent-green').Value));
+      X.Assert.False(Sys.Boolean.Parse(Control(Session, 'accent-blue').Value));
+      X.Assert.Equal of string('green', Storage.Load(Folder.Path).Accent);
+      Click(Session, Control(Session, 'appearance', 'system').Bounds);
+      X.Assert.Equal of string('system', Storage.Load(Folder.Path).Appearance);
+      Click(Session, Control(Session, 'appearance', 'light').Bounds);
+      Click(Session, Control(Session, 'accent-blue').Bounds);
+      const SettingsFile: string := IO.Path.Combine(Folder.Path, 'settings.json');
+      const BeforeKeys: string := IO.File.ReadAllText(SettingsFile);
       Click(Session, Control(Session, 'settings-tabs', '2').Bounds);
       X.Assert.Equal of int(2, Last.Navigation.SettingsTab);
       X.Assert.False(Control(Session, 'save-acoustid-keys').Enabled);
@@ -148,7 +164,7 @@ public type NativeMetadataSettingsTests = record
       Step(Session);
       Step(Session);
       X.Assert.DoesNotContain('fixture-user-key', Control(Session, 'acoustid-user-key').Value);
-      X.Assert.False(IO.File.Exists(IO.Path.Combine(Folder.Path, 'settings.json')));
+      X.Assert.Equal of string(BeforeKeys, IO.File.ReadAllText(SettingsFile));
       Click(Session, Control(Session, 'save-acoustid-keys').Bounds);
       X.Assert.False(Control(Session, 'save-acoustid-keys').Enabled);
       const Saved: Settings.AcoustIdKeys := Storage.Load(Folder.Path).AcoustId;

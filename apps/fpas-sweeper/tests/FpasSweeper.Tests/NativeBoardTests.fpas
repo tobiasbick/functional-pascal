@@ -1,0 +1,152 @@
+// [Documentation](../README.md)
+
+unit FpasSweeper.Tests.NativeBoardTests;
+
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Mvu.Application as Mvu;
+
+uses FpasSweeper.Game as Game;
+uses FpasSweeper.State as S;
+uses FpasSweeper.Update as U;
+uses FpasSweeper.View as View;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+uses Xunit as X;
+
+type Pointer = record
+  public XPosition: float;
+  public YPosition: float;
+  public Right: bool;
+  public Down: bool;
+end record;
+
+function Widget(Session: Gui.Session of S.Msg; Id: string): Gui.Control;
+begin
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    if Control.Id = Id then
+      return Control;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control: ' + Id);
+end function;
+
+procedure Step(Session: Gui.Session of S.Msg);
+begin
+  X.Assert.True(Session.Step());
+end procedure;
+
+procedure Click(
+  Session: Gui.Session of S.Msg;
+  Pending: Lists.Queue of Pointer;
+  LocalX: float;
+  LocalY: float;
+  Right: bool
+);
+begin
+  const Board: Cui.CuiRectangle := Widget(Session, 'board').Bounds;
+  const XPosition: float := Board.X + LocalX;
+  const YPosition: float := Board.Y + LocalY;
+  Pending.Enqueue(new Pointer(XPosition, YPosition, Right, true));
+  Step(Session);
+  Step(Session);
+  Pending.Enqueue(new Pointer(XPosition, YPosition, Right, false));
+  Step(Session);
+  Step(Session);
+end procedure;
+
+// Drives the real CUI canvas and the game's MVU update on the GUI owner thread.
+public type NativeBoardTests = record
+  // Each button controls the tile under the pointer, including after a native resize.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure NativeClicksRevealOrFlagCoveredTiles();
+  begin
+    X.Assert.True(
+      Sys.OperatingSystem.IsWindows() or not Sys.String.IsNullOrEmpty(
+        Sys.Environment.GetEnvironmentVariable('DISPLAY')
+      ),
+      'Native UI checks require a desktop display. On headless Linux, run under Xvfb.'
+    );
+    const Initial: S.Model := S.Initial(2);
+    const Window: Cui.CuiWindow := new Cui.CuiWindow(
+      'FPAS Sweeper input', 1120, 760, Cui.CuiRenderer.Software, true
+    );
+    const Pending: Lists.Queue of Pointer := new Lists.Queue of Pointer();
+    var Current: S.Model := Initial;
+    using const Session: Gui.Session of S.Msg := Host.StartThemed of (S.Model, S.Msg)(
+      Initial,
+      function(Previous: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg) begin
+        const Next: Mvu.Transition of (S.Model, S.Msg) := U.Apply(Previous, Message);
+        Current := Next.Model;
+        return Next;
+      end function,
+      View.Build, Window, 64,
+      procedure() begin
+        if Pending.Count > 0 then
+          const Input: Pointer := Pending.Dequeue();
+          Window.MovePointer(Input.XPosition, Input.YPosition);
+          if Input.Right then
+            Window.SetRightButton(Input.Down);
+          else
+            Window.SetLeftButton(Input.Down);
+          end if;
+        end if;
+      end procedure,
+      View.ThemeFor(Initial, null), View.ThemeFor, false
+    );
+    Step(Session);
+    Step(Session);
+    const Before: Cui.CuiRectangle := Widget(Session, 'board').Bounds;
+    X.Assert.True(Before.Width > 600.0F and Before.Height > 600.0F);
+    X.Assert.True(Widget(Session, 'settings').Bounds.X > Before.X + Before.Width);
+    X.Assert.Equal of string('metric', Widget(Session, 'time').Role);
+    X.Assert.Equal of string('00:00', Widget(Session, 'time').Value);
+    X.Assert.Equal of string('metric', Widget(Session, 'mines').Role);
+    X.Assert.Equal of string('10', Widget(Session, 'mines').Value);
+    for Control: Gui.Control in Session.Snapshot().Controls do
+      X.Assert.NotEqual of string('mode', Control.Id);
+    end for;
+
+    Window.Resize(840, 670);
+    for Attempt: int := 1 to 16 do
+      Step(Session);
+      if Session.Snapshot().Size.Width = 840.0F then
+        break;
+      end if;
+    end for;
+    const Board: Cui.CuiRectangle := Widget(Session, 'board').Bounds;
+    X.Assert.True(Board.Width > 340.0F and Board.Width < Before.Width);
+    X.Assert.True(Board.Height > 500.0F and Board.Height < Before.Height);
+    X.Assert.True(Widget(Session, 'settings').Bounds.X > Board.X + Board.Width);
+
+    const Pitch: float := Sys.MathF.Floor(
+      (Sys.MathF.Min(Board.Width, Board.Height) - 12.0F) * 0.125F
+    );
+    const CellX: float := (Board.Width - Pitch) * 0.5F;
+    const CellY: float := 6.0F + 3.45F * Pitch;
+    Click(Session, Pending, Board.Width * 0.5F, CellY, true);
+    Click(Session, Pending, CellX, 3.0F, false);
+    X.Assert.Equal of int(0, Current.Board.FlagCount);
+    X.Assert.Equal of Game.Phase(Game.Phase.Ready, Current.Board.State);
+
+    Click(Session, Pending, CellX, CellY, true);
+    X.Assert.Equal of Game.Cell(Game.Cell.Flagged, Current.Board.At(27));
+    X.Assert.Equal of long(0L, Current.StartedAt);
+    X.Assert.Equal of string('9', Widget(Session, 'mines').Value);
+    Click(Session, Pending, CellX, CellY, false);
+    X.Assert.Equal of Game.Phase(Game.Phase.Ready, Current.Board.State);
+    X.Assert.Equal of int(1, Current.Board.FlagCount);
+
+    Click(Session, Pending, CellX, CellY, true);
+    X.Assert.Equal of Game.Cell(Game.Cell.Covered, Current.Board.At(27));
+    Click(Session, Pending, CellX, CellY, false);
+    X.Assert.Equal of Game.Cell(Game.Cell.Open(0), Current.Board.At(27));
+    Click(Session, Pending, CellX, CellY, true);
+    X.Assert.Equal of int(0, Current.Board.FlagCount);
+  end procedure;
+end record;
+
+end unit;

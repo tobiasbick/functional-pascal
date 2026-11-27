@@ -413,6 +413,9 @@ begin
     Deliver(Window, Cleared);
     X.Assert.Equal of string('Chart US 1301', Control(Window, ShowButton).Text);
     Click(Window, Control(Window, 'podcast-add').Bounds);
+    Click(Window, Control(Window, 'podcast-feed-cancel').Bounds);
+    X.Assert.Null(Current.Podcasts.Draft);
+    Click(Window, Control(Window, 'podcast-add').Bounds);
     Send(Window, App.Msg.Podcasts(P.Msg.EditUrl(Show.Url)));
     const Manual: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch('podcasts/feed');
     Click(Window, Control(Window, 'podcast-feed-add').Bounds);

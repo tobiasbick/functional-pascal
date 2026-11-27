@@ -8,7 +8,7 @@
  * rows is nonnegative; selected is NULL or rows input bytes, copied for the frame.
  * state[4] is sort column (-2 disables sorting, -1 unsorted), descending, cursor and anchor
  * (cursor/anchor are -1 or valid row indices). State is copied back by end.
- * options: 1 input, 2 stripes, 4 hide checkboxes, 8 request grid focus.
+ * options: 1 input, 2 stripes, 4 hide checkboxes, 8 request grid focus, 16 use explicit scroll target.
  * Width and height use the shared extent encoding. Row height is at least one point.
  * range[3] receives first row, exclusive last row and frame-local root node;
  * headers[columns] receives frame-local header nodes, or -1.

@@ -11,7 +11,6 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Desktop as GuiHost;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Mvu.Application as Mvu;
-uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
@@ -207,7 +206,7 @@ begin
       E.Row of M.Msg(
         new L.Flow(Align := L.Alignment.Stretch),
         E.Size of M.Msg(NavView.Sidebar(Current, Theme), Fixed(NavView.Width)),
-        E.Size of M.Msg(E.Styled of M.Msg(E.Column of M.Msg(), S.Role.Divider), Fixed(1)),
+        E.Divider of M.Msg(),
         E.Size of M.Msg(Main, Fill)
       ), Fill
     )

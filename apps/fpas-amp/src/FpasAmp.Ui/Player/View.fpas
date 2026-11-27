@@ -14,7 +14,6 @@ uses Fpas.Ui.Widgets.Audio.LevelMeters as Meters;
 uses Fpas.Ui.Widgets.Audio.Waveforms as Waves;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
-uses Fpas.Ui.Widgets.Overlays.Popovers as Popovers;
 
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Ui.Albums.Artwork as Covers;
@@ -34,19 +33,9 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function Fixed(Width: int): L.Flex;
-begin
-  return new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Width)));
-end function;
-
 function Glyph(Code: int): string;
 begin
   return Sys.Char.ConvertFromUtf32(Code);
-end function;
-
-function Divider(): E.Element of M.Msg;
-begin
-  return E.Size of M.Msg(E.Styled of M.Msg(E.Column of M.Msg(), S.Role.Divider), Fixed(1));
 end function;
 
 function Artwork(Live: bool): E.Element of M.Msg;
@@ -203,31 +192,21 @@ begin
   else
     'Custom'
   end if;
-  const Rows: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
+  const Rows: C.List of Menus.Entry of M.Msg := new C.List of Menus.Entry of M.Msg();
   for Index: int := 0 to Presets.Choices.Length - 1 do
     Rows.Add(
-      Buttons.Button of M.Msg(
-        'player-preset-' + Index.ToString(), Presets.Choices[Index].Name,
-        M.Msg.Preset(Index), new Buttons.Options(
-          Variant := S.ButtonVariant.Ghost, Selected := Selected = Index,
-          ControlSize := Buttons.Size.Small, Width := L.Extent.Fill
+      (Menus.Entry of M.Msg).Action(
+        new Menus.Item of M.Msg(
+          Index.ToString(), Presets.Choices[Index].Name, M.Msg.Preset(Index),
+          Checked := Selected = Index
         )
       )
     );
   end for;
 
-  return Popovers.Popover of M.Msg(
-    'player-presets',
-    Buttons.Button of M.Msg(
-      'player-eq-preset', Label, M.Msg.ShowPresets(not Current.PresetsOpen),
-      new Buttons.Options(
-        Variant := S.ButtonVariant.Outline, ControlSize := Buttons.Size.Small,
-        IconRight := Glyph($E06D), Tooltip := 'Equalizer preset', Selected := Current.PresetsOpen
-      )
-    ),
-    [E.Column of M.Msg(new L.Flow(Align := L.Alignment.Stretch), Rows.ToArray())],
-    Current.PresetsOpen, M.Msg.ShowPresets(false),
-    new Popovers.Options(Position := Menus.Placement.TopEnd, Width := 150.0F, Padding := 4.0F)
+  return Menus.Menu of M.Msg(
+    'player-eq-preset', Label, Rows.ToArray(),
+    new Menus.Options(Variant := S.ButtonVariant.Outline, Position := Menus.Placement.TopEnd)
   );
 end function;
 
@@ -258,7 +237,7 @@ begin
       PresetMenu(Current),
       Buttons.Button of M.Msg(
         'player-eq-reset', 'Reset', M.Msg.Flatten,
-        new Buttons.Options(Variant := S.ButtonVariant.Ghost, ControlSize := Buttons.Size.Small)
+        new Buttons.Options(Variant := S.ButtonVariant.Ghost)
       )
     ),
     E.Row of M.Msg(new L.Flow(Gap := Points(2), Align := L.Alignment.Start), Bands.ToArray())
@@ -317,9 +296,9 @@ begin
     E.Row of M.Msg(
       new L.Flow(Gap := Points(16), Align := L.Alignment.Stretch),
       E.Size of M.Msg(Info(Current, Track), Fill),
-      Divider(),
+      E.Divider of M.Msg(),
       Equalizer(Current),
-      Divider(),
+      E.Divider of M.Msg(),
       E.Row of M.Msg(
         new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
         Volume(Current),
@@ -332,7 +311,7 @@ begin
   end if;
   return E.Column of M.Msg(
     new L.Flow(Align := L.Alignment.Stretch),
-    Divider(),
+    E.Divider of M.Msg(),
     E.Column of M.Msg(
       new L.Flow(Padding := Points(12), Gap := Points(10), Align := L.Alignment.Stretch),
       Controls,

@@ -88,8 +88,9 @@ void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *t
     const cui_id scroll_key = key ^ CUI__GRID_SCROLL;
     cui_scroll_state *scroll = cui_state(ui, scroll_key, sizeof *scroll);
     /* CUI-057: the native cursor reveal requires a previously defined cursor.
+       A controlled scroll target takes precedence on the first realization.
        See docs/future/cui-upstream-bugs.md#cui-057. */
-    if (frame->cursor >= 0 && (!retained->init || retained->cursor < 0))
+    if (!(options & 16) && frame->cursor >= 0 && (!retained->init || retained->cursor < 0))
         fpas_grid_reveal_cursor(scroll, frame->cursor, row_height > 0 ? row_height : 40);
     fpas_grid_row_state *edit = cui_state(ui, edit_key, sizeof *edit);
     edit->double_clicked = -1;

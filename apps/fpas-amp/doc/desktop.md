@@ -33,6 +33,8 @@ During a session, Music, each playlist, and each album track view retain their
 search, applied filters, sort, row selection and vertical position. These
 controls are restored when the view is reopened and applied to the latest
 catalogue rows.
+The minimum rating uses a native step slider. Zero accepts any rating.
+Selecting **Unrated** disables the slider and matches items without a rating.
 Artist and genre navigation scope the shared album browser by group ID. The
 browser keeps each cover grid's filters while navigating and records its own
 scroll position in `state.json`. This applies to Albums, Artists, Genres, and
@@ -49,8 +51,9 @@ records the playlist key and selection so startup can rebuild its queue.
 
 **Edit tags** in the track's three-dot menu opens the editor in Music and in
 album track lists. **Track**, **Release**, and **Credits** compare editable
-local tags with individual MusicBrainz proposals. Search is explicit. Choose a
-recording and release from the results, then select proposals individually or
+local tags with individual MusicBrainz proposals. Click **Search MusicBrainz**
+or press Enter in the search field. Use its clear button to reset the query.
+Choose a recording and release from the results, then select proposals individually or
 with **Select all** and **Select none**. Editing a local field clears its
 proposal selection. The heading identifies values that include saved library
 edits. A process-wide gate for each connected provider enforces the interval
@@ -102,6 +105,9 @@ fingerprinting also runs on demand from track details. Work is associated with
 the current track and can be cancelled when it changes. The [library
 reference](library.md#on-demand-waveforms) describes the waveform cache.
 
+The equalizer preset button opens a native menu. The menu checks the applied
+preset. Select a preset to apply it or press Escape to close the menu.
+
 ## Online radio
 
 **Radio → Stations** searches the public Radio Browser directory by name,
@@ -127,6 +133,8 @@ automatically when the app opens.
 
 Settings owns the source editor, appearance preferences and inventory progress
 display. The Library database card sits below the source list.
+The General tab uses the native Light, Dark and System selector and named
+accent buttons.
 Accepted source settings are saved before the library is reconfigured.
 A confirmed index clear or source reset saves the corresponding pause settings
 before requesting the clear. The settings view waits for the worker's result

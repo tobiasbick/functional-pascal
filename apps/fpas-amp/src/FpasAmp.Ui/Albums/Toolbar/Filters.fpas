@@ -6,17 +6,23 @@ unit FpasAmp.Ui.Albums.Toolbar.Filters;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.ActionFooters as Footers;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Inputs.Checkboxes as Checks;
 uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
-uses Fpas.Ui.Widgets.Inputs.Sliders as Sliders;
+uses Fpas.Ui.Widgets.Inputs.StepSliders as Steps;
 uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
 uses Fpas.Ui.Widgets.Overlays.Popovers as Popovers;
 
 uses FpasAmp.Ui.Albums.Toolbar.Model as M;
 uses System as Sys;
 uses System.Collections.Generic as C;
+
+const RatingLabels: array of string := [
+  'Any', '1 / 10', '2 / 10', '3 / 10', '4 / 10', '5 / 10',
+  '6 / 10', '7 / 10', '8 / 10', '9 / 10', '10 / 10'
+];
 
 function Points(Value: int): L.Spacing;
 begin
@@ -90,15 +96,9 @@ begin
   const Parts: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
   Parts.Add(Texts.Text of TMsg(Title, Texts.Appearance.HeadingThree));
   Parts.AddRange(Fields);
+  Parts.Add(E.Divider of TMsg());
   Parts.Add(
-    E.Size of TMsg(
-      E.Styled of TMsg(E.Column of TMsg(), S.Role.Divider),
-      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
-    )
-  );
-  Parts.Add(
-    E.Row of TMsg(
-      new L.Flow(Gap := Points(8), Justify := L.Justification.End),
+    Footers.ActionFooter of TMsg(
       B.Button of TMsg(
         Id + '-filter-reset',
         'Reset',
@@ -124,14 +124,14 @@ end function;
 // ## Parameters
 // - `Id`: Prefix for the form's controls.
 // - `Title`: The form heading.
-// - `Fields`: Choice controls above the rating slider.
+// - `Fields`: Choice controls above the rating step slider.
 // - `Rating`: Draft minimum rating from zero to ten, or -1 for unrated items.
 // - `Change`: Maps a rating proposal to a message.
 // - `Reset`: Message to clear the draft.
 // - `RatingLabel`: Identifies the entity being rated.
 // - `Apply`: Message to confirm the draft.
 // ## Returns
-// The title, choice controls, rating slider and form buttons.
+// The title, choice controls, rating step slider and form buttons.
 public function Form of TMsg(
   Id: string;
   Title: string;
@@ -146,27 +146,19 @@ begin
   const Parts: C.List of E.Element of TMsg := new C.List of E.Element of TMsg(Fields);
   const Unrated: bool := Rating = -1;
   Parts.Add(
-    E.Row of TMsg(
-      new L.Flow(Gap := Points(12), Align := L.Alignment.Start),
-      E.Size of TMsg(
-        Sliders.Slider of TMsg(
-          Id + '-filter-rating',
-          RatingLabel,
-          cast Sys.Math.Max(0, Rating) as float,
-          0.0F,
-          10.0F,
-          function(Value: float): TMsg => Change(cast Sys.Math.Round(Value) as int),
-          new Sliders.Options(Step := 1.0F, Enabled := not Unrated)
-        ), new L.Flex(Basis := L.Extent.Fill)
-      ),
-      Texts.Text of TMsg(
-        if Unrated then
+    Steps.StepSlider of TMsg(
+      Id + '-filter-rating',
+      new Steps.Value(RatingLabel, Sys.Math.Max(0, Rating), 0, 10),
+      function(Value: Steps.Event): TMsg => Change(Value.Current),
+      new Steps.Options(
+        Labels := RatingLabels,
+        Display := if Unrated then
           '—'
-        elsif Rating = 0 then
-          'Any'
         else
-          Rating.ToString() + ' / 10'
-        end if, Texts.Appearance.Secondary
+          ''
+        end if,
+        Plain := true,
+        Enabled := not Unrated
       )
     )
   );

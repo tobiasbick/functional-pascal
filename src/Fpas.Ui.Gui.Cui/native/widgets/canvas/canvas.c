@@ -39,6 +39,7 @@ static void fpas_canvas_paint(cui_ctx *ui, cui_rect area, void *data) {
     if (drawing->wheel && !custom_wheel) cui_wheel_region(ui, drawing->wheel, area);
 }
 
+/** Submits the native canvas and reports its primary, secondary, pointer and focus results. */
 int fpas_cui_drawing_canvas(cui_ctx *ui, const char *id, int width_kind, float width, int height_kind, float height, const fpas_canvas_shape *shapes, int count, int enabled, float *x, float *y, float *w, float *h, int wheel, float *dx, float *dy, fpas_canvas_paint_fn paint, void *user, int pointer, int focusable, int component_input, int focus, int cursor) {
     fpas_canvas_shape *copy = NULL;
     if (count > 0) {
@@ -88,6 +89,7 @@ int fpas_cui_drawing_canvas(cui_ctx *ui, const char *id, int width_kind, float w
     *dx = delta.x;
     *dy = delta.y;
     int flags = active && result.clicked ? 1 : 0;
+    if (active && result.hovered && cui_mouse_clicked(ui, CUI_MOUSE_RIGHT)) flags |= 32;
     if (active && component_input) flags |= 16;
     if (pointer) {
         fpas_canvas_pointer *previous = cui_state(ui, key, sizeof *previous);

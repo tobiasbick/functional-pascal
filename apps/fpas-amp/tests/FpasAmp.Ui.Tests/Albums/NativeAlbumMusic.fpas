@@ -11,6 +11,8 @@ uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as A;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
 
 uses ATL as Audio;
 uses FpasAmp.Library.Inventory.Monitoring as Library;
@@ -105,6 +107,12 @@ public type AlbumMusicTests = record
         Window.Wheel(Wheel);
         Wheel := 0.0F;
       end if;
+
+      if Key <> 0 then
+        Window.SetKey(Key, true);
+        Window.SetKey(Key, false);
+        Key := 0;
+      end if;
     end procedure;
     function Apply(Current: App.State; Message: App.Msg): A.Transition of (App.State, App.Msg);
     begin
@@ -174,6 +182,7 @@ public type AlbumMusicTests = record
     var YPos: float := -1.0F;
     var Left: int := -1;
     var Wheel: float := 0.0F;
+    var Key: int := 0;
     using const Window: Cui.CuiWindow := new Cui.CuiWindow(
       'FPas-Amp album music', 1320, 820, Cui.CuiRenderer.Software, true
     );
@@ -414,14 +423,22 @@ public type AlbumMusicTests = record
       X.Assert.InRange of float(Last.Player.Volume, -55.0F, -5.0F);
       const Selector: Gui.Control := Control(Session, 'player-eq-preset');
       const Reset: Cui.CuiRectangle := Control(Session, 'player-eq-reset').Bounds;
+      X.Assert.Equal of string('menu', Selector.Role);
       X.Assert.Equal of float(Reset.Height, Selector.Bounds.Height);
       X.Assert.True(Selector.Bounds.X + Selector.Bounds.Width <= Reset.X);
       Click(Session, Selector.Bounds);
-      Click(Session, Control(Session, 'player-preset-1').Bounds);
+      X.Assert.Equal of string('true', Control(Session, 'player-eq-preset').Value);
+      Key := cast Keys.Key.Escape as int;
+      Step(Session);
+      X.Assert.Equal of string('false', Control(Session, 'player-eq-preset').Value);
+      X.Assert.Equal of float(0.0F, Last.Player.Gains[0]);
+      Click(Session, Control(Session, 'player-eq-preset').Bounds);
+      Click(Session, Control(Session, Menus.ItemId('player-eq-preset', '1')).Bounds);
       X.Assert.Equal of string('Rock', Control(Session, 'player-eq-preset').Text);
+      X.Assert.Equal of string('false', Control(Session, 'player-eq-preset').Value);
       X.Assert.Equal of float(4.0F, Last.Player.Gains[0]);
       Click(Session, Control(Session, 'player-eq-preset').Bounds);
-      Click(Session, Control(Session, 'player-preset-0').Bounds);
+      Click(Session, Control(Session, Menus.ItemId('player-eq-preset', '0')).Bounds);
       X.Assert.Equal of float(0.0F, Last.Player.Gains[0]);
       if Last.Player.Index + 1 < Last.Player.Queue.Length then
         Click(Session, Control(Session, 'player-next').Bounds, 0.5F);

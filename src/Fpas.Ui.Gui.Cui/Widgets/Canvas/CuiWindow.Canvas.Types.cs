@@ -14,6 +14,13 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Canvas;
 [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
 public readonly record struct CuiDrawingShape(int Kind, float X, float Y, float A, float B, float Radius, uint Color);
 
+/// <summary>A native activation position in the preceding canvas layout.</summary>
+/// <param name="X">Horizontal coordinate in canvas-local logical points.</param>
+/// <param name="Y">Vertical coordinate in canvas-local logical points.</param>
+/// <param name="Width">Canvas width in logical points.</param>
+/// <param name="Height">Canvas height in logical points.</param>
+public readonly record struct CuiCanvasClick(float X, float Y, float Width, float Height);
+
 /// <summary>Events delivered to a canvas with component focus.</summary>
 public enum CuiCanvasInputKind
 {

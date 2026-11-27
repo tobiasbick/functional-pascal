@@ -638,7 +638,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         _,
         _,
         _,
-        _, _
+        _, _, _
       ), E.Element.Veil(
         _,
         _,

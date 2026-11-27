@@ -400,6 +400,35 @@ static bool grid_reveals_bound_cursor(void) {
     return valid;
 }
 
+/** A restored scroll target takes precedence over the first cursor reveal. */
+static bool grid_keeps_explicit_offset(void) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 400, 260, 1);
+    cui_set_reduced_motion(ui, true);
+    const char *titles[] = {"Name"};
+    const float widths[] = {200};
+    const int flags[] = {0};
+    const float offset = 420.0f;
+    int range[3], header, state[] = {-2, 0, 50, 50};
+    float current, maximum;
+    cui_begin_frame(ui, .016f);
+    fpas_cui_scroll_state(ui, "grid", 2, offset, &current, &maximum);
+    void *grid = fpas_cui_data_grid_begin(ui, "grid", titles, widths, flags, 1, 80,
+        NULL, state, 2, 160, 40, 2, 260, 1 | 16, range, &header);
+    for (int row = range[0]; row < range[1]; ++row) {
+        fpas_cui_data_grid_row(ui, row, "row", NULL);
+        fpas_cui_data_grid_cell(ui, "Example");
+    }
+    fpas_cui_data_grid_end(ui, grid, NULL, state);
+    fpas_cui_scroll_state(ui, "grid", -2, 0, &current, &maximum);
+    cui_end_frame(ui);
+    const bool valid = current == offset && state[2] == 50 && range[0] > 0 && range[1] <= 50;
+    cui_destroy(ui);
+    if (!valid) fprintf(stderr, "Grid replaced its explicit scroll target with the cursor.\n");
+    return valid;
+}
+
 static void grid_headers(cui_ctx *ui, int count, cui_rect *parts) {
     const char *titles[] = {"Name", "Team"};
     const float widths[] = {180, 130};
@@ -444,7 +473,8 @@ int main(int argc, char **argv) {
     const bool tree = !adapter || (tree_lazy_load() && tree_drag(true) && tree_drag(false));
     const bool alignment = !adapter || grid_alignment();
     const bool grid_controls = !adapter ||
-        (grid_checkbox_anchor() && grid_reveals_bound_cursor() && grid_initializes_appended_columns());
+        (grid_checkbox_anchor() && grid_reveals_bound_cursor() &&
+         grid_keeps_explicit_offset() && grid_initializes_appended_columns());
     const bool tree_cell = !adapter || (tree_cell_releases_chevron() && tree_cell_pixels());
     const bool options = !adapter || filter_options();
     return shrink && filter && tree && alignment && grid_controls && tree_cell && options ? 0 : 1;

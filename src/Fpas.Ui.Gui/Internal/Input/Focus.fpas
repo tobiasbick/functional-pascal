@@ -163,7 +163,8 @@ begin
       _,
       _,
       _,
-      const Handler: Sys.Func of (Canvases.Input, TMsg)?
+      const Handler: Sys.Func of (Canvases.Input, TMsg)?,
+      _
     ):
       if Options.Enabled and (Options.Focusable or Handler <> null) and (Preferred = null
         or Preferred = Id)

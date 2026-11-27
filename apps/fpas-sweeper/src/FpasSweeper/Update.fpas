@@ -48,7 +48,6 @@ begin
     Board := Board;
     Seed := Seed;
     Cursor := 0;
-    FlagMode := false;
     Elapsed := 0L;
     StartedAt := 0L;
     ClockFailed := false;
@@ -136,7 +135,7 @@ begin
     when Keys.Key.F if not Repeated:
       return Play(Model, Model.Cursor, true);
     when Keys.Key.Enter, Keys.Key.Space if not Repeated:
-      return Play(Model, Model.Cursor, Model.FlagMode);
+      return Play(Model, Model.Cursor, false);
     else
       return Next(Model);
   end case;
@@ -181,14 +180,10 @@ begin
       );
     when S.Msg.NewGame:
       return Start(Model);
-    when S.Msg.FlagMode(const Value: bool):
-      return Next(
-        Model with
-          FlagMode := Value;
-        end with
-      );
-    when S.Msg.Play(const Index: int):
-      return Play(Model, Index, Model.FlagMode);
+    when S.Msg.Reveal(const Index: int):
+      return Play(Model, Index, false);
+    when S.Msg.ToggleFlag(const Index: int):
+      return Play(Model, Index, true);
     when S.Msg.BoardInput(const Value: Canvas.Input):
       return BoardInput(Model, Value);
     when S.Msg.Theme(const Value: Appearance.Selection):

@@ -35,16 +35,25 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `LineCommits` | Supply one index into Revisions for each line. Use minus one for unattributed lines. |
-| `Revision.Time / Now` | Both use Unix seconds. Zero Now uses the current clock for relative ages. |
-| `Language / FirstLine / Height` | Empty / 0 / 0. Zero starts numbering at one or uses the native height. |
+| `LineCommits` | Supply a zero-based revision index or minus one for each line. An empty array omits attribution. |
+| `Revision.Hash / Author / Summary` | The gutter shows the author and up to seven hash characters. The tooltip shows the optional summary. |
+| `Revision.Time` | Revision time in Unix seconds. Zero omits the age. |
+| `Now` | Reference time in Unix seconds. Zero uses the system clock. |
+| `Language` | Empty. Set a language to highlight source lines. |
+| `FirstLine` | Zero. Values below one start numbering at one. |
+| `Height` | Zero uses 360 logical units. A negative value fills the parent. |
 | `Width / Enabled` | Fill / true. |
 
 ## Interaction
 
-Hover the gutter for a summary and to highlight the revision's lines.
-Click to receive `Event.Clicked`, an index into the supplied revisions.
-Use it to open the commit in your application's history view.
+Hover over the gutter for a summary and to highlight the revision's lines.
+The gutter uses a stronger shade for newer revisions and shows initials at
+narrow widths.
+
+The callback receives an `Event` when the hovered revision changes or when the
+user clicks its gutter. `Hovered` and `Clicked` are zero-based revision indices.
+Minus one indicates an absent revision. Use `Clicked` to open the revision in
+your application's history view.
 
 ## See also
 

@@ -32,13 +32,17 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Items` | Named nonnegative amounts with a finite sum. |
-| `Width / Height` | Fill / 0. Zero height uses the CUI default. |
-| `Format / Legend / Enabled` | null / true / true. |
+| `Items` | Named nonnegative amounts with a finite sum. Each item can specify a segment color. |
+| `Width` | Fill. |
+| `Height` | Zero uses a bar thickness of 10 logical units. |
+| `Format` | Null uses native automatic formatting. |
+| `Legend` | True. Shows values and shares in a wrapping legend below the bar. |
+| `Enabled` | True. Allows pointer inspection and activation. |
 
 ## Interaction
 
-Hover a segment or its legend entry to inspect the corresponding amount. Supply `OnActivate` to map a clicked segment's zero-based input index to a message.
+Hover a segment or legend entry to inspect the amount and share. The optional
+`OnActivate` callback receives the item's zero-based input index when clicked.
 
 ## See also
 

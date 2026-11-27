@@ -29,32 +29,49 @@ end function;
 // ## Parameters
 // - `Frame`: Current GUI presentation frame.
 // - `Id`: Stable widget identity.
-// - `Services`: Services supplied to the widget.
-// - `LastDay`: LastDay supplied to the widget.
+// - `Services`: Service names and availability histories.
+// - `LastDay`: Date of the newest value, or null for relative hover labels.
 // - `Settings`: Native layout and interaction options.
+// - `Changed`: Optional callback for hover proposals.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
   Id: string;
   Services: array of D.Service;
-  LastDay: Sys.DateOnly;
-  Settings: D.Options
+  LastDay: Sys.DateOnly?;
+  Settings: D.Options;
+  Changed: Sys.Func of (D.Hover, TMsg)?
 );
 begin
   const Role: string := 'uptime';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Width: S.NativeExtent := S.Extent(Settings.Width);
-  discard Frame.Window.Uptime(
+  const Date: Sys.DateOnly := LastDay ?? Sys.DateOnly.MinValue;
+  const Year: int := case LastDay of
+    when is Sys.DateOnly as Value: Value.Year;
+    else 0;
+  end case;
+  const Result: CuiDeveloper.CuiDevResult := Frame.Window.Uptime(
     Token,
     PackService(Services),
-    LastDay.Year,
-    LastDay.Month,
-    LastDay.Day,
+    Year,
+    Date.Month,
+    Date.Day,
     Width.Kind,
     Width.Value,
     Enabled
   );
   P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
+  if Enabled then
+    const Hovered: D.Hover? := Settings.Hovered;
+    if Hovered <> null and (Hovered.Service <> Result.Index or Hovered.Day <> Result.Action) then
+      case Changed of
+        when is Sys.Func of (D.Hover, TMsg) as Notify:
+          Frame.Messages.Add(Notify.Invoke(new D.Hover(Result.Index, Result.Action)));
+        else
+      end case;
+    end if;
+  end if;
 end procedure;
 
 end unit;

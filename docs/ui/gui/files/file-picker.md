@@ -38,7 +38,8 @@ end unit;
 | `Kind` | OpenFile. SaveFile adds the name field and Folder selects a directory. |
 | `Title / Start / Name` | All empty. The default title follows the mode and an empty Start uses the current directory. |
 | `Filter / FilterLabel` | Both empty. Use semicolon-separated glob patterns and an optional label. |
-| `Source / Base` | Both null. The default source lists local disk. Supply Base to draw a view under the modal. |
+| `Source` | Null. CUI reads the local directory through `cui_fs_list`. Supply a synchronous provider for a different file tree. |
+| `Base` | Null. Supply a view to draw under the modal. |
 
 ## Interaction
 
@@ -46,6 +47,10 @@ Set `Open` in the model to show the CUI modal. The callback receives an `Event`.
 Clear `Open` and handle `Event.Path` when it has a value. Cancel or Escape sends
 an event with `Path = null`. OpenFile supplies the existing selection, and
 SaveFile supplies a path for the application's save operation.
+
+In OpenFile mode, a filter change clears a selection when the file no longer
+matches. In SaveFile mode, the filter applies to the listing. The save name
+remains available for editing and confirmation.
 
 ![Save file picker with a filename field in the FPAS gallery](images/file-picker-save.png)
 

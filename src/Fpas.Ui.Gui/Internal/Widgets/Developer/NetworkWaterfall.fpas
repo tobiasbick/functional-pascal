@@ -44,14 +44,14 @@ end function;
 // - `Frame`: Current GUI presentation frame.
 // - `Id`: Stable widget identity.
 // - `Requests`: Requests supplied to the widget.
-// - `Selection`: Selection supplied to the widget.
+// - `Selection`: Model selection or null to use native selection.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
   Id: string;
   Requests: array of D.Request;
-  Selection: int;
+  Selection: int?;
   Changed: function(D.Event): TMsg;
   Settings: D.Options
 );
@@ -69,11 +69,16 @@ begin
     Settings.Loaded,
     Width.Kind,
     Width.Value,
-    Enabled
+    Enabled,
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   );
-  P.Root of TMsg(Frame, Id, Role, '', Enabled, Selection.ToString());
-  if Enabled and (Result.Index <> Selection or Result.Action >= 0 or Result.Count >= 0) then
-    Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Count, Result.Action)));
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, (Selection ?? Result.Index).ToString());
+  if Enabled and (Result.Flags <> 0 or Result.Action >= 0 or Result.Count >= 0
+    or (Settings.Hovered <> null and Settings.Hovered <> Result.Hover))
+  then
+    Frame.Messages.Add(
+      Changed(new D.Event(Result.Index, Result.Count, Result.Action, Result.Hover))
+    );
   end if;
 end procedure;
 

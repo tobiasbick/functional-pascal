@@ -22,7 +22,13 @@ begin
   const Initial: More.Model := new More.Model();
   const Typed: More.Model := MoreUpdate.Update(
     Initial, More.Msg.Request(
-      new Requests.Event(2, 'https://api.example.com/v1/orders?name=two+words&x=%26', false, false)
+      new Requests.Event(
+        2,
+        'https://api.example.com/v1/orders?name=two+words&x=%26',
+        false,
+        false,
+        true
+      )
     )
   );
   A.Check(
@@ -43,6 +49,15 @@ begin
   A.Check(
     Edited.Url = 'https://api.example.com/v1/orders?q=a%26b',
     'Editing pairs must update the URL with CUI encoding.'
+  );
+  const TooLong: More.Model := MoreUpdate.Update(
+    Edited, More.Msg.Parameters(
+      new Pairs.Event([new Pairs.Pair('q', new string(#32, 96), true, false)])
+    )
+  );
+  A.Check(
+    TooLong.Url = Edited.Url and TooLong.Parameters[0].Value = Edited.Parameters[0].Value,
+    'An oversized URL edit must preserve the current draft and parameter rows.'
   );
 end procedure;
 

@@ -36,11 +36,12 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Steps / Current` | Supply at least one step. Use minus one when closed. |
-| `Target / Position` | Empty / BottomStart. CUI centers the card if the target is absent and fits the card within the window. |
+| `Target / Position` | Empty / BottomStart. Set the stable ID of a control in the base view. An empty or absent target centers the card. CUI fits the card within the window. |
+| `Title / Body` | Empty. Supply the heading and supporting text for each step. |
 | `Width / Padding` | 0 / 0. CUI uses 300 logical points for the card and 6 around the target. |
 | `BlockTarget` | false. Set true to block pointer input in the spotlight too. |
-| `NextLabel / BackLabel / DoneLabel` | Empty uses the native captions. Literal replacements retain the same focus identities. |
-| `CountFormat` | Empty uses CUI's default. Up to two `%d` slots (step, total), plus literal `%%`. |
+| `NextLabel / BackLabel / DoneLabel` | null displays Next, Back and Done. Pass literal captions, including an empty string for a blank caption. |
+| `CountFormat` | null displays "step of total". Use up to two `%d` slots (step, total), plus literal `%%`. An empty string hides the count text. |
 
 ## Interaction
 
@@ -48,6 +49,17 @@ Set the current step to zero to start. CUI draws the spotlight and handles
 Back, Next, Done and dismissal. Store `Change.Step` to accept the proposal.
 `Change.Action` distinguishes completion from skipping, which both set the
 step to minus one.
+
+The GUI host resolves the target from the controls in the current frame.
+For native callers, the matching CUI identity comes from `cui_last_id` after
+the target control. The knob and fader targets highlight their interactive
+areas. The meter target highlights the entire meter.
+
+Tab moves between the tour buttons. With tour focus, Right advances, Left
+goes back, and Escape ends the tour. Enter or Space activates the focused
+button. Click the spotlighted control to use its normal input when
+`BlockTarget` is false. While the control holds focus, its arrow keys stay
+with the control. The dim area blocks pointer and wheel input.
 
 ## See also
 

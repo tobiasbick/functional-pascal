@@ -21,6 +21,24 @@ These widgets require the GUI host.
 | [Waveform](waveform.md) | Draw audio peaks with an optional seek position. |
 | [Tab bar](tab-bar.md) | Switch views using icons and badges in compact layouts. |
 
+## Motion gallery page
+
+The [Motion view](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
+uses a card for the text effects, a row with three equally weighted spotlight
+cards, a row with five loaders, and a centered dock. Two equally weighted columns
+hold the settings tiles and the playback controls. The tiles use a two-column
+grid. A rolling number example follows the CUI examples.
+
+## Playback clock
+
+The original CUI gallery advances the player by `cui_delta_time` on each frame.
+FPAS exposes the same frame delta through `Painter.DeltaTime()` in
+[`Fpas.Ui.Widgets.Canvas.Painting`](../canvas-and-bars/painting.md).
+The FPAS gallery uses its own playback clock to advance the model at about
+100 ms intervals. The clock uses elapsed time from a monotonic stopwatch.
+The model advances while playback runs, returns to zero after the end, and
+cancels the clock when the page closes.
+
 ## See also
 
 - [UI handbook](../README.md)

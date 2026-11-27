@@ -7,6 +7,14 @@ namespace Fpas.Ui.Gui.Cui.Interop;
 
 internal static partial class NativeMethods
 {
+    [StructLayout(LayoutKind.Sequential)]
+    internal record struct NativeTreeNode(int Parent, int FirstChild, int NextSibling, uint Flags);
+
+    [LibraryImport(Library, EntryPoint = "cui_tree_move")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static unsafe partial int TreeMove(NativeTreeNode* nodes, int count, int root,
+        int* moved, int movedCount, int target, int placement);
+
     [LibraryImport(Library, EntryPoint = "fpas_cui_tree_cell", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int TreeCell(nint context, string id, string label, string? icon, int depth, ref int open, int enabled, out int part);
@@ -18,7 +26,7 @@ internal static partial class NativeMethods
         float* widths, int* columnFlags, int columns,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] labels,
         int* parents, uint* flags, int count, int* state, int heightKind, float height,
-        float rowHeight, int options, out int node);
+        float rowHeight, int widthKind, float width, int options, byte* dropPermissions, out int node);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_tree_table_row")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -30,7 +38,7 @@ internal static partial class NativeMethods
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_tree_table_end")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void TreeTableEnd(nint context, nint handle, uint* flags, int* state, int* events, int* load);
+    internal static unsafe partial void TreeTableEnd(nint context, nint handle, uint* flags, int* state, int* events, int* load, int* dropped);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_tree_table_menu_begin", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

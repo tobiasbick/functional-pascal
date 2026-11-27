@@ -29,24 +29,15 @@ end procedure;
 // ## Parameters
 // - `Step`: Continuous when zero, otherwise the increment.
 // - `Reset`: Value to clamp and restore on reset.
-// - `DecimalPlaces`: Display precision.
 // - `UnitLabel`: Literal unit caption.
 // - `Span`: Distance between validated bounds.
 // - `At`: Diagnostic path.
-public procedure CheckDial(
-  Step: float;
-  Reset: float;
-  DecimalPlaces: int;
-  UnitLabel: string;
-  Span: float;
-  At: string
-);
+public procedure CheckDial(Step: float; Reset: float; UnitLabel: string; Span: float; At: string);
 begin
   if not ValidSize(Step) or not Sys.Single.IsFinite(Reset)
     or (Step > 0.0F and not Sys.Single.IsFinite(Span / Step))
-    or DecimalPlaces < 0 or DecimalPlaces > 6
   then
-    R.Reject(At, 'Invalid audio control increment, reset or display precision.');
+    R.Reject(At, 'Invalid audio control increment or reset.');
   end if;
 
   R.CheckText(UnitLabel, At + '/unit');
@@ -107,9 +98,18 @@ end procedure;
 public procedure CheckMeter(Peaks: array of float; Settings: M.Options; At: string);
 begin
   CheckLevels(Peaks, 1, At);
-  if not Sys.Single.IsFinite(Settings.MinimumDb) or Settings.MinimumDb >= 0.0F
-    or not Sys.Single.IsFinite(Settings.MaximumDb) or Settings.MaximumDb <= Settings.MinimumDb
-    or not Sys.Single.IsFinite(Settings.MaximumDb - Settings.MinimumDb)
+  const Minimum: float := if Settings.MinimumDb = 0.0F then
+    -60.0F
+  else
+    Settings.MinimumDb
+  end if;
+  const Maximum: float := if Settings.MaximumDb = 0.0F then
+    6.0F
+  else
+    Settings.MaximumDb
+  end if;
+  if not Sys.Single.IsFinite(Minimum) or Minimum >= 0.0F
+    or not Sys.Single.IsFinite(Maximum - Minimum) or Maximum <= Minimum
     or not ValidSize(Settings.Length) or not ValidSize(Settings.Thickness)
     or not Sys.Single.IsFinite(Settings.Hold) or not ValidSize(Settings.Decay)
   then

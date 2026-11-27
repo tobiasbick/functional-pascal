@@ -11,6 +11,12 @@ static const char **fpas_viz_labels(cui_ctx *ui, const char *const *labels, int 
     return copy;
 }
 
+static bool fpas_viz_cell_gap(cui_ctx *ui, float x, float y, float cell, float gap) {
+    const float step = cell + gap;
+    const float dx = ui->mx - x, dy = ui->my - y;
+    return dx >= 0 && dy >= 0 && (fmodf(dx, step) >= cell || fmodf(dy, step) >= cell);
+}
+
 static cui_viz_item *fpas_viz_items(cui_ctx *ui, const fpas_viz_item *items, int count) {
     cui_viz_item *copy = cui__frame_alloc(ui, sizeof *copy * (size_t)(count > 0 ? count : 1));
     for (int i = 0; i < count; ++i)

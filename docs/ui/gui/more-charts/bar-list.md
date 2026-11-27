@@ -39,7 +39,7 @@ end unit;
 
 ## Interaction
 
-CUI sorts by amount by default and uses labels as animation keys as rows change rank. A click sends the original input index through `OnActivate`. Keep a label stable across updates for the same item.
+CUI sorts from largest to smallest and keeps equal amounts in input order. Keep a label stable across updates for the same item. A click sends the input index of the row under the pointer, including during a rank animation. Rows beyond `MaximumRows` continue to slide out visually after they stop accepting clicks. [CUI-091](../../../future/cui-upstream-bugs.md#cui-091)
 
 ## See also
 

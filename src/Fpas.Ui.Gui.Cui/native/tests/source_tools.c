@@ -1,4 +1,5 @@
 // [Documentation](../../../../docs/ui/gui/more-developer-tools/README.md)
+// [Terminal](../../../../docs/ui/gui/files/terminal.md)
 #include "../fpas_cui.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -125,7 +126,7 @@ static void terminal(void) {
         cui_begin_frame(ui, .016f);
         int interrupt = 0;
         const char *line = fpas_cui_terminal(ui,"terminal",frame < 4 ? "Ready\n" : "Ready\nexample\n",
-            0,"> ",1,0,260,0,frame == 0 ? 7 : 3,&interrupt);
+            0,"> ",1,0,260,0,65536,1024,frame == 0 ? 7 : 3,&interrupt);
         if (line) {
             check(!strcmp(line, "echo example"), "Submission and Up history must return the same full command.");
             ++commands;
@@ -135,6 +136,109 @@ static void terminal(void) {
     }
     check(commands == 2 && interrupts == 1, "Expected submission, history replay, and one interrupt.");
     cui_destroy(ui);
+}
+
+enum { TERMINAL_WIDTH = 500, TERMINAL_HEIGHT = 260, TERMINAL_BYTES = TERMINAL_WIDTH * TERMINAL_HEIGHT * 4 };
+
+/** Compares native output, capacity changes, ANSI appends and explicit clear with the adapter. */
+static void terminal_rendering(void) {
+    static uint8_t expected[4][TERMINAL_BYTES], actual[TERMINAL_BYTES];
+    const char *prefix = "A longer line wraps more than once at this width.\nSecond line\nProgress 0%\r\x1b[";
+    char output[192];
+    snprintf(output, sizeof output, "%s32m100%%\x1b[0m\n", prefix);
+    for (int adapter = 0; adapter < 2; ++adapter) {
+        cui_sw_renderer *renderer = cui_sw_create();
+        cui_ctx *ui = cui_create(&(cui_ctx_desc){.renderer = cui_sw_iface(renderer)});
+        cui_set_viewport(ui, TERMINAL_WIDTH, TERMINAL_HEIGHT, 1);
+        cui_set_reduced_motion(ui, true);
+        char bytes[192];
+        cui_terminal_line lines[8];
+        cui_terminal_buffer buffer;
+        cui_terminal_init(&buffer, bytes, sizeof bytes, lines, 8);
+        cui_terminal_write(&buffer, prefix, -1);
+        for (int frame = 0; frame < 8; ++frame) {
+            if (frame == 5) cui_terminal_printf(&buffer, "32m%d%%\x1b[0m\n", 100);
+            if (frame == 6) {
+                cui_terminal_init(&buffer, bytes, 64, lines, 2);
+                cui_terminal_write(&buffer, output, -1);
+            }
+            if (frame == 7) cui_terminal_clear(&buffer);
+            cui_begin_frame(ui, .016f);
+            if (frame >= 3) {
+                if (adapter) {
+                    int interrupt;
+                    fpas_cui_terminal(ui, "output", frame == 7 ? "" : frame >= 5 ? output : prefix, frame == 7,
+                        "", 2, 230, -1, 15, frame >= 6 ? 64 : 192, frame >= 6 ? 2 : 8, 1, &interrupt);
+                } else {
+                    cui_terminal(ui, "output", &buffer, .width = CUI_PX(230), .height = -1, .size = 15, .no_input = true);
+                }
+            }
+            cui_end_frame(ui);
+            if (adapter && frame == 3)
+                check(cui_needs_redraw(ui), "New terminal geometry must request a second wrap frame.");
+            if (adapter && frame == 4)
+                check(!cui_needs_redraw(ui), "Settled terminal geometry must stop requesting frames.");
+            if (frame >= 4) {
+                cui_sw_render(renderer, cui_get_draw_data(ui), adapter ? actual : expected[frame - 4],
+                    TERMINAL_WIDTH, TERMINAL_HEIGHT, TERMINAL_WIDTH * 4, CUI_SW_RGBA);
+                if (adapter) check(memcmp(actual, expected[frame - 4], TERMINAL_BYTES) == 0,
+                    "Terminal wrapping, ANSI append, bounded capacities and revision clear must match CUI.");
+            }
+        }
+        cui_destroy(ui);
+        cui_sw_destroy(renderer);
+    }
+}
+
+/** Compares echo, interrupt and clear and verifies a disabled terminal skips Ctrl+L. */
+static void terminal_shortcuts(void) {
+    static uint8_t expected[3][TERMINAL_BYTES], actual[TERMINAL_BYTES];
+    for (int adapter = 0; adapter < 2; ++adapter) {
+        cui_sw_renderer *renderer = cui_sw_create();
+        cui_ctx *ui = cui_create(&(cui_ctx_desc){.renderer = cui_sw_iface(renderer)});
+        cui_set_viewport(ui, TERMINAL_WIDTH, TERMINAL_HEIGHT, 1);
+        cui_set_reduced_motion(ui, true);
+        char bytes[2048];
+        cui_terminal_line lines[32];
+        cui_terminal_buffer buffer;
+        cui_terminal_init(&buffer, bytes, sizeof bytes, lines, 32);
+        cui_terminal_write(&buffer, "Ready\n", -1);
+        int region = 0;
+        for (int frame = 0; frame < 9; ++frame) {
+            if (frame == 1 || frame == 6) press(ui, CUI_KEY_TAB, 0);
+            if (frame == 2) { cui_input_text(ui, "preview line"); press(ui, CUI_KEY_ENTER, 0); }
+            if (frame == 3) press(ui, CUI_KEY_C, CUI_MOD_CTRL);
+            if ((frame == 4 && adapter) || frame == 7) press(ui, CUI_KEY_L, CUI_MOD_CTRL);
+            cui_begin_frame(ui, .016f);
+            cui_push_disabled(ui, frame == 4);
+            int interrupt;
+            const char *command;
+            if (adapter) {
+                command = fpas_cui_terminal(ui, "actions", "Ready\n", 0, "", 1, 0, 210, 13,
+                    (int)sizeof bytes, 32, 3, &interrupt);
+            } else {
+                const cui_terminal_result result = cui_terminal(ui, "actions", &buffer, .prompt = "", .height = 210, .size = 13);
+                command = result.command;
+                interrupt = result.interrupt;
+            }
+            cui_pop_disabled(ui);
+            check((frame == 2 && command && !strcmp(command, "preview line")) || (frame != 2 && !command),
+                "Terminal must submit the complete preview line once.");
+            check(interrupt == (frame == 3), "Terminal must distinguish interrupt from clear.");
+            cui_end_frame(ui);
+            if (frame == 3 || frame == 6 || frame == 8) {
+                cui_sw_render(renderer, cui_get_draw_data(ui), adapter ? actual : expected[region],
+                    TERMINAL_WIDTH, TERMINAL_HEIGHT, TERMINAL_WIDTH * 4, CUI_SW_RGBA);
+                if (adapter) check(memcmp(actual, expected[region], TERMINAL_BYTES) == 0,
+                    "Terminal echo, interrupt and enabled clear must match CUI, and disabled clear must leave text intact.");
+                ++region;
+            }
+        }
+        check(memcmp(expected[1], expected[2], TERMINAL_BYTES) != 0,
+            "Enabled clear must remove the echoed terminal output.");
+        cui_destroy(ui);
+        cui_sw_destroy(renderer);
+    }
 }
 
 static void clipboard(void *user, const char *value) {
@@ -187,7 +291,7 @@ static void transition_frame(cui_ctx *ui, cui_sw_renderer *renderer, const char 
     cui_begin_frame(ui, .016f);
     if (output) {
         int interrupt;
-        fpas_cui_terminal(ui, "transition", output, revision, "> ", 1, 0, 300, 0, 1, &interrupt);
+        fpas_cui_terminal(ui, "transition", output, revision, "> ", 1, 0, 300, 0, 65536, 1024, 1, &interrupt);
     } else fpas_cui_log_console(ui, "transition", entries, count, 1, 0, 300, 0, 5);
     cui_end_frame(ui);
     cui_sw_render(renderer, cui_get_draw_data(ui), pixels, TRANSITION_WIDTH,
@@ -308,6 +412,8 @@ int main(void) {
     diff();
     hex();
     terminal();
+    terminal_rendering();
+    terminal_shortcuts();
     log_console();
     source_transitions();
     path_bar();

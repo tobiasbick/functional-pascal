@@ -4,10 +4,18 @@
 int fpas_cui_tree_table_menu_begin(cui_ctx *ui, const char *id, int enabled, int *node,
     unsigned int *popup, int *table) {
     *node = -1;
+    const cui_id key = cui_make_id(ui, id);
     /* The open popup pushes its own ID scope and layout node, so record both first. */
-    *popup = cui_make_id(ui, id) ^ CUI__TT_MENU;
+    *popup = key ^ CUI__TT_MENU;
     *table = ui->last_node;
-    return enabled && cui_tree_table_menu_begin(ui, id, node);
+    if (!enabled || cui_is_disabled(ui)) {
+        cui_popup *menu = cui__popup_get(ui, *popup, false);
+        if (menu) menu->open = false;
+        cui__tt_state *state = cui__state_lazy(ui, key ^ CUI__TT_STATE, sizeof *state, false);
+        if (state) state->menu_frame = 0;
+        return 0;
+    }
+    return cui_tree_table_menu_begin(ui, id, node);
 }
 
 int fpas_cui_tree_table_menu_end(cui_ctx *ui, unsigned int popup, int table, int visible,

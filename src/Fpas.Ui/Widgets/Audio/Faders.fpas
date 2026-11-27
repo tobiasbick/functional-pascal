@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Audio.Faders;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Presentation and input settings for a native mixer fader.
 public type Options = record
@@ -10,8 +11,8 @@ public type Options = record
   public Step: float := 0.0F;
   // Value used by double-click, Delete or Backspace, clamped to the bounds.
   public Reset: float := 0.0F;
-  // Value precision from zero through six decimal places.
-  public DecimalPlaces: int := 1;
+  // Numeric value format. Null uses one decimal place.
+  public Format: C.ValueFormat? := null;
   // Literal unit caption following the value.
   public UnitLabel: string := '';
   // Whether to hide the numeric value.

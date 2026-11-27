@@ -29,7 +29,7 @@ public type Event = record
   public Selected: int;
   // Activated zero-based index, or minus one.
   public Activated: int;
-  // Shown supplied to CUI.
+  // Diagnostics that pass the filters, including folded groups.
   public Shown: int;
 end record;
 
@@ -37,7 +37,7 @@ end record;
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Fill;
-  // Height supplied to CUI.
+  // Height in logical units. Zero uses 300. Negative values fill the parent.
   public Height: float := 0.0F;
   // Hide Toolbar supplied to CUI.
   public HideToolbar: bool := false;

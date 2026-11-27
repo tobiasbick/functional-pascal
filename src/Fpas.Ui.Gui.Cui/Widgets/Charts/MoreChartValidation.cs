@@ -37,7 +37,8 @@ public sealed partial class CuiWindow
     {
         ArgumentNullException.ThrowIfNull(series);
         CheckExtent(options.WidthKind, options.Width, nameof(options)); CheckVizDistance(options.Height);
-        Utf8.Validate(options.XLabel, nameof(options)); Utf8.Validate(options.YLabel, nameof(options));
+        if (options.XLabel is not null) Utf8.Validate(options.XLabel, nameof(options));
+        if (options.YLabel is not null) Utf8.Validate(options.YLabel, nameof(options));
         CheckChartFormat(options.XFormat); CheckChartFormat(options.YFormat);
         float xl = 1e30f, xh = -1e30f, yl = 1e30f, yh = -1e30f; long count = 0;
         foreach (var item in series)
@@ -90,7 +91,14 @@ public sealed partial class CuiWindow
     {
         ArgumentNullException.ThrowIfNull(candles);
         CheckExtent(options.WidthKind, options.Width, nameof(options)); CheckVizDistance(options.Height);
-        CheckVizLabels(options.Labels, candles.Length); CheckChartFormat(options.Format); CheckChartColor(options.Up); CheckChartColor(options.Down);
+        if (options.Labels is { Length: > 0 } labels)
+        {
+            if (labels.Length != candles.Length)
+                throw new ArgumentException("Labels must be empty or match the candle count.", nameof(options));
+            foreach (string? label in labels)
+                if (label is not null) Utf8.Validate(label, nameof(options));
+        }
+        CheckChartFormat(options.Format); CheckChartColor(options.Up); CheckChartColor(options.Down);
         float volume = 0;
         foreach (var candle in candles)
         {

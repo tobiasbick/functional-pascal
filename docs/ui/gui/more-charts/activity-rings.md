@@ -33,12 +33,15 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Items` | Up to eight labeled nonnegative progress fractions. |
-| `Size / Thickness` | 0 / 0. CUI chooses the diameter and ring thickness. |
-| `Center / Caption / Legend / Enabled` | Empty / empty / false / true. Center and Caption are literal text. |
+| `Size` | 0. CUI uses a 150-point diameter and can reduce the diameter in a narrow view. |
+| `Thickness` | 0. CUI uses one tenth of the effective diameter, with a minimum of eight points. |
+| `Center` | null. Use an empty string to show the caption alone. |
+| `Caption` | null. An empty string keeps the caption space when `Center` is set. |
+| `Legend / Enabled` | false / true. The legend shows names and percentages beside the rings. |
 
 ## Interaction
 
-CUI keeps drawing beyond one revolution when a value exceeds 1, up to four turns. Hover to inspect a ring. An optional `OnActivate` callback receives the clicked ring's input index.
+Values above `1` move the progress marker beyond the starting point, up to four turns. Hover over a visible ring or a legend row to inspect progress. The optional `OnActivate` callback receives the clicked item's input index. If an inner ring has insufficient space, its legend row still accepts clicks. [CUI-094](../../../future/cui-upstream-bugs.md#cui-094)
 
 ## See also
 

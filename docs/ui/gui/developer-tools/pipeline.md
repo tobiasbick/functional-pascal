@@ -36,13 +36,20 @@ end unit;
 | --- | --- |
 | `Job.Stage` | Zero-based stage index. |
 | `Job.Status` | 0 pending, 1 running, 2 passed, 3 failed, 4 skipped, 5 canceled. |
-| `Job.Duration / AllowFailure` | Pass seconds, or a negative duration if unavailable. AllowFailure keeps a failed job from failing its stage. |
-| `Width / Enabled` | Fill / true. Stages stack vertically on narrow panels. |
+| `Job.Duration / AllowFailure` | Pass seconds or a negative duration if unavailable. `AllowFailure` keeps a failed job from failing its stage. |
+| `Selection` | Pass a job index or -1 for no current selection. Null omits selection styling and keeps activation available. |
+| `Width / Enabled` | Fill / true. Stages stack vertically below 560 logical units. |
+| `Hovered` | Null. Supply the last reported hover index to receive hover changes. Start with -1. |
 
 ## Interaction
 
-Store the selected job and use `Clicked` to open its output. The
-application supplies updated statuses and durations as jobs progress.
+Click a job or focus it and press Enter or Space to activate it. A focus
+request for the pipeline targets the selected job or the first input job.
+Use `Clicked` to open job output and store `Selection` when tracking it.
+
+Apply `Event.Hovered` to `Options.Hovered` to track pointer changes. The
+index is -1 when the pointer leaves the jobs. Every proposal also includes
+the current hover index. Supply updated statuses and durations as jobs progress.
 
 ## See also
 

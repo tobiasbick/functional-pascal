@@ -34,16 +34,27 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
+| `Name / Method` | Pass a path or URL. Null method displays GET. |
 | `Start / Queued / Dns / Connect / Tls / Wait / Download` | Pass seconds relative to the start of the page for Start and durations in seconds for the phases. |
 | `Status / Type / Size` | Use status zero when pending or failed. Type can be null. Size is the number of bytes transferred. |
 | `DomLoaded / Loaded` | Both zero. A positive time in seconds draws its marker. |
-| `Width / Height / Enabled` | Fill / 0 / true. Zero uses the native height. |
+| `Width / Height / Enabled` | Fill / 320 logical units / true. Zero uses the default height. A negative height fills the parent. |
+| `Selection` | Pass a request index or minus one to keep selection in the application model. Pass null to let CUI keep selection. |
+| `Hovered` | Null. Store the previous hover index here to receive hover-only proposals. |
 
 ## Interaction
 
-Hover a bar for timing details. Up and Down move selection. Double-click
-or press Enter to activate a request. Map `Selection`, `Clicked` and
-`Activated` to the original request array. Minus one means no item.
+Hover a bar for the timing breakdown. At widths below 600 logical units,
+the waterfall omits the method, type and size columns.
+
+With focus, Up and Down move selection. Home and End move to the first
+and last request. Double-click or press Enter to activate. Escape clears
+the selection. Map `Selection`, `Clicked`, `Activated` and `Hovered` to the
+original request array. Minus one means no request.
+
+When the application owns selection, store the proposed selection and pass
+it back to the widget. When CUI owns selection, keep passing null. Both
+modes report the current index with click, activation and hover proposals.
 
 ## See also
 

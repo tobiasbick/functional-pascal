@@ -19,13 +19,13 @@ end record;
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Fill;
-  // Maximum entries or UTF-8 bytes, as applicable.
+  // Maximum expression bytes, at least 11.
   public Capacity: int := 63;
-  // Now supplied to CUI.
+  // Reference time in Unix seconds. Zero uses the clock.
   public Now: long := 0L;
   // Use UTC timestamps.
   public Utc: bool := false;
-  // Next Count supplied to CUI.
+  // Number of upcoming runs to show, from zero through ten.
   public NextCount: int := 3;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;

@@ -11,7 +11,7 @@ public type Vertex = record
   public Label: string;
   // Detail supplied to CUI.
   public Detail: string?;
-  // Tone supplied to CUI.
+  // Native Fpas.Ui.Styles.Tone ordinal.
   public Tone: int;
 end record;
 
@@ -31,18 +31,22 @@ public type Event = record
   public Clicked: int;
   // Activated zero-based index, or minus one.
   public Activated: int;
+  // Hovered zero-based index, or minus one.
+  public Hovered: int := -1;
 end record;
 
 // Native layout and interaction options.
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Fill;
-  // Height supplied to CUI.
+  // Card height, or zero for the native 360-unit default.
   public Height: float := 0.0F;
   // Top Down supplied to CUI.
   public TopDown: bool := false;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
+  // Last reported hover index. Null omits messages caused only by hover.
+  public Hovered: int? := null;
 end record;
 
 // Builds the native DependencyGraph widget.
@@ -52,7 +56,7 @@ end record;
 // - `Id`: Stable widget identity.
 // - `Vertices`: Model-owned vertices data.
 // - `Edges`: Model-owned edges data.
-// - `Selection`: Selected zero-based index, or minus one.
+// - `Selection`: Selected zero-based index, minus one for none, or null to let CUI retain it.
 // - `Changed`: Maps an action or edit to a message.
 // - `Settings`: Optional native settings.
 // ## Returns
@@ -61,7 +65,7 @@ public function DependencyGraph of TMsg(
   Id: string;
   Vertices: array of Vertex;
   Edges: array of Edge;
-  Selection: int;
+  Selection: int?;
   Changed: function(Event): TMsg;
   Settings: Options? := null
 ): E.Element of TMsg;

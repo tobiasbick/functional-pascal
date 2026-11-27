@@ -8,7 +8,11 @@ uses Fpas.Ui.Widgets.Ai.Composers as Composer;
 uses Fpas.Ui.Widgets.Ai.ResponseActions as Response;
 
 uses GuiGallery.Pages.Ai.State as S;
+uses GuiGallery.Pages.Motion.Clock as Clock;
+uses System as Sys;
 uses System.Collections.Generic as Lists;
+
+const ResponseClock: string := 'response-clock';
 
 function ApplyEditor(Value: Composer.Value; Change: Composer.Event): Composer.Value;
 begin
@@ -62,7 +66,6 @@ begin
       end with;
     when S.Msg.Response(Response.Event.Regenerate):
       return Model with
-        Elapsed := 0.0F;
         Editor := Model.Editor with
           Busy := true;
         end with;
@@ -79,10 +82,16 @@ begin
       end with;
     when S.Msg.Tick(const Seconds: float):
       if Model.Editor.Busy then
+        const Elapsed: float := Model.Elapsed + Seconds;
+        const Busy: bool := Elapsed <= 9.0F;
         return Model with
-          Elapsed := Model.Elapsed + Seconds;
+          Elapsed := if Busy then
+            Elapsed
+          else
+            0.0F
+          end if;
           Editor := Model.Editor with
-            Busy := Model.Elapsed + Seconds < 9.0F;
+            Busy := Busy;
           end with;
         end with;
       end if;
@@ -98,7 +107,7 @@ end function;
 // - `Model`: Current AI page state.
 // - `Message`: Proposed action.
 // ## Returns
-// Updated state and any attachment toast.
+// Updated state and commands for the response clock or attachment toast.
 public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
   const Next: S.Model := Apply(Model, Message);
@@ -114,7 +123,20 @@ begin
         ]
       );
     else
-      return new Mvu.Transition of (S.Model, S.Msg)(Next, []);
+      const Commands: array of Mvu.Command of S.Msg := if Next.Editor.Busy = Model.Editor.Busy then
+        []
+      elsif Next.Editor.Busy then
+        [
+          Clock.Start of S.Msg(
+            S.Msg.Tick,
+            function(Error: Sys.Exception): S.Msg => S.Msg.Editor(Composer.Event.Stop),
+            Identity := ResponseClock
+          )
+        ]
+      else
+        [Mvu.CancelBackground of S.Msg(ResponseClock)]
+      end if;
+      return new Mvu.Transition of (S.Model, S.Msg)(Next, Commands);
   end case;
 end function;
 

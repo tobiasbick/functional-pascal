@@ -33,13 +33,18 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Status / Seconds / Bytes` | Pass the code and measured values. CUI formats the status, time and size. |
-| `Width / Enabled` | Content / true. |
+| `Status` | Pass the HTTP status code. A nonpositive code displays `No response`. |
+| `Seconds` | Pass finite elapsed seconds. A negative value omits the time. |
+| `Bytes` | Pass a finite size in bytes. A negative value omits the size. |
+| `Width` | Content. A constrained row can wrap the status and metrics. |
+| `Enabled` | True. Sets the enabled state in host snapshots. |
 
 ## Interaction
 
-Update the supplied values after receiving a response. The status line is
-passive.
+Update the supplied values after receiving a response. CUI displays the status
+code and includes its reason phrase when known. CUI formats times below one
+second in milliseconds and sizes of 1000 bytes or more in decimal units.
+The status line emits no messages.
 
 ## See also
 
@@ -60,3 +65,5 @@ passive.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
   - [response_status.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/response_status.c)
   - [response_status.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/response_status.h)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [http_tools.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/http_tools.c)

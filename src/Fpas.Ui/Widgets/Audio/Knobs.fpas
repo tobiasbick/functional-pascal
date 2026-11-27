@@ -3,7 +3,7 @@
 unit Fpas.Ui.Widgets.Audio.Knobs;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // Presentation and input settings for a native rotary control.
 public type Options = record
@@ -11,10 +11,8 @@ public type Options = record
   public Step: float := 0.0F;
   // Value used by double-click, Delete or Backspace, clamped to the bounds.
   public Reset: float := 0.0F;
-  // Value precision from zero through six decimal places.
-  public DecimalPlaces: int := 0;
-  // Whether positive values display a leading plus sign.
-  public ShowSign: bool := false;
+  // Safe numeric format or null for the native integer display.
+  public Format: Charts.ValueFormat? := null;
   // Literal unit caption following the value.
   public UnitLabel: string := '';
   // Whether to hide the numeric value.
@@ -23,8 +21,8 @@ public type Options = record
   public Enabled: bool := true;
   // Diameter in logical points.
   public Size: float := 48.0F;
-  // Optional straight-alpha color for the arc.
-  public ArcColor: G.Color? := null;
+  // Native control color, theme color, or explicit straight-alpha color for the arc.
+  public ArcColor: Charts.Color := Charts.Color.Automatic;
   // Whether the arc starts in the middle of the sweep.
   public Bipolar: bool := false;
   // Whether equal turns multiply the value. Requires a positive minimum.

@@ -31,8 +31,10 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Font / Size / Color` | Body / 0 / Automatic. Zero size uses native text size. |
-| `Speed` | 0. Positive values are sweeps per second. |
+| `Font / Size` | Body / 0. Zero size uses the theme body text size. |
+| `Color` | Automatic. CUI uses muted text as the base for the highlight. |
+| `Width / NoWrap` | Content / false. Set a width to constrain the text. Set NoWrap to keep it on one line. |
+| `Speed` | 0. CUI uses 0.6 sweeps per second. Set a positive value for a different rate. |
 
 ## Interaction
 

@@ -31,12 +31,13 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Style` | Choose one of the five animation values. |
-| `Size / Color` | 0 / Automatic. Zero uses the native size. |
+| `Size` | 0. CUI uses 24 logical units. Dots are half as tall as their width. The other styles are square. |
+| `Color` | Automatic. CUI uses the secondary text color. |
 
 ## Interaction
 
-Include the loader while work is pending. The application tracks the
-work, and CUI animates the indicator.
+Include the loader while work is pending. The application tracks the work.
+With reduced motion, the indicator stays visible and still.
 
 ## See also
 

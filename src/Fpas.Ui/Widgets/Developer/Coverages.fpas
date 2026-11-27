@@ -5,29 +5,29 @@ unit Fpas.Ui.Widgets.Developer.Coverages;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 
-// Data for the native Coverage widget.
+// Coverage totals for a file.
 public type File = record
-  // Path supplied to CUI.
+  // Path used to place the file in the folder tree.
   public Path: string;
-  // Lines supplied to CUI.
+  // Number of coverable lines.
   public Lines: int;
-  // Lines Hit supplied to CUI.
+  // Number of covered lines.
   public LinesHit: int;
-  // Branches supplied to CUI.
+  // Number of coverable branches.
   public Branches: int;
-  // Branches Hit supplied to CUI.
+  // Number of covered branches.
   public BranchesHit: int;
-  // Functions supplied to CUI.
+  // Number of coverable functions.
   public Functions: int;
-  // Functions Hit supplied to CUI.
+  // Number of covered functions.
   public FunctionsHit: int;
 end record;
 
-// Action or changed value reported by the native widget.
+// File activation and aggregate line coverage.
 public type Event = record
-  // Activated zero-based index, or minus one.
+  // Activated zero-based file index, or minus one.
   public Activated: int;
-  // Lines supplied to CUI.
+  // Percentage of covered lines across all input files.
   public Lines: float;
 end record;
 
@@ -35,14 +35,16 @@ end record;
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Fill;
-  // Height supplied to CUI.
+  // Height in logical units. Zero fits the rows up to 360 units. Negative values fill the available height.
   public Height: float := 0.0F;
-  // Low supplied to CUI.
+  // Lower percentage threshold for the line, branch and function colors. Zero uses 50.
   public Low: float := 0.0F;
-  // High supplied to CUI.
+  // Upper percentage threshold for the line, branch and function colors. Zero uses 80.
   public High: float := 0.0F;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
+  // Last reported line percentage. Null omits messages caused only by a changed aggregate.
+  public ReportedLines: float? := null;
 end record;
 
 // Builds the native Coverage widget.
@@ -50,8 +52,8 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
-// - `Files`: Model-owned files data.
-// - `Changed`: Maps an action or edit to a message.
+// - `Files`: Model-owned paths and coverage counts.
+// - `Changed`: Maps an activation or aggregate change to a message.
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.

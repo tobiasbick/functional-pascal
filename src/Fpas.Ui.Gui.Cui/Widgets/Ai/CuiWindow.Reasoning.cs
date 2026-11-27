@@ -17,6 +17,7 @@ public sealed partial class CuiWindow
     public unsafe int BeginReasoning(string id, bool thinking, float seconds, string title, int flags, string? header)
     {
         CheckFrame();
+        CheckFeedbackNumber(seconds, nameof(seconds));
         int* nodes = stackalloc int[2];
         int state = NativeMethods.ReasoningBegin(context, Stable(id), thinking ? 1 : 0, seconds, OptionalAi(title), flags, nodes);
         if (header is not null) TrackControl(header, nodes[1]);

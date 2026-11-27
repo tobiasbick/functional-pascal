@@ -32,13 +32,17 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Used / Limit / Part.Amount` | Use consistent units for the usage, capacity and breakdown. |
-| `Part.Color / Unit` | Automatic / empty. Supply a color or an optional usage unit. |
+| `Used / Limit` | Use consistent units for current usage and capacity. Pass a positive capacity. |
+| `Parts` | Pass labels and amounts for the breakdown, or an empty array to omit the breakdown bar. |
+| `Part.Color` | Automatic uses the theme palette. Supply a color for a specific part. |
+| `Unit` | Null uses the native `tokens` label. An empty string omits the unit label. |
 
 ## Interaction
 
-Hover for the usage breakdown. Pass updated totals as the conversation
-adds or removes context. The meter is passive.
+The ring uses the warning color at 80 percent and the danger color at
+95 percent. Hover to see the totals and breakdown. The breakdown bar
+adds a free segment for any capacity left after the supplied parts.
+Pass updated totals as the conversation adds or removes context.
 
 ## See also
 

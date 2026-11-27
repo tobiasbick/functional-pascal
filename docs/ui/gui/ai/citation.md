@@ -18,13 +18,13 @@ uses Fpas.Ui.Widgets.Ai.Sources as S;
 // Shows a source reference with an activation message.
 // ## Parameters
 // - `Number`: Citation number used when no source domain is available.
-// - `Source`: Source URL, title and optional snippet.
+// - `Source`: Optional source URL, title and snippet.
 // ## Returns
 // The citation chip.
 public function View(Number: int; Source: S.Item): E.Element of string;
 begin
   return W.Citation of string('reference', Number, Source,
-    function(): string => Source.Url);
+    function(): string => Source.Url ?? '');
 end function;
 
 end unit;
@@ -34,18 +34,22 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Number / Source` | Pass the number and an optional source. A null source gives a numbered chip. |
-| `Activate / Enabled` | Pass a callback to handle activation, or null to omit the message. Enabled defaults to true. |
+| `Number` | Pass a positive number. The chip shows this number if the source has no domain. |
+| `Source` | Pass an optional source. Null omits the preview. |
+| `Source.Url / Title / Snippet` | Each defaults to null. The URL supplies the domain. The title and snippet supply text for the preview. |
+| `Activate / Enabled` | Pass a callback to handle activation, or null to omit the message. `Enabled` defaults to true. |
 
 ## Interaction
 
-Hover the chip to view the source preview. When a callback is supplied,
-handle activation in the application and open the intended source.
+Hover a chip with a source to view its preview. To activate an enabled
+chip, click it or press Enter or Space when it has focus. Handle the
+activation message in the application to open the source.
 
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_citation)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/Citations.fpas)
+- [Source type](../../../../src/Fpas.Ui/Widgets/Ai/Sources.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Source list](source-list.md)
 - [AI](README.md)

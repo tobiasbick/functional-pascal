@@ -91,8 +91,8 @@ begin
 
   Common.Distance(Settings.Size, At);
   Common.Distance(Settings.Thickness, At);
-  R.CheckText(Settings.Center, At);
-  R.CheckText(Settings.Caption, At);
+  R.CheckText(Settings.Center ?? '', At);
+  R.CheckText(Settings.Caption ?? '', At);
 end procedure;
 
 // Checks native scatter series and bubble sizes.
@@ -123,8 +123,8 @@ begin
   Common.Distance(Settings.Height, At);
   Common.Format(Settings.XFormat, At);
   Common.Format(Settings.YFormat, At);
-  R.CheckText(Settings.XLabel, At);
-  R.CheckText(Settings.YLabel, At);
+  R.CheckText(Settings.XLabel ?? '', At);
+  R.CheckText(Settings.YLabel ?? '', At);
   LR.CheckExtent(Settings.Width, R.Profile.Graphical, At);
 end procedure;
 
@@ -215,8 +215,8 @@ begin
     R.Reject(At, 'Time labels must match the candle count.');
   end if;
 
-  for Label: string in Settings.Labels do
-    R.CheckText(Label, At);
+  for Label: string? in Settings.Labels do
+    R.CheckText(Label ?? '', At);
   end for;
 
   if Settings.Overlays.Length > 4 then

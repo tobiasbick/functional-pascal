@@ -8,7 +8,7 @@ public sealed partial class CuiWindow
     /// <summary>Draws CUI's native audio level meter.</summary>
     /// <param name="id">Stable meter identity.</param>
     /// <param name="levels">One to eight nonnegative linear peaks.</param>
-    /// <param name="minimumDb">Negative lower bound in dBFS.</param>
+    /// <param name="minimumDb">Negative lower bound in dBFS, or zero for the native default.</param>
     /// <param name="maximumDb">Upper bound in dBFS, or zero for the native default.</param>
     /// <param name="length">Logical bar length, or zero for the native default.</param>
     /// <param name="thickness">Logical channel thickness, or zero for the native default.</param>
@@ -26,9 +26,11 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         ValidateAudioLevels(levels, minimumChannels: 1);
-        if (!float.IsFinite(minimumDb) || minimumDb >= 0)
+        if (!float.IsFinite(minimumDb) || minimumDb > 0)
             throw new ArgumentOutOfRangeException(nameof(minimumDb));
-        if (!float.IsFinite(maximumDb - minimumDb) || maximumDb <= minimumDb)
+        float minimum = minimumDb == 0 ? -60 : minimumDb;
+        float maximum = maximumDb == 0 ? 6 : maximumDb;
+        if (!float.IsFinite(maximum - minimum) || maximum <= minimum)
             throw new ArgumentOutOfRangeException(nameof(maximumDb));
         if (!ValidAudioSize(length)) throw new ArgumentOutOfRangeException(nameof(length));
         if (!ValidAudioSize(thickness)) throw new ArgumentOutOfRangeException(nameof(thickness));

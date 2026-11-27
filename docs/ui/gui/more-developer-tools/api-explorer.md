@@ -35,14 +35,18 @@ end unit;
 | --- | --- |
 | `Endpoint.Method / Path / Tag` | Supply method and path. A null tag groups the endpoint under Other. |
 | `Deprecated / Parameters` | Deprecated draws a badge. Parameters supply names, locations, types, required flags and optional descriptions. |
-| `Width / Height / Enabled` | Fill / 0 / true. |
+| `Selection` | Use an endpoint index, minus one for no selection, or null for native selection. |
+| `Width / Height / Enabled` | Fill / 0 / true. Zero height fits the content. A negative height fills the parent. |
 
 ## Interaction
 
-Filter by path or summary, then open an endpoint to inspect its parameters.
-Store `Event.Selection`. `TryIt` identifies an endpoint requested by
-the user, or minus one. Use it to populate a request draft in your
-application.
+Filter by path or summary. Click a tag to fold its group. Use Up and Down
+to move between visible endpoints. Click an endpoint or press Enter or
+Space to show its parameters.
+
+Store `Event.Selection` if the model owns the selection. `Event.TryIt`
+contains the requested endpoint index or minus one. Use the index to
+populate a request draft in your application.
 
 ## See also
 
@@ -63,3 +67,4 @@ application.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
   - [api_explorer.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/api_explorer.c)
   - [api_explorer.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/api_explorer.h)
+- [Native regression tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/developer_editors.c)

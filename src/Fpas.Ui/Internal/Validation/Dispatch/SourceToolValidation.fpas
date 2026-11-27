@@ -190,6 +190,9 @@ begin
       Height(Settings.Height, Path);
       R.CheckText(Output, Path);
       R.CheckText(Settings.Prompt, Path);
+      if Settings.ByteCapacity < 64 or Settings.LineCapacity < 2 then
+        R.Reject(Path, 'Terminal scrollback needs at least 64 bytes and two lines.');
+      end if;
     else
   end case;
 end procedure;

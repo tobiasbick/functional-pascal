@@ -10,13 +10,13 @@ public sealed partial class CuiWindow
     /// <summary>Draws the native Uptime widget.</summary>
     /// <param name="Id">Id supplied to CUI.</param>
     /// <param name="Services">Services supplied to CUI.</param>
-    /// <param name="Year">Year supplied to CUI.</param>
+    /// <param name="Year">Year of the newest sample, or zero for relative hover labels.</param>
     /// <param name="Month">Month supplied to CUI.</param>
     /// <param name="Day">Day supplied to CUI.</param>
     /// <param name="WidthKind">Width Kind supplied to CUI.</param>
     /// <param name="Width">Width supplied to CUI.</param>
     /// <param name="Enabled">Enabled supplied to CUI.</param>
-    /// <returns>Values proposed by CUI.</returns>
+    /// <returns>The hovered service in Index and day in Action. Both are minus one when no bar is under the pointer.</returns>
     public unsafe CuiDevResult Uptime(string Id, CuiDevService[] Services, int Year, int Month, int Day, int WidthKind, float Width, bool Enabled)
     {
         CheckFrame();

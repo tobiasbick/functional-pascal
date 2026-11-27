@@ -13,7 +13,8 @@
  * @param high High coverage threshold used for coloring.
  * @param width_kind FPAS extent kind.
  * @param width Width basis for that extent.
- * @param enabled Nonzero to accept input outside disabled scopes.
+ * @param flags Bit zero enables input. Bit one requests keyboard focus.
  * @param out Receives action as the activated file index (or -1) and x as lines. */
-CUI_API void fpas_cui_coverage(cui_ctx *ui, const char *id, const cui_coverage_file * files, int files_count, float height, float low, float high, int width_kind, float width, int enabled, fpas_dev_result * out);
+CUI_API void fpas_cui_coverage(cui_ctx *ui, const char *id, const cui_coverage_file *files, int files_count,
+    float height, float low, float high, int width_kind, float width, int flags, fpas_dev_result *out);
 #endif

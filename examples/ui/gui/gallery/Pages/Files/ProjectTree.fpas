@@ -1,0 +1,325 @@
+// [Documentation](../../../../../../docs/ui/gui/files/README.md#files-gallery-page)
+
+unit GuiGallery.Pages.Files.ProjectTree;
+
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Clipboard as Clipboard;
+uses Fpas.Ui.Gui.TreeTables as Moves;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Collections.DataGrids as Grid;
+uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+uses Fpas.Ui.Widgets.Collections.TreeTables as Tree;
+uses Fpas.Ui.Widgets.Display.IconGlyphs as Icons;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Shared.Sections as G;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+uses System.Globalization as Locale;
+
+function Folder(Name: string; Parent: int := -1; Open: bool := false): Tree.Node;
+begin
+  return new Tree.Node(Name, Parent, ['', 'Folder'], HasChildren := true, Open := Open);
+end function;
+
+function File(Name: string; Size: string; Kind: string; Parent: int := -1): Tree.Node;
+begin
+  return new Tree.Node(Name, Parent, [Size, Kind], Icons.File);
+end function;
+
+const Initial: array of Tree.Node := [
+  Folder('src', Open := true),
+  File('core.c', '24 KB', 'C source', 0),
+  File('layout.c', '31 KB', 'C source', 0),
+  File('widgets.c', '54 KB', 'C source', 0),
+  Folder('render', 0),
+  File('software.c', '34 KB', 'C source', 4),
+  File('opengl.c', '21 KB', 'C source', 4),
+  Folder('docs', Open := true),
+  File('guide.md', '18 KB', 'Markdown', 7),
+  File('components.md', '77 KB', 'Markdown', 7),
+  Folder('assets'),
+  File('logo.png', '12 KB', 'PNG image', 10),
+  File('README.md', '6 KB', 'Markdown'),
+  File('LICENSE', '1 KB', 'Text')
+];
+
+// State of the sample project hierarchy.
+public type Model = record
+  // Current nodes and their flags.
+  public Nodes: array of Tree.Node := Initial;
+  // Current keyboard cursor, or minus one.
+  public Cursor: int := -1;
+  // Most recent action description.
+  public Status: string := 'Drag files and folders to move them. Hold over a closed folder to open it.';
+end record;
+
+// Commands in a row menu.
+public type Action = enum
+  // Open a file or toggle a folder.
+  Open;
+  // Copy the selected filename.
+  Copy;
+  // Display the selected file's details.
+  Info;
+  // Append the node to the top level.
+  MoveToRoot;
+end enum;
+
+// Proposed tree table and menu changes.
+public type Msg = variant
+  // Table interaction for the current node array.
+  Change(Value: Tree.Change);
+  // Menu action for one node.
+  Menu(Index: int; Command: Action);
+  // Restore the original hierarchy.
+  Reset;
+end variant;
+
+function Entry(
+  Key: string;
+  Label: string;
+  Icon: string;
+  Index: int;
+  Command: Action;
+  Enabled: bool := true
+): Menus.Entry of Msg;
+begin
+  return (Menus.Entry of Msg).Action(
+    new Menus.Item of Msg(Key, Label, Msg.Menu(Index, Command), Icon, Enabled := Enabled)
+  );
+end function;
+
+function Menu(Node: Tree.Node; Index: int): array of Menus.Entry of Msg;
+begin
+  const OpenLabel: string := if not Node.HasChildren then
+    'Open'
+  elsif Node.Open then
+    'Collapse'
+  else
+    'Expand'
+  end if;
+  const OpenIcon: string := if not Node.HasChildren then
+    Icons.ExternalLink
+  elsif Node.Open then
+    Icons.Folder
+  else
+    Icons.FolderOpen
+  end if;
+  return [
+    Entry('open', OpenLabel, OpenIcon, Index, Action.Open),
+    Entry('copy', 'Copy name', Icons.Copy, Index, Action.Copy),
+    Entry('info', 'Info', Icons.Info, Index, Action.Info),
+    (Menus.Entry of Msg).Separator,
+    Entry('root', 'Move to top level', Icons.ArrowUp, Index, Action.MoveToRoot, Node.Parent >= 0)
+  ];
+end function;
+
+function Present(Nodes: array of Tree.Node): array of Tree.Node;
+begin
+  const Result: Lists.List of Tree.Node := new Lists.List of Tree.Node(Nodes.Length);
+  for Node: Tree.Node in Nodes do
+    Result.Add(
+      if not Node.HasChildren then
+        Node
+      else
+        Node with
+          Icon := if Node.Open then
+            Icons.FolderOpen
+          else
+            Icons.Folder
+          end if;
+        end with
+      end if
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Draws the original editable project tree and its reset row.
+// ## Parameters
+// - `State`: Current project state.
+// ## Returns
+// The tree table section.
+public function View(State: Model): E.Element of Msg;
+begin
+  return E.Column of Msg(
+    new L.Flow(Gap := G.Points(20), Clip := false),
+    G.Heading of Msg(Strings.Get('Heading.TreeTable'), Strings.Get('Heading.ProjectTreeHint')),
+    Tree.TreeTable of Msg(
+      'files-tree',
+      [
+        new Grid.Column('Name', 240.0F, Tables.Alignment.Left),
+        new Grid.Column('Size', 90.0F, Tables.Alignment.Right, Priority := 1),
+        new Grid.Column('Kind', 120.0F, Tables.Alignment.Left, Priority := 2)
+      ],
+      Present(State.Nodes), State.Cursor, null, Msg.Change,
+      new Tree.Options(
+        Height := L.Extent.Fixed(L.Measure.Logical(400)), Guides := true,
+        Draggable := true
+      ),
+      Menu := function(Index: int): array of Menus.Entry of Msg => Menu(State.Nodes[Index], Index)
+    ),
+    E.Row of Msg(
+      new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
+      Buttons.Button of Msg(
+        'files-tree-reset', Strings.Get('Text.Reset'), Msg.Reset,
+        new Buttons.Options(
+          Variant := S.ButtonVariant.Outline,
+          Icon := Icons.RotateCcw
+        )
+      ),
+      Texts.Text of Msg(State.Status, Texts.Appearance.Muted)
+    )
+  );
+end function;
+
+function Description(Nodes: array of Tree.Node; Index: int): string;
+begin
+  const Node: Tree.Node := Nodes[Index];
+  if not Node.HasChildren then
+    return Node.Label + ': ' + Node.Cells[1] + ', ' + Node.Cells[0] + '.';
+  end if;
+
+  var Children: int := 0;
+  for Child: Tree.Node in Nodes do
+    if Child.Parent = Index then
+      Children := Children + 1;
+    end if;
+  end for;
+
+  const Items: string := if Children = 1 then
+    ' item.'
+  else
+    ' items.'
+  end if;
+  return Node.Label + ': folder, ' + Children.ToString(Locale.CultureInfo.InvariantCulture) + Items;
+end function;
+
+function Move(State: Model; Drop: Tree.Drop): Model;
+begin
+  const Parent: int := if Drop.Placement = Tree.DropPlacement.Inside then
+    Drop.Target
+  else
+    State.Nodes[Drop.Target].Parent
+  end if;
+  const Destination: string := if Parent < 0 then
+    ' to the top level.'
+  else
+    ' into ' + State.Nodes[Parent].Label + '.'
+  end if;
+  const Name: string := if Drop.Nodes.Length = 1 then
+    State.Nodes[Drop.Nodes[0]].Label
+  else
+    Drop.Nodes.Length.ToString(Locale.CultureInfo.InvariantCulture) + ' items'
+  end if;
+  const Result: Moves.MoveResult := Moves.Move(State.Nodes, Drop);
+  if Parent >= 0 then
+    const Index: int := Result.IndexMap[Parent];
+    Result.Nodes[Index] := Result.Nodes[Index] with
+      Open := true;
+    end with;
+  end if;
+
+  return State with
+    Nodes := Result.Nodes;
+    Cursor := if State.Cursor < 0 then
+      -1
+    else
+      Result.IndexMap[State.Cursor]
+    end if;
+    Status := 'Moved ' + Name + Destination;
+  end with;
+end function;
+
+function Apply(State: Model; Change: Tree.Change): Model;
+begin
+  const Nodes: array of Tree.Node := cast Change.Nodes.Clone() as array of Tree.Node;
+  for Index: int in Change.Load do
+    Nodes[Index] := Nodes[Index] with
+      Loading := false;
+    end with;
+  end for;
+
+  const Next: Model := State with
+    Nodes := Nodes;
+    Cursor := Change.Cursor;
+  end with;
+  const Drop: Tree.Drop? := Change.Drop;
+  return if Drop <> null then
+    Move(Next, Drop)
+  else
+    Next
+  end if;
+end function;
+
+function SelectAction(State: Model; Index: int; Command: Action): Model;
+begin
+  const Node: Tree.Node := State.Nodes[Index];
+  case Command of
+    when Action.Open:
+      if not Node.HasChildren then
+        return State with
+          Status := 'Opened ' + Node.Label + '.';
+        end with;
+      end if;
+      const Nodes: array of Tree.Node := cast State.Nodes.Clone() as array of Tree.Node;
+      Nodes[Index] := Node with
+        Open := not Node.Open;
+      end with;
+      return State with
+        Nodes := Nodes;
+      end with;
+    when Action.Copy:
+      return State with
+        Status := 'Copied “' + Node.Label + '”.';
+      end with;
+    when Action.Info:
+      return State with
+        Status := Description(State.Nodes, Index);
+      end with;
+    when Action.MoveToRoot:
+      if Node.Parent < 0 then
+        return State;
+      end if;
+      var Last: int := State.Nodes.Length - 1;
+      while State.Nodes[Last].Parent >= 0 do
+        Last := Last - 1;
+      end while;
+
+      return Move(State, new Tree.Drop([Index], Last, Tree.DropPlacement.After));
+    else
+      return State;
+  end case;
+end function;
+
+// Updates the sample hierarchy and copies a name through the GUI host.
+// ## Parameters
+// - `State`: Current project state.
+// - `Message`: Table or menu proposal.
+// ## Returns
+// The next project state and any clipboard command.
+public function Update(State: Model; Message: Msg): Mvu.Transition of (Model, Msg);
+begin
+  case Message of
+    when Msg.Change(const Change: Tree.Change):
+      return new Mvu.Transition of (Model, Msg)(Apply(State, Change), []);
+    when Msg.Menu(const Index: int, const Command: Action):
+      const Effects: array of Mvu.Command of Msg := if Command = Action.Copy then
+        [Clipboard.WriteText of Msg(State.Nodes[Index].Label)]
+      else
+        []
+      end if;
+      return new Mvu.Transition of (Model, Msg)(SelectAction(State, Index, Command), Effects);
+    when Msg.Reset:
+      return new Mvu.Transition of (Model, Msg)(new Model(Status := 'Back to the start.'), []);
+  end case;
+end function;
+
+end unit;

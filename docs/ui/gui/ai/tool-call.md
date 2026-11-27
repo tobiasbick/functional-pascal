@@ -35,15 +35,20 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Status / Seconds` | Pending / 0. Pass the current task state and timing. |
-| `Icon / Detail / Input / Output` | All empty. Detail summarizes the call. Input and Output appear when expanded. |
-| `Enabled` | true. Allows opening payload details. |
+| `Status` | Pending. Set the current task state to display its status glyph. |
+| `Seconds` | 0. CUI hides the time while pending or when the value is zero. |
+| `Icon` | Empty. CUI uses the terminal glyph. Supply a glyph to replace it. |
+| `Detail` | Empty. Supply a short summary to display beside the tool name. |
+| `Input / Output` | Empty. Supply the payload text to display when the row opens. |
+| `Enabled` | true. Set false to prevent toggling the payload details. |
 
 ## Interaction
 
-Open a call with payload text to inspect its details. Update status and
-payloads as your application receives them. The widget renders the tool
-call that the application supplies.
+Click a row with payload text, or focus it and press Enter or Space, to open it.
+CUI uses JSON highlighting for text that starts with an object or array.
+For a failed call, the output label reads **Error**. If both payloads become
+empty, the row closes and leaves keyboard focus. Update the status and payloads
+as your application receives them.
 
 ## See also
 

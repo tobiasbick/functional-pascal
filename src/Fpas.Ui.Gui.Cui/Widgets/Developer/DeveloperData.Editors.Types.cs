@@ -44,14 +44,17 @@ public sealed record CuiScheduleProposal(string Expression, bool Valid, long Nex
 /// <param name="Modifiers">Modifiers supplied to the widget.</param>
 /// <param name="Valid">Valid supplied to the widget.</param>
 /// <param name="Matches">Matches supplied to the widget.</param>
-public sealed record CuiRegexProposal(string Pattern, string Sample, int Modifiers, bool Valid, int Matches);
+/// <param name="Error">CUI's diagnostic for invalid input or a match that exceeds its budget.</param>
+/// <param name="ModifiersChanged">Whether input changed the match flags in this frame.</param>
+public sealed record CuiRegexProposal(string Pattern, string Sample, int Modifiers, bool Valid, int Matches, string? Error = null, bool ModifiersChanged = false);
 
-/// <summary>Current HTTP form and dispatch intents.</summary>
-/// <param name="Method">Method supplied to the widget.</param>
-/// <param name="Url">Url supplied to the widget.</param>
-/// <param name="Send">Send supplied to the widget.</param>
-/// <param name="Cancel">Cancel supplied to the widget.</param>
-public sealed record CuiRequestProposal(int Method, string Url, bool Send, bool Cancel);
+/// <summary>Current HTTP draft and actions reported by the widget.</summary>
+/// <param name="Method">Selected HTTP method index.</param>
+/// <param name="Url">Current URL draft.</param>
+/// <param name="Send">Whether the user requests submission.</param>
+/// <param name="Cancel">Whether the user requests cancellation.</param>
+/// <param name="Changed">Whether the user edited the method or URL in this frame.</param>
+public sealed record CuiRequestProposal(int Method, string Url, bool Send, bool Cancel, bool Changed);
 
 /// <summary>Changed feature flag cell.</summary>
 /// <param name="Index">Index supplied to the widget.</param>

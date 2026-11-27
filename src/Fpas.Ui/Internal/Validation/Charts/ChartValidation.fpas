@@ -201,7 +201,8 @@ begin
       const Items: array of Charts.Item,
       const Selected: int,
       const OnSelect: Sys.Func of (int, TMsg)?,
-      const Settings: Treemaps.Options
+      const Settings: Treemaps.Options,
+      _
     ):
       const At: string := Identify(Id, Location + '/Treemap');
       R.RequireProfile(Current, R.Profile.Graphical, At);

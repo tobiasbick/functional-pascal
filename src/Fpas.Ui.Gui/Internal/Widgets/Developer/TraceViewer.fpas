@@ -109,7 +109,8 @@ begin
     Width.Kind,
     Width.Value,
     Enabled,
-    Links.ToArray()
+    Links.ToArray(),
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   );
   const Result: CuiDeveloper.CuiDevResult := Native.Edit;
   const Hovered: D.Hover := new D.Hover(Result.Hover, Native.HoveredLink);
@@ -123,7 +124,8 @@ begin
       Changed(
         new D.Event(
           new D.View(Result.X, Result.Y, cast Result.Z as float, Result.A, Result.B),
-          Result.Index, Result.Action, Result.Count <> 0, Hovered
+          Result.Index, Result.Action, Result.Count <> 0, Hovered,
+          (Result.Flags and 1) <> 0, (Result.Flags and 2) <> 0
         )
       )
     );

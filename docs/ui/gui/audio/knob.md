@@ -33,17 +33,25 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Value / Minimum / Maximum` | Supply finite values with increasing bounds. |
-| `Step / Reset` | 0 / 0. Zero Step allows continuous input. CUI clamps Reset to the bounds. |
-| `LogScale / Bipolar` | Both false. LogScale requires a positive minimum. Bipolar draws the arc from the middle of the sweep. |
-| `DecimalPlaces / UnitLabel / ShowSign / HideValue` | 0 / empty / false / false. |
-| `Size / ArcColor / Enabled` | 48 logical points / null / true. |
+| `Label` | Supply a literal caption. An empty label omits the caption. |
+| `Value / Minimum / Maximum` | Supply a finite value between finite, increasing bounds. |
+| `Step` | 0. Inputs adjust continuously at zero and snap to this increment when positive. |
+| `Reset` | 0. CUI clamps the reset value to the bounds and applies the step. |
+| `LogScale` | false. Set true to multiply the value by equal amounts on equal turns. The minimum and ratio must be positive and finite. |
+| `Bipolar` | false. Set true to draw the arc from the middle of its sweep. |
+| `Format` | Null. CUI displays the value as an integer. Supply a shared numeric format for precision, sign, notation, padding and literal text. |
+| `UnitLabel / HideValue` | Empty / false. Supply a unit after the value or hide the numeric caption. |
+| `Size` | 48 logical units. Zero also selects the native default. |
+| `ArcColor` | Automatic. CUI uses the control color. Supply a theme color or explicit RGBA color to override it. |
+| `Enabled` | true. Set false to disable input. |
 
 ## Interaction
 
-Drag vertically or focus the knob and use the wheel or arrows. Shift makes
-dragging finer and increases the arrow-key step. Double-click, Delete or
-Backspace restores Reset. Store the proposed value to accept the change.
+Drag vertically to turn the knob. Hold Shift for ten times finer drag input.
+With focus on the knob, use the wheel over it or press an arrow key. Shift with
+an arrow key and Page Up or Page Down adjust by ten steps. Home and End reach
+the bounds. Double-click, Delete or Backspace restores the reset value.
+Store the proposed value to accept the change.
 
 ## See also
 

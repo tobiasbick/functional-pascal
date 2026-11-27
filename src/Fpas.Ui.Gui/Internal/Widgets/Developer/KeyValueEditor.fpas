@@ -5,23 +5,11 @@ unit Fpas.Ui.Gui.Internal.Widgets.Developer.KeyValueEditor;
 uses Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Data.KeyValueData as Data;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Developer.KeyValueEditors as D;
 
 uses System as Sys;
-uses System.Collections.Generic as Lists;
-
-function PackPair(Items: array of D.Pair): array of CuiDeveloper.CuiDevPair;
-begin
-  const Native: Lists.List of CuiDeveloper.CuiDevPair := new Lists.List of CuiDeveloper.CuiDevPair(
-    Items.Length
-  );
-  for Entry: D.Pair in Items do
-    Native.Add(new CuiDeveloper.CuiDevPair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
-  end for;
-
-  return Native.ToArray();
-end function;
 
 // Presents the native KeyValueEditor widget.
 // ## Type parameters
@@ -44,7 +32,7 @@ begin
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Width: S.NativeExtent := S.Extent(Settings.Width);
-  const Before: array of CuiDeveloper.CuiDevPair := PackPair(Pairs);
+  const Before: array of CuiDeveloper.CuiDevPair := Data.Pack(Pairs);
   const Result: array of CuiDeveloper.CuiDevPair := Frame.Window.KeyValueEditor(
     Token,
     Before,
@@ -60,12 +48,7 @@ begin
   );
   P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
   if Enabled and not Sys.Object.ReferenceEquals(Result, Before) then
-    const Values: Lists.List of D.Pair := new Lists.List of D.Pair(Result.Length);
-    for Entry: CuiDeveloper.CuiDevPair in Result do
-      Values.Add(new D.Pair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
-    end for;
-
-    Frame.Messages.Add(Changed(new D.Event(Values.ToArray())));
+    Frame.Messages.Add(Changed(new D.Event(Data.Unpack(Result))));
   end if;
 end procedure;
 

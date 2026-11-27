@@ -34,14 +34,19 @@ end unit;
 | --- | --- |
 | `Pair.Enabled / Secret` | Enabled controls whether the pair is active. Secret masks its value in the editor. |
 | `Pair.Key / Value` | Up to 63 / 255 UTF-8 bytes. |
-| `Capacity / KeyPlaceholder / ValuePlaceholder` | 16 / empty / empty. Capacity limits the number of pairs. |
-| `HideToggles / HideSecrets / ReadOnly / Enabled` | false / false / false / true. The first two hide the corresponding row controls. |
+| `Capacity` | 16. Limits the number of pairs. |
+| `KeyPlaceholder / ValuePlaceholder` | Null / null. CUI uses Key and Value. Supply an empty string to omit a caption. |
+| `HideToggles` | false. Set true to hide the active-pair checkboxes. |
+| `HideSecrets` | false. Set true to hide the lock controls that change whether a value is masked. |
+| `ReadOnly / Enabled` | false / true. ReadOnly omits add and remove controls. Set Enabled to false to disable input and retain the layout. |
+| `Width` | Fill. The fields stack within a row below 480 logical units. |
 
 ## Interaction
 
 Type in the empty row to add a pair. Store `Event.Pairs` to accept edits
 and apply active pairs in your application. Secret changes presentation.
-The underlying string is still part of the model.
+The underlying string is still part of the model. Masked fields retain their
+visibility button when `HideSecrets` is true.
 
 ![Query parameters in the FPAS gallery](../more-developer-tools/images/key-value-parameters.png)
 
@@ -55,6 +60,8 @@ The underlying string is still part of the model.
 
 ## Source files
 
+- `src/Fpas.Ui.Gui/Internal/Data/`
+  - [KeyValueData.fpas](../../../../src/Fpas.Ui.Gui/Internal/Data/KeyValueData.fpas)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
   - [KeyValueEditor.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/KeyValueEditor.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Developer/`

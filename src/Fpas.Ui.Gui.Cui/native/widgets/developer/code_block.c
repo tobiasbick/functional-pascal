@@ -2,6 +2,7 @@
 #include "../../fpas_cui.h"
 #include <limits.h>
 
+/** Uses four spaces per tab for paint while preserving the original text for copy. */
 static void fpas_code_expand_tabs(cui_ctx *ui, cui_node *canvas, cui__code_paint *paint) {
     const char *tab = strchr(paint->code, '\t');
     if (!tab) return;
@@ -26,6 +27,7 @@ static void fpas_code_expand_tabs(cui_ctx *ui, cui_node *canvas, cui__code_paint
         paint->gutter + 2 * paint->pad + 8;
 }
 
+/** Preserves indented lines in the native plain-text painter. */
 static void fpas_paint_indented_plain_code(cui_ctx *ui, cui_node *node, void *data) {
     cui__paint_code(ui, node, data);
     /* CUI-063: CUI skips the complete plain token when the line begins with a space.
@@ -45,6 +47,14 @@ static void fpas_paint_indented_plain_code(cui_ctx *ui, cui_node *node, void *da
     }
 }
 
+/** Applies the same text paint rules to standalone and embedded code blocks. */
+static void fpas_prepare_code_paint(cui_ctx *ui, cui_node *canvas) {
+    cui__code_paint *paint = canvas->paint_data;
+    fpas_code_expand_tabs(ui, canvas, paint);
+    if (paint->lang.plain) canvas->paint = fpas_paint_indented_plain_code;
+}
+
+/** Builds a native code block and wires its scroll and copy controls. */
 void fpas_cui_code_block(cui_ctx *ui, const char *id, const char *code, const char *language,
     const char *title, int first, int last, float height, float size, int flags, int *copy) {
     const int node = ui->node_count;
@@ -67,9 +77,7 @@ void fpas_cui_code_block(cui_ctx *ui, const char *id, const char *code, const ch
     cui_code_block_ex(ui, id, code, &options);
     cui_pop_disabled(ui);
     cui_node *canvas = &ui->nodes[ui->last_node];
-    cui__code_paint *paint = canvas->paint_data;
-    fpas_code_expand_tabs(ui, canvas, paint);
-    if (paint->lang.plain) canvas->paint = fpas_paint_indented_plain_code;
+    fpas_prepare_code_paint(ui, canvas);
     ui->nodes[canvas->parent].paint = allowed ? fpas_document_scroll_layout : fpas_disabled_document_scroll_layout;
     *copy = fpas_find(ui, copy_key);
     fpas_own(ui, key, scroll, state_key, 0);

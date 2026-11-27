@@ -2,6 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.Problems;
 
+uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
@@ -60,10 +61,20 @@ begin
     Settings.HideToolbar,
     Width.Kind,
     Width.Value,
-    Enabled
+    Enabled,
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   );
-  P.Root of TMsg(Frame, Id, Role, '', Enabled, Result.Count.ToString());
-  if Enabled and (Result.Action >= 0) then
+  const Observed: string := Result.Index.ToString() + ',' + Result.Count.ToString();
+  var Previous: string := '';
+  for Control: App.Control in Frame.Previous do
+    if Control.Id = Id and Control.Role = Role then
+      Previous := Control.Value;
+      break;
+    end if;
+  end for;
+
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Observed);
+  if Enabled and (Result.Action >= 0 or Previous <> Observed) then
     Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Action, Result.Count)));
   end if;
 end procedure;

@@ -114,6 +114,7 @@
   <data name="Heading.FeatureFlagsHint" xml:space="preserve"><value>A switch per environment; click a share to change it.</value></data>
   <data name="Heading.FileBrowser" xml:space="preserve"><value>File browser</value></data>
   <data name="Heading.FileBrowserHint" xml:space="preserve"><value>Double-click to open; type to jump; Backspace goes up.</value></data>
+  <data name="Heading.ProjectTreeHint" xml:space="preserve"><value>Drag rows to move them: before, after or into a folder. Esc cancels; Shift and Ctrl select several. Right-click a row, or press Shift+F10, for its menu.</value></data>
   <data name="Heading.FilterBar" xml:space="preserve"><value>Filter bar</value></data>
   <data name="Heading.FilterBarHint" xml:space="preserve"><value>Chips for active filters, values in a list, and a search.</value></data>
   <data name="Heading.FlameGraph" xml:space="preserve"><value>Flame graph</value></data>

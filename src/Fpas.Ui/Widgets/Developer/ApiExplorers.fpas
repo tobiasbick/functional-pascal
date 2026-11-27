@@ -47,7 +47,7 @@ end record;
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Fill;
-  // Height supplied to CUI.
+  // Height in logical units. Zero fits content. A negative value fills the parent.
   public Height: float := 0.0F;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
@@ -59,7 +59,7 @@ end record;
 // ## Parameters
 // - `Id`: Stable widget identity.
 // - `Endpoints`: Model-owned endpoints data.
-// - `Selection`: Selected zero-based index, or minus one.
+// - `Selection`: Selected zero-based index, minus one for none, or null for native selection.
 // - `Changed`: Maps an action or edit to a message.
 // - `Settings`: Optional native settings.
 // ## Returns
@@ -67,7 +67,7 @@ end record;
 public function ApiExplorer of TMsg(
   Id: string;
   Endpoints: array of Endpoint;
-  Selection: int;
+  Selection: int?;
   Changed: function(Event): TMsg;
   Settings: Options? := null
 ): E.Element of TMsg;

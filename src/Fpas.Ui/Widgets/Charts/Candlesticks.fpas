@@ -4,7 +4,6 @@ unit Fpas.Ui.Widgets.Charts.Candlesticks;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 uses System as Sys;
@@ -29,8 +28,8 @@ public type Options = record
   public Width: L.Extent := L.Extent.Fill;
   // Logical height; zero selects CUI's default.
   public Height: float := 0.0F;
-  // Empty or one literal time caption per candle.
-  public Labels: array of string := [];
+  // Empty or one optional time caption per candle. Null omits one caption.
+  public Labels: array of string? := [];
   // Safe price format; null keeps CUI's two decimal places.
   public Format: C.ValueFormat? := null;
   // Up to four native line overlays. NaN samples are gaps.

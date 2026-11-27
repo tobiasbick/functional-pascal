@@ -1,7 +1,7 @@
 # Uptime bars
 
-Use uptime bars for a service status page. The gallery shows a row per
-service, with each bar representing one day.
+Use uptime bars for a service status page. Each service has a row with one bar
+per day, the latest status and the average across days with data.
 Available in **GUI**.
 
 ![Service availability by day in the FPAS gallery](images/uptime.png)
@@ -33,15 +33,22 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Service.Days` | Use fractions from zero through one. Negative samples represent missing data. |
-| `LastDay` | Supply the date of the last value so hover labels can resolve earlier dates. |
-| `Width / Enabled` | Fill / true. |
+| `Service.Name` | Supply the name shown above the daily bars. |
+| `Service.Days` | Supply fractions from zero through one, oldest first. Negative samples represent missing data. |
+| `LastDay` | Null uses relative hover labels. Supply a date to label the days with calendar dates. |
+| `Width` | Fill. |
+| `Enabled` | True. Set to false to suppress input. |
+| `Hovered` | Null. To receive hover changes, pass the last reported bar and a `Changed` callback. |
 
 ## Interaction
 
-Hover a bar to see its date and availability. Narrow panels retain the
-most recent days that fit. Pass fresh samples when the application
-updates the service history.
+Hover a bar to see its date and availability. Narrow panels retain the most
+recent days that fit.
+
+Initialize `Settings.Hovered` with `new W.Hover()` to track changes. Save the
+`Hover` value from `Changed` in the model and pass it to the next view. Both
+indices are zero-based. `Hover.Day` indexes the full service history. Both
+indices are minus one when the pointer leaves the bars.
 
 ## See also
 

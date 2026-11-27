@@ -36,16 +36,22 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Value / Minimum / Maximum` | Supply finite values with increasing bounds. |
-| `Step / Reset / DecimalPlaces` | 0 / 0 / 1. Zero Step allows continuous input. |
-| `Length / Horizontal` | 160 logical points / false. |
-| `Ticks / Levels` | Empty. Supply up to 32 ticks and up to eight linear channel peaks. |
-| `UnitLabel / HideValue / Enabled` | Empty / false / true. |
+| `Step / Reset` | 0 / 0. Zero step permits continuous input. Reset uses the bounds and step. |
+| `Format` | null. The native readout displays one decimal place. Use the shared numeric format to change the readout. |
+| `Length / Horizontal` | 160 logical units / false. Zero length also uses the native default. |
+| `Ticks / Levels` | Empty arrays. Supply up to 32 ticks in range and up to eight linear channel peaks. |
+| `UnitLabel / HideValue / Enabled` | Empty / false / true. The unit follows the numeric readout. |
 
 ## Interaction
 
-Click or drag along the track. A focused fader accepts wheel and arrow input.
-Double-click, Delete or Backspace restores Reset. Store the proposed gain in
-the model, and feed new peaks as the signal changes.
+Click or drag along the track. Hold Shift while dragging for finer movement.
+Use the wheel or arrow keys while the fader has focus. Shift+arrow and Page
+Up or Page Down move ten increments. Home and End select the bounds.
+Double-click, Delete or Backspace applies `Reset`.
+
+Store the proposed gain in the model. Supply updated channel peaks as the
+signal changes. If the lower bound is negative, the meter uses the fader
+bounds as its dB scale. Otherwise the meter uses −60 to +6 dB.
 
 ## See also
 
@@ -53,6 +59,7 @@ the model, and feed new peaks as the signal changes.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/Faders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Audio/View.fpas)
 - [Level meter](level-meter.md)
+- [Numeric value formats](../charts/README.md#value-format)
 - [Audio](README.md)
 
 ## Source files

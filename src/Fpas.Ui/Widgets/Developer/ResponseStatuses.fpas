@@ -9,7 +9,7 @@ uses Fpas.Ui.Layout as L;
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Content;
-  // Whether the widget accepts interaction.
+  // Whether the host presents the widget as enabled.
   public Enabled: bool := true;
 end record;
 
@@ -18,9 +18,9 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
-// - `Status`: Model-owned status data.
-// - `Seconds`: Model-owned seconds data.
-// - `Bytes`: Model-owned bytes data.
+// - `Status`: HTTP status code, or a nonpositive value before a response.
+// - `Seconds`: Finite elapsed seconds, or a negative value to omit the time.
+// - `Bytes`: Finite response size in bytes, or a negative value to omit the size.
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.

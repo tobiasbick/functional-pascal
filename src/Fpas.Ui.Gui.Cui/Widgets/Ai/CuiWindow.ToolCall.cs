@@ -21,6 +21,8 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         Utf8.Validate(name, nameof(name));
+        CheckFeedbackNumber(seconds, nameof(seconds));
+        if (status is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(status));
         int node;
         int open = NativeMethods.ToolCall(context, Stable(id), name, status, OptionalAi(icon), OptionalAi(detail),
             OptionalAi(input), OptionalAi(output), seconds, flags, &node);

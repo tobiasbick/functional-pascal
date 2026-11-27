@@ -23,13 +23,15 @@ uses System as Sys;
 // - `Selected`: Selected input item, or minus one. Requires `OnSelect` when set.
 // - `OnSelect`: Optional native selection proposal; null disables selection.
 // - `Settings`: Native presentation.
+// - `OnActivate`: Optional clicked input index.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
   Id: string;
   Items: array of Ch.Item;
   Selected: int;
   OnSelect: Sys.Func of (int, TMsg)?;
-  Settings: W.Options
+  Settings: W.Options;
+  OnActivate: Sys.Func of (int, TMsg)?
 );
 begin
   const Token: string := C.Token('treemap', Id);
@@ -58,6 +60,14 @@ begin
     case OnSelect of
       when is Sys.Func of (int, TMsg) as Notify:
         Frame.Messages.Add(Notify.Invoke(Result.Selected));
+      else
+    end case;
+  end if;
+
+  if Enabled and Result.Activated >= 0 then
+    case OnActivate of
+      when is Sys.Func of (int, TMsg) as Notify:
+        Frame.Messages.Add(Notify.Invoke(Result.Activated));
       else
     end case;
   end if;

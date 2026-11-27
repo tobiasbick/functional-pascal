@@ -18,6 +18,7 @@ public sealed partial class CuiWindow
         CheckFrame();
         Utf8.Validate(text, nameof(text));
         var native = MotionOptions(options);
+        CheckChartColor(to);
         NativeMethods.GradientText(context, Stable(id), text, in native, to.Palette, to.Rgba, animate ? 1 : 0);
     }
 }

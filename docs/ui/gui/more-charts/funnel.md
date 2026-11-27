@@ -33,12 +33,19 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Items` | Named nonnegative counts in stage order with a finite sum. |
-| `Width / Color / Format / Enabled` | Fill / Automatic / null / true. Color controls the base stage color. |
+| `Items` | Named nonnegative amounts in stage order with a finite sum. An item color sets that stage's fill. |
+| `Width` | Fill. |
+| `Color` | Automatic uses the theme accent or the first series color with a neutral accent. This color sets the base stage fill. |
+| `Format` | Null uses native automatic formatting. |
+| `Enabled` | True. Allows pointer inspection and activation. |
+
+Height follows the stage count. CUI uses fixed stage and connector sizes
+for every value of its native height field.
 
 ## Interaction
 
-Hover a stage to inspect its amount. An optional `OnActivate` callback receives the stage's zero-based input index on a click.
+Hover a stage to inspect its amount and conversion rates. On a click, the
+optional `OnActivate` callback receives the stage's zero-based input index.
 
 ## See also
 

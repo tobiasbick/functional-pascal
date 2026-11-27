@@ -11,14 +11,15 @@ public sealed partial class CuiWindow
     /// <param name="copyText">Clipboard text, or null.</param>
     /// <param name="vote">Model vote, or null.</param>
     /// <param name="flags">Native input and appearance flags.</param>
+    /// <param name="focus">Requested native part index or minus one.</param>
     /// <param name="track">Optional part tracking callback.</param>
-    public unsafe CuiResponseResult ResponseActions(string id, string? copyText, int? vote, int flags, Func<int, string>? track)
+    public unsafe CuiResponseResult ResponseActions(string id, string? copyText, int? vote, int flags, int focus, Func<int, string>? track)
     {
         CheckFrame();
         if (copyText is not null) Utf8.Validate(copyText, nameof(copyText));
         int next = vote.GetValueOrDefault();
         int* nodes = stackalloc int[5];
-        int events = NativeMethods.ResponseActions(context, Stable(id), copyText, vote.HasValue ? &next : null, flags, nodes);
+        int events = NativeMethods.ResponseActions(context, Stable(id), copyText, vote.HasValue ? &next : null, flags, focus, nodes);
         return new(events, next, TrackAiParts(nodes, 5, track));
     }
 }

@@ -8,13 +8,13 @@ uses System as Sys;
 
 // Geometry, scale and ballistics for a native audio level meter.
 public type Options = record
-  // Negative lower bound in dBFS.
+  // Negative lower bound in dBFS. Zero selects the CUI default of -60.
   public MinimumDb: float := -60.0F;
   // Upper bound in dBFS. Zero selects the CUI default of +6.
   public MaximumDb: float := 6.0F;
-  // Bar length in logical points.
+  // Bar length in logical units. Zero selects the CUI default of 160.
   public Length: float := 160.0F;
-  // Thickness of each channel bar in logical points.
+  // Thickness of each channel bar in logical units. Zero selects the CUI default of 6.
   public Thickness: float := 6.0F;
   // Whether bars run from left to right.
   public Horizontal: bool := false;
@@ -24,7 +24,7 @@ public type Options = record
   public Segmented: bool := false;
   // Peak hold in seconds. A negative value disables hold. Zero uses CUI's default.
   public Hold: float := 1.5F;
-  // Fall rate in dB per second.
+  // Fall rate in dB per second. Zero selects the CUI default of 20.
   public Decay: float := 20.0F;
 end record;
 
@@ -35,7 +35,7 @@ end record;
 // - `Id`: Stable meter identity.
 // - `Levels`: One to eight linear sample peaks, where 1.0 is 0 dBFS.
 // - `Settings`: Optional native geometry, scale and falloff.
-// - `OnClipCleared`: Optional message when the clip indicator is clicked.
+// - `OnClipCleared`: Optional message when a click resets the lit clip indicators.
 // ## Returns
 // The graphical level meter.
 public function LevelMeter of TMsg(

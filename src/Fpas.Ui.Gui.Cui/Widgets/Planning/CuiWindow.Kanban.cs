@@ -20,11 +20,11 @@ public sealed partial class CuiWindow
     }
 
     /// <summary>Opens the next native board column.</summary>
-    /// <param name="title">Column title.</param>
+    /// <param name="title">Literal column title.</param>
     /// <param name="count">Number of cards in this column.</param>
     /// <param name="dot">Optional heading color.</param>
-    /// <param name="limit">Work-in-progress limit, or zero.</param>
-    /// <param name="width">Logical width, or zero.</param>
+    /// <param name="limit">Advisory work-in-progress limit, or zero to hide it.</param>
+    /// <param name="width">Logical width, or zero for 280 logical units.</param>
     /// <param name="columnToken">Optional tracking identity of the column.</param>
     /// <param name="addToken">Optional tracking identity of Add.</param>
     /// <returns>Whether Add was activated.</returns>
@@ -35,7 +35,8 @@ public sealed partial class CuiWindow
         Utf8.Validate(title, nameof(title));
         CheckChartColor(dot);
         CheckFeedbackNumber(width, nameof(width));
-        if (count < 0 || limit < 0) throw new ArgumentOutOfRangeException(nameof(count));
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        ArgumentOutOfRangeException.ThrowIfNegative(limit);
         int* parts = stackalloc int[2];
         using var input = RestrictChrome(Layout.Kanban);
         int result = NativeMethods.KanbanColumnBegin(context, title, count, dot.Palette, dot.Rgba, limit, width, parts);

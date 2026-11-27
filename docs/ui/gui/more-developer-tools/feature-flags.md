@@ -34,14 +34,20 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Flag.On / Rollout` | Pass one switch and percentage per environment. While enabled, 0 and 100 mean the flag applies to everyone. |
-| `Environments` | Supply up to eight environment names. |
+| `Environments` | Supply zero to eight environment names. With zero environments, the panel shows flag names and descriptions. |
 | `Width / Height / Enabled` | Fill / 0 / true. Zero height fits the flag rows. |
 
 ## Interaction
 
-Toggle an environment or click its share to edit it. Use `Event.Index`
-and `Environment` to find the affected cell and store its `On` and
-`Rollout` values. The view draws the resulting model.
+Filter by key or description. A narrow panel shows one environment at a
+time. Use the control above the list to change the environment.
+
+Toggle a switch or open its share to edit it with a slider or preset.
+Tab moves between switches and share buttons. Enter or Space activates
+the focused control. Escape closes the share popover.
+
+Use `Event.Index` and `Environment` to find the affected cell. Store its
+`On` and `Rollout` values in the model.
 
 ## See also
 

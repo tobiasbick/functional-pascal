@@ -43,10 +43,13 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Value.Month / Selected` | Supply a date in the displayed month. The day is ignored. Selection defaults to null. |
-| `Appointment.Finish / Time / AllDay` | null / 9 / false. A finish date is inclusive and Time uses fractional hours. |
-| `FirstWeekday / CellHeight` | 0 / 0. Monday is zero and zero height uses native sizing. |
-| `MonthNames / DayNames` | Empty. For custom names, supply twelve months and seven weekdays starting with Monday. |
-| `Hour12 / Today / Enabled` | false / null / true. Null Today uses the current date. |
+| `Appointment.Finish` | Null. A finish date is inclusive. An unset or earlier finish gives a one-day event. |
+| `Appointment.Time / AllDay / Tone` | 9 fractional hours / false / neutral. All-day and multi-day events use bars. |
+| `FirstWeekday` | Zero for Monday. Use six for Sunday. |
+| `CellHeight` | Zero for 104 logical units. The compact grid uses 46 logical units. |
+| `MonthNames / DayNames` | Empty. For custom names, supply twelve months from January and seven weekdays from Monday. |
+| `Hour12` | False for 24-hour time. True displays labels such as `9:30a`. |
+| `Today / Enabled` | Null / true. Null Today uses the local system date. |
 
 ## Interaction
 
@@ -55,10 +58,28 @@ Adopt the proposed month and selected date in your update. Use
 to open the selected day. A nonnegative `Activated` indexes an appointment
 in the array supplied to the widget.
 
-With the grid focused, Page Up and Page Down keep the day of the month when
-possible and select the last available day in shorter months. Space selects
-the keyboard-focused date and Enter activates it, even when the pointer rests
-over a different date. Clicking selects the date under the pointer.
+Click a date to select it. Double-click to activate it. Use the arrows to
+move the keyboard cursor and Home to go to Today. Page Up and Page Down
+keep the day of month where possible and select the last day in shorter
+months. Space selects the keyboard date and Enter activates it. Focusing
+the grid keeps the displayed month.
+
+Click +N more to open the day's event list when the grid is full. Below
+520 logical units, the grid shows colored dots and lists the selected
+day's events underneath.
+
+## Date values
+
+The displayed month, selected day and events use `System.DateOnly`.
+The calendar proposes dates from 0001-01-01 through 9999-12-31.
+Set `Today` to override the local date for an application time zone or a test.
+Convert `System.DateTime.Today` with `DateOnly.FromDateTime` to read the
+local date in the application.
+
+Use `DateOnly.AddDays` for calendar arithmetic. CUI day numbers count
+from 1970-01-01. Subtract 719162 from `DateOnly.DayNumber` to get that
+day number. Add 719162 before calling `DateOnly.FromDayNumber` to
+convert back within the supported range.
 
 ## See also
 
@@ -81,3 +102,4 @@ over a different date. Clicking selects the date under the pointer.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/planning/`
   - [month_calendar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/month_calendar.c)
   - [month_calendar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/month_calendar.h)
+- [Native planning tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/planning.c)

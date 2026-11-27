@@ -14,9 +14,13 @@
  * @param width Width basis for that extent.
  * @param height Logical height, or the native auto/fill sentinel.
  * @param size Font size, or zero for the native default.
+ * @param byte_capacity Native text storage in bytes, at least 64.
+ * @param line_capacity Native line slots, at least two.
  * @param flags Bit 0 enables input, bit 1 shows the input line, bit 2 requests focus.
  * @param interrupt Receives nonzero when enabled input proposes Ctrl+C.
  * @return Submitted command, or NULL. Copy the borrowed command before the next
  * frame or context destruction. */
-CUI_API const char *fpas_cui_terminal(cui_ctx *ui, const char *id, const char *output, int revision, const char *prompt, int width_kind, float width, float height, float size, int flags, int *interrupt);
+CUI_API const char *fpas_cui_terminal(cui_ctx *ui, const char *id, const char *output, int revision,
+    const char *prompt, int width_kind, float width, float height, float size, int byte_capacity,
+    int line_capacity, int flags, int *interrupt);
 #endif

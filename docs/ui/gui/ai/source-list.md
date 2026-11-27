@@ -31,19 +31,28 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Source.Url / Title / Snippet` | Pass the URL. An empty title uses the domain. Snippet defaults to empty and is used in citation previews. |
-| `Changed / Enabled` | Pass a mapper to handle source activation. Null gives a passive list. Enabled defaults to true. |
+| `Documents` | Pass sources in display order. The list numbers the cards from one. |
+| `Source.Url` | Null. A supplied URL sets the displayed domain and the card tooltip. |
+| `Source.Title` | Null uses the domain. An empty string gives a blank title. |
+| `Source.Snippet` | Null. Citations use this text in previews. |
+| `Changed / Enabled` | Pass a mapper to handle source activation, or null to omit the message. `Enabled` defaults to true. |
 
 ## Interaction
 
-Scroll sideways to see more source cards. Resolve the index from
-activation against the documents you supplied and handle navigation
-in the application.
+Scroll sideways to see more source cards. Use Tab to move focus. The
+list scrolls to show a focused card if it is outside the viewport.
+Click a card or press Enter or Space when it has focus. Resolve the
+zero-based index against the supplied documents and open the source in
+the application.
+
+The tooltip displays up to 255 UTF-8 bytes of the URL and ends at a
+character boundary.
 
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_source_list)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/SourceLists.fpas)
+- [Source type](../../../../src/Fpas.Ui/Widgets/Ai/Sources.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Citation](citation.md)
 - [AI](README.md)

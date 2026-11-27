@@ -128,6 +128,12 @@ begin
       'The gallery must retain SQL edited through the native input.'
     );
   elsif Width = 1100 then
+    A.Check(A.HasText(Session, 'Tree table'), 'The Files page must show the project hierarchy.');
+    Offset := 500;
+    for Frame: int := 0 to 4 do
+      Draw(Session);
+    end for;
+
     Focus := 'files-terminal';
     A.Send(Session, State.Msg.Preview);
     Draw(Session);

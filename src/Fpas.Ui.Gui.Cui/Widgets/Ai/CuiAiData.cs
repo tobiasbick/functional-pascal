@@ -21,10 +21,13 @@ public sealed partial class CuiWindow
         return memory.Text(optional && value.Length == 0 ? null : value);
     }
 
+    private static unsafe byte* AiNullableText(ChartMemory memory, string? value) =>
+        value is null ? null : AiText(memory, value);
+
     private static unsafe NativeSource NativeCitation(ChartMemory memory, CuiSourceItem source) => new()
     {
-        Title = AiText(memory, source.Title, true), Url = AiText(memory, source.Url),
-        Snippet = AiText(memory, source.Snippet, true)
+        Title = AiNullableText(memory, source.Title), Url = AiNullableText(memory, source.Url),
+        Snippet = AiNullableText(memory, source.Snippet)
     };
 
     private static unsafe NativeModel* NativeModels(ChartMemory memory, CuiModelItem[] models)

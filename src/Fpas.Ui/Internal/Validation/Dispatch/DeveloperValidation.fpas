@@ -64,7 +64,7 @@ begin
       _,
       _,
       _
-    ), E.Element.Uptime(_, _, _, _):
+    ), E.Element.Uptime(_, _, _, _, _):
       Inspectors.Check of TMsg(Node, Location, Profile, Identify);
     else
       Reports.Check of TMsg(Node, Location, Profile, Identify);

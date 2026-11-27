@@ -25,11 +25,23 @@ amount and a color. For click callbacks, preserve the original input order
 when interpreting the returned index. Matrix and scatter callbacks instead
 identify the coordinates or series and point described on their pages.
 
+## More charts gallery page
+
+The heatmaps appear first in separate cards. Treemap and Radar share a row
+with growth weights of 1.3 and one. Funnel shares an equal-width row with
+Split bar and Waffle. Sankey fills its own card.
+
+Bar list and Activity rings share a row with growth weights of 1.4 and
+one. Shuffle changes the six amounts and retains their labels. Scatter
+fills a card. The three gauges wrap on narrow windows. The candlestick
+chart shows 2,000 periods in the final card.
+
 ## See also
 
 - [UI handbook](../README.md)
 - [Charts](../charts/README.md)
 - [More charts in the gallery](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
+- [CUI gallery comparison](../../../future/cui-compare/README.md#more-charts-evidence)
 
 ## Source files
 

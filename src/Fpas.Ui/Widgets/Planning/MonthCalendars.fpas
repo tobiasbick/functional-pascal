@@ -13,7 +13,7 @@ public type Appointment = record
   public Title: string;
   // First day.
   public Start: Sys.DateOnly;
-  // Optional inclusive final day.
+  // Optional inclusive final day. Null or an earlier date gives a one-day event.
   public Finish: Sys.DateOnly? := null;
   // Time for a timed event, in hours.
   public Time: float := 9.0F;
@@ -45,7 +45,7 @@ public type Options = record
   public DayNames: array of string := [];
   // Uses a 12-hour clock.
   public Hour12: bool := false;
-  // Optional override of the current date.
+  // Optional override of the local system date.
   public Today: Sys.DateOnly? := null;
   // Accepts input.
   public Enabled: bool := true;

@@ -17,8 +17,8 @@ end record;
 
 // Native presentation and interaction options.
 public type Options = record
-  // Optional usage unit.
-  public Unit: string := '';
+  // Optional usage unit. Null uses the native tokens label.
+  public Unit: string? := null;
 end record;
 
 // Builds the native ContextMeter widget.

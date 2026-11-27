@@ -26,7 +26,7 @@ internal sealed unsafe partial class ChartMemory : IDisposable
         return Copy<byte>(Utf8.Encoding.GetBytes(value + '\0'));
     }
 
-    internal byte** Labels(string[]? labels)
+    internal byte** Labels(string?[]? labels)
     {
         if (labels is null || labels.Length == 0) return null;
         nint[] pointers = new nint[labels.Length];

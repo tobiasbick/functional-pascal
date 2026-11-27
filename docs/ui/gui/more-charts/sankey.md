@@ -32,13 +32,14 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Nodes / Links` | Use named nodes and links with distinct From and To indices into the node array. Amounts must be finite and nonnegative. Zero hides a link. |
-| `Width / Height / NodeWidth` | Fill / 0 / 0. Zero uses native dimensions. |
+| `Nodes` | Named nodes with optional colors. Automatic colors use neutral gray for sources and intermediate nodes and palette colors for outcomes. |
+| `Links` | Use distinct `From` and `To` indices into the node array. Amounts must be finite and nonnegative. Zero hides a link. |
+| `Width / Height / NodeWidth` | Fill / 0 / 0. The native defaults are 300 points high and 6 points wide for each node bar. |
 | `Format / Enabled` | null / true. |
 
 ## Interaction
 
-Hover nodes and flows to inspect their amounts. A click can send `Selection.Node(Index)` or `Selection.Link(Index)`. Indices refer to the input arrays, including the positions of hidden zero-amount links.
+Hover over a node or flow to highlight its path and show its amounts. A click can send `Selection.Node(Index)` or `Selection.Link(Index)`. Indices refer to the input arrays, including the positions of hidden zero-amount links.
 
 ## See also
 

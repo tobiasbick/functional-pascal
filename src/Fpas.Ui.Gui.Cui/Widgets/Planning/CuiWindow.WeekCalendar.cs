@@ -10,11 +10,11 @@ public sealed partial class CuiWindow
 {
     /// <summary>Draws the native week calendar.</summary>
     /// <param name="id">Stable widget identity.</param>
-    /// <param name="week">First day number.</param>
+    /// <param name="week">First .NET day number of a seven-day range.</param>
     /// <param name="events">Current appointments.</param>
-    /// <param name="start">First visible hour.</param>
+    /// <param name="start">First visible hour, with zero for both hours selecting native defaults.</param>
     /// <param name="finish">Last visible hour.</param>
-    /// <param name="hourHeight">Height per hour.</param>
+    /// <param name="hourHeight">Height per hour, or zero for 52 logical units.</param>
     /// <param name="heightKind">Native height kind.</param>
     /// <param name="height">Preferred height.</param>
     /// <param name="flags">Native presentation and input flags.</param>
@@ -25,15 +25,25 @@ public sealed partial class CuiWindow
         float start, float finish, float hourHeight, int heightKind, float height, int flags, int focus, Func<int, string>? part)
     {
         CheckFrame();
+        ArgumentNullException.ThrowIfNull(events);
+        if (week < 0 || week > DateOnly.MaxValue.DayNumber - 6)
+            throw new ArgumentOutOfRangeException(nameof(week));
+        if (!WeekHour(start) || !WeekHour(finish) || finish <= start && (start != 0 || finish != 0))
+            throw new ArgumentException("The calendar needs an increasing hour range or both native defaults.", nameof(finish));
+        CheckFeedbackNumber(hourHeight, nameof(hourHeight));
         CheckExtent(heightKind, height, nameof(height));
+        if (focus < -1 || focus >= events.Length) throw new ArgumentOutOfRangeException(nameof(focus));
         using var memory = new ChartMemory();
         var data = new NativeWeekEvent[events.Length];
         for (int i = 0; i < data.Length; ++i)
         {
             var e = events[i];
             Utf8.Validate(e.Title, nameof(events));
-            Utf8.Validate(e.Detail, nameof(events));
-            data[i] = new() { Title = memory.Text(e.Title), Detail = memory.Text(Optional(e.Detail)), Day = e.Day,
+            if (e.Detail is not null) Utf8.Validate(e.Detail, nameof(events));
+            CheckTone(e.Tone);
+            if (e.Day is < 0 or > 6 || !WeekHour(e.Start) || !WeekHour(e.Finish) || e.Finish <= e.Start)
+                throw new ArgumentException("An appointment needs a day from zero to six and increasing hours.", nameof(events));
+            data[i] = new() { Title = memory.Text(e.Title), Detail = memory.Text(e.Detail), Day = e.Day,
                 Start = e.Start, Finish = e.Finish, Tone = e.Tone };
         }
         var nodes = new int[data.Length];
@@ -55,4 +65,6 @@ public sealed partial class CuiWindow
         }
         return new(edited, activated, TrackScheduleParts(nodes, part));
     }
+
+    private static bool WeekHour(float value) => float.IsFinite(value) && value is >= 0 and <= 24;
 }

@@ -87,19 +87,28 @@ begin
       if Buckets < 0 or not Sys.Double.IsFinite(
         Start
       ) or not Sys.Double.IsFinite(Bucket) or Bucket <= 0.0
+        or not Sys.Double.IsFinite(Start + Bucket * Buckets)
         or not Sys.Double.IsFinite(Value.Start) or not Sys.Double.IsFinite(Value.End)
       then
         Fail(At);
       end if;
 
       for Item: TimeHistograms.Series in SeriesData do
-        if Item.Counts.Length <> Buckets then
+        Rules.CheckText(Item.Name, At);
+        if Item.Tone < 0 or Item.Tone > 8 then
           Fail(At);
         end if;
 
-        for Amount: float in Item.Counts do
-          Chart.Distance(Amount, At);
-        end for;
+        const Counts: (array of float)? := Item.Counts;
+        if Counts <> null then
+          if Counts.Length <> Buckets then
+            Fail(At);
+          end if;
+
+          for Amount: float in Counts do
+            Chart.Distance(Amount, At);
+          end for;
+        end if;
       end for;
     when E.Element.Coverage(
       const Id: string,
@@ -110,10 +119,14 @@ begin
       const At: string := Identify(Id, Location + '/coverage');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      Chart.Distance(Settings.Height, At);
+      if not Sys.Single.IsFinite(Settings.Height) then
+        Fail(At);
+      end if;
+
       Chart.Distance(Settings.Low, At);
       Chart.Distance(Settings.High, At);
       for Item: Coverages.File in ReportFiles do
+        Rules.CheckText(Item.Path, At);
         if Item.LinesHit < 0 or Item.LinesHit > Item.Lines or Item.BranchesHit < 0
           or Item.BranchesHit > Item.Branches
           or Item.FunctionsHit < 0 or Item.FunctionsHit > Item.Functions
@@ -132,27 +145,42 @@ begin
       const At: string := Identify(Id, Location + '/blame');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      Chart.Distance(Settings.Height, At);
       Rules.CheckText(Settings.Language, At);
-      if Lines.Length <> LineCommits.Length then
+      if not Sys.Single.IsFinite(Settings.Height)
+        or Settings.FirstLine > int.MaxValue - Sys.Math.Max(0, Lines.Length - 1)
+        or (LineCommits.Length > 0 and Lines.Length <> LineCommits.Length)
+      then
         Fail(At);
       end if;
+
+      for Line: string in Lines do
+        Rules.CheckText(Line, At);
+      end for;
 
       for Index: int in LineCommits do
         SelectionIndex(Index, Revisions.Length, At);
       end for;
+
+      for Revision: Blames.Revision in Revisions do
+        Rules.CheckText(Revision.Hash, At);
+        Rules.CheckText(Revision.Author, At);
+        Rules.CheckText(Revision.Summary ?? '', At);
+      end for;
     when E.Element.ApiExplorer(
       const Id: string,
       const Endpoints: array of ApiExplorers.Endpoint,
-      const Selection: int,
+      const Selection: int?,
       _,
       const Settings: ApiExplorers.Options
     ):
       const At: string := Identify(Id, Location + '/api-explorer');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      Chart.Distance(Settings.Height, At);
-      SelectionIndex(Selection, Endpoints.Length, At);
+      if not Sys.Single.IsFinite(Settings.Height) then
+        Fail(At);
+      end if;
+
+      SelectionIndex(Selection ?? -1, Endpoints.Length, At);
     when E.Element.KeyValueEditor(
       const Id: string,
       const Pairs: array of KeyValueEditors.Pair,
@@ -162,8 +190,16 @@ begin
       const At: string := Identify(Id, Location + '/key-value-editor');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      Rules.CheckText(Settings.KeyPlaceholder, At);
-      Rules.CheckText(Settings.ValuePlaceholder, At);
+      const KeyPlaceholder: string? := Settings.KeyPlaceholder;
+      const ValuePlaceholder: string? := Settings.ValuePlaceholder;
+      if KeyPlaceholder <> null then
+        Rules.CheckText(KeyPlaceholder, At);
+      end if;
+
+      if ValuePlaceholder <> null then
+        Rules.CheckText(ValuePlaceholder, At);
+      end if;
+
       Capacity(Pairs.Length, Settings.Capacity, At);
       for Item: KeyValueEditors.Pair in Pairs do
         TextLimit(Item.Key, 63, At);
@@ -185,8 +221,15 @@ begin
       end if;
 
       for Field: QueryBuilders.Field in Fields do
+        Rules.CheckText(Field.Name, At);
         if Field.Kind < 0 or Field.Kind > 3 or (Field.Kind = 2 and Field.Choices.Length = 0) then
           Fail(At);
+        end if;
+
+        if Field.Kind = 2 then
+          for Choice: string in Field.Choices do
+            TextLimit(Choice, 63, At);
+          end for;
         end if;
       end for;
 
@@ -233,14 +276,16 @@ begin
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
       TextLimit(Expression, Settings.Capacity, At);
-      if Settings.NextCount < 0 or Settings.NextCount > 32 then
+      if Settings.Capacity < 11 or Settings.NextCount < 0 or Settings.NextCount > 10
+        or Settings.Now < -62135596800L or Settings.Now > 253402300799L
+      then
         Fail(At);
       end if;
     when E.Element.RegexTester(
       const Id: string,
       const Pattern: string,
       const Sample: string,
-      const Modifiers: int,
+      const Modifiers: int?,
       _,
       const Settings: RegexTesters.Options
     ):
@@ -250,7 +295,8 @@ begin
       Chart.Distance(Settings.Height, At);
       TextLimit(Pattern, Settings.PatternCapacity, At);
       TextLimit(Sample, Settings.TextCapacity, At);
-      if Modifiers < 0 or Modifiers > 7 then
+      const Flags: int := Modifiers ?? 0;
+      if Flags < 0 or Flags > 7 then
         Fail(At);
       end if;
     when E.Element.RequestBar(
@@ -263,7 +309,11 @@ begin
       const At: string := Identify(Id, Location + '/request-bar');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      Rules.CheckText(Settings.Placeholder, At);
+      const Placeholder: string? := Settings.Placeholder;
+      if Placeholder <> null then
+        Rules.CheckText(Placeholder, At);
+      end if;
+
       TextLimit(Url, Settings.Capacity, At);
       if Method < 0 or Method > 6 then
         Fail(At);
@@ -279,7 +329,7 @@ begin
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
       Chart.Distance(Settings.Height, At);
-      if Environments.Length < 1 or Environments.Length > 8 then
+      if Environments.Length > 8 then
         Fail(At);
       end if;
 

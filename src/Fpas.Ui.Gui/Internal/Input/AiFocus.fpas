@@ -4,11 +4,14 @@ unit Fpas.Ui.Gui.Internal.Input.AiFocus;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Widgets.Ai.ResponseActions as ResponseWidget;
+uses Fpas.Ui.Internal.Ai.ComposerParts as ComposerParts;
 uses Fpas.Ui.Widgets.Ai.Citations as Cite;
 uses Fpas.Ui.Widgets.Ai.Composers as Composer;
 uses Fpas.Ui.Widgets.Ai.ModelPickers as Model;
 uses Fpas.Ui.Widgets.Ai.PromptSuggestions as Suggestions;
 uses Fpas.Ui.Widgets.Ai.Reasonings as Reason;
+uses Fpas.Ui.Widgets.Ai.ResponseActions as Response;
 uses Fpas.Ui.Widgets.Ai.SourceLists as List;
 uses Fpas.Ui.Widgets.Ai.Sources as Sources;
 uses Fpas.Ui.Widgets.Ai.ToolCalls as Tool;
@@ -93,17 +96,21 @@ begin
       const Settings: Composer.Options
     ):
       if Settings.Enabled then
-        if Content.Take <> null then
-          return Parts(Id, Preferred, ['send', 'cancel']);
+        if Preferred = null or Preferred = Id then
+          return if Content.Take = null then
+            Id + '/editor'
+          else
+            Id + '/send'
+          end if;
         end if;
 
-        return Parts(
-          Id, Preferred, if Settings.Microphone then
-            ['editor', 'send', 'record']
-          else
-            ['editor', 'send']
-          end if
-        );
+        const Names: array of string := ComposerParts.Names(Content.Attachments.Length);
+        const Accept: array of bool := ComposerParts.Inputs(Content, Settings.Microphone, true);
+        for Index: int := 0 to Names.Length - 1 do
+          if Accept[Index] and Preferred = Id + '/' + Names[Index] then
+            return Preferred;
+          end if;
+        end for;
       end if;
     when E.Element.VoiceOrb(
       const Id: string,
@@ -140,6 +147,8 @@ begin
       if Preferred = null or Preferred = Id then
         return Id;
       end if;
+    when E.Element.ResponseActions(const Id: string, _, _, const Settings: Response.Options):
+      return ResponseWidget.FocusTarget(Id, Preferred, Settings);
     when E.Element.PromptSuggestions(
       const Id: string,
       const Items: array of Suggestions.Item,

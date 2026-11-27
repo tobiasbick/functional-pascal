@@ -32,13 +32,17 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Peaks / Progress` | Pass normalized samples. Null Progress displays the waveform without a seek cursor. |
-| `Width / Height / Bar / Gap` | Fill / 0 / 0 / 0. Zero dimensions use native defaults. |
-| `Color / Enabled` | Automatic / true. Color applies to the played bars. |
+| `Peaks / Progress` | Peaks and progress are fractions from 0 to 1. Null progress displays passive bars. |
+| `Width / Height / Bar / Gap` | Fill / 0 / 0 / 0. Zero uses 40 points for height, 3 for bar width and 2 for spacing. |
+| `Color / Enabled` | Automatic / true. Custom color applies to the played portion or to all passive bars. |
+| `SeekOnRelease` | false. With true, dragging previews the position and sends it on release. |
 
 ## Interaction
 
-Supply progress and a callback to enable seeking. Store the proposed
+Supply progress and a callback to enable seeking. A click seeks to the pointer
+position. Drag to send changes as the pointer moves, or set `SeekOnRelease` to
+send the final position when the user releases the pointer. Left and Right
+change the position by five percentage points immediately. Store the proposed
 fraction and move playback to the corresponding position.
 
 ## See also

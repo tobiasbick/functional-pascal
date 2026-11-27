@@ -13,9 +13,9 @@ uses Fpas.Ui.Widgets.Developer.ResponseStatuses as D;
 // ## Parameters
 // - `Frame`: Current GUI presentation frame.
 // - `Id`: Stable widget identity.
-// - `Status`: Status supplied to the widget.
-// - `Seconds`: Seconds supplied to the widget.
-// - `Bytes`: Bytes supplied to the widget.
+// - `Status`: HTTP status code, or a nonpositive value before a response.
+// - `Seconds`: Elapsed seconds, or a negative value to omit the time.
+// - `Bytes`: Response size in bytes, or a negative value to omit the size.
 // - `Settings`: Native layout and interaction options.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
@@ -30,7 +30,7 @@ begin
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Width: S.NativeExtent := S.Extent(Settings.Width);
-  discard Frame.Window.ResponseStatus(
+  Frame.Window.ResponseStatus(
     Token,
     Status,
     Seconds,

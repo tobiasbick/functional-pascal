@@ -45,17 +45,29 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Appointment.Day / Start / Finish` | Day zero is the first visible day. Express start and finish as fractional hours. |
-| `StartHour / EndHour` | 7 / 21. |
-| `HourHeight / Height` | 0 / Content. Zero uses native spacing. |
-| `ReadOnly / Enabled` | false / true. ReadOnly keeps activation and disables edits. |
+| `Week` | First visible date. The next six dates follow it. |
+| `Appointment.Day / Start / Finish` | Day zero means `Week`. Supply increasing fractional hours between zero and 24. |
+| `Appointment.Title / Detail` | Supply a title and a nullable detail. CUI shows details when the event has room. |
+| `Appointment.Tone` | `Neutral`. CUI uses the current accent for this tone. |
+| `StartHour / EndHour` | 7 / 21. Sets the visible part of each day. |
+| `HourHeight` | Zero selects 52 logical units per hour. |
+| `Height` | `Content` selects a 460-unit time grid. |
+| `ReadOnly` | False. True keeps activation and scrolling and disables edits. |
+| `Enabled` | True. False disables calendar input. |
 
 ## Interaction
 
 Drag an event to move it in 15-minute increments. Drag its bottom edge to
-resize. Use the arrows on a focused event, or Shift with Up or Down to
-resize. Adopt `Event.Events` to accept an edit. A nonnegative
-`Activated` indexes the event to open.
+resize. Use Left and Right to change the day of a focused event. Use Up and
+Down to move its time, or hold Shift to resize it.
+
+Keep the events in stable order during edits. Adopt `Event.Events` to
+accept an edit. If a move would place hours outside the day, the event
+keeps its original hours. A click, Enter or Space reports the event
+index in `Activated`.
+
+The day headers stay above the scrolling time grid. A narrow calendar
+scrolls horizontally. CUI marks the current date and local time when visible.
 
 ## See also
 

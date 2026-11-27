@@ -3,6 +3,7 @@
 
 int fpas_cui_funnel(cui_ctx *ui, const char *id, const fpas_viz_item *items, int count,
     int width_kind, float width, int palette, uint32_t rgba, const char *format, int enabled, int *node) {
+    /* [CUI-090](../../../../../docs/future/cui-upstream-bugs.md#cui-090): native height follows the stage count. */
     const cui_funnel_opts o = { .width = fpas_extent(width_kind, width),
         .color = fpas_chart_color(palette, rgba), .format = fpas_viz_text(ui, format) };
     *node = ui->node_count;

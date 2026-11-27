@@ -6,25 +6,15 @@ typedef struct {
     bool drag_hover;
 } fpas_file_drag_state;
 
-static bool fpas_file_target_at(cui_ctx *ui, cui_id key, float x, float y) {
-    for (int i = ui->prev_hit_count - 1; i >= 0; --i) {
-        const cui_hit *hit = &ui->prev_hits[i];
-        if (!cui__rect_contains(hit->rect, x, y)) continue;
-        if (hit->flags & CUI_NF_INTERACTIVE) return hit->id == key;
-        if (hit->flags & (CUI_NF_BLOCKER | CUI_NF_HIT_OPAQUE)) return false;
-    }
-    return false;
-}
-
 /* CUI-046: use CUI's painted hit geometry for desktop drag input.
    See docs/future/cui-upstream-bugs.md#cui-046. */
 static fpas_file_drag_state fpas_filter_file_drag(cui_ctx *ui, cui_id key) {
     fpas_file_drag_state hidden = {0};
-    if (ui->drop_count && !ui->drop_claimed && !fpas_file_target_at(ui, key, ui->drop_x, ui->drop_y)) {
+    if (ui->drop_count && !ui->drop_claimed && !fpas_interactive_at(ui, key, ui->drop_x, ui->drop_y)) {
         hidden.drop_count = ui->drop_count;
         ui->drop_count = 0;
     }
-    if (ui->drag_hover && !fpas_file_target_at(ui, key, ui->drag_x, ui->drag_y)) {
+    if (ui->drag_hover && !fpas_interactive_at(ui, key, ui->drag_x, ui->drag_y)) {
         hidden.drag_hover = true;
         ui->drag_hover = false;
     }

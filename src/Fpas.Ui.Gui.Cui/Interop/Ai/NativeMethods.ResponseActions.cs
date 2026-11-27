@@ -8,5 +8,5 @@ internal static partial class NativeMethods
 {
     [LibraryImport(Library, EntryPoint = "fpas_cui_response_actions", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial int ResponseActions(nint ui, string? id, string? copy_text, int* vote, int flags, int* parts);
+    internal static unsafe partial int ResponseActions(nint ui, string? id, string? copy_text, int* vote, int flags, int focus, int* parts);
 }

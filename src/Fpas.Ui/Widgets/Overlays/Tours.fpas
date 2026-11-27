@@ -47,14 +47,14 @@ public type Options = record
   public Padding: float := 0.0F;
   // Also block pointer input inside the spotlight.
   public BlockTarget: bool := false;
-  // Literal forward caption; empty selects native Next.
-  public NextLabel: string := '';
-  // Literal backward caption; empty selects native Back.
-  public BackLabel: string := '';
-  // Literal final caption; empty selects native Done.
-  public DoneLabel: string := '';
-  // Native count format: up to two %d slots (step, total), %% for a percent; empty uses CUI's default.
-  public CountFormat: string := '';
+  // Literal forward caption, or null to display Next.
+  public NextLabel: string? := null;
+  // Literal backward caption, or null to display Back.
+  public BackLabel: string? := null;
+  // Literal final caption, or null to display Done.
+  public DoneLabel: string? := null;
+  // Up to two %d slots (step, total), %% for a percent, or null for the native default.
+  public CountFormat: string? := null;
 end record;
 
 // Draws a model-controlled native guided tour over its base view.

@@ -18,9 +18,9 @@ public type Appointment = record
   public Start: float;
   // End hour.
   public Finish: float;
-  // Optional second line.
-  public Detail: string := '';
-  // Event color.
+  // Optional detail shown when the appointment has space.
+  public Detail: string? := null;
+  // Semantic event color. Neutral uses the current accent.
   public Tone: S.Tone := S.Tone.Neutral;
 end record;
 
@@ -40,7 +40,7 @@ public type Options = record
   public EndHour: float := 21.0F;
   // Points per hour, or zero for the default.
   public HourHeight: float := 0.0F;
-  // Native height.
+  // Height of the time grid. Content selects the native 460-point height.
   public Height: L.Extent := L.Extent.Content;
   // Disables moving and resizing.
   public ReadOnly: bool := false;

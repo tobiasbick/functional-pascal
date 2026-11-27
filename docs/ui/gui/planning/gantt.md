@@ -44,9 +44,14 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Value.Origin / Days` | Supply the first date and the timeline length in days. |
+| `Task.Name / Owner` | Supply a task caption. A null owner omits the avatar. An empty owner keeps an avatar with no initials. |
 | `Task.Start / Finish / DependsOn` | Dates are offsets from Origin. DependsOn defaults to minus one. Set it to the dependency's task index. |
-| `Task.Progress / Milestone / State` | 0 / false / Automatic. A milestone draws a diamond. |
-| `Today / DayWidth / RowHeight` | All zero. Zero Today hides the marker. Other zeros use native dimensions. |
+| `Task.Progress / Milestone / State` | 0 / false / Automatic. Use progress from zero to one. A milestone draws a diamond. |
+| `Task.Tone` | Neutral uses the state's color. Choose another tone to override the color. |
+| `Today` | Zero hides the marker. Use a positive day offset to mark today. |
+| `DayWidth` | Zero uses 30 logical units. |
+| `RowHeight` | Zero uses 40 logical units. Use a custom height greater than 16 logical units. |
+| `Height` | Content shows the full schedule. Fixed, fill, or percentage height sets a viewport for the whole chart. |
 | `ReadOnly / Enabled` | false / true. ReadOnly keeps activation and disables edits. |
 
 For task bars, `Start` is inclusive and `Finish` is exclusive: offsets 0 and 1
@@ -54,10 +59,19 @@ make a one-day task. A milestone may use equal start and finish offsets.
 
 ## Interaction
 
-Drag the bar to move a task, or pull either end to resize it. Dependency
-curves follow the dates passed to the chart. Store `Event.Tasks` to accept
+Drag a bar to move a task. Pull either end to resize the bar. Focus a task
+and press Left or Right to move it one day. Hold Shift to move the bar's
+finish. Press Enter or Space to activate the task.
+
+Dependency curves follow the task dates. Store `Event.Tasks` to accept
 a schedule proposal. A nonnegative `Activated` indexes the task to open.
-Scroll the timeline horizontally to see later dates.
+
+Scroll the timeline horizontally to see later dates. With a viewport
+height, scroll the chart vertically to see more tasks. Labels and bars
+scroll together. [CUI-079](../../../future/cui-upstream-bugs.md#cui-079)
+
+Below 480 logical units, the chart uses a narrower task list and hides the
+owner avatars. [CUI-083](../../../future/cui-upstream-bugs.md#cui-083)
 
 ## See also
 

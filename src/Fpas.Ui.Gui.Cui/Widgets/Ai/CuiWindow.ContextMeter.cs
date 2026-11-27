@@ -11,12 +11,13 @@ public sealed partial class CuiWindow
     /// <param name="used">Used context.</param>
     /// <param name="limit">Context capacity.</param>
     /// <param name="parts">Usage breakdown.</param>
-    /// <param name="unit">Usage unit.</param>
+    /// <param name="unit">Usage unit, or null for tokens.</param>
     /// <param name="flags">Native input and appearance flags.</param>
-    public unsafe void ContextMeter(string id, float used, float limit, CuiVizItem[] parts, string unit, int flags)
+    public unsafe void ContextMeter(string id, float used, float limit, CuiVizItem[] parts, string? unit, int flags)
     {
         CheckFrame();
         using var memory = new ChartMemory();
-        NativeMethods.ContextMeter(context, Stable(id), used, limit, memory.Items(parts), parts.Length, OptionalAi(unit), flags);
+        if (unit is not null) Utf8.Validate(unit, nameof(unit));
+        NativeMethods.ContextMeter(context, Stable(id), used, limit, memory.Items(parts), parts.Length, unit, flags);
     }
 }

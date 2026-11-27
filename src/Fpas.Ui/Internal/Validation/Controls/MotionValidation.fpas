@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Validation.Controls.MotionValidation;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Validation.Controls.MediaRules as Media;
 uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
 uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
@@ -12,6 +13,7 @@ uses Fpas.Ui.Widgets.Audio.NowPlaying as P;
 uses Fpas.Ui.Widgets.Audio.Waveforms as W;
 uses Fpas.Ui.Widgets.Charts.Charts as C;
 uses Fpas.Ui.Widgets.Feedback.Loaders as Load;
+uses Fpas.Ui.Widgets.Media.MediaImages as Images;
 uses Fpas.Ui.Widgets.Motion.GradientTexts as Grad;
 uses Fpas.Ui.Widgets.Motion.Motion as M;
 uses Fpas.Ui.Widgets.Motion.Spotlights as Spot;
@@ -90,18 +92,18 @@ begin
   for Entry: D.Entry of TMsg in Entries do
     case Entry of
       when D.Entry.Item(
-        const Icon: string,
-        const Label: string,
+        const Icon: string?,
+        const Label: string?,
         _,
         const Color: C.Color,
         _,
         const Badge: int
       ):
-        R.CheckText(Icon, At);
-        R.CheckText(Label, At);
+        R.CheckText(Icon ?? '', At);
+        R.CheckText(Label ?? '', At);
         Chart.Color(Color, At);
-        if Icon = '' or Badge < 0 then
-          R.Reject(At, 'A dock item needs a glyph and nonnegative badge.');
+        if Badge < 0 then
+          R.Reject(At, 'A dock badge must be nonnegative.');
         end if;
       else
     end case;
@@ -111,8 +113,8 @@ end procedure;
 procedure Tile(Label: string; Settings: Tiles.Options; At: string);
 begin
   R.CheckText(Label, At);
-  R.CheckText(Settings.Icon, At);
-  R.CheckText(Settings.Detail, At);
+  R.CheckText(Settings.Icon ?? '', At);
+  R.CheckText(Settings.Detail ?? '', At);
   Extent(Settings.Width, At);
   Chart.Color(Settings.Color, At);
 end procedure;
@@ -121,7 +123,11 @@ procedure Player(Current: P.Value; Settings: P.Options; At: string);
 begin
   R.CheckText(Current.Title, At);
   R.CheckText(Current.Artist, At);
-  R.CheckText(Current.Artwork, At);
+  const Artwork: Images.Source? := Current.Artwork;
+  if Artwork <> null then
+    Media.Image(Artwork, At);
+  end if;
+
   Extent(Settings.Width, At);
   Chart.Color(Current.ArtColor, At);
   Chart.Distance(Current.Duration, At);
@@ -152,13 +158,13 @@ end procedure;
 procedure Tabs(Items: array of T.Item; Selected: int; Settings: T.Options; At: string);
 begin
   Extent(Settings.Width, At);
-  if Selected < 0 or Selected >= Items.Length then
-    R.Reject(At, 'The selected tab must name an item.');
+  if Selected < -1 or Selected >= Items.Length then
+    R.Reject(At, 'The selection must be -1 or name a tab.');
   end if;
 
   for Item: T.Item in Items do
-    R.CheckText(Item.Icon, At);
-    R.CheckText(Item.Label, At);
+    R.CheckText(Item.Icon ?? '', At);
+    R.CheckText(Item.Label ?? '', At);
     if Item.Badge < 0 then
       R.Reject(At, 'A tab badge must be nonnegative.');
     end if;

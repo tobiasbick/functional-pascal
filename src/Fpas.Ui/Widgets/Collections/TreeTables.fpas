@@ -12,7 +12,7 @@ uses System as Sys;
 
 // A node in the tree table's model array.
 public type Node = record
-  // Literal label, also used for type-ahead.
+  // Literal row label and default type-ahead label.
   public Label: string;
   // Parent index, or minus one. A parent precedes its children.
   public Parent: int := -1;
@@ -28,18 +28,48 @@ public type Node = record
   public Selected: bool := false;
   // Whether the node is waiting for children.
   public Loading: bool := false;
+  // Override for type-ahead. Null uses the row label.
+  public TypeAheadLabel: string? := null;
+end record;
+
+// Placement relative to the target of a node move.
+public type DropPlacement = enum: byte
+  // Place the nodes before the target.
+  Before = 0;
+  // Append the nodes to the target's children.
+  Inside = 1;
+  // Place the nodes after the target.
+  After = 2;
+end enum;
+
+// An ordered proposal to move nodes with their subtrees.
+public type Drop = record
+  // Model indices in tree order.
+  public Nodes: array of int;
+  // Model index of the destination.
+  public Target: int;
+  // Placement relative to the destination.
+  public Placement: DropPlacement;
 end record;
 
 // Native tree-table options.
 public type Options = record
   // Tree table viewport height.
   public Height: L.Extent := L.Extent.Fill;
-  // Height of each row in logical points.
+  // Height of each row in logical units. Zero selects the native default of 32.
   public RowHeight: float := 32.0F;
   // Draw indentation guides.
   public Guides: bool := false;
   // Whether the tree table accepts input.
   public Enabled: bool := true;
+  // Tree table viewport width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Enable dragging to propose moves.
+  public Draggable: bool := false;
+  // Optional predicate for a target and placement.
+  public CanDrop: Sys.Func of (int, DropPlacement, bool)? := null;
+  // Find rows by typing their labels.
+  public TypeAhead: bool := true;
 end record;
 
 // The native result for one frame. Node indices refer to the supplied array.
@@ -54,6 +84,16 @@ public type Change = record
   public Activated: int;
   // Nodes requesting lazy children.
   public Load: array of int;
+  // Opened node, or minus one.
+  public Expanded: int := -1;
+  // Closed node, or minus one.
+  public Collapsed: int := -1;
+  // Whether the proposed selection differs from the view.
+  public SelectionChanged: bool := false;
+  // Whether the proposed sort differs from the view.
+  public SortChanged: bool := false;
+  // Proposed node move, or null when there is no drop.
+  public Drop: Drop? := null;
 end record;
 
 // Draws the virtual native tree table.

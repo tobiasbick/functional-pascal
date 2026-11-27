@@ -8,10 +8,10 @@ uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Native item.
 public type Item = record
-  // CUI icon glyph.
-  public Icon: string;
-  // Literal tab label.
-  public Label: string;
+  // CUI icon glyph. Null uses a circle. An empty string omits the glyph.
+  public Icon: string?;
+  // Literal tab label. Null omits its row.
+  public Label: string?;
   // Badge count or zero to hide.
   public Badge: int := 0;
 end record;
@@ -32,7 +32,7 @@ end record;
 // ## Parameters
 // - `Id`: Stable widget identity.
 // - `Items`: Tabs in display order.
-// - `Selected`: Current zero-based selection.
+// - `Selected`: Current zero-based selection or minus one for no selection.
 // - `Change`: Maps a native proposal to an application message.
 // - `Settings`: Optional native options.
 // ## Returns

@@ -31,16 +31,20 @@ public type Event = record
   public Clicked: int;
   // Activated zero-based index, or minus one.
   public Activated: int;
+  // Hovered zero-based index, or minus one.
+  public Hovered: int := -1;
 end record;
 
 // Native layout and interaction options.
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Fill;
-  // Height supplied to CUI.
+  // Card height, zero for 320 logical units or minus one to fill.
   public Height: float := 0.0F;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
+  // Last reported hover index. Null omits messages caused only by hover.
+  public Hovered: int? := null;
 end record;
 
 // Builds the native CommitGraph widget.
@@ -49,7 +53,7 @@ end record;
 // ## Parameters
 // - `Id`: Stable widget identity.
 // - `Commits`: Model-owned commits data.
-// - `Selection`: Selected zero-based index, or minus one.
+// - `Selection`: Selected zero-based index, minus one for none, or null to let CUI retain it.
 // - `Changed`: Maps an action or edit to a message.
 // - `Settings`: Optional native settings.
 // ## Returns
@@ -57,7 +61,7 @@ end record;
 public function CommitGraph of TMsg(
   Id: string;
   Commits: array of Commit;
-  Selection: int;
+  Selection: int?;
   Changed: function(Event): TMsg;
   Settings: Options? := null
 ): E.Element of TMsg;

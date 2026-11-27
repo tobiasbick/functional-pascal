@@ -143,14 +143,16 @@ begin
       const Items: array of Charts.Item,
       const Selected: int,
       const OnSelect: Sys.Func of (int, TChild)?,
-      const Settings: Treemaps.Options
+      const Settings: Treemaps.Options,
+      const OnActivate: Sys.Func of (int, TChild)?
     ):
       return (E.Element of TParent).Treemap(
         Id,
         Items,
         Selected,
         M.Callback of (int, TChild, TParent)(OnSelect, Messages),
-        Settings
+        Settings,
+        M.Callback of (int, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.RadarChart(
       const Id: string,

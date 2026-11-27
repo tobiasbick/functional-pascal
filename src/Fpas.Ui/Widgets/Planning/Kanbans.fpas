@@ -11,7 +11,7 @@ uses Fpas.Ui.Widgets.Charts.Charts as Colors;
 public type Card of TMsg = record
   // Stable nonnegative native card identity, unique on this board.
   public Key: int;
-  // Accessible caption.
+  // Caption in the GUI snapshot. Include visible text in Content.
   public Title: string;
   // Graphical content.
   public Content: E.Element of TMsg;
@@ -21,15 +21,15 @@ end record;
 // ## Type parameters
 // - `TMsg`: Application message type.
 public type Column of TMsg = record
-  // Heading.
+  // Literal heading.
   public Title: string;
   // Cards in order.
   public Cards: array of Card of TMsg;
-  // Heading dot.
+  // Heading dot. Automatic omits it.
   public Dot: Colors.Color := Colors.Color.Automatic;
-  // Work-in-progress limit. Zero hides the limit.
+  // Advisory work-in-progress limit. Zero hides the limit.
   public Limit: int := 0;
-  // Logical width. Zero uses the native default.
+  // Logical width. Zero uses 280 logical units.
   public Width: float := 0.0F;
 end record;
 
@@ -45,7 +45,7 @@ end variant;
 
 // Native board settings.
 public type Options = record
-  // Accepts card activation and moves.
+  // Accepts add, card activation, card moves and input in card bodies.
   public Enabled: bool := true;
 end record;
 

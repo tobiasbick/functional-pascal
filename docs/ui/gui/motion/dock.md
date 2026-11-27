@@ -1,6 +1,6 @@
 # Dock
 
-The gallery places its application icons in a centered dock.
+Use a dock to present a row of shortcuts with optional status indicators.
 Available in **GUI**.
 
 ![App dock with running dots and a mail badge in the FPAS gallery](images/dock.png)
@@ -35,14 +35,18 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Entry.Item / Separator` | Pass an icon, label, activation message and appearance. Separator divides groups. |
-| `Running / Badge` | Running draws a dot. A positive Badge shows a count. |
-| `Size / Magnify / Enabled` | 0 / 0 / true. Zero uses native size or magnification. |
+| `Entry.Item` | An optional glyph and tooltip, an activation message, and appearance. Null omits the glyph or tooltip. |
+| `Entry.Separator` | Divides groups. |
+| `Color` | The background color. Use `Automatic` for the native theme colors. |
+| `Running / Badge` | `Running` draws a dot. A positive `Badge` shows a count and values above 99 display `99+`. |
+| `Size / Magnify` | 0 / 0. The native defaults are 46 points and 1.55. |
+| `Enabled` | true. Accepts pointer and keyboard activation. |
 
 ## Interaction
 
-Move the pointer across icons to magnify them. Handle the item message
-to activate its destination and update running indicators or badges.
+Move the pointer across icons to magnify them. The dock uses the viewport
+width to reduce icon size and remove magnification in narrow windows. Click
+an item, or focus it and press Enter or Space, to send its activation message.
 
 ## See also
 

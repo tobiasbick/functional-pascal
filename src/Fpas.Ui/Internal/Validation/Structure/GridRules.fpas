@@ -178,6 +178,7 @@ begin
     end if;
 
     R.CheckText(Node.Label, At + '/name');
+    R.CheckText(Node.TypeAheadLabel ?? '', At + '/typeAhead');
     R.CheckText(Node.Icon, At + '/icon');
     for Value: string in Node.Cells do
       R.CheckText(Value, At + '/cell');

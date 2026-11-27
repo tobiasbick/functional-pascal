@@ -8,7 +8,7 @@ public sealed partial class CuiWindow
 {
     /// <summary>Offers a tree table's context menu after <see cref="EndTreeTable"/>; call it in every frame that offers one.</summary>
     /// <param name="id">The identity passed to <see cref="BeginTreeTable"/>.</param>
-    /// <param name="enabled">Whether the menu may open and accept input.</param>
+    /// <param name="enabled">Whether the menu may open and accept input. False closes an open menu.</param>
     /// <param name="node">The model node the open menu is for, or minus one.</param>
     /// <returns>Whether the menu is open. Always close the scope with <see cref="EndTreeTableMenu"/>.</returns>
     /// <remarks>A right click on a row opens it at the pointer and Shift+F10 opens it for the cursor row.

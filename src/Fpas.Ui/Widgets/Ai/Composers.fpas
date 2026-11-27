@@ -56,8 +56,8 @@ end variant;
 public type Options = record
   // Preferred composer width.
   public Width: L.Extent := L.Extent.Fill;
-  // Empty editor caption.
-  public Placeholder: string := '';
+  // Empty editor caption. Null uses CUI's default.
+  public Placeholder: string? := null;
   // Maximum visible lines, or zero for the default.
   public MaxLines: int := 0;
   // Maximum draft size, excluding the terminator.

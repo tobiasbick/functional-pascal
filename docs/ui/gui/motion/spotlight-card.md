@@ -35,13 +35,16 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Width / Height` | Fill / Content. |
-| `Padding / Gap / Color` | 0 / 0 / Automatic. Zero uses the native inset or spacing. |
-| `Beam` | false. Draws a moving light around the edge. |
+| `Padding` | Zero uses 20 logical units on each side. |
+| `Gap` | Zero uses 10 logical units between children. |
+| `Color` | Automatic uses the theme accent or the foreground color with a neutral accent. |
+| `Beam` | False. Draws a moving light around the edge when motion is enabled. |
 
 ## Interaction
 
-Move the pointer across the card to light the nearby edge. Supply
-child widgets for any actions the card contains.
+Move the pointer across an input-enabled card to light the nearby edge.
+A beamless card can remain lit without scheduling animation frames once
+the glow settles. Supply child widgets for any actions the card contains.
 
 ## See also
 

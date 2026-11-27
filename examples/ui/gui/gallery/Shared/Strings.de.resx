@@ -114,6 +114,7 @@
   <data name="Heading.FeatureFlagsHint" xml:space="preserve"><value>Ein Schalter pro Umgebung. Klicke auf einen Anteil, um ihn zu ändern.</value></data>
   <data name="Heading.FileBrowser" xml:space="preserve"><value>Dateibrowser</value></data>
   <data name="Heading.FileBrowserHint" xml:space="preserve"><value>Doppelklick öffnet, Tippen springt zum Eintrag und die Rücktaste wechselt nach oben.</value></data>
+  <data name="Heading.ProjectTreeHint" xml:space="preserve"><value>Ziehe Zeilen vor oder hinter andere Zeilen oder in einen Ordner. Esc bricht ab. Umschalt und Strg wählen mehrere Zeilen aus. Rechtsklick oder Umschalt+F10 öffnet das Menü.</value></data>
   <data name="Heading.FilterBar" xml:space="preserve"><value>Filterleiste</value></data>
   <data name="Heading.FilterBarHint" xml:space="preserve"><value>Chips für aktive Filter, Werteliste und Suche.</value></data>
   <data name="Heading.FlameGraph" xml:space="preserve"><value>Flammendiagramm</value></data>

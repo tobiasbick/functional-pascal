@@ -9,6 +9,49 @@ uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
 uses Fpas.Ui.Gui.Internal.Data.AiData as Data;
 uses Fpas.Ui.Widgets.Ai.ResponseActions as ResponseActions;
 
+uses System as Sys;
+
+const Keys: array of string := ['copy', 'regenerate', 'up', 'down', 'share'];
+
+function Present(Settings: ResponseActions.Options): array of bool;
+begin
+  return [
+    Settings.CopyText <> null,
+    not Settings.HideRegenerate,
+    true,
+    true,
+    not Settings.HideShare
+  ];
+end function;
+
+// Resolves a focus request to a visible response action.
+// ## Parameters
+// - `Id`: Widget ID.
+// - `Preferred`: Requested widget or part ID, or null for the first part.
+// - `Settings`: Native options.
+// ## Returns
+// The enabled part ID, or null.
+public function FocusTarget(
+  Id: string;
+  Preferred: string?;
+  Settings: ResponseActions.Options
+): string?;
+begin
+  if not Settings.Enabled then
+    return null;
+  end if;
+
+  const Shown: array of bool := Present(Settings);
+  for Index: int := 0 to Keys.Length - 1 do
+    const PartId: string := Id + '/' + Keys[Index];
+    if Shown[Index] and (Preferred = null or Preferred = Id or Preferred = PartId) then
+      return PartId;
+    end if;
+  end for;
+
+  return null;
+end function;
+
 // Presents CUI's native ResponseActions.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -29,10 +72,16 @@ begin
   const Role: string := 'response-actions';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
-  const Keys: array of string := ['copy', 'regenerate', 'up', 'down', 'share'];
+  const Shown: array of bool := Present(Settings);
+  const Focus: int := if Enabled then
+    P.Focus of TMsg(Frame, Id, Role, Keys, Shown, Sys.Array.IndexOf of bool(Shown, true))
+  else
+    -1
+  end if;
   const Result: CuiAi.CuiResponseResult := Frame.Window.ResponseActions(
     Token, Settings.CopyText, Vote,
     Enc.Bits(Enabled, 1) or Enc.Bits(Settings.HideRegenerate, 2) or Enc.Bits(Settings.HideShare, 4),
+    Focus,
     P.Tracker of TMsg(Frame, Id, Role, Keys)
   );
   P.Root of TMsg(Frame, Id, Role, '', false, (Vote ?? 0).ToString());

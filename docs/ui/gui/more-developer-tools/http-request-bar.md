@@ -35,15 +35,35 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Method` | 0 GET, 1 POST, 2 PUT, 3 PATCH, 4 DELETE, 5 HEAD, 6 OPTIONS. |
-| `Capacity / Placeholder` | 255 / empty. Capacity limits the UTF-8 URL edit buffer. |
-| `Loading / Width / Enabled` | false / Fill / true. Loading replaces Send with Cancel. |
+| `Capacity` | 255 UTF-8 bytes. |
+| `Placeholder` | Null uses CUI's example URL. An empty string hides the caption. |
+| `Loading` | False. True replaces Send with Cancel and suppresses submission from the URL field. |
+| `Width` | Fill. The bar uses an icon for the action at narrow widths. |
+| `Enabled` | True. False disables the method picker, URL field, and action. |
 
 ## Interaction
 
-Store the method and URL from the proposal. Send or Enter in the URL
-requests submission. During loading, the button requests cancellation.
-Your application handles both intents. The gallery works with local
-sample data.
+`Event.Changed` reports an edit to the method or URL. Store the method and URL
+from the proposal. A nonempty URL enables Send and submission with Enter.
+`Event.Send` and `Event.Cancel` report the action for the current loading state.
+The application handles those actions. The gallery uses local sample data.
+
+A host focus request for the widget ID focuses the URL field. Tab navigation
+reaches the method picker, the URL field, and the enabled action.
+
+## Query parameters
+
+`Fpas.Ui.Gui.UrlParameters.Parse` converts the query into
+`KeyValueEditors.Pair` values in URL order. The capacity limits the number of
+pairs to a value from 0 to 4096. CUI decodes percent escapes and converts `+`
+to a space. Each parsed pair starts enabled with its value visible.
+CUI's key and value buffers hold up to 63 and 255 UTF-8 bytes respectively.
+The GUI adapter omits a trailing partial UTF-8 sequence.
+
+`Fpas.Ui.Gui.UrlParameters.Replace` uses CUI to encode the enabled pairs with
+nonempty keys. The operation preserves the fragment and returns null if the
+result exceeds the supplied capacity in UTF-8 bytes. Use the same capacity as
+the request bar when the result becomes its URL. Both helpers operate on text.
 
 ## See also
 
@@ -59,6 +79,8 @@ sample data.
 
 - `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
   - [RequestBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/RequestBar.fpas)
+- `src/Fpas.Ui.Gui/`
+  - [UrlParameters.fpas](../../../../src/Fpas.Ui.Gui/UrlParameters.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
   - [NativeMethods.RequestBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.RequestBar.cs)
 - `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
@@ -66,3 +88,7 @@ sample data.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
   - [request_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/request_bar.c)
   - [request_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/request_bar.h)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [http_tools.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/http_tools.c)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Developer/`
+  - [CuiUrlParametersTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Developer/CuiUrlParametersTests.cs)

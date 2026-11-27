@@ -33,13 +33,16 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Axes / Series` | At least three axes. Each series provides one finite nonnegative value per axis in the same order. |
-| `Size / Maximum` | 0 / 0. Zero uses the default diameter or automatic scale, respectively. |
-| `Format / Legend / Enabled` | null / true / true. |
+| `Axes / Series` | At least three axis labels. Each series provides a name, one finite nonnegative value per axis in the same order, and an optional color. Automatic colors use the CUI series palette. |
+| `Size` | 0. CUI uses a diameter of 260 logical points and can shrink the plot to fit a narrow container. |
+| `Maximum` | 0. CUI selects the outer ring value from the data. Set a positive value for an explicit scale. |
+| `Format` | null. CUI uses compact numbers. A value format applies to ring labels and hover values. |
+| `Legend` | true. The legend shows when there are two or more series and wraps below the plot when space is narrow. |
+| `Enabled` | true. Set false to disable pointer interaction. |
 
 ## Interaction
 
-Hover to inspect values at an axis. Supply `OnActivate` to receive the zero-based axis index when CUI reports activation.
+Hover near an axis to show the nearest series point and its value. The last series shows its points when the pointer leaves the chart. Supply `OnActivate` to receive the zero-based axis index when CUI reports activation.
 
 ## See also
 

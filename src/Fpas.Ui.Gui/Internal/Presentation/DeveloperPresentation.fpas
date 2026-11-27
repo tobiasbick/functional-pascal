@@ -69,7 +69,7 @@ begin
       const Id: string,
       const Stages: array of string,
       const Jobs: array of Pipelines.Job,
-      const Selection: int,
+      const Selection: int?,
       const Changed: function(Pipelines.Event): TMsg,
       const Settings: Pipelines.Options
     ):
@@ -78,7 +78,7 @@ begin
       const Id: string,
       const Bindings: array of Keymaps.Binding,
       const Categories: array of string,
-      const Modifiers: int,
+      const Modifiers: int?,
       const Changed: function(Keymaps.Event): TMsg,
       const Settings: Keymaps.Options
     ):
@@ -86,7 +86,7 @@ begin
     when E.Element.CommitGraph(
       const Id: string,
       const Commits: array of CommitGraphs.Commit,
-      const Selection: int,
+      const Selection: int?,
       const Changed: function(CommitGraphs.Event): TMsg,
       const Settings: CommitGraphs.Options
     ):
@@ -95,7 +95,7 @@ begin
       const Id: string,
       const Vertices: array of DependencyGraphs.Vertex,
       const Edges: array of DependencyGraphs.Edge,
-      const Selection: int,
+      const Selection: int?,
       const Changed: function(DependencyGraphs.Event): TMsg,
       const Settings: DependencyGraphs.Options
     ):
@@ -103,7 +103,7 @@ begin
     when E.Element.NetworkWaterfall(
       const Id: string,
       const Requests: array of NetworkWaterfalls.Request,
-      const Selection: int,
+      const Selection: int?,
       const Changed: function(NetworkWaterfalls.Event): TMsg,
       const Settings: NetworkWaterfalls.Options
     ):
@@ -154,10 +154,11 @@ begin
     when E.Element.Uptime(
       const Id: string,
       const Services: array of Uptimes.Service,
-      const LastDay: Sys.DateOnly,
-      const Settings: Uptimes.Options
+      const LastDay: Sys.DateOnly?,
+      const Settings: Uptimes.Options,
+      const Changed: Sys.Func of (Uptimes.Hover, TMsg)?
     ):
-      UptimeWidget.Draw of TMsg(Frame, Id, Services, LastDay, Settings);
+      UptimeWidget.Draw of TMsg(Frame, Id, Services, LastDay, Settings, Changed);
     when E.Element.TimeHistogram(
       const Id: string,
       const Start: double,
@@ -198,7 +199,7 @@ begin
     when E.Element.ApiExplorer(
       const Id: string,
       const Endpoints: array of ApiExplorers.Endpoint,
-      const Selection: int,
+      const Selection: int?,
       const Changed: function(ApiExplorers.Event): TMsg,
       const Settings: ApiExplorers.Options
     ):
@@ -229,7 +230,7 @@ begin
       const Id: string,
       const Pattern: string,
       const Sample: string,
-      const Modifiers: int,
+      const Modifiers: int?,
       const Changed: function(RegexTesters.Event): TMsg,
       const Settings: RegexTesters.Options
     ):

@@ -35,12 +35,15 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Start / Values` | The first calendar date and finite daily values in date order. Nonpositive values leave empty squares. All dates must fit System.DateOnly. |
-| `CellSize / Color` | 0 / Automatic. CUI supplies a default cell size and accent ramp. |
-| `Format / Unit / Enabled` | null / empty / true. An empty unit omits the total caption. |
+| `CellSize` | 0. CUI uses an 11-point square. Set a positive size in logical points for a different square size. |
+| `Color` | Automatic. The CUI accent gives the highest step its color. Set a chart color to choose the top step. |
+| `Format` | null. CUI uses compact numbers. A value format applies to the daily amount and to the displayed total. |
+| `Unit` | Empty. Supply a unit to label the hover amount and show a total for the visible dates when space permits. |
+| `Enabled` | true. Set false to disable pointer interaction. |
 
 ## Interaction
 
-Hover a day for its date and amount. A click can send the actual date through `OnActivate`. CUI shows the newest weeks that fit when space is narrow. The callback still identifies the corresponding original date.
+Hover a day for its date and amount. A click can send the actual date through `OnActivate`. Gaps between squares have no hover or activation. CUI shows the newest weeks that fit when space is narrow. The callback still identifies the corresponding original date.
 
 ## See also
 

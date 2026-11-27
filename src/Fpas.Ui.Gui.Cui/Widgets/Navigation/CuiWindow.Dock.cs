@@ -8,8 +8,8 @@ public sealed partial class CuiWindow
 {
     /// <summary>Draws a native dock with item snapshots.</summary>
     /// <param name="id">Stable dock identity.</param>
-    /// <param name="icons">Glyph per item. Separators use an empty string.</param>
-    /// <param name="labels">Labels in entry order.</param>
+    /// <param name="icons">Optional glyph per item.</param>
+    /// <param name="labels">Optional tooltips in entry order.</param>
     /// <param name="colors">Colors in entry order.</param>
     /// <param name="badges">Badge counts in entry order.</param>
     /// <param name="kinds">Separator zero, item one, running item two.</param>
@@ -19,7 +19,7 @@ public sealed partial class CuiWindow
     /// <param name="focus">Entry to focus, or minus one.</param>
     /// <param name="part">Optional snapshot identity by entry index.</param>
     /// <returns>The activated entry index, or minus one.</returns>
-    public unsafe int Dock(string id, string[] icons, string[] labels, CuiChartColor[] colors, int[] badges,
+    public unsafe int Dock(string id, string?[] icons, string?[] labels, CuiChartColor[] colors, int[] badges,
         int[] kinds, float size, float magnify, bool enabled, int focus, Func<int, string>? part)
     {
         CheckFrame();
@@ -33,8 +33,12 @@ public sealed partial class CuiWindow
         var nodes = new int[count];
         for (int i = 0; i < count; ++i)
         {
-            Utf8.Validate(icons[i], nameof(icons));
-            Utf8.Validate(labels[i], nameof(labels));
+            if (kinds[i] is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(kinds));
+            if (kinds[i] == 0) continue;
+            if (badges[i] < 0) throw new ArgumentOutOfRangeException(nameof(badges));
+            if (icons[i] is { } icon) Utf8.Validate(icon, nameof(icons));
+            if (labels[i] is { } label) Utf8.Validate(label, nameof(labels));
+            CheckChartColor(colors[i]);
             palettes[i] = colors[i].Palette;
             rgba[i] = colors[i].Rgba;
         }

@@ -1,0 +1,44 @@
+// [Documentation](../../../../docs/ui/gui/developer-tools/query-builder.md)
+
+unit Fpas.Ui.Gui.Internal.Data.QueryData;
+
+uses Fpas.Ui.Gui.Cui.Widgets.Developer as Cui;
+uses Fpas.Ui.Widgets.Developer.QueryBuilders as W;
+
+uses System.Collections.Generic as Lists;
+
+// Converts field schema data for the native query widgets.
+// ## Parameters
+// - `Items`: Named and typed fields.
+// ## Returns
+// Native field definitions in the original order.
+public function Fields(Items: array of W.Field): array of Cui.CuiDevField;
+begin
+  const Result: Lists.List of Cui.CuiDevField := new Lists.List of Cui.CuiDevField(Items.Length);
+  for Entry: W.Field in Items do
+    Result.Add(new Cui.CuiDevField(Entry.Name, Entry.Kind, Entry.Choices));
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Converts the flattened query tree for the native query widgets.
+// ## Parameters
+// - `Items`: Groups and conditions in display order.
+// ## Returns
+// Native rules in the original tree order.
+public function Rules(Items: array of W.Rule): array of Cui.CuiDevRule;
+begin
+  const Result: Lists.List of Cui.CuiDevRule := new Lists.List of Cui.CuiDevRule(Items.Length);
+  for Entry: W.Rule in Items do
+    Result.Add(
+      new Cui.CuiDevRule(
+        Entry.Depth, Entry.Group, Entry.Any, Entry.Field, Entry.Operator, Entry.Value
+      )
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+end unit;

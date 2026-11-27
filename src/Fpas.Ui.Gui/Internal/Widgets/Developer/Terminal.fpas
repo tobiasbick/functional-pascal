@@ -42,7 +42,9 @@ begin
     Width.Value,
     Settings.Height,
     Settings.Size,
-    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Input, 2) or Enc.Bits(Focus, 4)
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Input, 2) or Enc.Bits(Focus, 4),
+    Settings.ByteCapacity,
+    Settings.LineCapacity
   );
   const Command: string? := Result.Command;
   if Command <> null then
@@ -53,7 +55,7 @@ begin
     Frame.Messages.Add(Received(D.Event.Interrupt));
   end if;
 
-  P.Root of TMsg(Frame, Id, Role, '', Enabled and Settings.Input, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

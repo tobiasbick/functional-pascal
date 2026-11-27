@@ -66,8 +66,10 @@ begin
     Enabled
   );
   P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
-  if Enabled and (Result.Flags <> 0) then
-    Frame.Messages.Add(Changed(new D.Event(Result.X, Result.Y)));
+  const SelectionChanged: bool := Result.Flags <> 0;
+  const HoverChanged: bool := Settings.Hovered <> null and Settings.Hovered <> Result.Hover;
+  if Enabled and (SelectionChanged or HoverChanged) then
+    Frame.Messages.Add(Changed(new D.Event(Result.X, Result.Y, Result.Hover, SelectionChanged)));
   end if;
 end procedure;
 

@@ -1,5 +1,6 @@
 // [Documentation](../../../../docs/ui/gui/audio/fader.md)
 using Fpas.Ui.Gui.Cui.Interop;
+using Fpas.Ui.Gui.Cui.Widgets.Charts;
 
 namespace Fpas.Ui.Gui.Cui;
 
@@ -13,7 +14,7 @@ public sealed partial class CuiWindow
     /// <param name="maximum">Finite inclusive upper bound.</param>
     /// <param name="step">Increment, or zero for continuous motion.</param>
     /// <param name="reset">Value to restore, clamped to the bounds.</param>
-    /// <param name="decimalPlaces">Precision from zero through six.</param>
+    /// <param name="format">Numeric display format. Null uses one decimal place.</param>
     /// <param name="unit">Optional unit caption.</param>
     /// <param name="hideValue">Whether to hide the numeric value.</param>
     /// <param name="length">Logical track length, or zero for the native default.</param>
@@ -25,12 +26,13 @@ public sealed partial class CuiWindow
     /// <param name="track">Whether to publish the control bounds.</param>
     /// <returns>The input proposal, or the model value if unchanged.</returns>
     public unsafe float Fader(string id, string label, float value, float minimum, float maximum,
-        float step, float reset, int decimalPlaces, string unit, bool hideValue,
+        float step, float reset, CuiChartFormat? format, string unit, bool hideValue,
         float length, bool horizontal, float[] ticks, float[] levels, bool enabled, bool focus, bool track)
     {
         CheckFrame();
         ValidateSlider(label, value, value, minimum, maximum);
         ValidateAudioDial(step, reset, unit, maximum - minimum);
+        CheckChartFormat(format);
         if (!ValidAudioSize(length)) throw new ArgumentOutOfRangeException(nameof(length));
         ArgumentNullException.ThrowIfNull(ticks);
         if (ticks.Length > 32) throw new ArgumentOutOfRangeException(nameof(ticks));
@@ -42,7 +44,7 @@ public sealed partial class CuiWindow
         fixed (float* marks = ticks, peaks = levels)
         {
             NativeMethods.Fader(context, Stable(id), label, ref value, minimum, maximum, step, reset,
-                SliderNumberFormat(decimalPlaces), Optional(unit), hideValue ? 1 : 0, length,
+                ChartMemory.FormatString(format) ?? "%.1f", Optional(unit), hideValue ? 1 : 0, length,
                 horizontal ? 1 : 0, marks, ticks.Length, peaks, levels.Length, enabled ? 1 : 0,
                 focus ? 1 : 0, out int node);
             if (track) TrackControl(id, node);

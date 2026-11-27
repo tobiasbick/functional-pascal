@@ -62,7 +62,7 @@ public sealed record CuiDevEdge(int From, int To);
 /// <param name="Tls">Tls supplied to CUI.</param>
 /// <param name="Wait">Wait supplied to CUI.</param>
 /// <param name="Download">Download supplied to CUI.</param>
-public sealed record CuiDevRequest(string Name, string Method, int Status, string? Type, double Size, double Start, float Queued, float Dns, float Connect, float Tls, float Wait, float Download);
+public sealed record CuiDevRequest(string Name, string? Method, int Status, string? Type, double Size, double Start, float Queued, float Dns, float Connect, float Tls, float Wait, float Download);
 
 /// <summary>Describes an input row for a native developer widget.</summary>
 /// <param name="Name">Name supplied to CUI.</param>

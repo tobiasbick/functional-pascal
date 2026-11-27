@@ -21,7 +21,7 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         CheckExtent(WidthKind, Width, nameof(Width));
-        if (Environments.Length is < 1 or > 8 || Entries.Any(entry => entry.On.Length != Environments.Length || entry.Rollout.Length != Environments.Length))
+        if (Environments.Length > 8 || Entries.Any(entry => entry.On.Length != Environments.Length || entry.Rollout.Length != Environments.Length))
             throw new ArgumentException("Each feature flag needs one value per environment.", nameof(Entries));
         using var memory = new ChartMemory();
         var values = new NativeDevFlag[Entries.Length];

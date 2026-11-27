@@ -165,11 +165,12 @@ begin
       AudioRules.CheckDial(
         Settings.Step,
         Settings.Reset,
-        Settings.DecimalPlaces,
         Settings.UnitLabel,
         Maximum - Minimum,
         At
       );
+      ChartChecks.Format(Settings.Format, At + '/format');
+      ChartChecks.Color(Settings.ArcColor, At);
       AudioRules.CheckKnob(Settings.Size, Settings.LogScale, Minimum, Maximum, At);
       return true;
     when E.Element.Fader(
@@ -182,11 +183,11 @@ begin
       AudioRules.CheckDial(
         Settings.Step,
         Settings.Reset,
-        Settings.DecimalPlaces,
         Settings.UnitLabel,
         Maximum - Minimum,
         At
       );
+      ChartChecks.Format(Settings.Format, At + '/format');
       AudioRules.CheckFader(
         Settings.Length,
         Settings.Ticks,

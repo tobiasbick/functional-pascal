@@ -35,14 +35,17 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Children` | Supply the view elements to draw inside the panel. |
-| `Thinking / Seconds` | false / 0. Thinking opens the panel and shows the running state. |
-| `Title / Enabled` | Empty / true. Title overrides the native heading. |
+| `Thinking` | false. Set true to show the running state. |
+| `Seconds` | 0. CUI adds the elapsed time to the default heading at one second or more. |
+| `Title` | Empty. Supply text to replace the default heading. |
+| `Enabled` | true. Set false to disable the heading control. |
 
 ## Interaction
 
-Click the heading to toggle the disclosure. Keep the summary and elapsed
-time in the application model. CUI retains the open state for the mounted
-panel.
+Click the heading, or focus it and press Enter or Space, to toggle the panel.
+CUI opens the panel while thinking and closes it when thinking ends. If the user
+toggles the panel, CUI keeps that choice while the panel stays mounted.
+Keep the summary and elapsed time in the application model.
 
 Declare dialogs, sheets, command palettes and file pickers outside the reasoning
 body. Validation rejects these modal declarations inside the body even when

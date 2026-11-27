@@ -41,8 +41,17 @@ uses Fpas.Ui.Widgets.Conversation.Comments as Comments;
 uses Fpas.Ui.Widgets.Conversation.Reactions as Reactions;
 uses Fpas.Ui.Widgets.Desktop.DocumentTabs as Docs;
 uses Fpas.Ui.Widgets.Desktop.StatusBars as StatusBar;
+uses Fpas.Ui.Widgets.Developer.ApiExplorers as ApiExplorers;
 uses Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks;
+uses Fpas.Ui.Widgets.Developer.CommitGraphs as CommitGraphs;
+uses Fpas.Ui.Widgets.Developer.DependencyGraphs as DependencyGraphs;
+uses Fpas.Ui.Widgets.Developer.Keymaps as Keymaps;
+uses Fpas.Ui.Widgets.Developer.NetworkWaterfalls as Network;
+uses Fpas.Ui.Widgets.Developer.Pipelines as Pipelines;
+uses Fpas.Ui.Widgets.Developer.ProblemsPanels as ProblemsPanels;
+uses Fpas.Ui.Widgets.Developer.RequestBars as RequestBars;
 uses Fpas.Ui.Widgets.Developer.Terminals as TerminalWidget;
+uses Fpas.Ui.Widgets.Developer.TraceViewers as Trace;
 uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
 uses Fpas.Ui.Widgets.Feedback.Banners as Banners;
 uses Fpas.Ui.Widgets.Feedback.Checklists as Checklists;
@@ -197,7 +206,12 @@ begin
       _,
       _,
       _
-    ), E.Element.PromptSuggestions(_, _, _, _), E.Element.ModelPicker(_, _, _, _, _):
+    ), E.Element.ResponseActions(_, _, _, _), E.Element.PromptSuggestions(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ModelPicker(_, _, _, _, _):
       return AiFocus.First of TMsg(Node, Preferred);
     when E.Element.Comment(const Id: string, _, _, _, _, const Settings: Comments.Options):
       if Settings.Enabled then
@@ -274,9 +288,9 @@ begin
       _,
       const Settings: Bars.Options
     ):
-      if Settings.Enabled then
+      if Settings.Enabled and Items.Length > 0 then
         if Preferred = null or Preferred = Id then
-          return Id + '/' + Selected.ToString();
+          return Id + '/' + Sys.Math.Max(0, Selected).ToString();
         end if;
 
         for Index: int := 0 to Items.Length - 1 do
@@ -351,6 +365,41 @@ begin
         return Id;
       end if;
     when E.Element.TreeTable(const Id: string, _, _, _, _, _, const Settings: TreeTable.Options, _):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.NetworkWaterfall(const Id: string, _, _, _, const Settings: Network.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.ApiExplorer(const Id: string, _, _, _, const Settings: ApiExplorers.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.TraceViewer(const Id: string, _, _, _, _, _, _, const Settings: Trace.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Pipeline(
+      const Id: string,
+      _,
+      const Jobs: array of Pipelines.Job,
+      _,
+      _,
+      const Settings: Pipelines.Options
+    ):
+      if Settings.Enabled and Jobs.Length > 0 and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Problems(const Id: string, _, _, const Settings: ProblemsPanels.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.RequestBar(const Id: string, _, _, _, const Settings: RequestBars.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.Keymap(const Id: string, _, _, _, _, const Settings: Keymaps.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
@@ -1183,6 +1232,16 @@ begin
       _
     ), E.Element.HexView(const Id: string, _, _, _, _):
       if Preferred = null or Preferred = Id then
+        return Id;
+      end if;
+    when E.Element.CommitGraph(const Id: string, _, _, _, const Settings: CommitGraphs.Options):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
+        return Id;
+      end if;
+    when E.Element.DependencyGraph(
+      const Id: string, _, _, _, _, const Settings: DependencyGraphs.Options
+    ):
+      if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
     when E.Element.Terminal(const Id: string, _, _, _, const Settings: TerminalWidget.Options):

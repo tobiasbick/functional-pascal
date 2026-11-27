@@ -36,13 +36,22 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Items` | Named nonnegative amounts with a finite sum. Each may supply a color. |
-| `Width / Height / Format` | Fill / 0 / null. Zero height and a null format use CUI defaults. |
+| `Width` | Fill. |
+| `Height` | Zero uses 300 logical units. |
+| `Format` | Null uses native automatic formatting. |
 | `Selected / OnSelect` | -1 / null. Supply both the current index and the callback for selection. |
+| `OnActivate` | Null. The callback receives the clicked tile's input index. |
 | `Enabled` | true. |
 
 ## Interaction
 
-Hover a tile to inspect it. With a selection callback, clicking proposes the tile's input index. Clicking the selected tile proposes -1. Store the proposed index in the model. Omit the callback for hover-only inspection.
+Hover a tile to inspect its amount and share. With a selection callback, a
+click proposes the tile's input index. Clicking the selected tile proposes
+-1. Store the proposed index in the model.
+
+Use `OnActivate` to open a tile or show its details. Activation works with or
+without selection. If both callbacks apply to a click, the selection
+message comes first.
 
 ## See also
 
@@ -53,6 +62,8 @@ Hover a tile to inspect it. With a selection callback, clicking proposes the til
 - [More charts](README.md)
 
 ## Source files
+
+- [TreemapContract.fpas](../../../../tests/Fixtures/gui-host/TreemapContract.fpas)
 
 - [Treemap.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Treemap.fpas)
 - [CuiWindow.Treemap.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.Treemap.cs)

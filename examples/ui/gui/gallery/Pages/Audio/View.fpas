@@ -9,6 +9,7 @@ uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
 uses Fpas.Ui.Widgets.Audio.Faders as F;
 uses Fpas.Ui.Widgets.Audio.Knobs as K;
 uses Fpas.Ui.Widgets.Audio.LevelMeters as M;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
 uses Fpas.Ui.Widgets.Overlays.Tours as Tours;
 
@@ -39,7 +40,7 @@ begin
           ),
           K.Knob of A.Msg(
             'audio-resonance', 'Resonance', Model.Resonance, 0.0F, 1.0F, A.Msg.SetResonance,
-            new K.Options(DecimalPlaces := 2)
+            new K.Options(Format := new C.ValueFormat(DecimalPlaces := 2))
           ),
           K.Knob of A.Msg(
             'audio-attack', 'Attack', Model.Attack, 1.0F, 2000.0F, A.Msg.SetAttack,
@@ -47,7 +48,10 @@ begin
           ),
           K.Knob of A.Msg(
             'audio-pan', 'Pan', Model.Pan, -1.0F, 1.0F, A.Msg.SetPan,
-            new K.Options(Bipolar := true, DecimalPlaces := 2, ShowSign := true)
+            new K.Options(
+              Bipolar := true,
+              Format := new C.ValueFormat(DecimalPlaces := 2, Sign := C.ValueSign.Always)
+            )
           )
         ),
         M.LevelMeter of A.Msg(

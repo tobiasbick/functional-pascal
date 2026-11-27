@@ -32,13 +32,20 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Vote / CopyText` | Vote uses minus one for down, zero for neutral and one for up. Null Vote leaves voting momentary, with no selected state. Null CopyText hides Copy. |
-| `HideRegenerate / HideShare / Enabled` | false / false / true. |
+| `Vote` | Pass minus one for down, zero for neutral, or one for up. Null gives vote messages without a selected state. |
+| `CopyText` | Null hides Copy. An empty string shows Copy and copies an empty string. |
+| `HideRegenerate / HideShare / Enabled` | False / false / true. |
 
 ## Interaction
 
-CUI copies the supplied text and reports Copy. Persist vote proposals
-and handle regeneration or sharing in the application.
+Click a button or press Enter or Space when it has focus. CUI copies
+the supplied text and sends `Copy`. Press a selected thumb to propose
+zero. Persist vote proposals and handle regeneration or sharing in the
+application.
+
+A focus request for the widget selects the first visible button. To
+focus a specific button, append `/copy`, `/regenerate`, `/up`,
+`/down`, or `/share` to the widget ID.
 
 ## See also
 

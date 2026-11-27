@@ -1,0 +1,20 @@
+// [Documentation](../../docs/ui/gui/developer-tools/query-builder.md)
+
+unit Fpas.Ui.Gui.QueryBuilders;
+
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Data.QueryData as Data;
+uses Fpas.Ui.Widgets.Developer.QueryBuilders as W;
+
+// Formats the query with CUI's field names and operators.
+// ## Parameters
+// - `Fields`: Schema used by the builder.
+// - `RulesData`: Conditions and groups in display order.
+// ## Returns
+// Complete native query description for display.
+public function Description(Fields: array of W.Field; RulesData: array of W.Rule): string;
+begin
+  return Cui.CuiWindow.DescribeQuery(Data.Fields(Fields), Data.Rules(RulesData));
+end function;
+
+end unit;

@@ -13,6 +13,20 @@ the model. These widgets require the GUI host.
 Specify a gain control's range in the units the user edits, such as dB.
 Supply meter peaks as linear amplitudes, where 1.0 represents 0 dBFS.
 
+## Audio gallery page
+
+The [Audio view](../../../../examples/ui/gui/gallery/Pages/Audio/View.fpas)
+places the tour button above a wrapping row. The synth card contains four
+knobs and a horizontal stereo master meter. The mixer card wraps six faders
+with stereo meters. The tour targets the Cutoff knob, the master meter and
+the Bass fader through stable control IDs.
+
+## Signal clock
+
+The original CUI gallery advances the synthetic signal once per frame. FPAS
+advances the signal through a background effect while Audio is visible. The
+gallery keeps the control values and signal phase when the page closes.
+
 ## See also
 
 - [UI handbook](../README.md)

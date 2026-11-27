@@ -5,6 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Audio.Fader;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as ChartData;
 uses Fpas.Ui.Widgets.Audio.Faders as W;
 
 uses System.Globalization as Culture;
@@ -43,7 +44,7 @@ begin
     Maximum,
     Settings.Step,
     Settings.Reset,
-    Settings.DecimalPlaces,
+    ChartData.Format(Settings.Format),
     Settings.UnitLabel,
     Settings.HideValue,
     Settings.Length,

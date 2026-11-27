@@ -40,14 +40,14 @@ public sealed class CuiMoreChartTests
             float[] sizes = [10, 20, 30, 40];
             CuiScatterSeries[] scatter = [new("Software 日本語", points, sizes), new("OpenGL", [new(2, 1), new(3, 3)])];
             CuiCandle[] candles = Candles(100);
-            string[] labels = Enumerable.Range(0, 100).Select(i => "Day " + i).ToArray();
+            string?[] labels = Enumerable.Range(0, 100).Select(i => i % 3 == 0 ? null : "Day " + i).ToArray();
             float[] overlay = Enumerable.Range(0, 100).Select(i => i % 9 == 0 ? float.NaN : 64 + i * .2f).ToArray();
             switch (kind)
             {
                 case 0: window.Sankey("widget", nodes, links, new(Height: 260, Format: new(0))); break;
                 case 1: window.BarList("widget", items, new(Format: new(2))); break;
                 case 2: window.ActivityRings("widget", items, new(Size: 170, Center: "82%", Caption: "of goal", Legend: true)); break;
-                case 3: window.ScatterChart("widget", scatter, new(XLabel: "Nodes", YLabel: "Time", YFormat: new(2))); break;
+                case 3: window.ScatterChart("widget", scatter, new(XLabel: "", YLabel: null, YFormat: new(2))); break;
                 case 4: window.RadialGauge("widget", 64, 0, 100, new(Label: "CPU", Unit: "%", Bands:
                     [new(60, 2, "Normal"), new(85, 3, "Busy"), new(100, 4, "Overloaded")], Detail: "of goal")); break;
                 case 5: window.Candlestick("widget", candles, new(Labels: labels, Overlays: [new("Average", overlay)])); break;
@@ -62,7 +62,7 @@ public sealed class CuiMoreChartTests
         }
     }
 
-    /// <summary>Keeps crosshair, zoom, appended data and retirement under native control.</summary>
+    /// <summary>Keeps inspection in range when periods are appended, replaced or removed.</summary>
     /// <param name="renderer">Native renderer.</param>
     [GuiTheory]
     [InlineData(CuiRenderer.Software)]
@@ -77,6 +77,10 @@ public sealed class CuiMoreChartTests
         Draw(key: 53); Draw(key: 52); Draw(key: 42);
         Assert.Equal(99, Draw(count: 120));
         Assert.Equal(119, Draw(key: 12, count: 120));
+        Assert.Equal(4, Draw(count: 5));
+        Assert.Equal(-1, Draw(count: 0));
+        Assert.Equal(-1, Draw(count: 12));
+        Assert.Equal(0, Draw(key: 11, count: 12));
         Assert.Equal(-1, Draw(enabled: false));
         window.ForgetControl("price");
         Assert.Equal(-1, Draw());

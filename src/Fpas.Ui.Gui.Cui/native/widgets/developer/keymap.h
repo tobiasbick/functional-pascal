@@ -10,12 +10,14 @@
  * @param bindings_count Number of bindings.
  * @param categories Category names referenced by binding category indices.
  * @param categories_count Number of category names.
- * @param modifiers Current native modifier bitmask.
+ * @param modifiers Current modifier bitmask, or -1 for the retained native selection.
  * @param hide_function_row Nonzero to omit function keys.
  * @param width_kind FPAS extent kind.
  * @param width Width basis for that extent.
- * @param enabled Nonzero to accept input outside disabled scopes.
- * @param out Receives index as proposed modifiers, action as clicked binding
- * index (or -1), and count as the number of conflicts. */
-CUI_API void fpas_cui_keymap(cui_ctx *ui, const char *id, const cui_keymap_binding * bindings, int bindings_count, const char *const * categories, int categories_count, int modifiers, int hide_function_row, int width_kind, float width, int enabled, fpas_dev_result * out);
+ * @param flags Bit 0 enables input. Bit 1 requests focus for the modifier selector.
+ * @param out Receives the current or proposed modifier mask, clicked CUI key
+ * code or CUI_KEY_NONE, conflict count and modifier-change flag. */
+CUI_API void fpas_cui_keymap(cui_ctx *ui, const char *id, const cui_keymap_binding *bindings, int bindings_count,
+    const char *const *categories, int categories_count, int modifiers, int hide_function_row,
+    int width_kind, float width, int flags, fpas_dev_result *out);
 #endif

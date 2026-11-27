@@ -21,16 +21,16 @@ public sealed record CuiDevTestItem(string Name, int Depth, int Status, float Du
 /// <param name="SourceFirst">Source First supplied to CUI.</param>
 public sealed record CuiDevStackFrame(string? FunctionName, string? File, int Line, int Column, bool External, string[] Source, int SourceFirst);
 
-/// <summary>Describes an input row for a native developer widget.</summary>
-/// <param name="Name">Name supplied to CUI.</param>
-/// <param name="Days">Days supplied to CUI.</param>
+/// <summary>Describes one service's availability history.</summary>
+/// <param name="Name">Name shown above the daily bars.</param>
+/// <param name="Days">Daily availability from oldest to newest. Negative values represent missing data.</param>
 public sealed record CuiDevService(string Name, float[] Days);
 
-/// <summary>Describes an input row for a native developer widget.</summary>
-/// <param name="Name">Name supplied to CUI.</param>
-/// <param name="Counts">Counts supplied to CUI.</param>
-/// <param name="Tone">Tone supplied to CUI.</param>
-public sealed record CuiDevSeries(string Name, float[] Counts, int Tone);
+/// <summary>Describes one series of event counts in a time histogram.</summary>
+/// <param name="Name">Name shown in the legend and hover labels.</param>
+/// <param name="Counts">One count per bucket, or null for all zeros.</param>
+/// <param name="Tone">Native tone from zero through eight. Zero uses the series palette.</param>
+public sealed record CuiDevSeries(string Name, float[]? Counts, int Tone);
 
 /// <summary>Describes an input row for a native developer widget.</summary>
 /// <param name="Path">Path supplied to CUI.</param>

@@ -6,7 +6,6 @@ uses Fpas.Ui.Gui.Scrolls as Scrolls;
 uses Fpas.Ui.Gui.Toasts as Toasts;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Mvu.Composition as C;
-uses Fpas.Ui.Widgets.Developer.Terminals as TerminalWidget;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
@@ -180,16 +179,14 @@ begin
           Code := Child.Model;
         end with, Child.Commands
       );
-    when G.Msg.Files(Files.Msg.Terminal(TerminalWidget.Event.Interrupt)):
-      return new Mvu.Transition of (G.Model, G.Msg)(
-        State,
-        [Toasts.Show of G.Msg(Strings.Get('Text.Interrupted'))]
-      );
     when G.Msg.Files(const Value: Files.Msg):
+      const Child: Mvu.Transition of (Files.Model, G.Msg) := C.MapTransition of (Files.Model, Files.Msg, G.Msg)(
+        FileUpdate.Update(State.Files, Value), G.Msg.Files, 'files'
+      );
       return new Mvu.Transition of (G.Model, G.Msg)(
         State with
-          Files := FileUpdate.Update(State.Files, Value);
-        end with, []
+          Files := Child.Model;
+        end with, Child.Commands
       );
     when G.Msg.Planning(const Value: Planning.Msg):
       const Child: Mvu.Transition of (Planning.Model, G.Msg) := C.MapTransition of (Planning.Model, Planning.Msg, G.Msg)(
@@ -430,7 +427,7 @@ begin
         if State.Active = G.Page.Audio then
           Commands.Add(Mvu.CancelBackground of G.Msg(AudioClock.Id));
         elsif State.Active = G.Page.Motion or State.Active = G.Page.Voice or State.Active =
-          G.Page.AI or State.Active = G.Page.CanvasAndBars
+          G.Page.CanvasAndBars
         then
           Commands.Add(Mvu.CancelBackground of G.Msg(MotionClock.Id));
         elsif State.Active = G.Page.EditingTools then
@@ -466,13 +463,6 @@ begin
             MotionClock.Start of G.Msg(
               function(Seconds: float): G.Msg => G.Msg.Voice(Voice.Msg.Tick(Seconds)),
               function(Error: Sys.Exception): G.Msg => G.Msg.Preview, 50
-            )
-          );
-        elsif Value = G.Page.AI then
-          Commands.Add(
-            MotionClock.Start of G.Msg(
-              function(Seconds: float): G.Msg => G.Msg.AI(Ai.Msg.Tick(Seconds)),
-              function(Error: Sys.Exception): G.Msg => G.Msg.Preview
             )
           );
         elsif Value = G.Page.Disclosure then

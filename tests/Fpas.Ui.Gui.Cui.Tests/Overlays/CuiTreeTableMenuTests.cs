@@ -7,7 +7,7 @@ namespace Fpas.Ui.Gui.Cui.Tests.Overlays;
 /// <summary>Checks the native per-node context menu of the virtual tree table.</summary>
 public sealed class CuiTreeTableMenuTests
 {
-    /// <summary>Opens for the row under a right click, selects it, chooses by keyboard and reopens with Shift+F10.</summary>
+    /// <summary>Uses pointer and keyboard to copy the current row and releases input when disabled.</summary>
     [GuiTheory]
     [InlineData(CuiRenderer.Software)]
     [InlineData(CuiRenderer.OpenGl)]
@@ -15,10 +15,11 @@ public sealed class CuiTreeTableMenuTests
     {
         using var window = new CuiWindow("Tree table menu", 600, 400, renderer, continuous: true);
         window.SetReducedMotion(true);
-        string[] labels = ["src", "main.c", "README.md"];
+        string[] labels = ["src", "main.c", "résumé-λ.txt"];
         int[] parents = [-1, 0, -1];
         uint[] flags = [2, 0, 0];
         int menuNode = -1;
+        int activated = -1;
         Draw();
         var row = window.GetControlRectangle("row/2");
         var point = new CuiRectangle { X = row.X + 24, Y = row.Y + row.Height / 2 };
@@ -32,10 +33,11 @@ public sealed class CuiTreeTableMenuTests
         Assert.Equal(4u, flags[2] & 4u);
         var table = window.GetControlRectangle("menu");
         Assert.True(table.Y <= row.Y && table.Y + table.Height >= row.Y + row.Height);
-        Assert.True(window.GetControlRectangle("menu/open").Width > 0);
+        Assert.True(window.GetControlRectangle("menu/copy").Width > 0);
 
         Draw(key: 10);
         Assert.Equal(0, Draw(key: 2).Choice);
+        Assert.Equal(labels[2], window.ReadClipboardText());
         Assert.False(Draw().Open);
 
         Draw(key: 65, modifiers: 1);
@@ -44,11 +46,18 @@ public sealed class CuiTreeTableMenuTests
         Draw(key: 3);
         Assert.False(Draw().Open);
 
+        Draw(key: 65, modifiers: 1);
+        Assert.True(Draw().Open);
+        Assert.False(Draw(menuEnabled: false).Open);
+        Assert.False(Draw(key: 2).Open);
+        Assert.Equal(2, activated);
+
         Draw(point, enabled: false);
         Assert.False(Draw(point, right: true, enabled: false).Open);
         Assert.False(Draw(point, right: false, enabled: false).Open);
 
-        CuiMenuResult Draw(CuiRectangle? pointer = null, bool? right = null, int key = 0, int modifiers = 0, bool enabled = true)
+        CuiMenuResult Draw(CuiRectangle? pointer = null, bool? right = null, int key = 0, int modifiers = 0,
+            bool enabled = true, bool menuEnabled = true)
         {
             Assert.True(window.NextFrame());
             window.MovePointer(pointer?.X ?? -1, pointer?.Y ?? -1);
@@ -60,10 +69,11 @@ public sealed class CuiTreeTableMenuTests
                 flags, state, 0, 0, 32, enabled ? 1 : 0);
             for (int index; (index = window.NextTreeTableRow(i => $"row/{i}")) >= 0;)
                 window.TreeTableName(labels[index], "", null);
-            window.EndTreeTable();
-            bool open = window.BeginTreeTableMenu("tree", enabled, out menuNode);
-            CuiMenuEntry[] entries = open ? [new(CuiMenuEntryKind.Action, "open", "Open")] : [];
-            var result = window.EndTreeTableMenu(entries, open ? ["menu", "menu/open"] : ["menu"]);
+            activated = window.EndTreeTable().Activated;
+            bool open = window.BeginTreeTableMenu("tree", enabled && menuEnabled, out menuNode);
+            CuiMenuEntry[] entries = open ? [new(CuiMenuEntryKind.Action, "copy", "Copy name")] : [];
+            var result = window.EndTreeTableMenu(entries, open ? ["menu", "menu/copy"] : ["menu"]);
+            if (result.Choice == 0) window.WriteClipboardText(labels[menuNode]);
             window.EndColumn();
             window.Present();
             return result;

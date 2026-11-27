@@ -2,6 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.Blame;
 
+uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
@@ -62,9 +63,24 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
-  if Enabled and (Result.Action >= 0) then
-    Frame.Messages.Add(Changed(new D.Event(Result.Action)));
+  const Hovered: string := Result.Hover.ToString();
+  var Previous: string := '-1';
+  for Control: App.Control in Frame.Previous do
+    if Control.Id = Id and Control.Role = Role then
+      Previous := Control.Value;
+      break;
+    end if;
+  end for;
+
+  P.Root of TMsg(
+    Frame, Id, Role, '', Enabled, if Frame.AcceptInput then
+      Hovered
+    else
+      Previous
+    end if
+  );
+  if Enabled and (Result.Action >= 0 or Previous <> Hovered) then
+    Frame.Messages.Add(Changed(new D.Event(Result.Action, Result.Hover)));
   end if;
 end procedure;
 

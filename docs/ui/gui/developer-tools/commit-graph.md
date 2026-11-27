@@ -33,15 +33,22 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Parent / MergeParent` | Pass the row index of each parent or minus one when absent. |
-| `Hash / Message / Author / Date / Refs` | Pass the hash and message plus optional author, formatted date and ref names. |
-| `Width / Height / Enabled` | Fill / 0 / true. Zero uses the native height. |
+| `Parent / MergeParent` | Pass the index of each parent later in the array. Use minus one when absent. |
+| `Hash / Message` | Pass the full hash and message. CUI shows the short hash and the first message line. |
+| `Author / Date / Refs` | Pass nullable author, formatted date and comma-separated references. Prefix a tag with `tag: `. |
+| `Width / Height / Enabled` | Fill / 0 / true. Height zero uses 320 logical units. Minus one fills the available space. |
+| `Selection` | Pass the selected row, minus one for none, or null to let CUI retain the selection. |
+| `Hovered` | null. Set minus one to start tracking hover. Store the last `Event.Hovered` value to receive changes only. |
+
+Below 560 logical units, CUI hides the author and date columns. Only the
+selected row shows references at that width.
 
 ## Interaction
 
-CUI builds the visible rows as the history scrolls. Up and Down change
-selection. Enter or double-click activates a row. Use the proposed index
-to resolve the supplied commit.
+CUI builds visible rows as the history scrolls. Click a row or use Up and Down
+to select a commit. Home and End select the first and last rows. Enter or
+double-click activates a row. Use the zero-based index to resolve the commit.
+Request focus with the graph's stable ID.
 
 ## See also
 
@@ -62,3 +69,4 @@ to resolve the supplied commit.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
   - [commit_graph.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/commit_graph.c)
   - [commit_graph.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/commit_graph.h)
+- [Native graph tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/developer_graphs.c)

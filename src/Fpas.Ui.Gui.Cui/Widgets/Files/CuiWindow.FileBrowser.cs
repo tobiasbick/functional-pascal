@@ -30,10 +30,16 @@ public sealed partial class CuiWindow
         CheckFrame();
         CheckExtent(widthKind, width, nameof(width));
         CheckExtent(heightKind, height, nameof(height));
-        if (places.Length > 6 || maximum is < 0 or > 100_000)
+        ArgumentNullException.ThrowIfNull(places);
+        if (maximum is < 0 or > 100_000)
             throw new ArgumentOutOfRangeException(nameof(maximum));
         Utf8.Validate(filter, nameof(filter));
-        foreach (string place in places) Utf8.Validate(place, nameof(places));
+        foreach (string place in places)
+        {
+            Utf8.Validate(place, nameof(places));
+            if (Utf8.Encoding.GetByteCount(place) >= 1024)
+                throw new ArgumentOutOfRangeException(nameof(places), "A place path exceeds the native buffer.");
+        }
         using var source = new CuiFileSource(list);
         Span<byte> path = stackalloc byte[1024];
         CuiFileSource.WritePath(folder, path);

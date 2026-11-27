@@ -13,8 +13,9 @@ argument of the normal `Canvas` constructor. See the
 Positions and explicit sizes are logical points. CUI handles display DPI.
 `FontScale()` is the user text multiplier; apply it to explicit text sizes when
 desired. `Measure` uses the exact supplied font role and logical size, matching
-`Text`. `Time()` and `DeltaTime()` expose the native frame clock in seconds;
-request another frame with `Frames.Redraw` when animation needs it.
+`Text`. `Time()` returns the cumulative native clock in seconds.
+`DeltaTime()` returns the time since the preceding frame, capped at 0.25 seconds
+for animation. Request another frame with `Frames.Redraw` when animation needs it.
 `Disabled()` reports whether the canvas was built inside a disabled scope,
 so custom painting can follow the surrounding control state. `Focused()` reports
 native focus ownership. Use `FocusVisible()` to decide when to draw a keyboard

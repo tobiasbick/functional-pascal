@@ -34,14 +34,21 @@ end unit;
 | --- | --- |
 | `Severity` | 0 error, 1 warning, 2 info, 3 hint. |
 | `File / Line / Column` | Use null for an entry without a file. Lines and columns are one-based. Zero omits a location component. |
-| `Width / Height / HideToolbar / Enabled` | Fill / 0 / false / true. HideToolbar hides severity filters and search. |
+| `Source / Code` | Optional diagnostic origin and identifier. |
+| `Width / Height` | Fill / 0. Zero height uses 300 logical units. Negative height fills the parent. |
+| `HideToolbar / Enabled` | false / true. `HideToolbar` hides severity filters and search. |
 
 ## Interaction
 
-Up and Down move selection. Use Left and Right to fold or unfold groups.
-Enter or double-click activates a diagnostic. Resolve `Activated` against
-the supplied array and open the source location in your application.
-`Shown` counts entries matching the filters.
+Up and Down move selection. Home and End go to the first and last rows.
+Use Left and Right to fold or unfold groups. Enter toggles a focused group.
+Enter or double-click on a diagnostic activates it. A focus request for the
+panel targets the list.
+
+Resolve `Activated` against the input array to open the source location.
+The widget also reports selection and filter changes with `Activated` set
+to -1. `Shown` counts diagnostics that match the filters, including folded
+groups. `Selected` is -1 when a group is selected.
 
 ## See also
 

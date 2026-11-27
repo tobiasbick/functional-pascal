@@ -2,6 +2,7 @@
 
 unit GuiGallery.Pages.Developer.Samples;
 
+uses Fpas.Ui.Gui.TraceGeometry as Trace;
 uses Fpas.Ui.Widgets.Developer.CommitGraphs as C;
 uses Fpas.Ui.Widgets.Developer.DependencyGraphs as G;
 uses Fpas.Ui.Widgets.Developer.Keymaps as K;
@@ -434,12 +435,12 @@ const FrameSpans: array of T.Span := [
   new T.Span('Frame', 0.0004, 0.0151, 0, 0, 0U),
   new T.Span('Input', 0.0006, 0.0019, 0, 1, 0U),
   new T.Span('Update', 0.0021, 0.0092, 0, 1, 0U),
-  new T.Span('Layout', 0.0094, 0.0121, 0, 1, 0U),
-  new T.Span('Paint', 0.0123, 0.0149, 0, 1, 0U),
   new T.Span('Physics', 0.0023, 0.0051, 0, 2, 0U),
   new T.Span('Animation', 0.0053, 0.0068, 0, 2, 0U),
   new T.Span('Scripts', 0.0070, 0.0090, 0, 2, 0U),
+  new T.Span('Layout', 0.0094, 0.0121, 0, 1, 0U),
   new T.Span('Measure', 0.0095, 0.0108, 0, 2, 0U),
+  new T.Span('Paint', 0.0123, 0.0149, 0, 1, 0U),
   new T.Span('Record', 0.0124, 0.0139, 0, 2, 0U),
   new T.Span('Submit', 0.0152, 0.0163, 1, 0, 0U),
   new T.Span('Upload', 0.0153, 0.0157, 1, 1, 0U),
@@ -453,22 +454,16 @@ const FrameSpans: array of T.Span := [
 function TraceSpans(): array of T.Span;
 begin
   const Values: Lists.List of T.Span := new Lists.List of T.Span(3 * FrameSpans.Length);
-  for Lane: int := 0 to 4 do
-    for Depth: int := 0 to 2 do
-      for Frame: int := 0 to 2 do
-        const Time: double := Frame * 0.0166;
-        for Entry: T.Span in FrameSpans do
-          if Entry.Track = Lane and Entry.Depth = Depth then
-            Values.Add(
-              new T.Span(Entry.Name, Time + Entry.Start, Time + Entry.End, Lane, Depth, 0U)
-            );
-          end if;
-        end for;
-      end for;
+  for Frame: int := 0 to 2 do
+    const Time: double := Frame * 0.0166;
+    for Entry: T.Span in FrameSpans do
+      Values.Add(
+        new T.Span(Entry.Name, Time + Entry.Start, Time + Entry.End, Entry.Track, Entry.Depth, 0U)
+      );
     end for;
   end for;
 
-  return Values.ToArray();
+  return Trace.SortSpans(Values.ToArray()).Spans;
 end function;
 
 // Spans in native track, depth and time order.

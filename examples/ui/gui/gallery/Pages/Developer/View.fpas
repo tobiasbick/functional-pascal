@@ -4,7 +4,7 @@ unit GuiGallery.Pages.Developer.View;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Graphics as Graphics;
-uses Fpas.Ui.Gui.Internal.Widgets.Developer.QueryBuilder as NativeQuery;
+uses Fpas.Ui.Gui.QueryBuilders as NativeQuery;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Developer.CommitGraphs as C;
 uses Fpas.Ui.Widgets.Developer.DependencyGraphs as G;
@@ -15,7 +15,6 @@ uses Fpas.Ui.Widgets.Developer.Pipelines as J;
 uses Fpas.Ui.Widgets.Developer.ProblemsPanels as P;
 uses Fpas.Ui.Widgets.Developer.QueryBuilders as Q;
 uses Fpas.Ui.Widgets.Developer.TraceViewers as T;
-uses Fpas.Ui.Widgets.Motion.Motion as Font;
 uses Fpas.Ui.Widgets.Pickers.SchedulePickers as S;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 

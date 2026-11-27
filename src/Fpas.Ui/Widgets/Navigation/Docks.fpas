@@ -9,8 +9,8 @@ uses Fpas.Ui.Widgets.Charts.Charts as C;
 // ## Type parameters
 // - `TMsg`: Application message type.
 public type Entry of TMsg = variant
-  // An icon and label with an activation message.
-  Item(Icon: string; Label: string; Activate: TMsg; Color: C.Color; Running: bool; Badge: int);
+  // An icon and tooltip with an activation message. Null omits the icon or tooltip.
+  Item(Icon: string?; Label: string?; Activate: TMsg; Color: C.Color; Running: bool; Badge: int);
   // A separator between items.
   Separator;
 end variant;

@@ -7,6 +7,7 @@ typedef struct {
     cui__tt_slot previous_tree;
     cui_tree_node *nodes;
     const char **labels;
+    const uint8_t *drop_permissions;
     cui_table_sort sort;
     int cursor;
 } fpas_tree_frame;
@@ -36,16 +37,27 @@ static const char *fpas_tree_label(void *user, int node) {
     return frame->labels[node];
 }
 
+static bool fpas_tree_can_drop(void *user, int target, int where) {
+    const fpas_tree_frame *frame = user;
+    return (frame->drop_permissions[target] & (1u << where)) != 0;
+}
+
 void *fpas_cui_tree_table_begin(cui_ctx *ui, const char *id,
     const char *const *titles, const float *widths, const int *column_flags, int columns,
     const char *const *labels, const int *parents, const uint32_t *flags, int count,
-    int *state, int height_kind, float height, float row_height, int options, int *node) {
+    int *state, int height_kind, float height, float row_height, int width_kind, float width,
+    int options, const uint8_t *drop_permissions, int *node) {
     fpas_tree_frame *frame = cui__frame_alloc(ui, sizeof *frame);
     *frame = (fpas_tree_frame){ .node = ui->node_count, .count = count,
         .previous_grid = ui->building.grid, .previous_tree = *cui__tt_slot_get(ui),
         .sort = { state[0], state[1] != 0 }, .cursor = state[2] };
     frame->nodes = cui__frame_alloc(ui, (size_t)(count ? count : 1) * sizeof *frame->nodes);
     frame->labels = cui__frame_alloc(ui, (size_t)(count ? count : 1) * sizeof *frame->labels);
+    if (drop_permissions && count) {
+        void *copy = cui__frame_alloc(ui, (size_t)count);
+        memcpy(copy, drop_permissions, (size_t)count);
+        frame->drop_permissions = copy;
+    }
     int *heads = cui__frame_alloc(ui, ((size_t)count + 1) * sizeof *heads);
     for (int k = 0; k <= count; ++k) heads[k] = -1;
     for (int k = count - 1; k >= 0; --k) {
@@ -65,10 +77,13 @@ void *fpas_cui_tree_table_begin(cui_ctx *ui, const char *id,
     }
     fpas_grid_input(ui, key, enabled, options & 8);
     const cui_tree_table_opts settings = {
-        .height = fpas_extent(height_kind, height), .row_height = row_height,
+        .width = fpas_extent(width_kind, width), .height = fpas_extent(height_kind, height),
+        .row_height = row_height,
         .root = heads[0], .sort = state[0] >= -1 ? &frame->sort : NULL,
         .cursor = &frame->cursor, .guides = (options & 2) != 0,
-        .label = fpas_tree_label, .user = frame
+        .label = options & 16 ? NULL : fpas_tree_label, .user = frame,
+        .draggable = enabled && (options & 4),
+        .can_drop = frame->drop_permissions ? fpas_tree_can_drop : NULL
     };
     const cui_id focus = ui->focus;
     const float dx = ui->scroll_dx, dy = ui->scroll_dy;
@@ -100,7 +115,7 @@ int fpas_cui_tree_table_name(cui_ctx *ui, const char *label, const char *icon) {
 }
 
 void fpas_cui_tree_table_end(cui_ctx *ui, void *handle, uint32_t *flags,
-    int *state, int *events, int *load) {
+    int *state, int *events, int *load, int *dropped) {
     fpas_tree_frame *frame = handle;
     const cui_tree_table_events result = cui_tree_table_end(ui);
     for (int k = 0; k < frame->count; ++k) flags[k] = frame->nodes[k].flags;
@@ -109,7 +124,15 @@ void fpas_cui_tree_table_end(cui_ctx *ui, void *handle, uint32_t *flags,
     state[2] = frame->cursor;
     events[0] = result.activated;
     events[1] = result.load_count;
+    events[2] = result.expanded;
+    events[3] = result.collapsed;
+    events[4] = result.selection_changed;
+    events[5] = result.sort_changed;
+    events[6] = result.drop_count;
+    events[7] = result.drop_target;
+    events[8] = result.drop_where;
     for (int k = 0; k < result.load_count; ++k) load[k] = result.load[k];
+    for (int k = 0; k < result.drop_count; ++k) dropped[k] = result.dropped[k];
     cui_pop_disabled(ui);
     *cui__tt_slot_get(ui) = frame->previous_tree;
     fpas_grid_restore(ui, frame->node, frame->previous_grid);

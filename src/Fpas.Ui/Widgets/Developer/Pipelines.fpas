@@ -25,6 +25,8 @@ public type Event = record
   public Selection: int;
   // Clicked zero-based index, or minus one.
   public Clicked: int;
+  // Hovered zero-based index, or minus one.
+  public Hovered: int := -1;
 end record;
 
 // Native layout and interaction options.
@@ -33,6 +35,8 @@ public type Options = record
   public Width: L.Extent := L.Extent.Fill;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
+  // Model-owned last reported hover. Null reports hover only with another change.
+  public Hovered: int? := null;
 end record;
 
 // Builds the native Pipeline widget.
@@ -42,7 +46,7 @@ end record;
 // - `Id`: Stable widget identity.
 // - `Stages`: Model-owned stages data.
 // - `Jobs`: Model-owned jobs data.
-// - `Selection`: Selected zero-based index, or minus one.
+// - `Selection`: Selected index, minus one for no current selection, or null to omit selection styling.
 // - `Changed`: Maps an action or edit to a message.
 // - `Settings`: Optional native settings.
 // ## Returns
@@ -51,7 +55,7 @@ public function Pipeline of TMsg(
   Id: string;
   Stages: array of string;
   Jobs: array of Job;
-  Selection: int;
+  Selection: int?;
   Changed: function(Event): TMsg;
   Settings: Options? := null
 ): E.Element of TMsg;

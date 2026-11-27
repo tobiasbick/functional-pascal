@@ -11,7 +11,7 @@ public type Pair = record
   public Key: string;
   // Value supplied to CUI.
   public Value: string;
-  // Whether the widget accepts interaction.
+  // Whether the pair is active in the application's data.
   public Enabled: bool;
   // Secret supplied to CUI.
   public Secret: bool;
@@ -27,15 +27,15 @@ end record;
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Fill;
-  // Maximum entries or UTF-8 bytes, as applicable.
+  // Maximum pairs.
   public Capacity: int := 16;
-  // Key Placeholder supplied to CUI.
-  public KeyPlaceholder: string := '';
-  // Value Placeholder supplied to CUI.
-  public ValuePlaceholder: string := '';
-  // Hide Toggles supplied to CUI.
+  // Caption for an empty key. Null uses the native caption.
+  public KeyPlaceholder: string? := null;
+  // Caption for an empty value. Null uses the native caption.
+  public ValuePlaceholder: string? := null;
+  // Hide the active-pair checkboxes.
   public HideToggles: bool := false;
-  // Hide Secrets supplied to CUI.
+  // Hide the lock controls that change whether a value is masked.
   public HideSecrets: bool := false;
   // Disallow edits.
   public ReadOnly: bool := false;

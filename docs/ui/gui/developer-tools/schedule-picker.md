@@ -33,15 +33,17 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Expression` | The fields are minute, hour, day of month, month and day of week. |
-| `Capacity / Width / Enabled` | 63 / Fill / true. Capacity controls the expression buffer. |
-| `Now / Utc / NextCount` | 0 / false / 3. Supply Unix seconds to override the reference clock. Zero NextCount hides the preview. |
+| `Capacity / Width / Enabled` | 63 / Fill / true. Capacity counts UTF-8 bytes and must be at least 11. |
+| `Now` | 0. Zero uses the clock. Supply Unix seconds within the CLR date range to set a reference time. |
+| `Utc` | false. CUI uses the local offset at the reference time for the preview. Set true to use UTC. |
+| `NextCount` | 3. Set the count from zero through ten. Zero hides the list and retains the first-run result. |
 
 ## Interaction
 
 Edit a preset or enter a custom expression. Keep the proposed expression
-as a draft. Use `Valid` before applying it and `Next` for the next run in
-Unix seconds, or zero if none is available. Your application owns job
-execution.
+as a draft. If an edit exceeds the capacity, the picker retains the current
+expression. Use `Valid` before applying it and `Next` for the next run in Unix
+seconds, or zero if none is available. Your application owns job execution.
 
 ## See also
 

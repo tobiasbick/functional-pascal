@@ -4,12 +4,12 @@ unit Fpas.Ui.Widgets.Ai.Sources;
 
 // A cited document.
 public type Item = record
-  // Displayed URL and source of the domain label.
-  public Url: string;
-  // Title, or empty to display the domain.
-  public Title: string := '';
-  // Excerpt shown in a citation preview.
-  public Snippet: string := '';
+  // Optional URL used for the domain label and source tooltip.
+  public Url: string? := null;
+  // Title, or null to use the domain in a source card.
+  public Title: string? := null;
+  // Optional excerpt shown in a citation preview.
+  public Snippet: string? := null;
 end record;
 
 end unit;

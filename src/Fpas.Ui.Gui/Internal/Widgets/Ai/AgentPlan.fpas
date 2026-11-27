@@ -44,7 +44,7 @@ begin
     Enabled,
     P.Tracker of TMsg(Frame, Id, Role, Keys)
   );
-  P.Root of TMsg(Frame, Id, Role, Settings.Title, false, '');
+  P.Root of TMsg(Frame, Id, Role, Settings.Title ?? 'Plan', false, '');
   for Index: int := 0 to Steps.Length - 1 do
     P.Part of TMsg(Frame, Id, Role, Keys[Index], Steps[Index].Title, Enabled, '');
   end for;

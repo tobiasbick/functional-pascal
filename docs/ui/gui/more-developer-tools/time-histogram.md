@@ -36,14 +36,25 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Start / Bucket / Buckets` | Start is Unix seconds. Bucket is the duration in seconds and Buckets is the number of buckets. |
-| `Series.Counts` | Supply one nonnegative count per bucket for each series. |
-| `Utc / Width / Height / Enabled` | false / Fill / 0 / true. Utc formats axis and tooltip times in UTC. |
+| `Series.Name` | Supply the name shown in the legend and hover labels. |
+| `Series.Counts` | Supply one nonnegative count per bucket, or null for all zeros. |
+| `Series.Tone` | Zero uses the series palette. Values one through eight use CUI semantic tones. |
+| `Utc` | False uses local time labels. True uses UTC labels. |
+| `Width` | Fill. |
+| `Height` | Zero uses the CUI plot height of 140 logical units. |
+| `Enabled` | True. Set to false to suppress input. |
+| `Hovered` | Null. To receive hover changes, pass the last reported bucket index. |
 
 ## Interaction
 
-Drag across the bars to choose a range. Click to clear it. Save the
-proposed start and end timestamps. A cleared range has zero at both
-ends. Hover a bucket to see its time and counts.
+Drag across the bars to select whole buckets. Click to clear the interval.
+When `Event.SelectionChanged` is true, save the proposed endpoints. Both
+endpoints are zero for a cleared interval.
+
+Hover a bucket to see its time and counts. To track hover, initialize
+`Settings.Hovered` to minus one and save `Event.Hovered` in the model. The
+index is zero-based. Minus one means the pointer is outside the buckets or
+a selection drag is in progress.
 
 ## See also
 

@@ -2,48 +2,15 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.QueryBuilder;
 
-uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
+uses Fpas.Ui.Gui.Internal.Data.QueryData as Data;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Developer.QueryBuilders as D;
 
 uses System as Sys;
 uses System.Collections.Generic as Lists;
-
-function PackField(Items: array of D.Field): array of CuiDeveloper.CuiDevField;
-begin
-  const Native: Lists.List of CuiDeveloper.CuiDevField := new Lists.List of CuiDeveloper.CuiDevField(
-    Items.Length
-  );
-  for Entry: D.Field in Items do
-    Native.Add(new CuiDeveloper.CuiDevField(Entry.Name, Entry.Kind, Entry.Choices));
-  end for;
-
-  return Native.ToArray();
-end function;
-
-function PackRule(Items: array of D.Rule): array of CuiDeveloper.CuiDevRule;
-begin
-  const Native: Lists.List of CuiDeveloper.CuiDevRule := new Lists.List of CuiDeveloper.CuiDevRule(
-    Items.Length
-  );
-  for Entry: D.Rule in Items do
-    Native.Add(
-      new CuiDeveloper.CuiDevRule(
-        Entry.Depth,
-        Entry.Group,
-        Entry.Any,
-        Entry.Field,
-        Entry.Operator,
-        Entry.Value
-      )
-    );
-  end for;
-
-  return Native.ToArray();
-end function;
 
 // Presents the native QueryBuilder widget.
 // ## Type parameters
@@ -68,10 +35,10 @@ begin
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Width: S.NativeExtent := S.Extent(Settings.Width);
-  const Before: array of CuiDeveloper.CuiDevRule := PackRule(RulesData);
+  const Before: array of CuiDeveloper.CuiDevRule := Data.Rules(RulesData);
   const Result: array of CuiDeveloper.CuiDevRule := Frame.Window.QueryBuilder(
     Token,
-    PackField(Fields),
+    Data.Fields(Fields),
     Before,
     Settings.Capacity,
     Settings.MaxDepth,
@@ -92,16 +59,5 @@ begin
     Frame.Messages.Add(Changed(new D.Event(Values.ToArray())));
   end if;
 end procedure;
-
-// Formats the query with CUI's field names and operators.
-// ## Parameters
-// - `Fields`: Schema used by the builder.
-// - `RulesData`: Conditions and groups in display order.
-// ## Returns
-// Formatted native query.
-public function Description(Fields: array of D.Field; RulesData: array of D.Rule): string;
-begin
-  return Cui.CuiWindow.DescribeQuery(PackField(Fields), PackRule(RulesData));
-end function;
 
 end unit;

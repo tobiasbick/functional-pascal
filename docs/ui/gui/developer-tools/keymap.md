@@ -36,13 +36,17 @@ end unit;
 | --- | --- |
 | `Binding.Modifiers / Key` | Use the same modifier and key codes as the [shortcut recorder](../smart-inputs/shortcut-recorder.md). |
 | `Binding.Action / Category` | Pass the action label and a zero-based category index. |
+| `Categories / Modifiers` | Legend labels and a model-owned modifier mask. Pass null to keep the modifier selection in CUI. |
 | `Width / HideFunctionRow / Enabled` | Fill / false / true. Set HideFunctionRow to omit the function keys. |
 
 ## Interaction
 
-Change the modifier selection to browse bindings. Hover a key for all its
-actions. Store `Event.Modifiers` and use `Event.Key` to open binding details.
-`Conflicts` counts bindings that repeat a combination.
+Focus the modifier selector to browse its presets with Left and Right. A
+focus request for the keymap targets this selector. Use the pointer to
+choose a keycap or hover over it for its actions. Store `Event.Modifiers`
+when providing the mask from the model. Use `Event.Key` to open binding details.
+`Conflicts` counts bindings
+that repeat a combination.
 
 ## See also
 

@@ -2,6 +2,7 @@
 
 unit GuiGallery.Pages.MoreDeveloper.State;
 
+uses Fpas.Ui.Gui.UrlParameters as Urls;
 uses Fpas.Ui.Widgets.Charts.TimeHistograms as G;
 uses Fpas.Ui.Widgets.Developer.ApiExplorers as A;
 uses Fpas.Ui.Widgets.Developer.Blames as B;
@@ -29,12 +30,9 @@ public type Model = record
   // Selected HTTP method index.
   public Method: int := 1;
   // URL displayed in the HTTP example.
-  public Url: string := 'https://api.example.com/v1/orders?status=open&limit=20';
+  public Url: string := Samples.RequestUrl;
   // Editable query parameters.
-  public Parameters: array of K.Pair := [
-    new K.Pair('status', 'open', true, false),
-    new K.Pair('limit', '20', true, false)
-  ];
+  public Parameters: array of K.Pair := Urls.Parse(Samples.RequestUrl, Samples.ParameterCapacity);
   // Selected API endpoint.
   public Endpoint: int := 2;
   // Feature toggles and rollout percentages.

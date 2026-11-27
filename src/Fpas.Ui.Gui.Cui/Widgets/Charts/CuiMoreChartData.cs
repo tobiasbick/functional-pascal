@@ -37,11 +37,11 @@ public sealed record CuiBarListOptions(int WidthKind = 1, float Width = 0, CuiCh
 /// <summary>Native concentric activity rings.</summary>
 /// <param name="Size">Logical diameter; zero selects the native default.</param>
 /// <param name="Thickness">Ring thickness; zero selects the native default.</param>
-/// <param name="Center">Literal center readout.</param>
-/// <param name="Caption">Literal caption below the center readout.</param>
+/// <param name="Center">Literal center readout. Null omits the readout and caption.</param>
+/// <param name="Caption">Literal caption. Null omits the caption space.</param>
 /// <param name="Legend">Show the native side legend.</param>
-public sealed record CuiActivityRingsOptions(float Size = 0, float Thickness = 0, string Center = "",
-    string Caption = "", bool Legend = false);
+public sealed record CuiActivityRingsOptions(float Size = 0, float Thickness = 0, string? Center = null,
+    string? Caption = null, bool Legend = false);
 
 /// <summary>A point in native scatter data units.</summary>
 /// <param name="X">Horizontal coordinate.</param>
@@ -60,13 +60,13 @@ public sealed record CuiScatterSeries(string Name, CuiPlotPoint[] Points, float[
 /// <param name="WidthKind">Native bridge width kind.</param>
 /// <param name="Width">Logical width or percentage.</param>
 /// <param name="Height">Logical height; zero selects the native default.</param>
-/// <param name="XLabel">Literal horizontal axis title.</param>
-/// <param name="YLabel">Literal vertical axis title.</param>
+/// <param name="XLabel">Literal horizontal axis title, or null to omit it.</param>
+/// <param name="YLabel">Literal vertical axis title, or null to omit it.</param>
 /// <param name="XFormat">Safe horizontal value format.</param>
 /// <param name="YFormat">Safe vertical value format.</param>
 /// <param name="Legend">Show the native series legend.</param>
 public sealed record CuiScatterOptions(int WidthKind = 1, float Width = 0, float Height = 0,
-    string XLabel = "", string YLabel = "", CuiChartFormat? XFormat = null, CuiChartFormat? YFormat = null, bool Legend = true);
+    string? XLabel = null, string? YLabel = null, CuiChartFormat? XFormat = null, CuiChartFormat? YFormat = null, bool Legend = true);
 
 /// <summary>A native gauge threshold and its semantic tone.</summary>
 /// <param name="To">Increasing upper threshold.</param>
@@ -116,7 +116,7 @@ public readonly record struct CuiCandle(float Open, float High, float Low, float
 /// <param name="WidthKind">Native bridge width kind.</param>
 /// <param name="Width">Logical width or percentage.</param>
 /// <param name="Height">Logical height; zero selects the native default.</param>
-/// <param name="Labels">Empty or one literal time caption per candle.</param>
+/// <param name="Labels">Empty or one optional time caption per candle.</param>
 /// <param name="Format">Safe price format; null keeps CUI's two decimal places.</param>
 /// <param name="Overlays">At most four line overlays; NaN samples are gaps.</param>
 /// <param name="Volume">Show native volume bars when any candle has volume.</param>
@@ -124,5 +124,5 @@ public readonly record struct CuiCandle(float Open, float High, float Low, float
 /// <param name="Up">Optional native rising-period color.</param>
 /// <param name="Down">Optional native falling-period color.</param>
 public sealed record CuiCandlestickOptions(int WidthKind = 1, float Width = 0, float Height = 0,
-    string[]? Labels = null, CuiChartFormat? Format = null, CuiChartSeries[]? Overlays = null,
+    string?[]? Labels = null, CuiChartFormat? Format = null, CuiChartSeries[]? Overlays = null,
     bool Volume = true, bool Ohlc = false, CuiChartColor Up = default, CuiChartColor Down = default);

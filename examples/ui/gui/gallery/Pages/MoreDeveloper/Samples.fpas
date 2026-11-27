@@ -13,6 +13,13 @@ uses Fpas.Ui.Widgets.Developer.Uptimes as U;
 
 uses System as Sys;
 
+// Initial URL for the editable request draft.
+public const RequestUrl: string := 'https://api.example.com/v1/orders?status=open&limit=20';
+// Maximum payload bytes in the native 256-byte URL buffer.
+public const RequestCapacity: int := 255;
+// Maximum number of query parameter rows shown by the example.
+public const ParameterCapacity: int := 8;
+
 // Original gallery sample data.
 public const Tests: array of X.Item := [
   new X.Item('layout', 0, 0, 0.0F, null),

@@ -8,7 +8,7 @@
  * @param id Stable composer identity.
  * @param draft Writable application draft using LF line endings.
  * @param capacity Draft buffer size in bytes, including its terminator.
- * @param placeholder Optional empty-draft caption.
+ * @param placeholder Empty-draft caption, or NULL for the native default.
  * @param attachments Array of attachment captions.
  * @param attachment_count Number of attachment captions.
  * @param models Available model records.
@@ -22,11 +22,11 @@
  * @param width Width basis for that extent.
  * @param flags Bit 0 enables input, bit 1 indicates busy, bit 2 shows the
  * microphone, and bit 3 indicates recording.
- * @param focus Requested field/send/microphone/cancel index (0 through 3),
- * or -1 for no request; absent controls cannot receive focus.
+ * @param focus Requested part index or -1. Absent parts cannot receive focus.
  * @param removed Receives the attachment removal proposal; initialize to -1.
- * @param nodes Receives four field/send/microphone/cancel node indices;
- * absent parts are -1. Node indices are valid only for the current frame.
+ * @param nodes Receives 6 + attachment_count node indices. The editor, send,
+ * microphone, cancel, attach and model controls precede the attachment remove
+ * controls in input order. Absent parts are -1. Indices are current-frame only.
  * @return Native CUI_COMPOSER_* event bitmask, or zero while disabled. */
 CUI_API int fpas_cui_composer(cui_ctx *ui, const char *id, char *draft, size_t capacity, const char *placeholder,
     const char *const *attachments, int attachment_count, const cui_model *models, int model_count, int *selected,

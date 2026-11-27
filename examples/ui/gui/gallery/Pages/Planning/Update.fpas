@@ -70,7 +70,7 @@ begin
       end with;
       if Event.Activated >= 0 then
         const Item: W.Appointment := Event.Events[Event.Activated];
-        return Notify(Next, Item.Title, Item.Detail);
+        return Notify(Next, Item.Title, Item.Detail ?? '');
       end if;
 
       return new A.Transition of (M.Model, M.Msg)(Next, []);
@@ -98,7 +98,7 @@ begin
       if Event.Activated >= 0 then
         return Notify(
           Next,
-          View.MonthEvents(Model.Today)[Event.Activated].Title,
+          View.MonthEventTitle(Event.Activated),
           'Opened from the month calendar'
         );
       end if;

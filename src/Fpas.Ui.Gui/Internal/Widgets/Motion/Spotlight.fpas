@@ -32,7 +32,7 @@ begin
   const Height: S.NativeExtent := S.Extent(Settings.Height);
   Frame.Window.BeginSpotlight(
     C.Token('spotlight', Id), Width.Kind, Width.Value, Height.Kind, Height.Value,
-    Settings.Padding, Settings.Gap, Colors.Color(Settings.Color), Settings.Beam
+    Settings.Padding, Settings.Gap, Colors.Color(Settings.Color), Settings.Beam, Frame.AcceptInput
   );
   for Child: E.Element of TMsg in Children do
     Visit(Child, Frame, false, L.Alignment.Default);

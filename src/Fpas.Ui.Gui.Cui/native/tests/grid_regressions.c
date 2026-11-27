@@ -130,7 +130,7 @@ static bool tree_lazy_load(void) {
     const float widths[] = { 240, 100 };
     const int column_flags[] = { 0, 2 }, parents[] = { -1, 0 };
     uint32_t flags[] = { CUI_TREE_HAS_CHILDREN, 0 };
-    int state[] = { -2, 0, 0 }, events[2], load[64];
+    int state[] = { -2, 0, 0 }, events[9], load[64];
     bool valid = true;
     for (int frame = 0; frame < 5; ++frame) {
         if (frame == 1 || frame == 3) press(ui, CUI_KEY_RIGHT);
@@ -140,16 +140,16 @@ static bool tree_lazy_load(void) {
         if (frame == 0) fpas_cui_request_focus(ui, "tree");
         if (frame == 2) flags[0] &= ~(uint32_t)CUI_TREE_LOADING;
         void *tree = fpas_cui_tree_table_begin(ui, "tree", titles, widths, column_flags, 2,
-            labels, parents, flags, frame < 2 ? 1 : 2, state, 2, 160, 32, 3, &root);
+            labels, parents, flags, frame < 2 ? 1 : 2, state, 2, 160, 32, 1, 0, 3, NULL, &root);
         for (int row; (row = fpas_cui_tree_table_row(ui, &part)) >= 0;) {
             fpas_cui_tree_table_name(ui, labels[row], NULL);
             fpas_cui_data_grid_cell(ui, row == 0 ? "1.2 MB" : "24 KB");
             ++visible;
         }
-        fpas_cui_tree_table_end(ui, tree, flags, state, events, load);
+        fpas_cui_tree_table_end(ui, tree, flags, state, events, load, NULL);
         cui_end_frame(ui);
         if (frame == 1)
-            valid &= visible == 1 && events[1] == 1 && load[0] == 0 &&
+            valid &= visible == 1 && events[1] == 1 && load[0] == 0 && events[2] == 0 &&
                 (flags[0] & CUI_TREE_LOADING) != 0;
         if (frame == 2) valid &= visible == 2 && events[1] == 0;
         if (frame == 3) valid &= state[2] == 1 && (flags[1] & CUI_TREE_SELECTED) != 0;
@@ -157,6 +157,52 @@ static bool tree_lazy_load(void) {
     }
     cui_destroy(ui);
     if (!valid) fprintf(stderr, "Tree table lazy-load or keyboard navigation failed.\n");
+    return valid;
+}
+
+static bool tree_drag(bool allowed) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 520, 320, 1);
+    cui_set_reduced_motion(ui, true);
+    const char *titles[] = { "Name" }, *labels[] = { "src", "button.c", "output" };
+    const float widths[] = { 240 };
+    const int columns[] = { 0 }, parents[] = { -1, 0, -1 };
+    const uint8_t permissions[] = { 0, 0, allowed ? 2 : 0 };
+    uint32_t flags[] = { CUI_TREE_OPEN | CUI_TREE_SELECTED, CUI_TREE_SELECTED, CUI_TREE_HAS_CHILDREN };
+    int state[] = { -2, 0, 0 }, events[9], load[64], dropped[3];
+    cui_rect source = {0}, target = {0};
+    bool valid = true;
+    for (int frame = 0; frame < 4; ++frame) {
+        if (frame == 1) {
+            cui_input_mouse_move(ui, source.x + 100, source.y + source.h / 2);
+            cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+        }
+        if (frame == 2) cui_input_mouse_move(ui, target.x + 100, target.y + target.h / 2);
+        if (frame == 3) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+        cui_begin_frame(ui, .016f);
+        int root, part;
+        cui_id parts[3] = {0};
+        void *tree = fpas_cui_tree_table_begin(ui, "files", titles, widths, columns, 1,
+            labels, parents, flags, 3, state, 2, 200, 32, 2, 300, 5, permissions, &root);
+        for (int row; (row = fpas_cui_tree_table_row(ui, &part)) >= 0;) {
+            parts[row] = fpas_cui_node_key(ui, part);
+            fpas_cui_tree_table_name(ui, labels[row], NULL);
+        }
+        fpas_cui_tree_table_end(ui, tree, flags, state, events, load, dropped);
+        cui_end_frame(ui);
+        source = cui_get_rect(ui, parts[0]);
+        target = cui_get_rect(ui, parts[2]);
+        const cui_rect bounds = cui_get_rect(ui, fpas_cui_node_key(ui, root));
+        const bool should_drop = allowed && frame == 3;
+        if (bounds.w != 300 || events[6] != (should_drop ? 1 : 0) ||
+            (should_drop && (dropped[0] != 0 || events[7] != 2 || events[8] != CUI_TREE_DROP_INSIDE))) {
+            fprintf(stderr, "Tree drag frame %d: width=%g, allowed=%d, count=%d, target=%d, where=%d.\n",
+                frame, bounds.w, allowed, events[6], events[7], events[8]);
+            valid = false;
+        }
+    }
+    cui_destroy(ui);
     return valid;
 }
 
@@ -395,7 +441,7 @@ int main(int argc, char **argv) {
     const bool adapter = argc < 2 || strcmp(argv[1], "upstream") != 0;
     const bool shrink = grid_shrink(adapter);
     const bool filter = filter_add(adapter);
-    const bool tree = !adapter || tree_lazy_load();
+    const bool tree = !adapter || (tree_lazy_load() && tree_drag(true) && tree_drag(false));
     const bool alignment = !adapter || grid_alignment();
     const bool grid_controls = !adapter ||
         (grid_checkbox_anchor() && grid_reveals_bound_cursor() && grid_initializes_appended_columns());

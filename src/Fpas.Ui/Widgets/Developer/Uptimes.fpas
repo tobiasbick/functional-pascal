@@ -7,12 +7,20 @@ uses Fpas.Ui.Layout as L;
 
 uses System as Sys;
 
-// Data for the native Uptime widget.
+// Availability history for a service.
 public type Service = record
-  // Name supplied to CUI.
+  // Name shown above the daily bars.
   public Name: string;
-  // Days supplied to CUI.
+  // Daily availability from oldest to newest. Negative values represent missing data.
   public Days: array of float;
+end record;
+
+// The bar under the pointer.
+public type Hover = record
+  // Zero-based service index, or minus one when no bar is under the pointer.
+  public Service: int := -1;
+  // Zero-based day index in the full service history, or minus one when no bar is under the pointer.
+  public Day: int := -1;
 end record;
 
 // Native layout and interaction options.
@@ -21,6 +29,8 @@ public type Options = record
   public Width: L.Extent := L.Extent.Fill;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
+  // Last reported bar. Null omits hover messages.
+  public Hovered: Hover? := null;
 end record;
 
 // Builds the native Uptime widget.
@@ -28,20 +38,22 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
-// - `Services`: Model-owned services data.
-// - `LastDay`: Model-owned lastday data.
+// - `Services`: Service names and availability histories.
+// - `LastDay`: Date of the newest value, or null for relative hover labels.
 // - `Settings`: Optional native settings.
+// - `Changed`: Optional callback that maps a change in the hovered bar to a message.
 // ## Returns
 // A graphical element.
 public function Uptime of TMsg(
   Id: string;
   Services: array of Service;
-  LastDay: Sys.DateOnly;
-  Settings: Options? := null
+  LastDay: Sys.DateOnly? := null;
+  Settings: Options? := null;
+  Changed: Sys.Func of (Hover, TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin
-  return (E.Element of TMsg).Uptime(Id, Services, LastDay, Settings ?? new Options());
+  return (E.Element of TMsg).Uptime(Id, Services, LastDay, Settings ?? new Options(), Changed);
 end function;
 
 end unit;

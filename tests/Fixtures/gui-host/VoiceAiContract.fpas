@@ -6,11 +6,14 @@ uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Ai.Composers as Composer;
+uses Fpas.Ui.Widgets.Ai.ResponseActions as Response;
 
 uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as G;
 uses GuiGallery.App.Update as U;
 uses GuiGallery.App.View as V;
+uses GuiGallery.Pages.Ai.State as AiPage;
 uses GuiGallery.Pages.Voice.State as VoicePage;
 uses GuiGallery.Pages.Voice.Update as VoiceUpdate;
 uses System as Sys;
@@ -150,6 +153,24 @@ procedure Run(Page: G.Page; Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(
       Latest.AI.Editor.Selected > 0,
       'The native model picker did not commit a keyboard selection.'
+    );
+    const Running: G.Model := new G.Model(
+      Active := G.Page.AI,
+      AI := new AiPage.Model(Editor := new Composer.Value(Busy := true), Elapsed := 8.0F)
+    );
+    const Continued: Mvu.Transition of (G.Model, G.Msg) := U.Update(
+      Running, G.Msg.AI(AiPage.Msg.Response(Response.Event.Regenerate))
+    );
+    A.Check(Continued.Model.AI.Elapsed = 8.0F, 'Regenerate restarted an active response.');
+    const Away: Mvu.Transition of (G.Model, G.Msg) := U.Update(
+      Continued.Model, G.Msg.Show(G.Page.Overview)
+    );
+    const Finished: Mvu.Transition of (G.Model, G.Msg) := U.Update(
+      Away.Model, G.Msg.AI(AiPage.Msg.Tick(2.0F))
+    );
+    A.Check(
+      not Finished.Model.AI.Editor.Busy,
+      'The AI response did not finish away from its page.'
     );
   end procedure;
 begin

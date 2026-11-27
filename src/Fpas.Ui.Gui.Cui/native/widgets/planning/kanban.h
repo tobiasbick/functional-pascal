@@ -9,13 +9,13 @@
 CUI_API int fpas_cui_kanban_begin(cui_ctx *ui, const char *id, int enabled);
 /** Begins a column in the current board.
  * @param ui Current frame context.
- * @param title Column caption.
+ * @param title Literal column caption.
  * @param count Model card count for the heading.
- * @param palette Automatic (0), theme series (1..6), or explicit RGBA (-1).
+ * @param palette No dot (0), theme series (1 through 6), RGBA (-1), or encoded theme token.
  * @param color Explicit color with red in the low byte.
  * @param limit Work-in-progress limit, or zero to hide it.
  * @param width Logical column width, or zero for the native default.
- * @param parts Receives column and heading node indices.
+ * @param parts Receives column and add button node indices.
  * @return Nonzero when enabled input activates the column's add action. */
 CUI_API int fpas_cui_kanban_column_begin(cui_ctx *ui, const char *title, int count, int palette, uint32_t color, int limit, float width, int *parts);
 /** Begins a card body in the current column.

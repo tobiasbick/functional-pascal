@@ -7,6 +7,7 @@ uses Fpas.Ui.Widgets.Files.FileBrowsers as Browser;
 uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
 uses Fpas.Ui.Widgets.Navigation.PathBars as Paths;
 
+uses GuiGallery.Pages.Files.ProjectTree as Tree;
 uses GuiGallery.Pages.Files.Terminal as Shell;
 
 // File gallery state.
@@ -23,6 +24,8 @@ public type Model = record
   public Opening: bool := false;
   // Native save picker visibility.
   public Saving: bool := false;
+  // Project tree shown between the file browser and terminal.
+  public Project: Tree.Model := new Tree.Model();
 end record;
 
 // File gallery actions.
@@ -39,6 +42,8 @@ public type Msg = variant
   Saved(Event: Picker.Event);
   // Native terminal input.
   Terminal(Value: Terminal.Event);
+  // Sample project tree interaction.
+  Project(Value: Tree.Msg);
   // Navigates the standalone path bar.
   Path(Event: Paths.Event);
 end variant;

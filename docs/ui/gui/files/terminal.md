@@ -33,16 +33,34 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Width / Height / Size` | Fill / 0 / 0. Zero uses native height or font size. A height of minus one fills the viewport. |
+| `Width / Height / Size` | Fill / 0 / 0. Zero uses 320 logical units for height and 13 for font size. A height of minus one fills the available space. |
 | `Prompt / Input` | `'$ '` / true. Set Input to false for an output panel. |
-| `Output / Revision` | Append to cumulative output for live scrollback. Change Revision to clear the scrollback and replay the supplied output. |
+| `ByteCapacity` | 65536. Allocate at least 64 bytes for native UTF-8 output. |
+| `LineCapacity` | 1024. Allocate at least two slots, including the current line. |
+| `Output / Revision` | Append to the cumulative output. Change Revision to clear native scrollback and replay the supplied output. |
+
+## Output
+
+Append text to the application's cumulative output. Format values in FPAS
+before appending. CUI drops older lines when the scrollback reaches its byte
+or line capacity. Changing a capacity rebuilds the scrollback from the
+cumulative output.
+
+The widget wraps long lines and follows new output until the user scrolls up.
+Use a newline to start a line and a carriage return to overwrite progress on
+the current line. CUI supports ANSI palette and RGB colors, bold, dim text,
+underline and inverse colors.
 
 ## Interaction
 
-CUI echoes submitted lines and handles Up and Down command history, pointer
-selection and Ctrl+L. A submitted line sends `Event.Command`. Ctrl+C without
-a selection sends `Event.Interrupt`. Handle those actions in the application
-update and append any resulting output to the model.
+CUI echoes submitted lines. Use Up and Down to navigate command history.
+Drag to select output and use the system copy shortcut to copy the selection.
+Ctrl+C without a selection sends `Event.Interrupt`. Enter sends
+`Event.Command` when the input line is active.
+
+Ctrl+L clears the native scrollback. To reset the application's output, supply
+an empty output and a new revision. Handle command and interrupt messages in
+the application update.
 
 ## See also
 
@@ -56,6 +74,7 @@ update and append any resulting output to the model.
 
 - `src/Fpas.Ui/Widgets/Developer/`
   - [Terminal.fpas](../../../../src/Fpas.Ui/Widgets/Developer/Terminal.fpas)
+  - [Terminals.fpas](../../../../src/Fpas.Ui/Widgets/Developer/Terminals.fpas)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
   - [Terminal.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/Terminal.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
@@ -66,3 +85,4 @@ update and append any resulting output to the model.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
   - [terminal.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/terminal.c)
   - [terminal.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/terminal.h)
+- [Native source tools tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/source_tools.c)

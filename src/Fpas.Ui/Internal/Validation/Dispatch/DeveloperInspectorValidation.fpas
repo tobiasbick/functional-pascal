@@ -80,9 +80,15 @@ begin
       const At: string := Identify(Id, Location + '/problems');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      Chart.Distance(Settings.Height, At);
+      if not Sys.Single.IsFinite(Settings.Height) then
+        Fail(At);
+      end if;
+
       for Item: ProblemsPanels.Diagnostic in Diagnostics do
         Rules.CheckText(Item.Message, At);
+        Rules.CheckText(Item.File ?? '', At);
+        Rules.CheckText(Item.Source ?? '', At);
+        Rules.CheckText(Item.Code ?? '', At);
         if Item.Severity < 0 or Item.Severity > 3 or Item.Line < 0 or Item.Column < 0 then
           Fail(At);
         end if;
@@ -91,15 +97,21 @@ begin
       const Id: string,
       const Stages: array of string,
       const Jobs: array of Pipelines.Job,
-      const Selection: int,
+      const Selection: int?,
       _,
       const Settings: Pipelines.Options
     ):
       const At: string := Identify(Id, Location + '/pipeline');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      SelectionIndex(Selection, Jobs.Length, At);
+      SelectionIndex(Selection ?? -1, Jobs.Length, At);
+      SelectionIndex(Settings.Hovered ?? -1, Jobs.Length, At);
+      for Stage: string in Stages do
+        Rules.CheckText(Stage, At);
+      end for;
+
       for Item: Pipelines.Job in Jobs do
+        Rules.CheckText(Item.Name, At);
         if Item.Stage < 0 or Item.Stage >= Stages.Length or Item.Status < 0 or Item.Status > 5
           or not Sys.Single.IsFinite(Item.Duration)
         then
@@ -110,38 +122,52 @@ begin
       const Id: string,
       const Bindings: array of Keymaps.Binding,
       const Categories: array of string,
-      const Modifiers: int,
+      const Modifiers: int?,
       _,
       const Settings: Keymaps.Options
     ):
       const At: string := Identify(Id, Location + '/keymap');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      if Modifiers < 0 or Modifiers > 15 then
+      const Mask: int := Modifiers ?? 0;
+      if Mask < 0 or Mask > 15 then
         Fail(At);
       end if;
 
       for Item: Keymaps.Binding in Bindings do
+        Rules.CheckText(Item.Action, At);
         if Item.Modifiers < 0 or Item.Modifiers > 15 or Item.Key < 0 or Item.Key >= 68
           or Item.Category < 0
         then
           Fail(At);
         end if;
       end for;
+
+      for Category: string in Categories do
+        Rules.CheckText(Category, At);
+      end for;
     when E.Element.CommitGraph(
       const Id: string,
       const Commits: array of CommitGraphs.Commit,
-      const Selection: int,
+      const Selection: int?,
       _,
       const Settings: CommitGraphs.Options
     ):
       const At: string := Identify(Id, Location + '/commit-graph');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      Chart.Distance(Settings.Height, At);
-      SelectionIndex(Selection, Commits.Length, At);
+      if Settings.Height <> -1.0F then
+        Chart.Distance(Settings.Height, At);
+      end if;
+
+      SelectionIndex(Selection ?? -1, Commits.Length, At);
       for Index: int := 0 to Commits.Length - 1 do
         const Item: CommitGraphs.Commit := Commits[Index];
+        Rules.CheckText(Item.Hash, At);
+        Rules.CheckText(Item.Message, At);
+        Rules.CheckText(Item.Author ?? '', At);
+        Rules.CheckText(Item.Date ?? '', At);
+        Rules.CheckText(Item.Refs ?? '', At);
         if Item.Parent <> -1 and (Item.Parent <= Index or Item.Parent >= Commits.Length) then
           Fail(At);
         end if;
@@ -156,7 +182,7 @@ begin
       const Id: string,
       const Vertices: array of DependencyGraphs.Vertex,
       const Edges: array of DependencyGraphs.Edge,
-      const Selection: int,
+      const Selection: int?,
       _,
       const Settings: DependencyGraphs.Options
     ):
@@ -164,7 +190,15 @@ begin
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
       Chart.Distance(Settings.Height, At);
-      SelectionIndex(Selection, Vertices.Length, At);
+      SelectionIndex(Selection ?? -1, Vertices.Length, At);
+      for Vertex: DependencyGraphs.Vertex in Vertices do
+        Rules.CheckText(Vertex.Label, At);
+        Rules.CheckText(Vertex.Detail ?? '', At);
+        if Vertex.Tone < 0 or Vertex.Tone > 8 then
+          Fail(At);
+        end if;
+      end for;
+
       for Item: DependencyGraphs.Edge in Edges do
         if Item.From < 0 or Item.From >= Vertices.Length or Item.To < 0 or Item.To >=
           Vertices.Length
@@ -175,18 +209,24 @@ begin
     when E.Element.NetworkWaterfall(
       const Id: string,
       const Requests: array of NetworkWaterfalls.Request,
-      const Selection: int,
+      const Selection: int?,
       _,
       const Settings: NetworkWaterfalls.Options
     ):
       const At: string := Identify(Id, Location + '/network-waterfall');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      Chart.Distance(Settings.Height, At);
+      if not Sys.Single.IsFinite(Settings.Height) then
+        Fail(At);
+      end if;
+
       Number(Settings.DomLoaded, At);
       Number(Settings.Loaded, At);
-      SelectionIndex(Selection, Requests.Length, At);
+      SelectionIndex(Selection ?? -1, Requests.Length, At);
       for Item: NetworkWaterfalls.Request in Requests do
+        Rules.CheckText(Item.Name, At + '/name');
+        Rules.CheckText(Item.Method ?? '', At + '/method');
+        Rules.CheckText(Item.Type ?? '', At + '/type');
         Number(Item.Size, At);
         Number(Item.Start, At);
         for Duration: float in [
@@ -223,6 +263,16 @@ begin
       end if;
 
       Chart.Distance(Value.Scroll, At);
+      for Track: TraceViewers.Track in Tracks do
+        Rules.CheckText(Track.Name, At + '/track');
+      end for;
+
+      for Marker: TraceViewers.Marker in Markers do
+        Rules.CheckText(Marker.Name, At + '/marker');
+        if not Sys.Double.IsFinite(Marker.Time) or Marker.Tone < 0 or Marker.Tone > 8 then
+          Fail(At);
+        end if;
+      end for;
       var Prior: TraceViewers.Span? := null;
       for Link: TraceViewers.Link in Settings.Links do
         if Link.From < 0 or Link.From >= Spans.Length or Link.To < 0 or Link.To >= Spans.Length
@@ -235,6 +285,7 @@ begin
       end for;
 
       for Item: TraceViewers.Span in Spans do
+        Rules.CheckText(Item.Name, At + '/span');
         if Item.Track < 0 or Item.Track >= Tracks.Length or Item.Depth < 0 or Item.Depth > 256
           or not Sys.Double.IsFinite(
           Item.Start
@@ -260,10 +311,15 @@ begin
       const At: string := Identify(Id, Location + '/test-explorer');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
-      Chart.Distance(Settings.Height, At);
+      if not Sys.Single.IsFinite(Settings.Height) then
+        Fail(At);
+      end if;
+
       var Depth: int := -1;
       for Item: TestExplorers.Item in Entries do
-        if Item.Depth < 0 or Item.Depth > Depth + 1 or Item.Depth > 256 or Item.Status < 0
+        Rules.CheckText(Item.Name, At);
+        Rules.CheckText(Item.Message ?? '', At);
+        if Item.Depth < 0 or Item.Depth > Depth + 1 or Item.Depth > 63 or Item.Status < 0
           or Item.Status > 5
           or not Sys.Single.IsFinite(Item.Duration)
         then
@@ -285,7 +341,15 @@ begin
       Rules.CheckText(Settings.Message, At);
       Rules.CheckText(Settings.Language, At);
       for Item: StackTraces.Frame in Frames do
-        if Item.Line < 0 or Item.Column < 0 or Item.SourceFirst < 0 then
+        Rules.CheckText(Item.FunctionName ?? '', At);
+        Rules.CheckText(Item.File ?? '', At);
+        for Line: string in Item.Source do
+          Rules.CheckText(Line, At);
+        end for;
+
+        if Item.Line < 0 or Item.Column < 0 or Item.SourceFirst < 0
+          or Item.SourceFirst > int.MaxValue - Item.Source.Length
+        then
           Fail(At);
         end if;
       end for;
@@ -304,13 +368,15 @@ begin
     when E.Element.Uptime(
       const Id: string,
       const Services: array of Uptimes.Service,
-      const LastDay: Sys.DateOnly,
-      const Settings: Uptimes.Options
+      _,
+      const Settings: Uptimes.Options,
+      _
     ):
       const At: string := Identify(Id, Location + '/uptime');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
       for Item: Uptimes.Service in Services do
+        Rules.CheckText(Item.Name, At);
         for Day: float in Item.Days do
           if not Sys.Single.IsFinite(Day) or Day > 1.0F then
             Fail(At);

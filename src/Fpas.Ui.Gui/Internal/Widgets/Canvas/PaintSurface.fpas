@@ -67,7 +67,7 @@ public type Adapter = record implements D.Surface
     return self.Native.Time;
   end function;
 
-  // Returns the native frame duration in seconds.
+  // Returns the native frame duration in seconds, capped at 0.25.
   public function DeltaTime(): float;
   begin
     return self.Native.DeltaTime;

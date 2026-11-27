@@ -1,0 +1,42 @@
+// [Documentation](../../../../docs/ui/gui/developer-tools/key-value-editor.md)
+
+unit Fpas.Ui.Gui.Internal.Data.KeyValueData;
+
+uses Fpas.Ui.Gui.Cui.Widgets.Developer as Native;
+uses Fpas.Ui.Widgets.Developer.KeyValueEditors as W;
+
+uses System.Collections.Generic as Lists;
+
+// Converts application pairs to CUI's representation.
+// ## Parameters
+// - `Pairs`: Current application pairs.
+// ## Returns
+// The equivalent CUI pairs in input order.
+public function Pack(Pairs: array of W.Pair): array of Native.CuiDevPair;
+begin
+  const Values: Lists.List of Native.CuiDevPair := new Lists.List of Native.CuiDevPair(
+    Pairs.Length
+  );
+  for Pair: W.Pair in Pairs do
+    Values.Add(new Native.CuiDevPair(Pair.Key, Pair.Value, Pair.Enabled, Pair.Secret));
+  end for;
+
+  return Values.ToArray();
+end function;
+
+// Converts CUI pairs to the key-value editor's type.
+// ## Parameters
+// - `Pairs`: Pairs reported by CUI.
+// ## Returns
+// The equivalent application pairs in input order.
+public function Unpack(Pairs: array of Native.CuiDevPair): array of W.Pair;
+begin
+  const Values: Lists.List of W.Pair := new Lists.List of W.Pair(Pairs.Length);
+  for Pair: Native.CuiDevPair in Pairs do
+    Values.Add(new W.Pair(Pair.Key, Pair.Value, Pair.Enabled, Pair.Secret));
+  end for;
+
+  return Values.ToArray();
+end function;
+
+end unit;

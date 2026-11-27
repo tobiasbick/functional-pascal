@@ -1,0 +1,32 @@
+// [Documentation](../../docs/ui/gui/more-developer-tools/http-request-bar.md#query-parameters)
+
+unit Fpas.Ui.Gui.UrlParameters;
+
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Data.KeyValueData as Data;
+uses Fpas.Ui.Widgets.Developer.KeyValueEditors as W;
+
+// Decodes the query in a URL draft.
+// ## Parameters
+// - `Url`: URL text to parse.
+// - `Capacity`: Maximum number of pairs from 0 to 4096.
+// ## Returns
+// Decoded query parameters in URL order with each pair enabled.
+public function Parse(Url: string; Capacity: int): array of W.Pair;
+begin
+  return Data.Unpack(Cui.CuiWindow.UrlParameters(Url, Capacity));
+end function;
+
+// Replaces the query in a URL draft.
+// ## Parameters
+// - `Url`: Original URL text.
+// - `Pairs`: Pairs to encode if they are enabled and have a key.
+// - `Capacity`: Maximum UTF-8 byte count for the result.
+// ## Returns
+// The URL with the replaced query, or null if the result exceeds the capacity.
+public function Replace(Url: string; Pairs: array of W.Pair; Capacity: int): string?;
+begin
+  return Cui.CuiWindow.SetUrlParameters(Url, Data.Pack(Pairs), Capacity);
+end function;
+
+end unit;

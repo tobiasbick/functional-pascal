@@ -2,8 +2,7 @@
 
 unit GuiGallery.Pages.MoreDeveloper.Update;
 
-uses Fpas.Ui.Gui.Cui as Cui;
-uses Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
+uses Fpas.Ui.Gui.UrlParameters as Urls;
 uses Fpas.Ui.Widgets.Charts.TimeHistograms as G;
 uses Fpas.Ui.Widgets.Developer.ApiExplorers as A;
 uses Fpas.Ui.Widgets.Developer.FeatureFlagEditors as F;
@@ -11,39 +10,31 @@ uses Fpas.Ui.Widgets.Developer.KeyValueEditors as K;
 uses Fpas.Ui.Widgets.Developer.RegexTesters as R;
 uses Fpas.Ui.Widgets.Developer.RequestBars as H;
 
+uses GuiGallery.Pages.MoreDeveloper.Samples as D;
 uses GuiGallery.Pages.MoreDeveloper.State as M;
-uses System.Collections.Generic as Lists;
 
 function Request(Model: M.Model; Value: H.Event): M.Model;
 begin
-  if Value.Url = Model.Url then
-    return Model with
-      Method := Value.Method;
-    end with;
+  if not Value.Changed then
+    return Model;
   end if;
-  const Pairs: Lists.List of K.Pair := new Lists.List of K.Pair();
-  for Entry: CuiDeveloper.CuiDevPair in Cui.CuiWindow.UrlParameters(Value.Url, 8) do
-    Pairs.Add(new K.Pair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
-  end for;
 
   return Model with
     Method := Value.Method;
     Url := Value.Url;
-    Parameters := Pairs.ToArray();
+    Parameters := Urls.Parse(Value.Url, D.ParameterCapacity);
   end with;
 end function;
 
 function Parameters(Model: M.Model; Value: K.Event): M.Model;
 begin
-  const Pairs: Lists.List of CuiDeveloper.CuiDevPair := new Lists.List of CuiDeveloper.CuiDevPair(
-    Value.Pairs.Length
-  );
-  for Entry: K.Pair in Value.Pairs do
-    Pairs.Add(new CuiDeveloper.CuiDevPair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
-  end for;
+  const Url: string? := Urls.Replace(Model.Url, Value.Pairs, D.RequestCapacity);
+  if Url = null then
+    return Model;
+  end if;
 
   return Model with
-    Url := Cui.CuiWindow.SetUrlParameters(Model.Url, Pairs.ToArray(), 255) ?? Model.Url;
+    Url := Url;
     Parameters := Value.Pairs;
   end with;
 end function;

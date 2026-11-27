@@ -1,25 +1,24 @@
 // [Documentation](../../../../docs/ui/gui/more-developer-tools/http-response-status.md)
-using Fpas.Ui.Gui.Cui.Widgets.Developer;
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    /// <summary>Draws the native ResponseStatus widget.</summary>
-    /// <param name="Id">Id supplied to CUI.</param>
-    /// <param name="Status">Status supplied to CUI.</param>
-    /// <param name="Seconds">Seconds supplied to CUI.</param>
-    /// <param name="Bytes">Bytes supplied to CUI.</param>
-    /// <param name="WidthKind">Width Kind supplied to CUI.</param>
-    /// <param name="Width">Width supplied to CUI.</param>
-    /// <param name="Enabled">Enabled supplied to CUI.</param>
-    /// <returns>Values proposed by CUI.</returns>
-    public unsafe CuiDevResult ResponseStatus(string Id, int Status, double Seconds, double Bytes, int WidthKind, float Width, bool Enabled)
+    /// <summary>Draws the native response status.</summary>
+    /// <param name="Id">Stable widget identity.</param>
+    /// <param name="Status">HTTP status code, or a nonpositive value before a response.</param>
+    /// <param name="Seconds">Elapsed time in seconds, or a negative value to omit it.</param>
+    /// <param name="Bytes">Response size in bytes, or a negative value to omit it.</param>
+    /// <param name="WidthKind">Native width extent kind.</param>
+    /// <param name="Width">Value for the native width extent.</param>
+    /// <param name="Enabled">Whether the host presents the widget as enabled.</param>
+    public void ResponseStatus(string Id, int Status, double Seconds, double Bytes, int WidthKind, float Width, bool Enabled)
     {
         CheckFrame();
         CheckExtent(WidthKind, Width, nameof(Width));
-        NativeMethods.DevResponseStatus(context, Stable(Id), Status, Seconds, Bytes, WidthKind, Width, Enabled ? 1 : 0, out var result);
-        return result.ToManaged();
+        if (!double.IsFinite(Seconds)) throw new ArgumentOutOfRangeException(nameof(Seconds));
+        if (!double.IsFinite(Bytes)) throw new ArgumentOutOfRangeException(nameof(Bytes));
+        NativeMethods.DevResponseStatus(context, Stable(Id), Status, Seconds, Bytes, WidthKind, Width, Enabled ? 1 : 0);
     }
 }

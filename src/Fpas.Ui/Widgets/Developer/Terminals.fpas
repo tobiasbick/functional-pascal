@@ -25,6 +25,10 @@ public type Options = record
   public Prompt: string := '$ ';
   // Show the command input line.
   public Input: bool := true;
+  // Native text storage in UTF-8 bytes. A value of at least 64 is required.
+  public ByteCapacity: int := 65536;
+  // Native line storage, including the current line. A value of at least two is required.
+  public LineCapacity: int := 1024;
 end record;
 
 // Creates a graphical Terminal.

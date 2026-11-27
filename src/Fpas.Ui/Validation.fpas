@@ -1065,7 +1065,13 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       ):
         const At: string := Identify(Id, Location + '/treeTable');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
-        GridRules.Grid(Columns, Nodes.Length, Order, Settings.Height, Settings.RowHeight, At);
+        LayoutRules.CheckExtent(Settings.Width, Mode, At + '/width');
+        const RowHeight: float := if Settings.RowHeight = 0.0F then
+          32.0F
+        else
+          Settings.RowHeight
+        end if;
+        GridRules.Grid(Columns, Nodes.Length, Order, Settings.Height, RowHeight, At);
         GridRules.Tree(Nodes, Columns.Length, Cursor, At);
       when E.Element.ReorderableList(
         const Id: string,
@@ -1157,7 +1163,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _,
         _
-      ), E.Element.Uptime(_, _, _, _), E.Element.TimeHistogram(
+      ), E.Element.Uptime(_, _, _, _, _), E.Element.TimeHistogram(
         _,
         _,
         _,
@@ -1434,10 +1440,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
 
         FeedbackRules.Nonnegative(Settings.Width, At + '/width');
         FeedbackRules.Nonnegative(Settings.Padding, At + '/padding');
-        Rules.CheckText(Settings.NextLabel, At + '/next');
-        Rules.CheckText(Settings.BackLabel, At + '/back');
-        Rules.CheckText(Settings.DoneLabel, At + '/done');
-        Rules.CheckCountFormat(Settings.CountFormat, 2, At + '/countFormat');
+        Rules.CheckText(Settings.NextLabel ?? '', At + '/next');
+        Rules.CheckText(Settings.BackLabel ?? '', At + '/back');
+        Rules.CheckText(Settings.DoneLabel ?? '', At + '/done');
+        Rules.CheckCountFormat(Settings.CountFormat ?? '', 2, At + '/countFormat');
         for Item: Tours.Step in Steps do
           Rules.CheckText(Item.Target, At + '/target');
           Rules.CheckText(Item.Title, At + '/title');

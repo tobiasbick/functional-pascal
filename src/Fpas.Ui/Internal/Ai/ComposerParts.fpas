@@ -1,0 +1,46 @@
+// [Documentation](../../../../docs/ui/gui/voice/composer.md)
+
+unit Fpas.Ui.Internal.Ai.ComposerParts;
+
+uses Fpas.Ui.Widgets.Ai.Composers as C;
+
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+
+// Names the native parts in adapter order.
+// ## Parameters
+// - `Attachments`: Number of attached files.
+// ## Returns
+// Parts of the composer control IDs.
+public function Names(Attachments: int): array of string;
+begin
+  const Parts: Lists.List of string := new Lists.List of string(6 + Attachments);
+  Parts.AddRange(['editor', 'send', 'record', 'cancel', 'attach', 'model']);
+  for Index: int := 0 to Attachments - 1 do
+    Parts.Add('remove/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture));
+  end for;
+
+  return Parts.ToArray();
+end function;
+
+// Determines the parts that can receive input.
+// ## Parameters
+// - `Content`: Model-owned composer state.
+// - `Microphone`: Whether text mode includes the recording action.
+// - `Enabled`: Whether the composer accepts input.
+// ## Returns
+// Input flags in adapter order.
+public function Inputs(Content: C.Value; Microphone: bool; Enabled: bool): array of bool;
+begin
+  const Flags: array of bool := new bool[6 + Content.Attachments.Length];
+  Sys.Array.Fill of bool(Flags, Enabled);
+  const Editing: bool := Content.Take = null;
+  Flags[0] := Enabled and Editing;
+  Flags[2] := Enabled and Editing and Microphone;
+  Flags[3] := Enabled and not Editing;
+  Flags[4] := Enabled and Editing;
+  Flags[5] := Enabled and Editing and Content.Models.Length > 0;
+  return Flags;
+end function;
+
+end unit;

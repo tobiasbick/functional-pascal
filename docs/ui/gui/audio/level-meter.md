@@ -35,16 +35,22 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Levels` | One to eight finite, nonnegative linear peaks. 1.0 represents 0 dBFS. |
-| `MinimumDb / MaximumDb` | −60 / +6 dBFS. Zero MaximumDb uses +6. |
-| `Length / Thickness` | 160 / 6 logical points. |
-| `Horizontal / Scale / Segmented` | All false. |
-| `Hold / Decay` | 1.5 seconds / 20 dB per second. A negative Hold disables it. Zero selects the native hold time. |
+| `MinimumDb / MaximumDb` | −60 / +6 dBFS. Zero uses the respective default. The resulting minimum must be negative and less than the maximum. |
+| `Length / Thickness` | 160 / 6 logical units. Zero uses the respective default. |
+| `Horizontal` | False. Horizontal bars increase from left to right. Vertical bars increase from bottom to top. |
+| `Scale` | False. A scale labels the preset dB marks that fit within the selected range and length. |
+| `Segmented` | False. Set true for LED segments. |
+| `Hold / Decay` | 1.5 seconds / 20 dB per second. Zero uses the respective default. A negative hold removes the delay before the peak mark falls. |
 
 ## Interaction
 
-Pass fresh peaks as frames update. CUI applies decay, shows the held peaks
-and latches the clip indicators. Clicking a lit indicator clears it and calls
-`OnClipCleared` if supplied.
+Pass fresh peaks as frames update. The bars rise to each peak and fall at
+the selected decay rate. The level colors change at −18 and −6 dBFS.
+
+Each channel latches its clip indicator at 0 dBFS. Click the clip lights to
+clear all latched indicators and send `OnClipCleared` if supplied. A peak
+that still reaches 0 dBFS lights its indicator again. If a channel leaves
+the list, the meter discards its hold and clip state.
 
 ## See also
 

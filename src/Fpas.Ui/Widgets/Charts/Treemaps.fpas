@@ -28,6 +28,7 @@ end record;
 // - `Items`: Named nonnegative amounts.
 // - `Selected`: Selected input item, or minus one. Requires `OnSelect` when set.
 // - `OnSelect`: Optional native selection proposal; null disables selection.
+// - `OnActivate`: Optional clicked input index. Runs after `OnSelect` when both apply.
 // - `Settings`: Native presentation.
 // ## Returns
 // A graphical element.
@@ -36,11 +37,19 @@ public function Treemap of TMsg(
   Items: array of C.Item;
   Settings: Options? := null;
   Selected: int := -1;
-  OnSelect: Sys.Func of (int, TMsg)? := null
+  OnSelect: Sys.Func of (int, TMsg)? := null;
+  OnActivate: Sys.Func of (int, TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin
-  return (E.Element of TMsg).Treemap(Id, Items, Selected, OnSelect, Settings ?? new Options());
+  return (E.Element of TMsg).Treemap(
+    Id,
+    Items,
+    Selected,
+    OnSelect,
+    Settings ?? new Options(),
+    OnActivate
+  );
 end function;
 
 end unit;

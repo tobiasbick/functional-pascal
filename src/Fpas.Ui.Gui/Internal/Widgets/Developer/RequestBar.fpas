@@ -14,8 +14,8 @@ uses Fpas.Ui.Widgets.Developer.RequestBars as D;
 // ## Parameters
 // - `Frame`: Current GUI presentation frame.
 // - `Id`: Stable widget identity.
-// - `Method`: Method supplied to the widget.
-// - `Url`: Url supplied to the widget.
+// - `Method`: Current HTTP method index.
+// - `Url`: Current URL draft.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
 public procedure Draw of TMsg(
@@ -40,11 +40,14 @@ begin
     Settings.Placeholder,
     Width.Kind,
     Width.Value,
-    Enabled
+    Enabled,
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   );
   P.Root of TMsg(Frame, Id, Role, '', Enabled, Result.Url);
-  if Enabled and (Result.Method <> Method or Result.Url <> Url or Result.Send or Result.Cancel) then
-    Frame.Messages.Add(Changed(new D.Event(Result.Method, Result.Url, Result.Send, Result.Cancel)));
+  if Enabled and (Result.Changed or Result.Send or Result.Cancel) then
+    Frame.Messages.Add(
+      Changed(new D.Event(Result.Method, Result.Url, Result.Send, Result.Cancel, Result.Changed))
+    );
   end if;
 end procedure;
 

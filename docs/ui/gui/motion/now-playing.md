@@ -30,20 +30,24 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Title / Artist / Position / Duration` | Pass the labels and timing in seconds. |
-| `Playing / ArtColor / Artwork` | false / Automatic / empty. Supply a file path for custom artwork. |
-| `Width / Compact / Enabled` | Content / false / true. |
+| `Title / Artist` | Pass the track labels. |
+| `Position / Duration` | Pass seconds. Position ranges from zero to duration. |
+| `Playing / ArtColor / Artwork` | false / Automatic / null. Use a file or an RGBA image source for custom artwork. The art color sets the tile background. |
+| `Width / Compact / Enabled` | Content / false / true. CUI prefers 360 points in regular mode and 340 points in compact mode. Compact mode uses smaller artwork and omits Previous. The regular card also uses smaller artwork and omits Previous when its width is below 300 points. |
 
 ## Interaction
 
-Apply the proposed position or play state. Handle previous and next
-requests in the application. Supply updated position as playback runs.
+Tab to the available transport buttons and activate them with Enter or Space.
+Click or drag the seek bar to preview a position. Releasing the pointer
+proposes that position. Apply the proposed play state or position, handle
+Previous and Next, and supply updated position as playback runs.
 
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_now_playing)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/NowPlaying.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
+- [Image sources](../text-and-display/image.md)
 - [Waveform](waveform.md)
 - [Motion](README.md)
 

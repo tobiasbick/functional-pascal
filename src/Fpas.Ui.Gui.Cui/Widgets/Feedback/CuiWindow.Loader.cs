@@ -15,6 +15,7 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         CheckFeedbackNumber(size, nameof(size));
+        CheckChartColor(color);
         if (style is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(style));
         NativeMethods.Loader(context, Stable(id), style, size, color.Palette, color.Rgba);
     }

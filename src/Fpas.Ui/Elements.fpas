@@ -431,7 +431,7 @@ public type Element of TMsg = variant
   // Display CUI's native calendar-heatmap.
   CalendarHeatmap(Id: string; Start: Sys.DateOnly; Values: array of float; Settings: CalendarHeatmaps.Options; OnActivate: Sys.Func of (Sys.DateOnly, TMsg)?);
   // Display CUI's native treemap.
-  Treemap(Id: string; Items: array of Charts.Item; Selected: int; OnSelect: Sys.Func of (int, TMsg)?; Settings: Treemaps.Options);
+  Treemap(Id: string; Items: array of Charts.Item; Selected: int; OnSelect: Sys.Func of (int, TMsg)?; Settings: Treemaps.Options; OnActivate: Sys.Func of (int, TMsg)?);
   // Display CUI's native radar-chart.
   RadarChart(Id: string; Series: array of Charts.Series; Axes: array of string; Settings: RadarCharts.Options; OnActivate: Sys.Func of (int, TMsg)?);
   // Display CUI's native funnel.
@@ -615,15 +615,15 @@ public type Element of TMsg = variant
   // Native Problems widget.
   Problems(Id: string; Diagnostics: array of ProblemsPanels.Diagnostic; Changed: function(ProblemsPanels.Event): TMsg; Settings: ProblemsPanels.Options);
   // Native Pipeline widget.
-  Pipeline(Id: string; Stages: array of string; Jobs: array of Pipelines.Job; Selection: int; Changed: function(Pipelines.Event): TMsg; Settings: Pipelines.Options);
+  Pipeline(Id: string; Stages: array of string; Jobs: array of Pipelines.Job; Selection: int?; Changed: function(Pipelines.Event): TMsg; Settings: Pipelines.Options);
   // Native Keymap widget.
-  Keymap(Id: string; Bindings: array of Keymaps.Binding; Categories: array of string; Modifiers: int; Changed: function(Keymaps.Event): TMsg; Settings: Keymaps.Options);
+  Keymap(Id: string; Bindings: array of Keymaps.Binding; Categories: array of string; Modifiers: int?; Changed: function(Keymaps.Event): TMsg; Settings: Keymaps.Options);
   // Native CommitGraph widget.
-  CommitGraph(Id: string; Commits: array of CommitGraphs.Commit; Selection: int; Changed: function(CommitGraphs.Event): TMsg; Settings: CommitGraphs.Options);
+  CommitGraph(Id: string; Commits: array of CommitGraphs.Commit; Selection: int?; Changed: function(CommitGraphs.Event): TMsg; Settings: CommitGraphs.Options);
   // Native DependencyGraph widget.
-  DependencyGraph(Id: string; Vertices: array of DependencyGraphs.Vertex; Edges: array of DependencyGraphs.Edge; Selection: int; Changed: function(DependencyGraphs.Event): TMsg; Settings: DependencyGraphs.Options);
+  DependencyGraph(Id: string; Vertices: array of DependencyGraphs.Vertex; Edges: array of DependencyGraphs.Edge; Selection: int?; Changed: function(DependencyGraphs.Event): TMsg; Settings: DependencyGraphs.Options);
   // Native NetworkWaterfall widget.
-  NetworkWaterfall(Id: string; Requests: array of NetworkWaterfalls.Request; Selection: int; Changed: function(NetworkWaterfalls.Event): TMsg; Settings: NetworkWaterfalls.Options);
+  NetworkWaterfall(Id: string; Requests: array of NetworkWaterfalls.Request; Selection: int?; Changed: function(NetworkWaterfalls.Event): TMsg; Settings: NetworkWaterfalls.Options);
   // Native TraceViewer widget.
   TraceViewer(Id: string; Tracks: array of TraceViewers.Track; Spans: array of TraceViewers.Span; Markers: array of TraceViewers.Marker; Value: TraceViewers.View; Selection: int; Changed: function(TraceViewers.Event): TMsg; Settings: TraceViewers.Options);
   // Native TestExplorer widget.
@@ -633,7 +633,7 @@ public type Element of TMsg = variant
   // Native ResponseStatus widget.
   ResponseStatus(Id: string; Status: int; Seconds: double; Bytes: double; Settings: ResponseStatuses.Options);
   // Native Uptime widget.
-  Uptime(Id: string; Services: array of Uptimes.Service; LastDay: Sys.DateOnly; Settings: Uptimes.Options);
+  Uptime(Id: string; Services: array of Uptimes.Service; LastDay: Sys.DateOnly?; Settings: Uptimes.Options; Changed: Sys.Func of (Uptimes.Hover, TMsg)?);
   // Native TimeHistogram widget.
   TimeHistogram(Id: string; Start: double; Bucket: double; Buckets: int; SeriesData: array of TimeHistograms.Series; Value: TimeHistograms.Range; Changed: function(TimeHistograms.Event): TMsg; Settings: TimeHistograms.Options);
   // Native Coverage widget.
@@ -641,7 +641,7 @@ public type Element of TMsg = variant
   // Native Blame widget.
   Blame(Id: string; Lines: array of string; LineCommits: array of int; Revisions: array of Blames.Revision; Changed: function(Blames.Event): TMsg; Settings: Blames.Options);
   // Native ApiExplorer widget.
-  ApiExplorer(Id: string; Endpoints: array of ApiExplorers.Endpoint; Selection: int; Changed: function(ApiExplorers.Event): TMsg; Settings: ApiExplorers.Options);
+  ApiExplorer(Id: string; Endpoints: array of ApiExplorers.Endpoint; Selection: int?; Changed: function(ApiExplorers.Event): TMsg; Settings: ApiExplorers.Options);
   // Native KeyValueEditor widget.
   KeyValueEditor(Id: string; Pairs: array of KeyValueEditors.Pair; Changed: function(KeyValueEditors.Event): TMsg; Settings: KeyValueEditors.Options);
   // Native QueryBuilder widget.
@@ -649,7 +649,7 @@ public type Element of TMsg = variant
   // Native SchedulePicker widget.
   SchedulePicker(Id: string; Expression: string; Changed: function(SchedulePickers.Event): TMsg; Settings: SchedulePickers.Options);
   // Native RegexTester widget.
-  RegexTester(Id: string; Pattern: string; Sample: string; Modifiers: int; Changed: function(RegexTesters.Event): TMsg; Settings: RegexTesters.Options);
+  RegexTester(Id: string; Pattern: string; Sample: string; Modifiers: int?; Changed: function(RegexTesters.Event): TMsg; Settings: RegexTesters.Options);
   // Native RequestBar widget.
   RequestBar(Id: string; Method: int; Url: string; Changed: function(RequestBars.Event): TMsg; Settings: RequestBars.Options);
   // Native FeatureFlags widget.

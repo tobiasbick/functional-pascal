@@ -219,7 +219,7 @@ public function Map of (TChild, TParent)(
         case Entry of
           when Docks.Entry.Separator: (Docks.Entry of TParent).Separator;
           when Docks.Entry.Item(
-            const Icon: string, const Label: string, const Message: TChild,
+            const Icon: string?, const Label: string?, const Message: TChild,
             const Color: MotionColors.Color, const Running: bool, const Badge: int
           ): (Docks.Entry of TParent).Item(Icon, Label, Messages(Message), Color, Running, Badge);
         end case
@@ -718,7 +718,7 @@ begin
       _,
       _,
       _
-    ), E.Element.Uptime(_, _, _, _), E.Element.TimeHistogram(
+    ), E.Element.Uptime(_, _, _, _, _), E.Element.TimeHistogram(
       _,
       _,
       _,
@@ -1494,6 +1494,7 @@ begin
       _,
       _
     ), E.Element.Treemap(
+      _,
       _,
       _,
       _,

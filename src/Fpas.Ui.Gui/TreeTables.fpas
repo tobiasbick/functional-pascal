@@ -1,0 +1,46 @@
+// [Documentation](../../docs/ui/gui/data-grid/tree-table.md)
+
+unit Fpas.Ui.Gui.TreeTables;
+
+uses Fpas.Ui.Gui.Cui.Widgets.Collections as Native;
+uses Fpas.Ui.Widgets.Collections.TreeTables as T;
+
+uses System.Collections.Generic as Lists;
+
+// The model tree after applying a drop.
+public type MoveResult = record
+  // Nodes in their new order.
+  public Nodes: array of T.Node;
+  // New index of each node by its old index.
+  public IndexMap: array of int;
+end record;
+
+// Applies CUI's tree move to model data.
+// ## Parameters
+// - `Nodes`: Nodes in their original order, with proposed flags.
+// - `Drop`: Ordered nodes and target placement.
+// ## Returns
+// The relinked model and index mapping.
+public function Move(Nodes: array of T.Node; Drop: T.Drop): MoveResult;
+begin
+  const Parents: array of int := new int[Nodes.Length];
+  for Index: int := 0 to Nodes.Length - 1 do
+    Parents[Index] := Nodes[Index].Parent;
+  end for;
+
+  const Moved: Native.CuiTreeMove := Native.CuiTreeMoves.Move(
+    Parents, Drop.Nodes, Drop.Target, cast Drop.Placement as int
+  );
+  const Result: Lists.List of T.Node := new Lists.List of T.Node(Nodes.Length);
+  for Index: int := 0 to Nodes.Length - 1 do
+    Result.Add(
+      Nodes[Moved.Order[Index]] with
+        Parent := Moved.Parents[Index];
+      end with
+    );
+  end for;
+
+  return new MoveResult(Result.ToArray(), Moved.IndexMap);
+end function;
+
+end unit;

@@ -49,7 +49,8 @@ begin
   );
   P.Root of TMsg(Frame, Id, Role, '', false, '');
   for Index: int := 0 to Documents.Length - 1 do
-    P.Part of TMsg(Frame, Id, Role, Keys[Index], Documents[Index].Title, Enabled, '');
+    const Document: Sources.Item := Documents[Index];
+    P.Part of TMsg(Frame, Id, Role, Keys[Index], Document.Title ?? Document.Url ?? '', Enabled, '');
   end for;
 
   if Picked >= 0 then

@@ -98,11 +98,12 @@ static void check_number_precision(cui_ctx *ui) {
     CHECK(strcmp(clipboard, "1.2500000000000000") == 0 && number.value == 1.25);
 }
 
-typedef struct { bool parent_disabled, enabled; int result; } picker_state;
+typedef struct { bool parent_disabled, enabled; int result, reads; } picker_state;
 
 static int empty_folder(void *user, const char *path, cui_file_entry *entries, int capacity,
     char *names, size_t name_capacity, bool hidden) {
-    (void)user; (void)path; (void)entries; (void)capacity; (void)names; (void)name_capacity; (void)hidden;
+    (void)path; (void)entries; (void)capacity; (void)names; (void)name_capacity; (void)hidden;
+    ++*(int *)user;
     return 0;
 }
 
@@ -112,23 +113,159 @@ static void picker(cui_ctx *ui, void *state) {
     int nodes[5];
     cui_push_disabled(ui, picker->parent_disabled);
     picker->result = fpas_cui_file_picker(ui, "picker", 1, picker->enabled, 0, NULL,
-        NULL, NULL, NULL, NULL, empty_folder, NULL, path, sizeof path, nodes);
+        NULL, NULL, NULL, NULL, empty_folder, &picker->reads, path, sizeof path, nodes);
     cui_pop_disabled(ui);
 }
 
 static void check_disabled_picker(cui_ctx *ui) {
     picker_state state = {.enabled = true};
     frames(ui, picker, &state, 2);
+    CHECK(state.reads == 1);
     state.parent_disabled = true;
     key(ui, picker, &state, CUI_KEY_ESCAPE, 0);
     CHECK(state.result == 0);
+    key(ui, picker, &state, CUI_KEY_F5, 0);
+    frames(ui, picker, &state, 1);
+    CHECK(state.reads == 1);
     state.parent_disabled = false;
     state.enabled = false;
     key(ui, picker, &state, CUI_KEY_ESCAPE, 0);
     CHECK(state.result == 0);
+    key(ui, picker, &state, CUI_KEY_F5, 0);
+    frames(ui, picker, &state, 1);
+    CHECK(state.reads == 1);
     state.enabled = true;
+    key(ui, picker, &state, CUI_KEY_F5, 0);
+    frames(ui, picker, &state, 1);
+    CHECK(state.reads == 2);
     key(ui, picker, &state, CUI_KEY_ESCAPE, 0);
     CHECK(state.result == 1);
+}
+
+typedef struct { int reads, limit; bool hidden; } file_listing;
+
+/** Lists test entries and records the current native options. */
+static int list_test_files(void *user, const char *path, cui_file_entry *entries, int capacity,
+    char *names, size_t name_capacity, bool hidden) {
+    (void)path;
+    file_listing *listing = user;
+    ++listing->reads;
+    listing->limit = capacity;
+    listing->hidden = hidden;
+    const char *labels[] = { "Alpha.txt", "Beta.png", ".hidden.txt" };
+    int count = 0;
+    size_t used = 0;
+    for (int i = 0; i < (hidden ? 3 : 2) && count < capacity; ++i) {
+        const size_t length = strlen(labels[i]) + 1;
+        if (used + length > name_capacity) break;
+        memcpy(names + used, labels[i], length);
+        entries[count++] = (cui_file_entry){ .name = names + used };
+        used += length;
+    }
+    return count;
+}
+
+typedef struct {
+    file_listing listing;
+    int maximum, revision;
+    bool hidden;
+    const char *filter;
+    const char *selected;
+    cui_id list;
+} browser_fixture;
+
+/** Draws the browser against the bounded test listing. */
+static void browser_test_frame(cui_ctx *ui, void *data) {
+    browser_fixture *state = data;
+    char folder[1024] = ".";
+    const char *picked;
+    int parts[7];
+    fpas_cui_file_browser(ui, "browser", folder, sizeof folder, 1, 0, 2, 380, state->filter,
+        NULL, 0, list_test_files, &state->listing, state->maximum, state->revision,
+        1 | 8 | (state->hidden ? 4 : 0), 0, &state->selected, &picked, parts);
+    state->list = fpas_cui_node_key(ui, parts[0]);
+}
+
+/** Clicks an ordinary file row or a picker control. */
+static void click_file_part(cui_ctx *ui, draw_fn draw, void *state, cui_id part, float offset) {
+    const cui_rect rect = cui_get_rect(ui, part);
+    cui_input_mouse_move(ui, rect.x + rect.w * .5f, rect.y + (offset > 0 ? offset : rect.h * .5f));
+    frames(ui, draw, state, 1);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+    frames(ui, draw, state, 1);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+    frames(ui, draw, state, 1);
+}
+
+/** Checks that options refresh a mounted folder and filtering retires its selection. */
+static void check_file_browser(cui_ctx *ui) {
+    cui_set_viewport(ui, 640, 480, 1);
+    browser_fixture state = { .maximum = 8 };
+    frames(ui, browser_test_frame, &state, 2);
+    CHECK(state.listing.reads == 1 && state.listing.limit == 8 && !state.listing.hidden);
+    click_file_part(ui, browser_test_frame, &state, state.list, 44);
+    CHECK(state.selected && strstr(state.selected, "Alpha.txt"));
+    state.filter = "*.png";
+    frames(ui, browser_test_frame, &state, 1);
+    CHECK(state.selected == NULL && state.listing.reads == 1);
+    state.hidden = true;
+    frames(ui, browser_test_frame, &state, 2);
+    CHECK(state.listing.reads == 2 && state.listing.hidden && state.listing.limit == 8);
+    state.maximum = 1;
+    frames(ui, browser_test_frame, &state, 1);
+    CHECK(state.listing.reads == 3 && state.listing.limit == 1);
+    ++state.revision;
+    frames(ui, browser_test_frame, &state, 1);
+    CHECK(state.listing.reads == 4 && state.listing.limit == 1);
+}
+
+typedef struct {
+    file_listing listing;
+    bool open;
+    int mode, result;
+    const char *filter;
+    char path[1024];
+    cui_id parts[5];
+} file_picker_fixture;
+
+/** Draws the controlled picker against the same test listing. */
+static void file_picker_test_frame(cui_ctx *ui, void *data) {
+    file_picker_fixture *state = data;
+    int parts[5];
+    state->result = fpas_cui_file_picker(ui, "test-picker", state->open, 1, state->mode, NULL,
+        ".", state->mode == 1 ? "new.txt" : NULL, state->filter, NULL,
+        list_test_files, &state->listing, state->path, sizeof state->path, parts);
+    for (int i = 0; i < 5; ++i) state->parts[i] = parts[i] >= 0 ? fpas_cui_node_key(ui, parts[i]) : 0;
+}
+
+/** Checks that Open uses visible entries and Save accepts the user-entered name. */
+static void check_picker_filter(cui_ctx *ui) {
+    cui_set_viewport(ui, 900, 700, 1);
+    file_picker_fixture state = { .open = true };
+    frames(ui, file_picker_test_frame, &state, 3);
+    click_file_part(ui, file_picker_test_frame, &state, state.parts[4], 44);
+    state.filter = "*.png";
+    frames(ui, file_picker_test_frame, &state, 2);
+    click_file_part(ui, file_picker_test_frame, &state, state.parts[2], 0);
+    CHECK(state.result == 0);
+    click_file_part(ui, file_picker_test_frame, &state, state.parts[4], 44);
+    click_file_part(ui, file_picker_test_frame, &state, state.parts[2], 0);
+    CHECK(state.result == 2 && strstr(state.path, "Beta.png"));
+
+    state.open = false;
+    state.mode = 1;
+    frames(ui, file_picker_test_frame, &state, 2);
+    state.open = true;
+    state.filter = "*.txt";
+    frames(ui, file_picker_test_frame, &state, 3);
+    click_file_part(ui, file_picker_test_frame, &state, state.parts[4], 44);
+    click_file_part(ui, file_picker_test_frame, &state, state.parts[3], 0);
+    key(ui, file_picker_test_frame, &state, CUI_KEY_A, CUI_MOD_PRIMARY);
+    text(ui, file_picker_test_frame, &state, "draft.txt");
+    state.filter = "*.png";
+    frames(ui, file_picker_test_frame, &state, 2);
+    click_file_part(ui, file_picker_test_frame, &state, state.parts[2], 0);
+    CHECK(state.result == 2 && strstr(state.path, "draft.txt"));
 }
 
 typedef struct {
@@ -392,7 +529,7 @@ static void check_area(cui_ctx *ui) {
 
 int main(void) {
     void (*checks[])(cui_ctx *) = { check_area, check_tags, check_code, check_select, check_number,
-        check_number_precision, check_disabled_picker, check_dropzone, check_field_widths,
+        check_number_precision, check_disabled_picker, check_file_browser, check_picker_filter, check_dropzone, check_field_widths,
         check_multi_select_keyboard, check_sliders };
     for (size_t i = 0; i < sizeof checks / sizeof *checks; ++i) {
         cui_sw_renderer *sw = cui_sw_create();

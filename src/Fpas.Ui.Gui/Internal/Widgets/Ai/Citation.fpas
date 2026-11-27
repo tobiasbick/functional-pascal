@@ -46,7 +46,7 @@ begin
     Frame, Id, Role, if Source = null then
       Number.ToString()
     else
-      Source.Title
+      Source.Title ?? Source.Url ?? Number.ToString()
     end if, Enabled, ''
   );
   if Clicked then

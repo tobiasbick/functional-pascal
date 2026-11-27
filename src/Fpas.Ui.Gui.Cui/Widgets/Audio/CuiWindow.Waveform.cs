@@ -15,7 +15,7 @@ public sealed partial class CuiWindow
     /// <param name="height">Logical height or zero.</param>
     /// <param name="bar">Bar width or zero.</param>
     /// <param name="gap">Bar gap or zero.</param>
-    /// <param name="color">Played bar color.</param>
+    /// <param name="color">Color of the played portion or all passive bars.</param>
     /// <param name="flags">Enabled (1), request focus (2), and commit pointer input on release (4).</param>
     /// <returns>The proposed position, or null without progress.</returns>
     public unsafe float? Waveform(string id, float[] peaks, float? progress, int widthKind, float width,
@@ -26,6 +26,12 @@ public sealed partial class CuiWindow
         CheckFeedbackNumber(height, nameof(height));
         CheckFeedbackNumber(bar, nameof(bar));
         CheckFeedbackNumber(gap, nameof(gap));
+        CheckChartColor(color);
+        ArgumentNullException.ThrowIfNull(peaks);
+        foreach (float peak in peaks)
+            if (!float.IsFinite(peak) || peak < 0 || peak > 1) throw new ArgumentOutOfRangeException(nameof(peaks));
+        if (progress is float fraction && (!float.IsFinite(fraction) || fraction < 0 || fraction > 1))
+            throw new ArgumentOutOfRangeException(nameof(progress));
         float position = progress.GetValueOrDefault();
         fixed (float* values = peaks)
             NativeMethods.Waveform(context, Stable(id), values, peaks.Length, progress.HasValue ? &position : null,

@@ -32,14 +32,18 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Font / Size / Width` | Body / 0 / Content. |
-| `From / To` | Both Automatic. Supply colors to override the native gradient endpoints. |
-| `Animate` | false. Lets the gradient drift along the text. |
+| `Font` | Body. |
+| `Size` | Zero uses the theme's body text size. |
+| `Width` | Content. Supply a width to wrap the text. |
+| `From` | Automatic uses the accent or the foreground color with a neutral accent. |
+| `To` | Automatic blends the first color toward the foreground. |
+| `Animate` | False. Set True to move the gradient along the text. |
 
 ## Interaction
 
-Use the widget wherever styled text fits. CUI handles the gradient and
-the animation. Reduced motion keeps the gradient still.
+The static gradient runs from `From` at the left to `To` at the right.
+The animated gradient repeats a forward and reverse blend to make the loop
+continuous. Reduced motion shows the first phase of the animated gradient.
 
 ## See also
 

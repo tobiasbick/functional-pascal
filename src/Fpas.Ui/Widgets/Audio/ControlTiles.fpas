@@ -8,10 +8,10 @@ uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Native options.
 public type Options = record
-  // Optional CUI icon.
-  public Icon: string := '';
-  // Optional state line.
-  public Detail: string := '';
+  // Native glyph. Null uses the default glyph. An empty string hides the glyph.
+  public Icon: string? := null;
+  // State line. Null uses On or Off. An empty string leaves the state line blank.
+  public Detail: string? := null;
   // Active tile color.
   public Color: C.Color := C.Color.Automatic;
   // Native width.

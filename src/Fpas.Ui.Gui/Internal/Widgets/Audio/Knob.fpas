@@ -2,10 +2,10 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.Knob;
 
-uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Data;
 uses Fpas.Ui.Widgets.Audio.Knobs as W;
 
 uses System.Globalization as Culture;
@@ -36,16 +36,6 @@ begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
   const Role: string := 'knob';
   const Token: string := C.Token(Role, Id);
-  const Color: G.Color? := Settings.ArcColor;
-  const Rgba: uint := if Color = null then
-    0u
-    // CUI reserves all-zero RGBA for its default.
-  elsif Color.Alpha = 0 then
-    1u
-  else
-    cast Color.Red as uint or (cast Color.Green as uint shl 8)
-    or (cast Color.Blue as uint shl 16) or (cast Color.Alpha as uint shl 24)
-  end if;
   const Proposed: float := Frame.Window.Knob(
     Token,
     Label,
@@ -54,14 +44,13 @@ begin
     Maximum,
     Settings.Step,
     Settings.Reset,
-    Settings.DecimalPlaces,
+    Data.Format(Settings.Format),
     Settings.UnitLabel,
     Settings.HideValue,
     Settings.Size,
     Settings.Bipolar,
     Settings.LogScale,
-    Settings.ShowSign,
-    Rgba,
+    Data.Color(Settings.ArcColor),
     Enabled,
     C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     not Frame.PaintingClosed

@@ -32,15 +32,28 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Candles / Labels` | Pass finite values with High and Low enclosing Open and Close. Volume is nonnegative and defaults to 0. Labels is empty or has one caption per period. |
-| `Width / Height / Format` | Fill / 0 / null. A null price format uses two decimal places. |
-| `Overlays` | Empty. Supply up to four line series. NaN in an overlay marks a gap. |
+| `Candles` | Pass finite values with High and Low enclosing Open and Close. Volume is nonnegative and defaults to zero. |
+| `Labels` | Empty or one caption per period. A null entry omits the axis caption and uses the period number in the tooltip. |
+| `Width / Height / Format` | Fill / 0 / null. Zero uses 320 logical units. A null price format uses two decimal places. |
+| `Overlays` | Empty. Supply up to four lines with values in period order. NaN marks a gap. |
 | `Volume / Ohlc / Enabled` | true / false / true. Enable Ohlc for bars instead of candle bodies. |
-| `Up / Down` | Automatic / Automatic. |
+| `Up / Down` | Automatic uses the success and danger colors for rising and falling periods. |
 
 ## Interaction
 
-Use the wheel to zoom around the pointer. Drag or use Shift+wheel to pan. With focus, Left and Right move the crosshair, Shift moves ten periods, and Home or End goes to an endpoint. Plus and minus zoom and zero fits all periods. The chart follows newly appended periods when its viewport is at the end. `OnCursorChange` can report the original period index or -1 when inspection clears.
+Use the wheel to zoom around the pointer. Drag, use Shift+wheel or scroll
+sideways to pan. Hover a candle to inspect its prices, the change from the
+previous close and the volume when shown.
+
+With focus, Left and Right move the crosshair. Hold Shift to move by ten
+periods. Home and End go to the first and last periods. Plus and Minus
+zoom. Zero fits all periods. A focus ring surrounds the plot during keyboard
+navigation.
+
+The chart follows appended periods while the newest period is visible.
+`OnCursorChange` reports an index in the supplied periods, or minus one
+when inspection clears. If the data shrinks, the keyboard cursor stays
+within the remaining periods.
 
 ## See also
 

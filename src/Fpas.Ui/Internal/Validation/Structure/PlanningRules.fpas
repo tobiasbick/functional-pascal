@@ -90,10 +90,8 @@ begin
   R.CheckText(Settings.Filter, At);
   Extent(Settings.Width, At);
   Extent(Settings.Height, At);
-  if Settings.Places.Length > 6 or Settings.MaximumEntries < 0 or Settings.MaximumEntries >
-    100000
-  then
-    R.Reject(At, 'The browser accepts up to six places and 100,000 entries.');
+  if Settings.MaximumEntries < 0 or Settings.MaximumEntries > 100000 then
+    R.Reject(At, 'The browser accepts up to 100,000 entries.');
   end if;
 
   for Place: string in Settings.Places do
@@ -138,7 +136,7 @@ begin
   Extent(Settings.Height, At);
   for Event: WeekCalendars.Appointment in Current.Events do
     R.CheckText(Event.Title, At);
-    R.CheckText(Event.Detail, At);
+    R.CheckText(Event.Detail ?? '', At);
     Tone(Event.Tone, At);
     Hour(Event.Start, At);
     Hour(Event.Finish, At);
@@ -192,10 +190,17 @@ begin
 
   Chart.Distance(Settings.DayWidth, At);
   Chart.Distance(Settings.RowHeight, At);
+  if not Sys.Single.IsFinite(Settings.DayWidth * cast Current.Days as float)
+    or (Settings.RowHeight > 0.0F and Settings.RowHeight <= 16.0F)
+    or not Sys.Single.IsFinite(Settings.RowHeight * cast Current.Tasks.Length as float)
+  then
+    R.Reject(At, 'The Gantt chart needs finite dimensions and space for each bar.');
+  end if;
+
   Extent(Settings.Height, At);
   for Task: Gantts.Task in Current.Tasks do
     R.CheckText(Task.Name, At);
-    R.CheckText(Task.Owner, At);
+    R.CheckText(Task.Owner ?? '', At);
     Tone(Task.Tone, At);
     if Task.Start < 0 or Task.Finish > Current.Days or Task.Finish < Task.Start
       or (Task.Finish = Task.Start and not Task.Milestone) or Task.DependsOn < -1

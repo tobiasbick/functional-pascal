@@ -5,6 +5,7 @@ unit Fpas.Ui.Widgets.Audio.NowPlaying;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 
 // Native value.
 public type Value = record
@@ -18,10 +19,10 @@ public type Value = record
   public Duration: float;
   // Current transport state.
   public Playing: bool := false;
-  // Fallback artwork color.
+  // Background color of the artwork tile.
   public ArtColor: C.Color := C.Color.Automatic;
-  // Optional image resource path.
-  public Artwork: string := '';
+  // Optional file or RGBA artwork.
+  public Artwork: Media.Source? := null;
 end record;
 
 // Native event.

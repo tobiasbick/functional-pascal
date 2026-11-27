@@ -35,8 +35,11 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Replay / OnComplete` | 0 / null. Change Replay to restart. Supply a callback for completion. |
-| `Speed / Delay / Caret` | 0 / 0 / false. Positive Speed sets characters per second. Delay is in seconds. |
-| `Font / Size / Color / NoWrap` | Body / 0 / Automatic / false. |
+| `Speed` | 0. CUI starts at 45 characters per second. Set a positive value for a different rate. |
+| `Delay` | 0. Set a delay in seconds before typing starts. |
+| `Caret` | false. Set true to show a blinking caret until the text is complete. |
+| `Font / Size / Color` | Body / 0 / Automatic. Zero size uses the theme body text size. The automatic color uses the foreground. |
+| `Width / NoWrap` | Content / false. Set a width to constrain the text. Set NoWrap to keep it on one line. |
 
 ## Interaction
 

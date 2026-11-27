@@ -33,14 +33,16 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Replay / Delay` | Both zero. Change Replay to restart. Delay is in seconds. |
-| `Font / Size / Color` | Body / 0 / Automatic. |
+| `Replay / Delay` | Both zero. Change Replay to restart. Set a delay in seconds before the reveal starts. |
+| `Speed` | 0. CUI starts a new word every 45 milliseconds. Set a positive value in words per second. |
+| `Font / Size / Color` | Body / 0 / Automatic. Zero size uses the theme body text size. The automatic color uses the foreground. |
 | `Width / NoWrap` | Content / false. Use NoWrap to keep the message on a single line. |
 
 ## Interaction
 
 CUI reveals words when first shown or when the text changes. Change the
-revision to replay the same message. Reduced motion shows the full text.
+revision to replay the same message. Spaces, tabs and line breaks separate
+words. Reduced motion shows the full text.
 
 ## See also
 

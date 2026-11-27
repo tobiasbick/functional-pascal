@@ -35,10 +35,12 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Series / Sizes` | Each series contains finite Point(X, Y) coordinates. Supply no sizes for dots, or one finite nonnegative size per point for bubbles. |
-| `Width / Height` | Fill / 0. Zero uses the default height. |
-| `XLabel / YLabel / XFormat / YFormat` | Empty / empty / null / null. The formats apply to their respective axes. |
-| `Legend / Enabled` | true / true. |
+| `Series / Sizes` | Supply named series with finite coordinates. Use no sizes for dots, or one finite nonnegative size per point for bubbles. |
+| `Series.Color` | Automatic. CUI chooses the series color in input order. |
+| `Width / Height` | Fill / 0. Zero uses 280 logical units. |
+| `XLabel / YLabel` | Null omits the axis title and its space. An empty title keeps that space. |
+| `XFormat / YFormat` | Null uses CUI's number format. Each format applies to the axis and tooltip. |
+| `Legend / Enabled` | True / true. The legend appears with two or more series. |
 
 ## Interaction
 

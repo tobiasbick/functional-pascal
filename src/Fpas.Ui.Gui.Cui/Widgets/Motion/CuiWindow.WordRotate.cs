@@ -14,6 +14,7 @@ public sealed partial class CuiWindow
     public void WordRotate(string id, string[] words, float interval, CuiMotionText options)
     {
         CheckFrame();
+        ArgumentNullException.ThrowIfNull(words);
         foreach (string word in words) Utf8.Validate(word, nameof(words));
         CheckFeedbackNumber(interval, nameof(interval));
         var native = MotionOptions(options);

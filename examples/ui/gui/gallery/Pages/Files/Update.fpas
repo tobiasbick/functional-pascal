@@ -2,11 +2,16 @@
 
 unit GuiGallery.Pages.Files.Update;
 
+uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Composition as Composition;
 uses Fpas.Ui.Widgets.Developer.Terminals as Terminal;
 uses Fpas.Ui.Widgets.Files.FileBrowsers as Browser;
 uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
 uses Fpas.Ui.Widgets.Navigation.PathBars as Paths;
 
+uses Gallery.Shared.Strings as Strings;
+uses GuiGallery.Pages.Files.ProjectTree as ProjectTree;
 uses GuiGallery.Pages.Files.State as M;
 uses GuiGallery.Pages.Files.Terminal as Shell;
 uses GuiGallery.Pages.Files.View as V;
@@ -27,13 +32,7 @@ begin
   end try;
 end function;
 
-// Applies native file navigation and picker results.
-// ## Parameters
-// - `Model`: Current Files state.
-// - `Message`: Proposed file action.
-// ## Returns
-// The new gallery state.
-public function Update(Model: M.Model; Message: M.Msg): M.Model;
+function Apply(Model: M.Model; Message: M.Msg): M.Model;
 begin
   return case Message of
     when M.Msg.Browse(const Event: Browser.Event): Model with
@@ -64,7 +63,6 @@ begin
           Output := Model.Output + Shell.Run(Command, Model.Folder);
         end with
       end if;
-    when M.Msg.Terminal(Terminal.Event.Interrupt): Model;
     when M.Msg.Path(const Event: Paths.Event): Model with
       Folder := if Event.Text <> null then
         ValidFolder(Model.Folder, Event.Text ?? Model.Folder)
@@ -76,6 +74,35 @@ begin
         Model.Folder
       end if;
     end with;
+    else Model;
+  end case;
+end function;
+
+// Applies native file, project and terminal messages.
+// ## Parameters
+// - `Model`: Current Files state.
+// - `Message`: Proposed file action.
+// ## Returns
+// The new gallery state and any host commands.
+public function Update(Model: M.Model; Message: M.Msg): Mvu.Transition of (M.Model, M.Msg);
+begin
+  case Message of
+    when M.Msg.Project(const Value: ProjectTree.Msg):
+      const Child: Mvu.Transition of (ProjectTree.Model, M.Msg) := Composition.MapTransition of (ProjectTree.Model, ProjectTree.Msg, M.Msg)(
+        ProjectTree.Update(Model.Project, Value), M.Msg.Project
+      );
+      return new Mvu.Transition of (M.Model, M.Msg)(
+        Model with
+          Project := Child.Model;
+        end with, Child.Commands
+      );
+    when M.Msg.Terminal(Terminal.Event.Interrupt):
+      return new Mvu.Transition of (M.Model, M.Msg)(
+        Model,
+        [Toasts.Show of M.Msg(Strings.Get('Text.Interrupted'))]
+      );
+    else
+      return new Mvu.Transition of (M.Model, M.Msg)(Apply(Model, Message), []);
   end case;
 end function;
 

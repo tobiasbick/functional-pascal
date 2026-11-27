@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Mapping.DeveloperTools;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Mapping.MessageMapping as M;
 uses Fpas.Ui.Widgets.Charts.TimeHistograms as TimeHistograms;
 uses Fpas.Ui.Widgets.Developer.ApiExplorers as ApiExplorers;
 uses Fpas.Ui.Widgets.Developer.Blames as Blames;
@@ -58,7 +59,7 @@ begin
       const Id: string,
       const Stages: array of string,
       const Jobs: array of Pipelines.Job,
-      const Selection: int,
+      const Selection: int?,
       const Changed: function(Pipelines.Event): TChild,
       const Settings: Pipelines.Options
     ):
@@ -74,7 +75,7 @@ begin
       const Id: string,
       const Bindings: array of Keymaps.Binding,
       const Categories: array of string,
-      const Modifiers: int,
+      const Modifiers: int?,
       const Changed: function(Keymaps.Event): TChild,
       const Settings: Keymaps.Options
     ):
@@ -89,7 +90,7 @@ begin
     when E.Element.CommitGraph(
       const Id: string,
       const Commits: array of CommitGraphs.Commit,
-      const Selection: int,
+      const Selection: int?,
       const Changed: function(CommitGraphs.Event): TChild,
       const Settings: CommitGraphs.Options
     ):
@@ -104,7 +105,7 @@ begin
       const Id: string,
       const Vertices: array of DependencyGraphs.Vertex,
       const Edges: array of DependencyGraphs.Edge,
-      const Selection: int,
+      const Selection: int?,
       const Changed: function(DependencyGraphs.Event): TChild,
       const Settings: DependencyGraphs.Options
     ):
@@ -119,7 +120,7 @@ begin
     when E.Element.NetworkWaterfall(
       const Id: string,
       const Requests: array of NetworkWaterfalls.Request,
-      const Selection: int,
+      const Selection: int?,
       const Changed: function(NetworkWaterfalls.Event): TChild,
       const Settings: NetworkWaterfalls.Options
     ):
@@ -185,10 +186,14 @@ begin
     when E.Element.Uptime(
       const Id: string,
       const Services: array of Uptimes.Service,
-      const LastDay: Sys.DateOnly,
-      const Settings: Uptimes.Options
+      const LastDay: Sys.DateOnly?,
+      const Settings: Uptimes.Options,
+      const Changed: Sys.Func of (Uptimes.Hover, TChild)?
     ):
-      return (E.Element of TParent).Uptime(Id, Services, LastDay, Settings);
+      return (E.Element of TParent).Uptime(
+        Id, Services, LastDay, Settings,
+        M.Callback of (Uptimes.Hover, TChild, TParent)(Changed, Messages)
+      );
     when E.Element.TimeHistogram(
       const Id: string,
       const Start: double,
@@ -240,7 +245,7 @@ begin
     when E.Element.ApiExplorer(
       const Id: string,
       const Endpoints: array of ApiExplorers.Endpoint,
-      const Selection: int,
+      const Selection: int?,
       const Changed: function(ApiExplorers.Event): TChild,
       const Settings: ApiExplorers.Options
     ):
@@ -293,7 +298,7 @@ begin
       const Id: string,
       const Pattern: string,
       const Sample: string,
-      const Modifiers: int,
+      const Modifiers: int?,
       const Changed: function(RegexTesters.Event): TChild,
       const Settings: RegexTesters.Options
     ):

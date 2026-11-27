@@ -32,13 +32,17 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Item.Title / Detail / Icon` | Supply a title. Detail and Icon default to empty. |
-| `Columns / Enabled` | 0 / true. Zero uses the native column count. |
+| `Item.Title` | Supply the card title. |
+| `Item.Detail` | null omits the supporting line. |
+| `Item.Icon` | null omits the icon slot. Supply a CUI icon glyph to fill the slot. |
+| `Columns` | 0 uses a maximum of two columns. CUI reduces the column count when there is too little space for 200 logical units per card. |
+| `Enabled` | true. |
 
 ## Interaction
 
-Look up the selected index and apply its text to the draft. Sending
-a request is a separate application action.
+Click a card or move focus to the card with Tab and press Enter or Space.
+Use the resulting zero-based index to update the draft. Sending a request is
+a separate application action.
 
 ## See also
 
@@ -59,3 +63,4 @@ a request is a separate application action.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
   - [prompt_suggestions.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/prompt_suggestions.c)
   - [prompt_suggestions.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/prompt_suggestions.h)
+- [Native AI card tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/ai_cards.c)

@@ -74,8 +74,8 @@ if(FPAS_CUI_BUILD_TESTS)
         property_text_replacement calendar smart_inputs wheel_interruption charts
         visualizations more_charts collection_regressions grid_regressions grid_editing
         code_instruments api_extensions editor_extensions painting motion creative
-        planning social media voice_ai developer_tools canvas_bars display source_tools
-        editing_tools desktop_chrome)
+        planning social media voice_ai ai_cards developer_tools canvas_bars display source_tools
+        editing_tools desktop_chrome developer_graphs developer_inspectors developer_editors http_tools)
         add_executable(fpas_cui_${widget} tests/${widget}.c)
         set_target_properties(fpas_cui_${widget} PROPERTIES
             C_STANDARD 99 C_STANDARD_REQUIRED YES C_EXTENSIONS OFF)

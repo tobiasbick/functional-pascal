@@ -1,10 +1,10 @@
 // [Documentation](../../../../../docs/ui/gui/more-developer-tools/http-response-status.md)
 #include "../../fpas_cui.h"
 
-void fpas_cui_response_status(cui_ctx *ui, const char *id, int status, double seconds, double bytes, int width_kind, float width, int enabled, fpas_dev_result * out) {
+/** Draw and track CUI's display-only response status line. */
+void fpas_cui_response_status(cui_ctx *ui, const char *id, int status, double seconds, double bytes, int width_kind, float width, int enabled) {
     const int root = ui->node_count;
     const cui_id key = cui_make_id(ui, id);
-    *out = fpas_dev_empty();
     cui_push_disabled(ui, !enabled);
     cui_response_status(ui,status,seconds,bytes);
     cui_pop_disabled(ui);

@@ -34,15 +34,21 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Vertex.Label / Detail / Tone` | Supply the node label, an optional detail and a native tone code. |
-| `Edge.From / To` | Indices in the input vertex array. CUI computes a layered layout when the graph changes. |
-| `TopDown / Width / Height / Enabled` | false / Fill / 0 / true. TopDown stacks the layers vertically. |
+| `Vertex.Label / Detail / Tone` | Supply the label, a nullable detail and a `Fpas.Ui.Styles.Tone` ordinal. |
+| `Edge.From / To` | Pass zero-based node indices. CUI computes layers and breaks cycles in the layout. |
+| `TopDown / Width / Height / Enabled` | false / Fill / 0 / true. TopDown stacks the layers vertically. Height zero uses 360 logical units. |
+| `Selection` | Pass the selected node, minus one for none, or null to let CUI retain the selection. |
+| `Hovered` | null. Set minus one to start tracking hover. Store the last `Event.Hovered` value to receive changes only. |
 
 ## Interaction
 
-Hover a node to see what it depends on and what depends on it. Drag to pan,
-use the wheel to zoom and press F to fit. Save `Event.Selection` and use
-`Activated` to open details for the node.
+Hover a node to highlight its dependencies and dependants. Drag to pan, use
+the wheel to zoom, or hold Shift while scrolling to pan horizontally.
+Press F to fit the graph and use plus or minus to adjust zoom.
+
+Click a node to select it. Arrow keys move along edges or across a layer.
+Enter or double-click activates the selected node. Escape clears selection.
+Request focus with the graph's stable ID.
 
 ## See also
 
@@ -62,3 +68,4 @@ use the wheel to zoom and press F to fit. Save `Event.Selection` and use
 - `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
   - [dependency_graph.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/dependency_graph.c)
   - [dependency_graph.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/dependency_graph.h)
+- [Native graph tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/developer_graphs.c)

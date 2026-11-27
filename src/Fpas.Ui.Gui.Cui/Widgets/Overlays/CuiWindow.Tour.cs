@@ -18,20 +18,21 @@ public sealed partial class CuiWindow
     /// <param name="blockTarget">Whether to block the highlighted control's pointer input.</param>
     /// <param name="trackPart">Maps a native action slot to its inspection identity.</param>
     /// <param name="focusPart">One plus the slot to focus, zero for no request.</param>
-    /// <param name="nextLabel">Literal caption, empty for Next.</param>
-    /// <param name="backLabel">Literal caption, empty for Back.</param>
-    /// <param name="doneLabel">Literal caption, empty for Done.</param>
-    /// <param name="countFormat">At most two %d slots (step, total), %% for a percent, empty for CUI's default.</param>
+    /// <param name="nextLabel">Literal caption, or null for Next.</param>
+    /// <param name="backLabel">Literal caption, or null for Back.</param>
+    /// <param name="doneLabel">Literal caption, or null for Done.</param>
+    /// <param name="countFormat">At most two %d slots (step, total), %% for a percent, or null for CUI's default.</param>
     /// <returns>The native proposal and rendered actions; the input model is unchanged.</returns>
     public unsafe CuiTourResult Tour(string id, string[] targets, string[] titles, string[] bodies,
         int[] placements, int step, float width = 0, float padding = 0, bool blockTarget = false,
         Func<int, string>? trackPart = null, int focusPart = 0,
-        string nextLabel = "", string backLabel = "", string doneLabel = "", string countFormat = "")
+        string? nextLabel = null, string? backLabel = null, string? doneLabel = null, string? countFormat = null)
     {
         CheckFrame();
-        Utf8.Validate(nextLabel, nameof(nextLabel)); Utf8.Validate(backLabel, nameof(backLabel));
-        Utf8.Validate(doneLabel, nameof(doneLabel));
-        string? format = CountFormat.Check(countFormat, 2);
+        if (nextLabel is not null) Utf8.Validate(nextLabel, nameof(nextLabel));
+        if (backLabel is not null) Utf8.Validate(backLabel, nameof(backLabel));
+        if (doneLabel is not null) Utf8.Validate(doneLabel, nameof(doneLabel));
+        if (countFormat is not null) CountFormat.Check(countFormat, 2);
         string identity = Stable(id);
         ArgumentNullException.ThrowIfNull(targets);
         ArgumentNullException.ThrowIfNull(titles);
@@ -60,7 +61,7 @@ public sealed partial class CuiWindow
         fixed (uint* targetKeys = keys)
         fixed (int* positions = placements, nodes = parts)
             action = NativeMethods.Tour(context, identity, targetKeys, titles, bodies, positions, count,
-                ref proposed, width, padding, blockTarget ? 1 : 0, Optional(nextLabel), Optional(backLabel), Optional(doneLabel), format,
+                ref proposed, width, padding, blockTarget ? 1 : 0, nextLabel, backLabel, doneLabel, countFormat,
                 focusPart, out node, out key, nodes);
         TrackControl(id, node, key);
         List<int> visible = [];

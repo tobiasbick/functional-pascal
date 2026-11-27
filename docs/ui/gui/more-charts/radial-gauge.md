@@ -34,12 +34,19 @@ end unit;
 | --- | --- |
 | `Value / Minimum / Maximum` | Supply a finite value and finite increasing limits. CUI clamps the fill to the scale and displays the actual reading. |
 | `Style / Bands` | Automatic uses Segments when bands are supplied and Arc otherwise. Arc, Segments and Ring can be selected explicitly. Provide up to 16 increasing thresholds within the scale. |
-| `Size / Sweep / ShowLimits / Target` | 0 / 0 / true / null. Zero uses native dimensions. A custom sweep is 90 through 300 degrees. An arc can draw the target marker. |
-| `Label / Unit / Detail / Format / Color` | Empty / empty / empty / null / Automatic. Ring supports a detail caption. |
+| `Band.Tone / Band.Name` | Neutral / empty. Segments use the band color and show the name when the value is in the band. |
+| `Size / Sweep` | Zero uses a width of 200 logical units and a sweep of 270 degrees. An arc or segments use a sweep between 90 and 300 degrees. |
+| `ShowLimits / Target` | True / null. An arc shows the limit captions and can draw a target marker. |
+| `Label / Unit / Detail` | Empty. Add a caption, measurement unit or detail line to any style. |
+| `Format` | Null. CUI uses its compact number format for the reading, limits and target. |
+| `Color` | Automatic. Set the fill color explicitly. Bands still color their own segments. |
 
 ## Interaction
 
-The gauge is passive. Pass the current reading from the model. CUI chooses a band color and status caption for segments. The arc can show scale limits and a target, and the ring can include a detail below the value.
+The gauge displays the current reading from the model. CUI animates the fill
+as the reading changes. With reduced motion, the fill changes immediately.
+A ring makes a full turn. The containing card receives pointer input over
+the passive gauge.
 
 ## See also
 

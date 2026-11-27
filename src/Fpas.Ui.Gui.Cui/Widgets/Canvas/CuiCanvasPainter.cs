@@ -57,7 +57,7 @@ public sealed class CuiCanvasPainter
     public float FontScale { get { Check(); return NativeMethods.CanvasFontScale(context); } }
     /// <summary>Gets CUI's monotonic frame time in seconds.</summary>
     public double Time { get { Check(); return NativeMethods.CanvasTime(context); } }
-    /// <summary>Gets the native frame duration in seconds.</summary>
+    /// <summary>Gets the native frame duration in seconds, capped at 0.25.</summary>
     public float DeltaTime { get { Check(); return NativeMethods.CanvasDeltaTime(context); } }
 
     /// <summary>Resolves a semantic token from the current interpolated palette.</summary>

@@ -16,15 +16,19 @@ public sealed partial class CuiWindow
     /// <param name="gap">Logical spacing.</param>
     /// <param name="color">Semantic or explicit color.</param>
     /// <param name="beam">Whether to draw the traveling beam.</param>
-    public void BeginSpotlight(string id, int widthKind, float width, int heightKind, float height, float padding, float gap, CuiChartColor color, bool beam)
+    /// <param name="acceptHover">Whether pointer proximity lights the card.</param>
+    public void BeginSpotlight(string id, int widthKind, float width, int heightKind,
+        float height, float padding, float gap, CuiChartColor color, bool beam, bool acceptHover = true)
     {
         CheckFrame();
         CheckExtent(widthKind, width, nameof(width));
         CheckExtent(heightKind, height, nameof(height));
         CheckFeedbackNumber(padding, nameof(padding));
         CheckFeedbackNumber(gap, nameof(gap));
+        CheckChartColor(color);
+        int flags = (beam ? 1 : 0) | (acceptHover ? 2 : 0);
         int node = NativeMethods.SpotlightBegin(context, Stable(id), widthKind, width, heightKind, height,
-            padding, gap, color.Palette, color.Rgba, beam ? 1 : 0);
+            padding, gap, color.Palette, color.Rgba, flags);
         layouts.Add(new(Layout.Spotlight, Node: node));
     }
 

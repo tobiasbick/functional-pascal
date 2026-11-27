@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Validation.Dispatch.VoiceAndAiValidation;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Ai.ComposerParts as ComposerParts;
 uses Fpas.Ui.Internal.Validation.Controls.AiRules as AiRules;
 uses Fpas.Ui.Internal.Validation.Controls.VoiceRules as VoiceRules;
 uses Fpas.Ui.Internal.Validation.Core.ChartChecks as ChartRules;
@@ -126,7 +127,7 @@ begin
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       LR.CheckExtent(Settings.Width, Profile, At);
       VoiceRules.Composer(Content, Settings, At);
-      for Part: string in ['editor', 'send', 'record', 'cancel'] do
+      for Part: string in ComposerParts.Names(Content.Attachments.Length) do
         discard Identify(Id + '/' + Part, At);
       end for;
     when E.Element.VoiceOrb(
@@ -182,9 +183,9 @@ begin
     ):
       const At: string := Identify(Id, Location + '/AgentPlan');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
-      Rules.CheckText(Settings.Title, At);
+      Rules.CheckText(Settings.Title ?? '', At);
       for Step: AgentPlans.Step in Steps do
-        AiRules.Task(Step.Status, 0.0F, [Step.Title, Step.Detail], At);
+        AiRules.Task(Step.Status, 0.0F, [Step.Title, Step.Detail ?? ''], At);
       end for;
 
       for Part: int := 0 to Steps.Length - 1 do
@@ -201,6 +202,9 @@ begin
       const At: string := Identify(Id, Location + '/AgentStatus');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       AiRules.Task(Settings.Status, Settings.Seconds, [Label, Settings.Icon], At);
+      if cast Settings.Seconds as double > cast int.MaxValue as double then
+        Rules.Reject(At, 'Agent status elapsed seconds exceed the supported range.');
+      end if;
     when E.Element.SourceList(
       const Id: string,
       const Documents: array of Sources.Item,
@@ -250,7 +254,7 @@ begin
         Rules.Reject(At, 'A context meter needs a finite ratio and positive capacity.');
       end if;
 
-      Rules.CheckText(Settings.Unit, At);
+      Rules.CheckText(Settings.Unit ?? '', At);
       for Part: ContextMeters.Part in Breakdown do
         Rules.CheckText(Part.Label, At);
         ChartRules.Distance(Part.Amount, At);
@@ -286,8 +290,8 @@ begin
 
       for Item: PromptSuggestions.Item in Items do
         Rules.CheckText(Item.Title, At);
-        Rules.CheckText(Item.Detail, At);
-        Rules.CheckText(Item.Icon, At);
+        Rules.CheckText(Item.Detail ?? '', At);
+        Rules.CheckText(Item.Icon ?? '', At);
       end for;
 
       for Part: int := 0 to Items.Length - 1 do

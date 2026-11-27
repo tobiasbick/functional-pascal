@@ -3,8 +3,46 @@
 unit Fpas.Ui.Gui.TraceGeometry;
 
 uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Developer as Native;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Developer.TraceViewers as Trace;
+
+uses System.Collections.Generic as Lists;
+
+// Spans in CUI's sort order, with original indices mapped to their new positions.
+public type SortedSpans = record
+  // Spans ordered by track, depth and time.
+  public Spans: array of Trace.Span;
+  // New index for each original span index.
+  public IndexMap: array of int;
+end record;
+
+// Sorts model spans using CUI's native trace comparator.
+// ## Parameters
+// - `Spans`: Source spans in any order.
+// ## Returns
+// Sorted spans and the index map for selections and dependency links.
+public function SortSpans(Spans: array of Trace.Span): SortedSpans;
+begin
+  const NativeSpans: Lists.List of Native.CuiDevSpan := new Lists.List of Native.CuiDevSpan(
+    Spans.Length
+  );
+  for Span: Trace.Span in Spans do
+    NativeSpans.Add(
+      new Native.CuiDevSpan(Span.Name, Span.Start, Span.End, Span.Track, Span.Depth, Span.ColorKey)
+    );
+  end for;
+
+  const Order: array of int := Native.CuiTraceOrder.Sort(NativeSpans.ToArray());
+  const Result: Lists.List of Trace.Span := new Lists.List of Trace.Span(Spans.Length);
+  const IndexMap: array of int := new int[Spans.Length];
+  for Index: int := 0 to Order.Length - 1 do
+    Result.Add(Spans[Order[Index]]);
+    IndexMap[Order[Index]] := Index;
+  end for;
+
+  return new SortedSpans(Result.ToArray(), IndexMap);
+end function;
 
 // Reads one span from the last presented native trace on the window owner thread.
 // ## Type parameters

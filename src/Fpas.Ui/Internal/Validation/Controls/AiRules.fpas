@@ -34,9 +34,9 @@ end procedure;
 // - `At`: Diagnostic location.
 public procedure Source(Value: S.Item; At: string);
 begin
-  R.CheckText(Value.Url, At);
-  R.CheckText(Value.Title, At);
-  R.CheckText(Value.Snippet, At);
+  R.CheckText(Value.Url ?? '', At);
+  R.CheckText(Value.Title ?? '', At);
+  R.CheckText(Value.Snippet ?? '', At);
 end procedure;
 
 // Checks the native model list and selection.

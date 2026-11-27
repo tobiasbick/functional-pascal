@@ -19,7 +19,7 @@ uses System.Collections.Generic as Lists;
 // - `Frame`: Current presentation frame.
 // - `Id`: Stable widget identity.
 // - `Items`: Tab descriptors.
-// - `Selected`: Selected index.
+// - `Selected`: Selected index or minus one.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native appearance and input options.
 public procedure Draw of TMsg(
@@ -33,8 +33,8 @@ public procedure Draw of TMsg(
 begin
   const Token: string := C.Token('tab-bar', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
-  const Icons: Lists.List of string := new Lists.List of string(Items.Length);
-  const Labels: Lists.List of string := new Lists.List of string(Items.Length);
+  const Icons: Lists.List of string? := new Lists.List of string? (Items.Length);
+  const Labels: Lists.List of string? := new Lists.List of string? (Items.Length);
   const Badges: array of int := new int[Items.Length];
   var Focus: int := -1;
   for Index: int := 0 to Items.Length - 1 do
@@ -43,7 +43,7 @@ begin
     Badges[Index] := Items[Index].Badge;
     const Part: string := Id + '/' + Index.ToString();
     if C.WantsFocus of TMsg(Frame, Part, C.Token('tab-bar-item', Part), Enabled)
-      or (Index = Selected and C.WantsFocus of TMsg(
+      or (Index = Sys.Math.Max(0, Selected) and C.WantsFocus of TMsg(
       Frame,
       Id,
       C.Token('tab-bar-item', Part),
@@ -84,7 +84,7 @@ begin
     for Index: int := 0 to Items.Length - 1 do
       Frame.Controls.Add(
         new App.Control(
-          Id + '/' + Index.ToString(), Items[Index].Label, 'tab-bar-item',
+          Id + '/' + Index.ToString(), Items[Index].Label ?? '', 'tab-bar-item',
           new Cui.CuiRectangle(), Enabled, Value := (Index = Next).ToString()
         )
       );

@@ -1,6 +1,6 @@
 # Tab bar
 
-The gallery presents Home, Search, Inbox and Profile with a badge on Inbox.
+Use a tab bar to navigate between views in a compact layout.
 Available in **GUI**.
 
 ![Compact tab bar and Inbox badge in the FPAS gallery](images/tab-bar.png)
@@ -16,7 +16,7 @@ uses Fpas.Ui.Widgets.Navigation.TabBars as W;
 // Shows navigation tabs for a compact view.
 // ## Parameters
 // - `Tabs`: Icons, captions and badge counts in display order.
-// - `Selected`: Selected zero-based index.
+// - `Selected`: Selected zero-based index or -1 for no selection.
 // ## Returns
 // The bar with a proposed tab index.
 public function View(Tabs: array of W.Item; Selected: int): E.Element of int;
@@ -31,13 +31,17 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Item.Icon / Label / Badge` | Supply the glyph and label. Badge defaults to zero, which hides it. |
-| `Width / LabelsOnSelection / Enabled` | Fill / false / true. LabelsOnSelection shows just the selected label. |
+| `Item.Icon` | A CUI glyph. Null uses a circle. Use an empty string to omit the glyph. |
+| `Item.Label` | Literal text. Null omits the label row. |
+| `Item.Badge` | 0 hides the badge. Values above 9 display `9+`. |
+| `Selected` | A zero-based index or -1 for no selection. |
+| `Width / LabelsOnSelection / Enabled` | Fill / false / true. `LabelsOnSelection` shows only the selected label. |
 
 ## Interaction
 
-Apply a proposed index to the model and display its associated view.
-The bar animates the selection indicator.
+Click a tab or use Left and Right from a focused tab to propose a selection.
+Enter or Space proposes the focused tab. Apply the proposed index to the
+model and display its view. The bar animates the selection indicator.
 
 ## See also
 

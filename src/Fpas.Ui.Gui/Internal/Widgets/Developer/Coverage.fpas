@@ -61,11 +61,14 @@ begin
     Settings.High,
     Width.Kind,
     Width.Value,
-    Enabled
+    Enabled,
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   );
   P.Root of TMsg(Frame, Id, Role, '', Enabled, Result.X.ToString());
-  if Enabled and (Result.Action >= 0) then
-    Frame.Messages.Add(Changed(new D.Event(Result.Action, cast Result.X as float)));
+  const Lines: float := cast Result.X as float;
+  const LinesChanged: bool := Settings.ReportedLines <> null and Settings.ReportedLines <> Lines;
+  if Enabled and (Result.Action >= 0 or LinesChanged) then
+    Frame.Messages.Add(Changed(new D.Event(Result.Action, Lines)));
   end if;
 end procedure;
 

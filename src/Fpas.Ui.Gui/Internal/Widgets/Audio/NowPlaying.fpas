@@ -5,10 +5,13 @@ unit Fpas.Ui.Gui.Internal.Widgets.Audio.NowPlaying;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Audio as CuiAudio;
+uses Fpas.Ui.Gui.Cui.Widgets.Media as CuiMedia;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Gui.Internal.Data.MediaData as Data;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Audio.NowPlaying as W;
+uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 
 uses System as Sys;
 
@@ -62,9 +65,15 @@ begin
   else
     0
   end if);
+  const Source: Media.Source? := Current.Artwork;
+  const Artwork: CuiMedia.CuiMediaImage? := if Source <> null then
+    Data.Convert(Source)
+  else
+    null
+  end if;
   const Result: CuiAudio.CuiPlayerResult := Frame.Window.NowPlaying(
     Token, Current.Title, Current.Artist,
-    Current.Artwork, Colors.Color(Current.ArtColor), ref Position, Current.Duration, ref Playing,
+    Artwork, Colors.Color(Current.ArtColor), ref Position, Current.Duration, ref Playing,
     Width.Kind, Width.Value, Flags, Focus, Track
   );
   const Mask: int := Result.Events;

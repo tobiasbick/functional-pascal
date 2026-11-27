@@ -6,7 +6,7 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    private sealed record TreeOutput(nint Handle, uint[] Flags, int[] State);
+    private sealed record TreeOutput(nint Handle, uint[] Flags, int[] State, bool Draggable);
 
     /// <summary>Draws a native tree cell for composition inside a table or data grid cell.</summary>
     /// <param name="id">Stable cell and inspection identity.</param>
@@ -38,18 +38,25 @@ public sealed partial class CuiWindow
     /// <param name="state">Sort column, descending flag and cursor index.</param>
     /// <param name="heightKind">Encoded viewport extent kind.</param>
     /// <param name="height">Height or percentage.</param>
-    /// <param name="rowHeight">Logical row height.</param>
-    /// <param name="options">Input, guides and focus bits.</param>
+    /// <param name="rowHeight">Logical row height, or zero for the native default.</param>
+    /// <param name="options">Input, guides, dragging, focus and no label callback bits.</param>
+    /// <param name="widthKind">Encoded viewport extent kind.</param>
+    /// <param name="width">Width or percentage.</param>
+    /// <param name="dropPermissions">Optional mask of allowed placements per node.</param>
     public unsafe void BeginTreeTable(string id, CuiGridColumn[] columns, string[] labels, int[] parents,
-        uint[] flags, int[] state, int heightKind, float height, float rowHeight, int options)
+        uint[] flags, int[] state, int heightKind, float height, float rowHeight, int options,
+        int widthKind = 1, float width = 0, byte[]? dropPermissions = null)
     {
         CheckFrame();
-        CheckGridHeight(labels.Length, heightKind, height, rowHeight);
+        CheckGridHeight(labels.Length, heightKind, height, rowHeight == 0 ? 32 : rowHeight);
+        CheckExtent(widthKind, width, nameof(width));
         if (labels.Length != parents.Length || labels.Length != flags.Length || labels.Length >= int.MaxValue / 2)
             throw new ArgumentException("Expected matching node arrays.", nameof(parents));
         if (state.Length != 3 || state[0] < -2 || state[0] >= columns.Length ||
             state[2] < -1 || state[2] >= labels.Length)
             throw new ArgumentException("Invalid sort or cursor.", nameof(state));
+        if (dropPermissions is not null && dropPermissions.Length != labels.Length)
+            throw new ArgumentException("Expected drop permissions for each node.", nameof(dropPermissions));
         for (int index = 0; index < labels.Length; index++)
         {
             Utf8.Validate(labels[index], nameof(labels));
@@ -63,9 +70,10 @@ public sealed partial class CuiWindow
         fixed (float* w = widths)
         fixed (int* c = columnFlags, p = parents, s = state)
         fixed (uint* f = flags)
+        fixed (byte* d = dropPermissions)
             handle = NativeMethods.TreeTableBegin(context, Stable(id), titles, w, c, titles.Length,
-                labels, p, f, labels.Length, s, heightKind, height, rowHeight, options, out node);
-        layouts.Add(new(Layout.TreeTable, node, new TreeOutput(handle, flags, state)));
+                labels, p, f, labels.Length, s, heightKind, height, rowHeight, widthKind, width, options, d, out node);
+        layouts.Add(new(Layout.TreeTable, node, new TreeOutput(handle, flags, state, (options & 4) != 0)));
     }
 
     /// <summary>Begins the next native visible node.</summary>
@@ -95,16 +103,19 @@ public sealed partial class CuiWindow
     }
 
     /// <summary>Closes the tree table and copies its model changes.</summary>
-    /// <returns>Native activation and lazy-load events.</returns>
+    /// <returns>Native activation, expansion, lazy-load, selection, sort and drop events.</returns>
     public unsafe CuiTreeTableEvents EndTreeTable()
     {
         var output = (TreeOutput)RequireLayout(Layout.TreeTable).Data!;
-        int* events = stackalloc int[2];
+        int* events = stackalloc int[9];
         int* load = stackalloc int[64];
+        int[] dropped = output.Draggable ? new int[output.Flags.Length] : [];
         fixed (uint* f = output.Flags)
         fixed (int* s = output.State)
-            NativeMethods.TreeTableEnd(context, output.Handle, f, s, events, load);
+        fixed (int* d = dropped)
+            NativeMethods.TreeTableEnd(context, output.Handle, f, s, events, load, d);
         layouts.RemoveAt(layouts.Count - 1);
-        return new(events[0], new ReadOnlySpan<int>(load, events[1]).ToArray());
+        return new(events[0], new ReadOnlySpan<int>(load, events[1]).ToArray(), events[2], events[3],
+            events[4] != 0, events[5] != 0, dropped.AsSpan(0, events[6]).ToArray(), events[7], events[8]);
     }
 }

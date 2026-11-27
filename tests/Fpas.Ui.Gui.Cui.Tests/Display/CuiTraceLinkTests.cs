@@ -6,6 +6,22 @@ namespace Fpas.Ui.Gui.Cui.Tests.Display;
 /// <summary>Checks native trace link hit testing, geometry and retained input.</summary>
 public sealed class CuiTraceLinkTests
 {
+    /// <summary>Sorts by lane, depth, start and descending end while retaining original indices.</summary>
+    [Fact]
+    public void NativeSortKeepsTheOriginalIndices()
+    {
+        CuiDevSpan[] spans = [
+            new("Worker", 0, 1, 1, 0, 10),
+            new("Child", .2, .4, 0, 1, 20),
+            new("Later", .3, .5, 0, 0, 30),
+            new("Short", .1, .1, 0, 0, 40),
+            new("Long", .1, .2, 0, 0, 50),
+        ];
+
+        Assert.Equal([4, 3, 2, 1, 0], CuiTraceOrder.Sort(spans));
+        Assert.Equal([10u, 20u, 30u, 40u, 50u], spans.Select(span => span.ColorKey).ToArray());
+    }
+
     /// <summary>Reads span rectangles and reports the original link index after caller inputs change.</summary>
     /// <param name="renderer">Native renderer.</param>
     [GuiTheory]

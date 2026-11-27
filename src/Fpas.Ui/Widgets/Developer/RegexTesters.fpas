@@ -15,8 +15,10 @@ public type Event = record
   public Modifiers: int;
   // Whether the current input is valid.
   public Valid: bool;
-  // Matches supplied to CUI.
+  // Number of matches reported by CUI.
   public Matches: int;
+  // Diagnostic for an invalid pattern or a match that exceeds the CUI budget.
+  public Error: string? := null;
 end record;
 
 // Native layout and interaction options.
@@ -27,7 +29,7 @@ public type Options = record
   public PatternCapacity: int := 127;
   // Text Capacity supplied to CUI.
   public TextCapacity: int := 1023;
-  // Height supplied to CUI.
+  // Sample editor height in logical units. Zero uses 180 logical units.
   public Height: float := 0.0F;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
@@ -40,7 +42,7 @@ end record;
 // - `Id`: Stable widget identity.
 // - `Pattern`: Model-owned pattern data.
 // - `Sample`: Model-owned sample data.
-// - `Modifiers`: Model-owned modifiers data.
+// - `Modifiers`: Model-owned modifiers or null for native modifiers.
 // - `Changed`: Maps an action or edit to a message.
 // - `Settings`: Optional native settings.
 // ## Returns
@@ -49,7 +51,7 @@ public function RegexTester of TMsg(
   Id: string;
   Pattern: string;
   Sample: string;
-  Modifiers: int;
+  Modifiers: int?;
   Changed: function(Event): TMsg;
   Settings: Options? := null
 ): E.Element of TMsg;

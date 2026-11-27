@@ -7,15 +7,15 @@ uses Fpas.Ui.Layout as L;
 
 // Data for the native TestExplorer widget.
 public type Item = record
-  // Name supplied to CUI.
+  // Display name used by the name filter.
   public Name: string;
-  // Nesting depth, starting at zero.
+  // Nesting depth from zero through 63.
   public Depth: int;
-  // Status supplied to CUI.
+  // Pipeline status code from zero through five.
   public Status: int;
   // Duration in seconds, or negative when unavailable.
   public Duration: float;
-  // Message supplied to CUI.
+  // Optional failure detail.
   public Message: string?;
 end record;
 
@@ -25,17 +25,17 @@ public type Event = record
   public Selected: int;
   // Activated zero-based index, or minus one.
   public Activated: int;
-  // Run supplied to CUI.
+  // Zero-based index of the item requested to run, or minus one.
   public Run: int;
-  // Run All supplied to CUI.
+  // Whether the user requested a run of all tests.
   public RunAll: bool;
-  // Passed supplied to CUI.
+  // Number of passing tests.
   public Passed: int;
-  // Failed supplied to CUI.
+  // Number of failing tests.
   public Failed: int;
-  // Skipped supplied to CUI.
+  // Number of skipped or canceled tests.
   public Skipped: int;
-  // Total supplied to CUI.
+  // Number of tests across all statuses.
   public Total: int;
 end record;
 
@@ -43,7 +43,7 @@ end record;
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Fill;
-  // Height supplied to CUI.
+  // Height in logical units, zero for 320, or negative to fill the parent.
   public Height: float := 0.0F;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
@@ -55,7 +55,7 @@ end record;
 // ## Parameters
 // - `Id`: Stable widget identity.
 // - `Entries`: Model-owned entries data.
-// - `Changed`: Maps an action or edit to a message.
+// - `Changed`: Maps a run request, activation, selection change or count change to a message.
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.

@@ -17,6 +17,22 @@ messages in your update. These widgets require the GUI host.
 | [Response actions](response-actions.md) | Offer copy, regenerate, vote and share below an answer. |
 | [Context meter](context-meter.md) | Show the fraction of context used and its breakdown. |
 
+## AI gallery page
+
+The [AI view](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas) uses a
+row with two columns. The wider column contains the conversation, sources,
+response actions and composer. The second column contains the agent plan and
+four prompt suggestions. A standalone model picker follows the original
+examples and uses the same selection as the composer.
+
+## Response clock
+
+The original CUI gallery measures elapsed time with `cui_time`. FPAS exposes
+that clock through [`Painter.Time()`](../canvas-and-bars/painting.md). The
+FPAS gallery uses a monotonic clock in a background effect while the sample
+response runs. Stop cancels the effect. A response can finish while another
+gallery page is visible. Regenerate starts a response if the composer is idle.
+
 ## See also
 
 - [UI handbook](../README.md)

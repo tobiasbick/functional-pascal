@@ -17,6 +17,12 @@ widgets require the GUI host.
 | [Schedule picker](schedule-picker.md) | Edit a cron expression and preview upcoming runs. |
 | [Keymap](keymap.md) | Display shortcuts, categories and conflicting bindings. |
 
+## Developer tools gallery page
+
+The page shows the ten widgets above in table order. It prepares trace spans
+with the native sort and displays the native description of the current query.
+See the [CUI gallery comparison](../../../future/cui-compare/README.md#developer-tools-evidence).
+
 ## See also
 
 - [UI handbook](../README.md)
@@ -26,7 +32,7 @@ widgets require the GUI host.
 ## Source files
 
 <details>
-<summary>Browse 11 source files</summary>
+<summary>Browse 12 source files</summary>
 
 - `examples/ui/gui/gallery/Pages/Developer/`
   - [Samples.fpas](../../../../examples/ui/gui/gallery/Pages/Developer/Samples.fpas)
@@ -41,6 +47,7 @@ widgets require the GUI host.
   - [DeveloperData.Inspectors.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/DeveloperData.Inspectors.Types.cs)
   - [DeveloperData.Inspectors.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/DeveloperData.Inspectors.cs)
 - `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [developer_inspectors.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/developer_inspectors.c)
   - [developer_tools.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/developer_tools.c)
 - `tests/Fixtures/gui-host/`
   - [DeveloperToolsContract.fpas](../../../../tests/Fixtures/gui-host/DeveloperToolsContract.fpas)

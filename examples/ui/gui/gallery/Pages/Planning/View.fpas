@@ -16,20 +16,26 @@ uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 uses System.Collections.Generic as Lists;
 
-// Original month appointments positioned relative to the current month.
+const MonthNames: array of string := [
+  'Standup', 'Design review', 'Offsite', '1:1', 'Release', 'Planning',
+  'Customer call', 'Lunch', 'Retro', 'Holiday', 'Demo', 'Board meeting'
+];
+
+// Gets the name of an appointment in the month example.
 // ## Parameters
-// - `Today`: Date used for the examples.
+// - `Index`: Native appointment index.
 // ## Returns
-// The twelve original appointments.
-public function MonthEvents(Today: Sys.DateOnly): array of Month.Appointment;
+// The name sent to the notification.
+public function MonthEventTitle(Index: int): string;
+begin
+  return MonthNames[Index];
+end function;
+
+function MonthEvents(Today: Sys.DateOnly): array of Month.Appointment;
 begin
   const First: Sys.DateOnly := new Sys.DateOnly(Today.Year, Today.Month, 1);
-  const Names: array of string := [
-    'Standup', 'Design review', 'Offsite', '1:1', 'Release', 'Planning',
-    'Customer call', 'Lunch', 'Retro', 'Holiday', 'Demo', 'Board meeting'
-  ];
   const Result: Lists.List of Month.Appointment := new Lists.List of Month.Appointment();
-  for Index: int := 0 to Names.Length - 1 do
+  for Index: int := 0 to MonthNames.Length - 1 do
     const Start: Sys.DateOnly := First.AddDays((Index * 5) mod 27);
     const Span: bool := Index = 2 or Index = 9;
     const Finish: Sys.DateOnly? := if Span then
@@ -39,7 +45,7 @@ begin
     end if;
     Result.Add(
       new Month.Appointment(
-        Names[Index], Start, Finish,
+        MonthNames[Index], Start, Finish,
         9.0F + cast (Index mod 8) as float, Span or Index = 4, cast (1 + Index mod 8) as S.Tone
       )
     );
@@ -55,8 +61,9 @@ end function;
 // Native examples in gallery order.
 public function View(Model: M.Model): array of E.Element of M.Msg;
 begin
-  const Day: int := (cast Model.Today.DayOfWeek as int + 6) mod 7;
-  const Monday: Sys.DateOnly := Model.Today.AddDays(-Day);
+  const Today: Sys.DateOnly := Model.Today ?? Sys.DateOnly.FromDateTime(Sys.DateTime.Today);
+  const Day: int := (cast Today.DayOfWeek as int + 6) mod 7;
+  const Monday: Sys.DateOnly := Today.AddDays(-Day);
   return [
     G.Heading of M.Msg(
       Strings.Get('Heading.Kanban'),
@@ -89,9 +96,9 @@ begin
     ),
     Month.MonthCalendar of M.Msg(
       'planning-month',
-      new Month.Value(Model.Month ?? Model.Today, MonthEvents(Model.Today), Model.Selected),
+      new Month.Value(Model.Month ?? Today, MonthEvents(Today), Model.Selected),
       M.Msg.Month,
-      new Month.Options(Today := Model.Today)
+      new Month.Options(Today := Today)
     )
   ];
 end function;

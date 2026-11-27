@@ -5,42 +5,48 @@ unit Fpas.Ui.Widgets.Charts.TimeHistograms;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 
-// Data for the native TimeHistogram widget.
+// One series of event counts.
 public type Series = record
-  // Name supplied to CUI.
+  // Name shown in the legend and hover labels.
   public Name: string;
-  // Counts supplied to CUI.
-  public Counts: array of float;
-  // Tone supplied to CUI.
+  // One count per bucket, or null for all zeros.
+  public Counts: (array of float)?;
+  // Native tone from zero through eight. Zero uses the series palette.
   public Tone: int;
 end record;
 
-// Data for the native TimeHistogram widget.
+// Selected interval in Unix seconds. Two zeros clear the selection.
 public type Range = record
-  // Start supplied to CUI.
+  // Start of the interval.
   public Start: double;
-  // End supplied to CUI.
+  // End of the interval.
   public End: double;
 end record;
 
-// Action or changed value reported by the native widget.
+// Interval and hover results reported by the native widget.
 public type Event = record
-  // Start supplied to CUI.
+  // Start of the proposed interval in Unix seconds.
   public Start: double;
-  // End supplied to CUI.
+  // End of the proposed interval in Unix seconds.
   public End: double;
+  // Zero-based bucket under the pointer, or minus one.
+  public Hovered: int := -1;
+  // Whether the user changed or cleared the interval.
+  public SelectionChanged: bool := true;
 end record;
 
 // Native layout and interaction options.
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Fill;
-  // Height supplied to CUI.
+  // Plot height in logical units. Zero uses CUI's 140-unit default.
   public Height: float := 0.0F;
-  // Use UTC timestamps.
+  // Whether the time labels use UTC.
   public Utc: bool := false;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
+  // Last reported bucket. Null omits messages caused only by hover.
+  public Hovered: int? := null;
 end record;
 
 // Builds the native TimeHistogram widget.
@@ -48,12 +54,12 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
-// - `Start`: Model-owned start data.
-// - `Bucket`: Model-owned bucket data.
-// - `Buckets`: Model-owned buckets data.
-// - `Series`: Model-owned series data.
-// - `Value`: Model-owned value data.
-// - `Changed`: Maps an action or edit to a message.
+// - `Start`: Unix timestamp of the first bucket.
+// - `Bucket`: Bucket duration in seconds.
+// - `Buckets`: Number of buckets.
+// - `Series`: Named event counts grouped by bucket.
+// - `Value`: Current selected interval.
+// - `Changed`: Maps an interval or hover result to a message.
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.

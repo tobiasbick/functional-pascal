@@ -198,7 +198,9 @@ handler may finish asynchronously.
 ## Clipboard
 
 Return `Fpas.Ui.Gui.Clipboard.WriteText of TMsg(Text)` to copy plain text from an
-update, such as a menu command that copies a path. Return
+update, such as a menu command that copies a path. The command submits Unicode
+text to the clipboard provider of the owner window. Text can contain line
+breaks and must contain no NUL characters. Return
 `Fpas.Ui.Gui.Clipboard.ReadText of TMsg(OnRead)` to read text. The host applies
 `OnRead` to the clipboard text on its owner thread and queues the resulting
 message. Unavailable clipboard text is passed as an empty string.

@@ -100,23 +100,11 @@ begin
     const Caption: string := if Slot = 0 then
       'End the tour'
     elsif Slot = 1 then
-      if Settings.BackLabel = '' then
-        'Back'
-      else
-        Settings.BackLabel
-      end if
+      Settings.BackLabel ?? 'Back'
     elsif Current = Steps.Length - 1 then
-      if Settings.DoneLabel = '' then
-        'Done'
-      else
-        Settings.DoneLabel
-      end if
+      Settings.DoneLabel ?? 'Done'
     else
-      if Settings.NextLabel = '' then
-        'Next'
-      else
-        Settings.NextLabel
-      end if
+      Settings.NextLabel ?? 'Next'
     end if;
     Frame.Controls.Add(
       new App.Control(

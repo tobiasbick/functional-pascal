@@ -25,7 +25,7 @@ public type Span = record
   public Track: int;
   // Nesting depth, starting at zero.
   public Depth: int;
-  // Color Key supplied to CUI.
+  // Native color key. Zero hashes the name.
   public ColorKey: uint;
 end record;
 
@@ -87,6 +87,10 @@ public type Event = record
   public Collapsed: bool;
   // Current native hover, available with every proposal.
   public Hovered: Hover := new Hover();
+  // Whether the selection changed this frame.
+  public SelectionChanged: bool := false;
+  // Whether the range, vertical offset or measurement changed this frame.
+  public ViewChanged: bool := false;
 end record;
 
 // Native layout and interaction options.

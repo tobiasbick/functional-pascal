@@ -4,7 +4,6 @@ unit Fpas.Ui.Widgets.Charts.ScatterCharts;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 uses System as Sys;
@@ -43,10 +42,10 @@ public type Options = record
   public Width: L.Extent := L.Extent.Fill;
   // Logical height; zero selects CUI's default.
   public Height: float := 0.0F;
-  // Literal horizontal axis title.
-  public XLabel: string := '';
-  // Literal vertical axis title.
-  public YLabel: string := '';
+  // Literal horizontal axis title. Null omits the title and its space.
+  public XLabel: string? := null;
+  // Literal vertical axis title. Null omits the title and its space.
+  public YLabel: string? := null;
   // Safe horizontal value format.
   public XFormat: C.ValueFormat? := null;
   // Safe vertical value format.

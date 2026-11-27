@@ -38,16 +38,24 @@ end unit;
 | `Width / Height` | Fill / Content. Content uses the native height. |
 | `Filter / FoldersOnly / Hidden` | Empty / false / false. A filter is a semicolon-separated list of glob patterns. |
 | `Places / NoPlaces` | Empty / false. The empty list uses CUI's default places. |
-| `Source / Revision` | null / 0. Null lists local disk. With a provider, change Revision to refresh a changed listing for the same folder. |
-| `MaximumEntries / Enabled` | 0 / true. Zero uses the native limit. |
+| `Source` | Null. CUI reads the local directory through `cui_fs_list`. Supply a synchronous provider for a different file tree. |
+| `Revision` | 0. Change the revision to reload the current folder after the provider data changes. |
+| `MaximumEntries` | 0. CUI uses 20,000 entries. A positive value limits the entries read before filtering and sorting. |
+| `Enabled` | true. Set false to disable navigation and selection. |
 
 ## Interaction
 
 Double-click to enter a folder or activate a file. Type to jump within the
 listing and use Backspace to go up. Store `Event.Folder` to follow navigation.
 `Selected` reports the selection and `Picked` identifies an activated file.
+When a filter hides the selected entry, the browser clears the selection.
+Changing `Hidden` or `MaximumEntries` reloads the current folder.
+
 A custom provider receives a path and the hidden-file flag. Return null for
 an unreadable folder, which the browser reports with `Event.Error`.
+Each entry supplies a name, a directory flag, a size in bytes and a UTC
+modification time in Unix seconds. The gallery uses the same directory reader
+for its browser, its pickers and the terminal's `ls` command.
 
 ## See also
 

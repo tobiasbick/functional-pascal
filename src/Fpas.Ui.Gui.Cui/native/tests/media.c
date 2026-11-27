@@ -3,6 +3,7 @@
 // [Image viewer](../../../../docs/ui/gui/social-and-media/image-viewer.md)
 // [Image cropper](../../../../docs/ui/gui/social-and-media/image-cropper.md)
 // [Image compare](../../../../docs/ui/gui/social-and-media/image-compare.md)
+// [Now playing](../../../../docs/ui/gui/motion/now-playing.md)
 #include "../fpas_cui.h"
 #include <math.h>
 #include <stdio.h>
@@ -305,6 +306,29 @@ static bool comparison_owns_scoped_textures(const fpas_media_source *image) {
     return valid && probe.destroyed == 4;
 }
 
+static bool player_releases_artwork(fpas_media_source source) {
+    image_probe probe = {0};
+    cui_ctx *ui = create_context(&probe);
+    if (!ui) return false;
+    const cui_id key = cui_make_id(ui, "player");
+    const int uploads[] = { 1, 1, 1, 2 }, releases[] = { 0, 0, 1, 1 };
+    bool valid = true;
+    for (int frame = 0; frame < 4; ++frame) {
+        float position = 0;
+        int playing = 0, parts[4];
+        cui_begin_frame(ui, .016f);
+        fpas_cui_now_playing(ui, "player", "Track", "", frame == 2 ? NULL : &source, 0, 0,
+            &position, 10, &playing, 2, 300, 3, -1, parts);
+        cui_end_frame(ui);
+        valid = valid && probe.created == uploads[frame] && probe.destroyed == releases[frame] &&
+            parts[0] >= 0 && parts[1] < 0 && parts[2] >= 0 && parts[3] >= 0;
+    }
+    fpas_cui_forget(ui, key);
+    valid = valid && probe.destroyed == 2;
+    cui_destroy(ui);
+    return valid && probe.destroyed == 2;
+}
+
 /** Verifies media interactions, texture ownership and strict native pixels. */
 int main(void) {
     static const uint8_t pixels[] = { 0, 0, 0, 255, 255, 255, 255, 255 };
@@ -347,6 +371,7 @@ int main(void) {
     const bool wheel = viewer_routes_wheel(&two_pixels);
     const bool crop = crop_tracks_minimum();
     const bool comparison = comparison_owns_scoped_textures(&two_pixels);
+    const bool player = player_releases_artwork(two_pixels);
     bool equivalent = true;
     for (int widget = 0; widget < 3; ++widget)
         for (int custom = 0; custom < 2; ++custom)
@@ -356,5 +381,6 @@ int main(void) {
     if (!wheel) fprintf(stderr, "The disabled viewer did not pass wheel input to its scroll area.\n");
     if (!crop) fprintf(stderr, "The initialized or resized crop did not preserve its aspect and minimum side.\n");
     if (!comparison) fprintf(stderr, "The comparison did not retain and release scoped image textures.\n");
-    return passed && avatars_released && wheel && crop && comparison && equivalent ? 0 : 1;
+    if (!player) fprintf(stderr, "The player did not retain and release artwork with the expected transport parts.\n");
+    return passed && avatars_released && wheel && crop && comparison && player && equivalent ? 0 : 1;
 }

@@ -5,28 +5,30 @@ unit Fpas.Ui.Widgets.Developer.RequestBars;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 
-// Action or changed value reported by the native widget.
+// Request draft and actions reported by the native widget.
 public type Event = record
-  // Method supplied to CUI.
+  // Selected HTTP method index.
   public Method: int;
-  // Url supplied to CUI.
+  // Current URL draft.
   public Url: string;
-  // Send supplied to CUI.
+  // Whether the user requests submission.
   public Send: bool;
-  // Cancel supplied to CUI.
+  // Whether the user requests cancellation.
   public Cancel: bool;
+  // Whether the user edited the method or URL in this frame.
+  public Changed: bool := false;
 end record;
 
 // Native layout and interaction options.
 public type Options = record
   // Native preferred layout width.
   public Width: L.Extent := L.Extent.Fill;
-  // Maximum entries or UTF-8 bytes, as applicable.
+  // Maximum URL length in UTF-8 bytes.
   public Capacity: int := 255;
-  // Loading supplied to CUI.
+  // Show Cancel and suppress submission from the URL field.
   public Loading: bool := false;
-  // Placeholder supplied to CUI.
-  public Placeholder: string := '';
+  // Caption for an empty URL. Null uses the native caption.
+  public Placeholder: string? := null;
   // Whether the widget accepts interaction.
   public Enabled: bool := true;
 end record;
@@ -36,8 +38,8 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
-// - `Method`: Model-owned method data.
-// - `Url`: Model-owned url data.
+// - `Method`: Model-owned HTTP method index from 0 (GET) to 6 (OPTIONS).
+// - `Url`: Model-owned URL draft.
 // - `Changed`: Maps an action or edit to a message.
 // - `Settings`: Optional native settings.
 // ## Returns

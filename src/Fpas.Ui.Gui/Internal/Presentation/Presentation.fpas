@@ -515,7 +515,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         _,
         _,
         _
-      ), E.Element.Uptime(_, _, _, _), E.Element.TimeHistogram(
+      ), E.Element.Uptime(_, _, _, _, _), E.Element.TimeHistogram(
         _,
         _,
         _,
@@ -1904,9 +1904,10 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         const Items: array of Charts.Item,
         const Selected: int,
         const OnSelect: Sys.Func of (int, TMsg)?,
-        const Settings: Treemaps.Options
+        const Settings: Treemaps.Options,
+        const OnActivate: Sys.Func of (int, TMsg)?
       ):
-        TreemapWidget.Draw of TMsg(Current, Id, Items, Selected, OnSelect, Settings);
+        TreemapWidget.Draw of TMsg(Current, Id, Items, Selected, OnSelect, Settings, OnActivate);
       when E.Element.RadarChart(
         const Id: string,
         const Series: array of Charts.Series,

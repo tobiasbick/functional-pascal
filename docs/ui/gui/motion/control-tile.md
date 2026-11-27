@@ -33,13 +33,18 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Icon / Detail / Color` | Empty / empty / Automatic. Set Detail to describe the current state. |
-| `Width / Wide / Enabled` | Fill / false / true. Wide selects the horizontal layout. |
+| `Icon` | Null uses the lightning glyph. An empty string hides the glyph. |
+| `Detail` | Null shows `On` or `Off`. An empty string leaves the state line blank. |
+| `Color` | Automatic uses the theme's active tile colors. Supply a color to set the active fill. |
+| `Width` | Fill. |
+| `Wide` | False. Set True to place the icon beside the text. |
+| `Enabled` | True. Allows pointer and keyboard activation. |
 
 ## Interaction
 
-Activate the tile to propose the opposite state. Store the new value
-and update any detail text in the model.
+Click the tile or press Enter or Space when it has focus. Each activation
+proposes the opposite state. Store the new value and update any detail text
+in the model.
 
 ## See also
 

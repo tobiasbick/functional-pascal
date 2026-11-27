@@ -32,13 +32,15 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Words / Interval` | Supply the phrases in display order. Zero Interval uses native timing. A positive interval is in seconds. |
-| `Font / Size / Color` | Body / 0 / Automatic. |
+| `Words` | Supply the phrases in display order. An empty array displays no text. |
+| `Interval` | 0. CUI displays each phrase for 2.4 seconds. Set a positive value in seconds for a different interval. |
+| `Font / Size / Color` | Body / 0 / Automatic. Zero size uses the theme body text size. The automatic color uses the theme emphasis. |
 
 ## Interaction
 
-Place the effect next to a fixed label. CUI rolls each new phrase into
-place and adjusts the width to it. The application supplies the phrases.
+Place the effect next to a fixed label. CUI rolls each phrase into place on one
+line and adjusts its width. With reduced motion, the current phrase stays in
+place.
 
 ## See also
 

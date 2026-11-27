@@ -42,7 +42,7 @@ end function;
 // - `Id`: Stable widget identity.
 // - `Vertices`: Vertices supplied to the widget.
 // - `Edges`: Edges supplied to the widget.
-// - `Selection`: Selection supplied to the widget.
+// - `Selection`: Model selection or null to use native selection.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
 public procedure Draw of TMsg(
@@ -50,7 +50,7 @@ public procedure Draw of TMsg(
   Id: string;
   Vertices: array of D.Vertex;
   Edges: array of D.Edge;
-  Selection: int;
+  Selection: int?;
   Changed: function(D.Event): TMsg;
   Settings: D.Options
 );
@@ -68,11 +68,15 @@ begin
     Settings.TopDown,
     Width.Kind,
     Width.Value,
-    Enabled
+    Enabled,
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   );
-  P.Root of TMsg(Frame, Id, Role, '', Enabled, Selection.ToString());
-  if Enabled and (Result.Index <> Selection or Result.Action >= 0 or Result.Count >= 0) then
-    Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Count, Result.Action)));
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, (Selection ?? Result.Index).ToString());
+  const HoverChanged: bool := Settings.Hovered <> null and Settings.Hovered <> Result.Hover;
+  if Enabled and (Result.Flags <> 0 or Result.Action >= 0 or Result.Count >= 0 or HoverChanged) then
+    Frame.Messages.Add(
+      Changed(new D.Event(Result.Index, Result.Count, Result.Action, Result.Hover))
+    );
   end if;
 end procedure;
 

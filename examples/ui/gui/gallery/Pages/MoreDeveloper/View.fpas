@@ -116,12 +116,15 @@ begin
     ),
     Limit(
       760, 12,
-      H.RequestBar of M.Msg('dev-request', Model.Method, Model.Url, M.Msg.Request),
+      H.RequestBar of M.Msg(
+        'dev-request', Model.Method, Model.Url, M.Msg.Request,
+        new H.Options(Capacity := D.RequestCapacity)
+      ),
       K.KeyValueEditor of M.Msg(
         'dev-params',
         Model.Parameters,
         M.Msg.Parameters,
-        new K.Options(Capacity := 8)
+        new K.Options(Capacity := D.ParameterCapacity)
       ),
       Status.ResponseStatus of M.Msg('dev-response', 201, 0.142, 18400.0)
     ),

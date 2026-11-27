@@ -62,6 +62,7 @@ uses GalleryToggleGroupContract as ToggleGroupContract;
 uses GalleryTooltipContract as TooltipContract;
 uses GalleryTourContract as TourContract;
 uses GalleryTreeTableMenuContract as TreeTableMenuContract;
+uses GalleryTreemapContract as TreemapContract;
 uses GalleryTypewriterObservationContract as TypewriterObservationContract;
 uses GalleryValidationBoundaryContract as ValidationBoundaryContract;
 uses GalleryVoiceAiContract as VoiceAiContract;
@@ -273,6 +274,7 @@ begin
   DialogContract.Verify(Renderer, Capture);
   CompletionContract.Verify(Renderer, Capture);
   ReaderContract.Verify(Renderer, Capture);
+  TreemapContract.Verify(Renderer);
   DisclosureContract.Verify(Renderer, Capture);
   DisclosureFeedbackContract.Verify(Renderer, Capture);
   FeedbackContract.Verify(Renderer, Capture);

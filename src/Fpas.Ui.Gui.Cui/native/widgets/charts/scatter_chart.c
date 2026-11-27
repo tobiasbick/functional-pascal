@@ -9,7 +9,8 @@ int fpas_cui_scatter_chart(cui_ctx *ui, const char *id, const fpas_scatter_serie
         data[i] = (cui_scatter_series){ .name = fpas_viz_text(ui, series[i].name), .points = series[i].points,
             .sizes = series[i].sizes, .count = series[i].count, .color = fpas_chart_color(series[i].palette, series[i].rgba) };
     const cui_scatter_opts o = { .width = fpas_extent(width_kind, width), .height = height,
-        .x_label = fpas_viz_text(ui, x_label), .y_label = fpas_viz_text(ui, y_label),
+        .x_label = x_label ? cui__frame_strdup(ui, x_label, -1) : NULL,
+        .y_label = y_label ? cui__frame_strdup(ui, y_label, -1) : NULL,
         .x_format = fpas_viz_text(ui, x_format), .y_format = fpas_viz_text(ui, y_format), .no_legend = !legend };
     *node = ui->node_count;
     cui_push_disabled(ui, !enabled);

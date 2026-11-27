@@ -33,12 +33,14 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Status / Seconds / Icon` | Pending / 0 / empty. An explicit glyph overrides the native status icon. |
+| `Status` | Pending. CUI draws loader dots while running and a status glyph for the other states. |
+| `Seconds` | 0. Set a nonnegative elapsed time in seconds that fits a 32-bit signed integer. Zero hides the time. |
+| `Icon` | Empty. Supply a glyph to replace the status glyph in Pending, Done, Failed or Skipped. |
 
 ## Interaction
 
-Pass a new caption, state and time as the active task changes. The pill
-is passive.
+Pass a new caption, state and time as the active task changes. The pill is
+passive. With reduced motion, the running dots stay visible and still.
 
 ## See also
 

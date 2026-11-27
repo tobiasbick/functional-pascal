@@ -15,6 +15,9 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         Utf8.Validate(label, nameof(label));
+        CheckFeedbackNumber(seconds, nameof(seconds));
+        if ((double)seconds > int.MaxValue) throw new ArgumentOutOfRangeException(nameof(seconds));
+        if (status is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(status));
         NativeMethods.AgentStatus(context, Stable(id), label, status, seconds, OptionalAi(icon));
     }
 }

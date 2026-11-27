@@ -7,6 +7,7 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections;
 uses Fpas.Ui.Gui.Cui.Widgets.Overlays as CuiOverlays;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Gui.Internal.Widgets.Collections.DataGrid as G;
 uses Fpas.Ui.Gui.Internal.Widgets.Overlays.Menu as MenuWidget;
@@ -94,6 +95,26 @@ begin
     end if);
 end function;
 
+function DropPermissions(
+  Count: int;
+  CanDrop: Sys.Func of (int, T.DropPlacement, bool)?
+): (array of byte)?;
+begin
+  case CanDrop of
+    when is Sys.Func of (int, T.DropPlacement, bool) as Allows:
+      const Allowed: array of byte := new byte[Count];
+      for Index: int := 0 to Count - 1 do
+        Allowed[Index] := cast (Enc.Bits(Allows.Invoke(Index, T.DropPlacement.Before), 1)
+          or Enc.Bits(Allows.Invoke(Index, T.DropPlacement.Inside), 2)
+          or Enc.Bits(Allows.Invoke(Index, T.DropPlacement.After), 4)) as byte;
+      end for;
+
+      return Allowed;
+    else
+      return null;
+  end case;
+end function;
+
 // Offers the table's native context menu and forwards the chosen command.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -172,11 +193,12 @@ begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('tree-table', Id);
   const Height: S.NativeExtent := S.Extent(Settings.Height);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Labels: Lists.List of string := new Lists.List of string(Nodes.Length);
   const Parents: array of int := new int[Nodes.Length];
   const NativeFlags: array of uint := new uint[Nodes.Length];
   for Index: int := 0 to Nodes.Length - 1 do
-    Labels.Add(Nodes[Index].Label);
+    Labels.Add(Nodes[Index].TypeAheadLabel ?? Nodes[Index].Label);
     Parents[Index] := Nodes[Index].Parent;
     NativeFlags[Index] := Flags(Nodes[Index]);
   end for;
@@ -191,20 +213,10 @@ begin
     0
   end if;
   const State: array of int := [SortIndex, Desc, Cursor];
-  const Options: int := (if Enabled then
-    1
-  else
-    0
-  end if) + (if Settings.Guides then
-    2
-  else
-    0
-  end if) +
-    (if C.WantsFocus of TMsg(Frame, Id, Token, Enabled) then
-      8
-    else
-      0
-    end if);
+  const Draggable: bool := Enabled and Settings.Draggable;
+  const Options: int := Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Guides, 2)
+    or Enc.Bits(Draggable, 4) or Enc.Bits(C.WantsFocus of TMsg(Frame, Id, Token, Enabled), 8)
+    or Enc.Bits(not Settings.TypeAhead, 16);
   const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
@@ -212,7 +224,14 @@ begin
   end if;
   Frame.Window.BeginTreeTable(
     Token, G.Columns(Columns), Labels.ToArray(), Parents, NativeFlags, State,
-    Height.Kind, Height.Value, Settings.RowHeight, Options
+    Height.Kind, Height.Value, Settings.RowHeight, Options, Width.Kind, Width.Value,
+    DropPermissions(
+      Nodes.Length, if Draggable then
+        Settings.CanDrop
+      else
+        null
+      end if
+    )
   );
   var Index: int := Frame.Window.NextTreeTableRow(Track);
   while Index >= 0 do
@@ -259,13 +278,21 @@ begin
     return;
   end if;
 
-  var Changed: bool := State[0] <> SortIndex or State[1] <> Desc or State[2] <> Cursor
-    or Result.Activated >= 0 or Result.Load.Length <> 0;
+  const Drop: T.Drop? := if Result.Dropped.Length > 0 then
+    new T.Drop(Result.Dropped, Result.DropTarget, cast Result.DropPlacement as T.DropPlacement)
+  else
+    null
+  end if;
+  const SortChanged: bool := State[0] <> SortIndex or State[1] <> Desc;
+  var Changed: bool := SortChanged or State[2] <> Cursor or Result.Activated >= 0
+    or Result.Load.Length <> 0 or Drop <> null;
+  var SelectionChanged: bool := Result.SelectionChanged;
   const Proposed: array of T.Node := cast Nodes.Clone() as array of T.Node;
   for Row: int := 0 to Nodes.Length - 1 do
     const Bits: uint := NativeFlags[Row];
     if Flags(Nodes[Row]) <> Bits then
       Changed := true;
+      SelectionChanged := SelectionChanged or Nodes[Row].Selected <> ((Bits and 4U) <> 0U);
       Proposed[Row] := Nodes[Row] with
         Open := (Bits and 2U) <> 0U;
         Selected := (Bits and 4U) <> 0U;
@@ -276,7 +303,12 @@ begin
 
   if Changed then
     Frame.Messages.Add(
-      Change(new T.Change(Proposed, State[2], G.Sort(State), Result.Activated, Result.Load))
+      Change(
+        new T.Change(
+          Proposed, State[2], G.Sort(State), Result.Activated, Result.Load, Result.Expanded,
+          Result.Collapsed, SelectionChanged, SortChanged, Drop
+        )
+      )
     );
   end if;
 end procedure;

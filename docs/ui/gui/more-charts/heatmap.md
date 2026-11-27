@@ -35,12 +35,16 @@ end unit;
 | --- | --- |
 | `Values / Rows / Columns` | Provide one finite value per cell in row-major order. A cell at Row and Column uses Values[Row * Columns + Column]. |
 | `RowLabels / ColumnLabels` | Empty or one caption per row or column. Empty entries leave individual labels blank. |
-| `Width / CellSize` | Content / 0. Zero fits the available width. An explicit cell size with Content gives the grid its intrinsic width. |
-| `Range / Color / Format / Enabled` | null / Automatic / null / true. A null range and format use native automatic settings. |
+| `Width` | Content. CUI fills the available width when `CellSize` is zero. An explicit cell size with Content gives the grid its intrinsic width. |
+| `CellSize` | 0. Set a positive size in logical points to use fixed-size squares. |
+| `Range` | null. CUI selects the scale from the data. Explicit bounds must be finite and increasing. |
+| `Color` | Automatic. The CUI accent gives the highest step its color. Set a chart color to choose the top step. |
+| `Format` | null. CUI uses compact numbers. A value format applies to the range and to hover values. |
+| `Enabled` | true. Set false to disable pointer interaction. |
 
 ## Interaction
 
-Hover a square to inspect its value. A click can send its zero-based row and column via `OnActivate`. CUI handles pointer inspection and the heatmap stays outside keyboard focus traversal.
+Hover a square to inspect its value. A click can send its zero-based row and column via `OnActivate`. Gaps between squares have no hover or activation. The heatmap stays outside keyboard focus traversal.
 
 ## See also
 

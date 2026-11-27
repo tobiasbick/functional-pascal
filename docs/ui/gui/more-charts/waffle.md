@@ -32,13 +32,19 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Items` | Named nonnegative amounts with a finite sum. |
+| `Items` | Named nonnegative amounts with a finite sum. Each item can specify a square color. |
 | `Columns / Rows` | 10 / 10. Each takes a value from 1 through 60. |
-| `CellSize / Format / Enabled` | 0 / null / true. Zero selects the native square size. |
+| `CellSize` | Zero uses 18 logical units. |
+| `Format` | Null uses native automatic formatting for the inspected value. |
+| `Enabled` | True. Allows pointer inspection and activation. |
 
 ## Interaction
 
-CUI allocates squares to each item in proportion to its share. Hover to inspect it. An optional `OnActivate` callback receives the index of the item associated with the clicked square.
+CUI allocates squares in proportion to each item's share. The legend moves
+below the grid when horizontal space is limited. Hover a square or legend
+entry to inspect the value and share. The optional `OnActivate` callback
+receives the item's zero-based input index. Only squares and legend entries
+can activate items.
 
 ## See also
 

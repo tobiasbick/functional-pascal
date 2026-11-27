@@ -8,5 +8,5 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Ai;
 /// <param name="Events">Native event mask.</param>
 /// <param name="Selected">Proposed model index.</param>
 /// <param name="Removed">Removed attachment index or minus one.</param>
-/// <param name="Parts">Visible editor, send, microphone and cancel controls.</param>
+/// <param name="Parts">Presence in editor, send, microphone, cancel, attach, model and attachment order.</param>
 public sealed record CuiComposerResult(string Draft, int Events, int Selected, int Removed, bool[] Parts);

@@ -31,8 +31,8 @@ public procedure Draw of TMsg(
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('dock', Id);
-  const Icons: Lists.List of string := new Lists.List of string(Entries.Length);
-  const Labels: Lists.List of string := new Lists.List of string(Entries.Length);
+  const Icons: Lists.List of string? := new Lists.List of string? (Entries.Length);
+  const Labels: Lists.List of string? := new Lists.List of string? (Entries.Length);
   const Tones: array of CuiCharts.CuiChartColor := new CuiCharts.CuiChartColor[Entries.Length];
   const Badges: array of int := new int[Entries.Length];
   const Kinds: array of int := new int[Entries.Length];
@@ -40,10 +40,10 @@ begin
   for Index: int := 0 to Entries.Length - 1 do
     case Entries[Index] of
       when W.Entry.Separator:
-        Icons.Add('');
-        Labels.Add('');
+        Icons.Add(null);
+        Labels.Add(null);
       when W.Entry.Item(
-        const Icon: string, const Label: string, _, const Color: Chart.Color,
+        const Icon: string?, const Label: string?, _, const Color: Chart.Color,
         const Running: bool, const Badge: int
       ):
         Icons.Add(Icon);
@@ -85,7 +85,7 @@ begin
         Frame.Controls.Add(
           new App.Control(
             Id + '/' + Index.ToString(),
-            Labels[Index],
+            Labels[Index] ?? '',
             'dock-item',
             new Cui.CuiRectangle(),
             Enabled

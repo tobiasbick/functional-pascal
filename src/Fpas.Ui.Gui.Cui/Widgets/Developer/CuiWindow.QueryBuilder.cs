@@ -23,23 +23,16 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         CheckExtent(WidthKind, Width, nameof(Width));
+        ArgumentNullException.ThrowIfNull(Rules);
         if (Capacity < 1 || Capacity > 4096 || Rules.Length > Capacity) throw new ArgumentOutOfRangeException(nameof(Capacity));
+        if (MaxDepth is < 0 or > 64) throw new ArgumentOutOfRangeException(nameof(MaxDepth));
         using var memory = new ChartMemory();
         NativeDevField* fields = PackQueryFields(memory, Fields);
         var storage = new NativeDevRule[Capacity];
         int count = Rules.Length;
         fixed (NativeDevRule* rows = storage)
         {
-            for (int i = 0; i < count; i++)
-            {
-                var rule = Rules[i];
-                rows[i].Depth = rule.Depth;
-                rows[i].Group = rule.Group ? (byte)1 : (byte)0;
-                rows[i].Any = rule.Any ? (byte)1 : (byte)0;
-                rows[i].Field = rule.Field;
-                rows[i].Operator = rule.Operator;
-                WriteDevText(rule.Value, new Span<byte>(rows[i].Value, 64));
-            }
+            PackQueryRules(Rules, rows);
             NativeMethods.DevQueryBuilder(context, Stable(Id), fields, Fields.Length, rows, ref count, Capacity, MaxDepth,
                 ReadOnly ? 1 : 0, WidthKind, Width, Enabled ? 1 : 0, out var result);
             if (!Enabled || ReadOnly || (result.Flags == 0 && count == Rules.Length)) return Rules;
@@ -47,7 +40,8 @@ public sealed partial class CuiWindow
             for (int i = 0; i < count; ++i)
                 next[i] = new(rows[i].Depth, rows[i].Group != 0, rows[i].Any != 0, rows[i].Field, rows[i].Operator,
                     ReadDevText(new ReadOnlySpan<byte>(rows[i].Value, 64)));
-            return next;
+            // CUI-134 (docs/future/cui-upstream-bugs.md#cui-134): an empty first choice can report an idle edit.
+            return next.AsSpan().SequenceEqual(Rules) ? Rules : next;
         }
     }
 }

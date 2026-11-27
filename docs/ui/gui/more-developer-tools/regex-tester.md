@@ -34,15 +34,20 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Modifiers` | Bits 1, 2 and 4 select case-insensitive, multiline and dot-all matching. |
+| `Modifiers` | Bits 1, 2 and 4 select case-insensitive, multiline and dot-all matching. Pass null for native modifiers. |
 | `PatternCapacity / TextCapacity` | 127 / 1023. They limit the UTF-8 edit buffers. |
-| `Width / Height / Enabled` | Fill / 0 / true. |
+| `Width / Height / Enabled` | Fill / 0 / true. Zero height uses 180 logical units for the sample editor. |
 
 ## Interaction
 
-Edit the pattern, flags or sample to receive `Event.Valid` and `Matches`
-along with the updated inputs. The tester uses CUI's regex syntax. Keep
-the proposal in the model if you want edits to persist.
+Edit the pattern, flags or sample to receive `Event.Valid`, `Matches` and
+`Error` with the updated inputs. `Error` contains CUI's diagnostic if the
+pattern is invalid or matching exceeds the native budget. Keep the
+proposed inputs in the model to retain edits.
+
+The tester uses CUI's regex syntax. Tab moves between the pattern, flags
+and sample. Left and Right move between flags. Enter or Space flips the
+focused flag.
 
 ## See also
 

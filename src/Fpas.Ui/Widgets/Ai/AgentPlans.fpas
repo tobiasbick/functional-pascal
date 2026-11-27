@@ -11,16 +11,16 @@ uses System as Sys;
 public type Step = record
   // Visible title.
   public Title: string;
-  // Supporting text.
-  public Detail: string := '';
+  // Supporting text, or null to omit the detail line.
+  public Detail: string? := null;
   // Current step state.
   public Status: TaskStates.Status := TaskStates.Status.Pending;
 end record;
 
 // Native presentation and interaction options.
 public type Options = record
-  // Heading or empty for the native default.
-  public Title: string := '';
+  // Heading, or null to display Plan.
+  public Title: string? := null;
   // Allow activating steps.
   public Enabled: bool := true;
 end record;

@@ -30,8 +30,8 @@ public type Task = record
   public Finish: int;
   // Completed fraction.
   public Progress: float := 0.0F;
-  // Optional owner name.
-  public Owner: string := '';
+  // Owner name. Null omits the avatar.
+  public Owner: string? := null;
   // Dependency task index, or minus one.
   public DependsOn: int := -1;
   // Renders a milestone diamond.
@@ -58,9 +58,9 @@ public type Options = record
   public Today: int := 0;
   // Width per day, or zero for default.
   public DayWidth: float := 0.0F;
-  // Height per row, or zero for default.
+  // Height per row, greater than 16 logical units or zero for the default.
   public RowHeight: float := 0.0F;
-  // Native chart height.
+  // Chart viewport extent. Content shows the full schedule.
   public Height: L.Extent := L.Extent.Content;
   // Disables rescheduling.
   public ReadOnly: bool := false;

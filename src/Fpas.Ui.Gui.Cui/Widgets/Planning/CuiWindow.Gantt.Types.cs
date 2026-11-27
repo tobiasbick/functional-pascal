@@ -1,11 +1,9 @@
 // [Documentation](../../../../docs/ui/gui/planning/gantt.md)
-using Fpas.Ui.Gui.Cui.Interop;
-
 namespace Fpas.Ui.Gui.Cui.Widgets.Planning;
 
 /// <summary>A native timeline task.</summary>
 /// <param name="Name">Task name.</param>
-/// <param name="Owner">Optional owner.</param>
+/// <param name="Owner">Owner name, or null to omit the avatar.</param>
 /// <param name="Start">Start offset.</param>
 /// <param name="Finish">End offset.</param>
 /// <param name="Progress">Completed fraction.</param>
@@ -13,7 +11,7 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Planning;
 /// <param name="Dependency">Dependency index or minus one.</param>
 /// <param name="Milestone">Milestone appearance.</param>
 /// <param name="State">Native task state.</param>
-public readonly record struct CuiGanttTask(string Name, string Owner, int Start, int Finish, float Progress, int Tone, int Dependency, bool Milestone, int State);
+public readonly record struct CuiGanttTask(string Name, string? Owner, int Start, int Finish, float Progress, int Tone, int Dependency, bool Milestone, int State);
 
 /// <summary>Native edit proposal and tracked parts.</summary>
 /// <param name="Tasks">Changed task schedule, or null.</param>

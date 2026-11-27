@@ -2,6 +2,7 @@
 
 unit GuiGallery.Pages.Files.View;
 
+uses Fpas.Ui.Composition as Composition;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
@@ -15,6 +16,7 @@ uses Fpas.Ui.Widgets.Navigation.PathBars as Paths;
 uses Gallery.Shared.FilePickerExample as PickerSample;
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Files.Folders as Directory;
+uses GuiGallery.Pages.Files.ProjectTree as Tree;
 uses GuiGallery.Pages.Files.State as M;
 uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
@@ -145,17 +147,18 @@ begin
   end if;
 end function;
 
-// Displays the native file browser, both dialogs and a standalone path bar.
+// Displays the Files page and both dialogs.
 // ## Parameters
 // - `Model`: Current Files state.
 // ## Returns
-// Original browser section followed by the path bar example.
+// Browser, project tree, terminal and standalone path bar.
 public function View(Model: M.Model): array of E.Element of M.Msg;
 begin
   const Path: array of string := Segments(Model.Folder);
   const Base: E.Element of M.Msg := E.Column of M.Msg(
     new L.Flow(Gap := G.Points(20), Clip := false),
     Original(Model),
+    Composition.Map of (Tree.Msg, M.Msg)(Tree.View(Model.Project), M.Msg.Project),
     G.Heading of M.Msg(
       Strings.Get('Text.SectionTerminal'),
       Strings.Get('Heading.TerminalHint')

@@ -18,6 +18,13 @@ These widgets require the GUI host.
 | [Uptime bars](uptime.md) | Show daily availability for each service. |
 | [Time histogram](time-histogram.md) | Show stacked counts over time and select a range. |
 
+## More developer tools gallery page
+
+The gallery presents the ten sections in CUI order. The HTTP section groups
+the request bar, key-value editor and response status. It reads and updates
+the URL with the [query parameter functions](http-request-bar.md#query-parameters).
+See the [gallery comparison](../../../future/cui-compare/README.md#more-developer-tools-evidence).
+
 ## See also
 
 - [UI handbook](../README.md)

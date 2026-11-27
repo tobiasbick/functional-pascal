@@ -42,18 +42,34 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
+| `Track.Name / Collapsed` | Name the lane. A collapsed lane shows only its top row. |
 | `Span.Start / End / Track / Depth` | Times are in seconds. Lanes and depths are zero-based. Supply nonoverlapping spans at the same depth in a lane. |
-| `View.Start / End / Scroll` | Pass the visible time range in seconds and the vertical offset in points. |
-| `View.MarkStart / MarkEnd` | Pass the measured interval in seconds. |
-| `Width / Height / RowHeight / Enabled` | Fill / 0 / 0 / true. Zero uses native dimensions. |
+| `Span.ColorKey` | Zero derives the color from the span name. |
+| `Markers` | Pass named moments in seconds with an optional semantic tone. |
+| `View.Start / End / Scroll` | Pass the visible time range in seconds and the vertical offset in logical units. An end at or before the start fits the full trace. |
+| `View.MarkStart / MarkEnd` | Pass the measured interval in seconds. An end at or before the start clears the interval. |
+| `Width / Height / RowHeight / Enabled` | Fill / automatic up to 320 / 20 / true. Zero height or row height uses the native default. |
 | `Links / Hovered` | Empty / null. Links connect indices in the sorted span array. Supply the previous Hovered value to enable hover-only proposals. |
 
 ## Interaction
 
-Zoom with the wheel, pan by dragging and hold Shift while dragging to
-measure. Click a lane name to fold it. Save `Event.Viewport` and `Selection`.
+Zoom with the wheel. Hold Shift while turning the wheel or drag to pan.
+Turn the wheel over the lane names to scroll vertically. Hold Shift while
+dragging to measure. Click a lane name to fold it.
+
+With focus, Left and Right select adjacent spans in the same row. Up
+selects the parent and Down selects the first child. Press Enter to zoom
+to the selection, plus or minus to zoom, and F to fit. Escape clears a
+measurement first, then the selection.
+
+Save `Event.Viewport` and `Selection`. The `ViewChanged` and
+`SelectionChanged` fields report which values changed.
 When `TrackIndex` is nonnegative, also update the indicated lane's
 `Collapsed` state.
+
+Use `Fpas.Ui.Gui.TraceGeometry.SortSpans` to sort once by track, depth and
+start time. At an equal start time, CUI sorts longer spans first. Use
+`SortedSpans.IndexMap[OldIndex]` to remap selected spans and links.
 
 Use `Link.From` and `To` for dependencies between spans. Each link can set a
 tone, width and dashed style. `Event.Hovered` identifies the span or link
@@ -87,6 +103,7 @@ rectangle. [Native API example](../../../../examples/ui/gui/native-api/README.md
 - `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
   - [CuiWindow.TraceViewer.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.TraceViewer.Types.cs)
   - [CuiWindow.TraceViewer.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.TraceViewer.cs)
+  - [CuiTraceOrder.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiTraceOrder.cs)
 - `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
   - [trace_viewer.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/trace_viewer.c)
   - [trace_viewer.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/trace_viewer.h)

@@ -1,6 +1,7 @@
 // [Documentation](../../../../../docs/ui/gui/more-charts/radial-gauge.md)
 #include "../../fpas_cui.h"
 
+/** Draws a passive instrument without taking input from its container. */
 int fpas_cui_radial_gauge(cui_ctx *ui, const char *id, float value, float minimum, float maximum,
     const fpas_radial_options *options) {
     cui_gauge_band *bands = cui__frame_alloc(ui, sizeof *bands * (size_t)(options->band_count > 0 ? options->band_count : 1));
@@ -12,5 +13,7 @@ int fpas_cui_radial_gauge(cui_ctx *ui, const char *id, float value, float minimu
         .style = options->style, .detail = options->detail, .color = fpas_chart_color(options->palette, options->rgba) };
     const int node = ui->node_count;
     cui_radial_gauge_ex(ui, id, value, minimum, maximum, &o);
+    /* CUI-092 (docs/future/cui-upstream-bugs.md#cui-092): no input action uses this hit. */
+    ui->nodes[node].flags &= ~CUI_NF_INTERACTIVE;
     ui->last_node = node; return node;
 }

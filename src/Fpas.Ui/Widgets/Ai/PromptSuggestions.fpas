@@ -8,15 +8,15 @@ uses Fpas.Ui.Elements as E;
 public type Item = record
   // Suggestion title.
   public Title: string;
-  // Supporting description.
-  public Detail: string := '';
-  // Optional icon.
-  public Icon: string := '';
+  // Supporting description, or null to omit the detail line.
+  public Detail: string? := null;
+  // Icon glyph, or null to omit the icon slot.
+  public Icon: string? := null;
 end record;
 
 // Native presentation and interaction options.
 public type Options = record
-  // Number of columns, or zero for the native default.
+  // Maximum number of columns, or zero for the native default of two.
   public Columns: int := 0;
   // Allow choosing a suggestion.
   public Enabled: bool := true;

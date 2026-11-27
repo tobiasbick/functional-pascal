@@ -388,8 +388,8 @@ caption as an intentional FPAS adaptation.
   the focused wheel and keyboard input. TUI: graphical profile required.
 - [x] <a id="cui_level_meter"></a>[Level meter](ui/gui/audio/level-meter.md) (`cui_level_meter`): [API][fpas-audio]. Audio shows the
   segmented stereo master, and the native test checks clip clearing.
-  The accepted Audio content matches CUI pixel for pixel in Windows software
-  captures at 1201 and 900 points with the same signal phase.
+  The [Audio comparison](future/cui-compare/README.md#audio-evidence) covers
+  the wrapped layout, matching signal phase, and guided tour.
   TUI: graphical profile required.
 - [x] <a id="cui_dropzone"></a>[Dropzone](ui/gui/capture/dropzone.md) (`cui_dropzone`): [API][fpas-capture]. See [Capture](ui/gui/capture/README.md)
   for screenshots and examples. The gallery shows the original
@@ -748,10 +748,9 @@ See [Files](ui/gui/files/README.md) for screenshots and FPAS examples.
   [terminal picker](ui/tui/files/file-picker.md) shares the examples and provides
   keyboard and pointer selection, directory navigation and focus return.
 
-The original Files browser, button row and the Open and Save as dialog
-panels match pixel for pixel in Windows Software and OpenGL at 1100×2200
-and scale one with identical fixture files. The separate Terminal example
-is tracked under code and tool panels. [Files API][fpas-files-planning]
+The [Files comparison](future/cui-compare/README.md#files-evidence) covers the
+browser, both dialog panels, draggable project tree and terminal.
+[Files API][fpas-files-planning]
 
 ### Code and tool panels
 
@@ -809,10 +808,9 @@ The five CUI component specimens are grouped under Editing tools. Windows
 Software and OpenGL captures match the native reference at 1100 × 1400 and
 550 × 1400, scale 1, across three scroll positions.
 
-The Code page's new sections and the original Files content through Terminal
-match their CUI references pixel for pixel on Windows at widths 1100 and 550,
-scale 1, using Software and OpenGL. The Code comparison covers four scroll
-positions per width. The supplementary Files path bar is outside the comparison.
+The Code page's new sections match the CUI reference on Windows at widths
+1100 and 550 at scale 1 with Software and OpenGL. The Code comparison covers
+four scroll positions per width.
 
 ### Developer tools
 
@@ -846,7 +844,10 @@ screenshots and FPAS examples.
 - [x] <a id="cui_api_explorer"></a>[API explorer](ui/gui/more-developer-tools/api-explorer.md) (`cui_api_explorer`)
 
 The original Developer tools and More developer tools pages exercise these
-[graphical APIs](ui/widgets.md#developer-tools). The page content
+[graphical APIs](ui/widgets.md#developer-tools). See the
+[Developer tools comparison](future/cui-compare/README.md#developer-tools-evidence)
+and [More developer tools comparison](future/cui-compare/README.md#more-developer-tools-evidence)
+for the Linux layout and input checks. The page content
 matches the pinned CUI reference on Windows at 1100 × 1700 and scale 1.
 Software and OpenGL comparisons covered three scroll positions per page with
 the same animation clock. Focused tests cover trace folding and measurement,
@@ -880,15 +881,10 @@ examples and widget options.
 - [x] <a id="cui_heatmap"></a>[Heatmap](ui/gui/more-charts/heatmap.md) (`cui_heatmap`), calendar heatmap (`cui_calendar_heatmap`),
   treemap (`cui_treemap`), radar (`cui_radar_chart`), funnel (`cui_funnel`),
   split bar (`cui_split_bar`) and waffle (`cui_waffle`):
-  [API](ui/widgets.md#visualizations). More charts reproduces the
-  original first seven examples, including their data, text, 1.3:1 column ratio,
-  palette, labels and native responsive behavior. CUI owns drawing and input;
-  the bridge supplies frame-owned text and optional activation/selection messages.
-  Calendar activation resolves a native visible-week index to the original date.
-  Focused checks cover native geometry and pixels, copied-data lifetime, disabled
-  input, model-owned treemap selection, calendar clipping and width changes.
-  The full More charts page is validated with native content captures at matching
-  theme, scale, viewport and renderer; application navigation is excluded.
+  [API](ui/widgets.md#visualizations). The gallery uses the original data,
+  captions and 1.3:1 chart row. Calendar activation resolves the visible
+  cell to a date. Treemap supports activation and model-owned selection.
+  Native tests cover cell gaps, wrapped legends and width changes.
   See also [Calendar heatmap](ui/gui/more-charts/calendar-heatmap.md),
   [Treemap](ui/gui/more-charts/treemap.md), [Radar chart](ui/gui/more-charts/radar-chart.md),
   [Funnel](ui/gui/more-charts/funnel.md),
@@ -897,19 +893,11 @@ examples and widget options.
   (`cui_activity_rings`), scatter/bubble chart (`cui_scatter_chart`), radial
   gauge (`cui_radial_gauge`) and candlestick/OHLC chart (`cui_candlestick`):
   [API](ui/widgets.md#flows-ranks-and-instruments).
-  More charts reproduces the complete original page, including Shuffle,
-  native ring progress above one, bubble sizes, all three radial styles and
-  2,000 OHLC periods. CUI owns layout, animation, hit-testing, zoom, panning,
-  crosshair/keyboard input and following appended periods. The bridge only
-  translates data/events, owns deferred text and retires retained state.
-  Focused checks cover pixel/geometry parity, input-data lifetime, original
-  callback indices, native rank changes and released item/viewport allocations.
-  Full-page content matches the pinned native gallery with zero differing pixels
-  in light/dark themes, software/OpenGL renderers and 1240×4100/600×4800
-  viewports at scale one. The 640 native pixel/geometry comparisons and 19
-  managed binding cases also cover input and allocation retirement.
-  Native tests check queued wheel input on disabled candlesticks and report
-  the original Sankey link index on a ribbon click.
+  The gallery includes Shuffle, ring progress above one, bubble sizes,
+  three radial styles and 2,000 OHLC periods. Native tests cover animated
+  ranks, ring input, Sankey link indices and candlestick controls.
+  See the [More charts gallery comparison](future/cui-compare/README.md#more-charts-evidence)
+  for page layout and interaction checks against CUI.
   See also [Bar list](ui/gui/more-charts/bar-list.md),
   [Activity rings](ui/gui/more-charts/activity-rings.md),
   [Scatter chart](ui/gui/more-charts/scatter-chart.md),
@@ -1001,13 +989,12 @@ See [Planning](ui/gui/planning/README.md) for screenshots and FPAS examples.
 - [x] <a id="cui_kanban_begin"></a>[Kanban board, columns, and cards](ui/gui/planning/kanban.md) (`cui_kanban_begin`, `cui_kanban_column_begin`,
   `cui_kanban_card_begin`): native columns, composed card content and drag between columns.
 - [x] <a id="cui_week_calendar"></a>[Week calendar](ui/gui/planning/week-calendar.md) (`cui_week_calendar`): native weekly events with keyboard move and resize.
-- [x] <a id="cui_month_calendar"></a>[Month calendar](ui/gui/planning/month-calendar.md) (`cui_month_calendar`): native month navigation, date selection and event dots.
-- [x] <a id="cui_gantt"></a>[Gantt chart](ui/gui/planning/gantt.md) (`cui_gantt`): native tasks, milestones, dependencies and keyboard move and resize.
+- [x] <a id="cui_month_calendar"></a>[Month calendar](ui/gui/planning/month-calendar.md) (`cui_month_calendar`): native month navigation, date selection and event indicators.
+- [x] <a id="cui_gantt"></a>[Gantt chart](ui/gui/planning/gantt.md) (`cui_gantt`): native tasks, milestones, dependencies, keyboard editing and height control.
 
-The original Planning page matches pixel for pixel in Windows Software and
-OpenGL at 1100×2200 and scale one. The adapters restore Enter activation of
-read-only week events and Gantt tasks and click activation of read-only week
-events. [Planning API][fpas-files-planning]
+See the [Planning gallery comparison](future/cui-compare/README.md#planning-evidence)
+for layout and input checks against the original page. Read-only week events
+and Gantt tasks support activation. [Planning API][fpas-files-planning]
 
 - [x] <a id="cui_node_editor_begin"></a>[Node editor with pins, links, and node content](ui/gui/canvas-and-bars/node-editor.md) (`cui_node_editor_begin`,
   `cui_node_begin`, `cui_node_input`, `cui_node_output`,
@@ -1071,11 +1058,9 @@ of these effects and the compact controls shown on the same page.
 - [x] <a id="cui_loader"></a>[Loader and its motion variants](ui/gui/motion/loader.md) (`cui_loader`): [API][fpas-motion]. Motion
   shows dots, bars, pulse, orbit and grid in the original order.
 
-Motion requires the graphical profile. The Windows gallery tests cover
-Software and OpenGL. At 1100 × 1700, scale 1, with reduced motion and matched
-clocks, the original content has zero differing OpenGL pixels and one Software
-pixel on the active tab's antialiased edge. The supplemental number example
-follows the original page content.
+Motion requires the graphical profile. The [gallery comparison](future/cui-compare/README.md#motion-evidence)
+shows the original layout in both themes and describes the render and input
+checks. The rolling number example follows the original page content.
 
 ### AI interfaces
 
@@ -1104,11 +1089,11 @@ See [AI](ui/gui/ai/README.md) for gallery screenshots and FPAS examples.
 - [x] <a id="cui_voice_orb"></a>[Voice orb](ui/gui/voice/voice-orb.md) (`cui_voice_orb`): a supplemental example on Voice for CUI's
   legacy widget. Clicking it switches from idle to listening.
 
-At 1100 × 1800 and scale one, the original AI and Voice sections match the
-pinned Windows gallery pixel for pixel in Software and OpenGL. The Voice
-comparison fixes the demo time at 250 ms. The AI comparison uses a fixed
-native animation phase to match the reduced-motion workaround. The standalone
-model picker and legacy voice orb follow the original content.
+The [AI gallery comparison](future/cui-compare/README.md#ai-evidence) records
+the pixel and input checks. On Windows, the original Voice sections match at
+1100 × 1800 and scale one in Software and OpenGL with the demo time set to
+250 ms. The standalone model picker and legacy voice orb follow the original
+content.
 
 [revision]: https://github.com/yappologistic/CUI/tree/86d9781bbc3c35c264ec46287ad89c1d86a4c4de
 [fpas-motion]: ui/widgets.md#motion-and-compact-controls

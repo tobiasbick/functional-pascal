@@ -42,17 +42,29 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Card.Key / Content` | Use a stable nonnegative key unique to the board and supply a body element. |
-| `Column.Dot / Limit / Width` | Automatic / 0 / 0. Zero Limit hides the work-in-progress limit. Zero Width uses the native column width. |
-| `Enabled` | true. |
+| `Id` | Use a stable board ID. |
+| `Column.Title` | Literal heading. The board shows the number of cards next to it. |
+| `Column.Dot` | `Automatic` omits the heading dot. Supply a color, theme token or series color to show it. |
+| `Column.Limit` | Zero hides the limit. Above a positive limit, CUI shows the count in the danger color. |
+| `Column.Width` | Zero uses 280 logical units. Use a finite nonnegative value to set the column width. |
+| `Card.Key` | Use a stable nonnegative integer that is unique across the board. |
+| `Card.Title / Content` | The title appears in the GUI snapshot. Supply the visible card body as `Content`. |
+| `Enabled` | True. Add, card activation, moves and card content accept input. |
 
 ## Interaction
 
-Drag cards within or across columns. With a card focused, Space picks it
-up, the arrows move it, and Enter drops it. Escape cancels the move. Apply
-`Event.Move` by removing the card first and then inserting it at the proposed
-index. The add button and card activation send separate messages. Scroll
-horizontally to reach columns outside the visible area.
+Drag cards within or across columns. With a card focused, Space lifts it.
+Use the arrows to move the lifted card. Press Enter or Space to drop it, or
+Escape to cancel. Tab cancels the lift and moves focus. Scroll horizontally
+to reach columns outside the viewport.
+
+`Event.Add` reports the zero-based column index. Click a card or press Enter
+on a focused card to receive `Event.Activate` with its key.
+
+`Event.Move` reports the card key, source column, target column and insertion
+index. Remove the card first and then insert it at the proposed index. The
+limit is advisory and permits drops. If the model removes the lifted card or
+moves it out of the source column, the board cancels the gesture.
 
 ## See also
 

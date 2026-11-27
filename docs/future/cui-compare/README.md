@@ -28,6 +28,14 @@ theme and widget state.
 | [Data grid](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L414) | [Data grid](../../ui/gui/data-grid/README.md#data-grid-gallery-page) | Native filter bar, grid and source tree table | Exact in 31 of 32 captures | Sorting, resizing, selection, editing and disclosure | All three original sections | [Data grid evidence](#data-grid-evidence) |
 | [Code](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L519) | [Code](../../ui/gui/code/README.md#code-gallery-page) | Native code blocks, equal-width pair and JSON views | 25 exact capture pairs | Copy, horizontal scroll and JSON folding | All five original examples | [Code evidence](#code-evidence) |
 | [Social and media](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L581) | [Social and media](../../ui/gui/social-and-media/README.md#social-and-media-gallery-page) | Native cards, weighted columns and wrapping media row | Exact in 20 of 27 capture pairs | Likes, sales, slides, image controls and card dismissal | All nine original sections | [Social and media evidence](#social-and-media-evidence) |
+| [Planning](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L731) | [Planning](../../ui/gui/planning/README.md#planning-gallery-page) | Native board, week calendar, Gantt chart and month calendar | Exact in 22 of 30 capture pairs | Card movement, appointment and task editing, date selection | All four original sections | [Planning evidence](#planning-evidence) |
+| [More charts](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L812) | [More charts](../../ui/gui/more-charts/README.md#more-charts-gallery-page) | Native cards, weighted rows and wrapping gauges | Exact in 31 of 35 capture pairs | Chart hover, candlestick navigation and Shuffle | All 13 original chart types | [More charts evidence](#more-charts-evidence) |
+| [Motion](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L945) | [Motion](../../ui/gui/motion/README.md#motion-gallery-page) | Cards, dock and weighted columns at eight widths | Light theme matches outside loader regions, with one edge pixel at three widths. Dark theme also shows the native resting-shadow difference after a theme change. | Replay, hover, transport, seek, tile toggles and tab selection | All original sections | [Motion evidence](#motion-evidence) |
+| [AI](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L1035) | [AI](../../ui/gui/ai/README.md#ai-gallery-page) | Two weighted columns and native conversation controls at eight widths | Exact in all 16 settled captures | Disclosure, voting, draft, model selection and response lifecycle | All original sections | [AI evidence](#ai-evidence) |
+| [Audio](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L1119) | [Audio](../../ui/gui/audio/README.md#audio-gallery-page) | Synth and mixer cards wrap at eight tested widths | Exact in 16 settled captures with the same signal phase | Knob and fader input, metering, and tour navigation | All original controls and tour steps | [Audio evidence](#audio-evidence) |
+| [Files](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L1277) | [Files](../../ui/gui/files/README.md#files-gallery-page) | Shared browser, dialog row, project table and terminal | Exact in 13 of 16 settled captures. Three captures differ at borders. | Native file navigation, project tree and terminal input | All original sections | [Files evidence](#files-evidence) |
+| [Developer tools](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L1510) | [Developer tools](../../ui/gui/developer-tools/README.md#developer-tools-gallery-page) | Native widget layout and section widths | Exact in all 16 settled views | Keyboard, pointer and editor input | All ten original sections | [Developer tools evidence](#developer-tools-evidence) |
+| [More developer tools](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L1684) | [More developer tools](../../ui/gui/more-developer-tools/README.md#more-developer-tools-gallery-page) | Native widget layout and section widths | Exact in 16 settled views with the same sample text | All 18 input captures match | All ten original sections | [More developer tools evidence](#more-developer-tools-evidence) |
 
 ## CUI functions
 
@@ -38,52 +46,73 @@ Record each reviewed `cui_*` function once. Link to the gallery pages that exerc
 | [`cui_accent_name`](../../ui/gui/actions/theme-switcher.md) | `Themes.Accent` and localized labels | Adopted | Buttons shell | Name each accent swatch |
 | [`cui_accordion_begin`](../../ui/gui/data-display/accordion.md) | `Accordions.Accordion` | Adopted | Data display | Open or close an independent FAQ entry |
 | [`cui_accordion_end`](../../ui/gui/data-display/accordion.md) | `Accordions.Accordion` | Adopted | Data display | End the body of an expanded entry |
+| [`cui_activity_rings`](../../ui/gui/more-charts/activity-rings.md) | `ActivityRings.ActivityRings` | Adopted | More charts | Show three targets, including progress above one |
+| [`cui_agent_plan`](../../ui/gui/ai/agent-plan.md) | `AgentPlans.AgentPlan` | Adopted | AI | Show five steps and their current progress |
+| [`cui_agent_status`](../../ui/gui/ai/agent-status.md) | `AgentStatuses.AgentStatus` | Adopted | AI | Show the busy report-reading status |
 | [`cui_alert`](../../ui/gui/feedback/alert.md) | `Alerts.Alert` | Adopted | Feedback | Dismiss the storage warning and show four tones |
-| [`cui_avatar`](../../ui/gui/disclosure/avatar.md) | `Avatars.Avatar` | Adopted | Overview, Feedback, Data display, Disclosure, Data grid | Team initials and presence indicators |
+| [`cui_api_explorer`](../../ui/gui/more-developer-tools/api-explorer.md) | `ApiExplorers.ApiExplorer` | Adopted | More developer tools | Select endpoints and read parameters |
+| [`cui_avatar`](../../ui/gui/disclosure/avatar.md) | `Avatars.Avatar` | Adopted | Overview, Feedback, Data display, Disclosure, Data grid, Planning | Team initials and presence indicators |
 | [`cui_avatar_group`](../../ui/gui/feedback/avatar-group.md) | `AvatarGroups.AvatarGroup` | Adopted | Feedback | Show four team members and an overflow count |
 | [`cui_avatar_upload`](../../ui/gui/capture/avatar-upload.md) | AvatarUploads.AvatarUpload | Adopted | Capture | Replace a profile photo after an accepted image drop |
-| [`cui_badge`](../../ui/gui/feedback/badge.md) | `Badges.Badge` | Adopted | Overview, Buttons shell, Feedback, Data display, Data grid | Team roles and the sidebar version |
+| [`cui_badge`](../../ui/gui/feedback/badge.md) | `Badges.Badge` | Adopted | Overview, Buttons shell, Feedback, Data display, Data grid, Planning | Team roles and the sidebar version |
 | [`cui_banner`](../../ui/gui/disclosure/banner.md) | Banners.Banner | Adopted | Disclosure | Show, dismiss and reopen an announcement |
 | [`cui_bar_chart`](../../ui/gui/charts/bar-chart.md) | `BarCharts.BarChart` | Adopted | Charts | Grouped visits and stacked test-run bars |
-| [`cui_box`](../../ui/gui/layout/container-options.md) | `Elements.Row/Column`, `Stacks.Stack`, `Grids.Grid` | Adopted | Overview, Inputs, Buttons shell, Selection, Feedback, Data display, Charts, Actions, Smart inputs, Pickers, Capture, Disclosure, Code, Social and media | Responsive grids and the layered sidebar brand |
+| [`cui_bar_list`](../../ui/gui/more-charts/bar-list.md) | `BarLists.BarList` | Adopted | More charts | Rank the six page amounts by value |
+| [`cui_blame`](../../ui/gui/more-developer-tools/blame.md) | `Blames.Blame` | Adopted | More developer tools | Show source lines with commit attribution |
+| [`cui_box`](../../ui/gui/layout/container-options.md) | `Elements.Row/Column`, `Stacks.Stack`, `Grids.Grid` | Adopted | Overview, Inputs, Buttons shell, Selection, Feedback, Data display, Charts, Actions, Smart inputs, Pickers, Capture, Disclosure, Code, Social and media, Motion | Responsive grids and the layered sidebar brand |
 | [`cui_breadcrumb`](../../ui/gui/navigation/breadcrumb.md) | `Breadcrumbs.Breadcrumb` | Adopted | Navigation | Select an ancestor and show its caption in a toast |
-| [`cui_button`](../../ui/gui/actions/button.md) | `Buttons.Button` | Adopted | Overview, Buttons, Navigation, Overlays, Feedback, Disclosure, Social and media | Workspace actions and the variant, size, icon, state and group examples |
+| [`cui_button`](../../ui/gui/actions/button.md) | `Buttons.Button` | Adopted | Overview, Buttons, Navigation, Overlays, Feedback, Disclosure, Social and media, More charts, Motion, Audio, Files | Workspace actions and the variant, size, icon, state and group examples |
 | [`cui_button_group`](../../ui/gui/actions/button-group.md) | `ButtonGroups.ButtonGroup` | Adopted | Buttons | Bold, Italic and Underline share one frame |
+| [`cui_calendar_heatmap`](../../ui/gui/more-charts/calendar-heatmap.md) | `CalendarHeatmaps.CalendarHeatmap` | Adopted | More charts | Show 364 daily activity values |
+| [`cui_candlestick`](../../ui/gui/more-charts/candlestick.md) | `Candlesticks.Candlestick` | Adopted | More charts | Inspect the 2,000 price and volume periods |
 | [`cui_canvas`](../../ui/gui/text-and-display/canvas.md) | `Canvases.Canvas` | Adopted | Buttons shell | Paint and activate each accent swatch |
-| [`cui_card`](../../ui/gui/feedback/card.md) | `Cards.Card` | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays, Feedback, Data display, Charts, Actions, Pickers, Social and media | Workspace, Team and example cards |
+| [`cui_card`](../../ui/gui/feedback/card.md) | `Cards.Card` | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays, Feedback, Data display, Charts, Actions, Pickers, Social and media, More charts, Motion, Audio | Workspace, Team and example cards |
 | [`cui_card_stack_begin`](../../ui/gui/social-and-media/card-stack.md) | CardStacks.CardStack | Adopted | Social and media | Start the destination deck |
 | [`cui_card_stack_end`](../../ui/gui/social-and-media/card-stack.md) | CardStacks.CardStack | Adopted | Social and media | Report a dismissal direction |
 | [`cui_card_stack_item`](../../ui/gui/social-and-media/card-stack.md) | CardStacks.CardStack | Adopted | Social and media | Compose the three destination cards |
 | [`cui_carousel`](../../ui/gui/social-and-media/carousel.md) | Carousels.Carousel | Adopted | Social and media | Navigate the four release slides |
 | [`cui_carousel_slide`](../../ui/gui/social-and-media/carousel.md) | Carousels.Carousel | Adopted | Social and media | Compose each release slide |
+| [`cui_chat_composer`](../../ui/gui/voice/composer.md) | `Composers.Composer` | Adopted | AI | Edit, send, stop, remove attachments and switch models |
 | [`cui_chat_divider`](../../ui/gui/social-and-media/chat-divider.md) | ChatDividers.ChatDivider | Adopted | Social and media | Separate the conversation by date |
-| [`cui_chat_message`](../../ui/gui/social-and-media/chat-message.md) | ChatMessages.ChatMessage | Adopted | Social and media | Show grouped bubbles and a receipt |
+| [`cui_chat_message`](../../ui/gui/social-and-media/chat-message.md) | ChatMessages.ChatMessage | Adopted | Social and media, AI | Show grouped bubbles and a receipt |
 | [`cui_checkbox`](../../ui/gui/selection/checkbox.md) | `Checkboxes.Checkbox` | Adopted | Overview, Selection, Overlays, Charts | Summary preference also updates the disabled example in Selection |
 | [`cui_checklist`](../../ui/gui/disclosure/onboarding-checklist.md) | Checklists.Checklist | Adopted | Disclosure | Toggle completion and advance to the next step |
 | [`cui_chip`](../../ui/gui/selection/chip.md) | `Chips.Chip` | Adopted | Selection | Independent category choices wrap inside the card |
+| [`cui_citation`](../../ui/gui/ai/citation.md) | `Citations.Citation` | Adopted | AI | Preview each numbered source |
 | [`cui_code_block`](../../ui/gui/code/code-block.md) | CodeBlocks.CodeBlock | Adopted | Code | Highlight and copy the C, Python and shell examples |
 | [`cui_color_of`](../../ui/gui/canvas-and-bars/painting.md) | `Themes.ColorToken` and `Painting.Surface.Color` | Adopted | Buttons shell | Use the active CUI palette for swatches during rendering |
 | [`cui_color_picker`](../../ui/gui/inputs/color-picker.md) | `ColorPickers.ColorPicker` | Adopted | Inputs | Brand color swatch |
-| [`cui_column`](../../ui/gui/layout/column.md) | `Elements.Column` | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays, Feedback, Data display, Charts, Actions, Smart inputs, Pickers, Capture, Disclosure, Reader, Data grid, Code, Social and media | Section headings, form captions and field stacks |
+| [`cui_column`](../../ui/gui/layout/column.md) | `Elements.Column` | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays, Feedback, Data display, Charts, Actions, Smart inputs, Pickers, Capture, Disclosure, Reader, Data grid, Code, Social and media, Planning, More charts, Motion, AI, Files, Developer tools, More developer tools | Section headings, form captions and field stacks |
 | [`cui_command_palette`](../../ui/gui/overlays/command-palette.md) | `CommandPalettes.CommandPalette` | Adopted | Overview, Buttons shell, Overlays | Search and select a gallery command with Primary+K |
 | [`cui_comment`](../../ui/gui/social-and-media/comment.md) | Comments.Comment | Adopted | Social and media | Show a thread with likes and replies |
+| [`cui_commit_graph`](../../ui/gui/developer-tools/commit-graph.md) | `CommitGraphs.CommitGraph` | Adopted | Developer tools | Draw and select ten commits across branch lanes |
 | [`cui_confirm_button`](../../ui/gui/actions/confirm-button.md) | `ConfirmButtons.ConfirmButton` | Adopted | Actions | Two-step Delete project confirmation |
 | [`cui_confirm_popover`](../../ui/gui/disclosure/confirm-popover.md) | ConfirmPopovers.ConfirmPopover | Adopted | Disclosure | Confirm or cancel the branch preview |
 | [`cui_context_menu`](../../ui/gui/overlays/context-menu.md) | `Menus.ContextMenu` | Adopted | Overlays | Right-click the muted card to open commands |
+| [`cui_context_meter`](../../ui/gui/ai/context-meter.md) | `ContextMeters.ContextMeter` | Adopted | AI | Show 57 percent usage and the three context parts |
+| [`cui_control_tile`](../../ui/gui/motion/control-tile.md) | `ControlTiles.ControlTile` | Adopted | Motion | Toggle Wi-Fi, Hotspot, Focus, AirShare and Dark appearance |
 | [`cui_copy_button`](../../ui/gui/actions/copy-button.md) | `CopyButtons.CopyButton` | Adopted | Buttons | Copy the displayed install command |
 | [`cui_countdown`](../../ui/gui/disclosure/countdown.md) | Countdowns.Countdown | Adopted | Disclosure | Display standard and compact countdowns |
 | [`cui_counter`](../../ui/gui/social-and-media/counter.md) | Counters.Counter | Adopted | Social and media | Count sales with grouped thousands |
+| [`cui_coverage`](../../ui/gui/more-developer-tools/coverage.md) | `Coverages.Coverage` | Adopted | More developer tools | Fold folders and sort coverage totals |
 | [`cui_cropper`](../../ui/gui/social-and-media/image-cropper.md) | ImageCroppers.ImageCropper | Adopted | Social and media | Adjust the square crop |
 | [`cui_data_grid_begin`](../../ui/gui/data-grid/data-grid.md) | DataGrids.DataGrid | Adopted | Data grid | Lay out a virtual grid and realize rows in the viewport |
 | [`cui_data_grid_cell`](../../ui/gui/data-grid/data-grid.md) | DataGrids.Cell.Content | Adopted | Data grid | Compose badge and score cells with native widgets |
-| [`cui_data_grid_cell_text`](../../ui/gui/data-grid/data-grid.md) | DataGrids.Cell.Text | Adopted | Data grid | Display email and numeric cells as native text |
+| [`cui_data_grid_cell_text`](../../ui/gui/data-grid/data-grid.md) | DataGrids.Cell.Text | Adopted | Data grid, Files | Display email and numeric cells as native text |
 | [`cui_data_grid_edit`](../../ui/gui/data-grid/data-grid.md#interaction) | DataGrids.Cell.Editable | Adopted | Data grid | Edit a name next to its avatar |
 | [`cui_data_grid_end`](../../ui/gui/data-grid/data-grid.md) | DataGrids.DataGrid | Adopted | Data grid | Complete the viewport and publish the native proposal |
 | [`cui_data_grid_row`](../../ui/gui/data-grid/data-grid.md) | DataGrids.Row | Adopted | Data grid | Build a visible row by display position |
+| [`cui_date_from_days`](../../ui/gui/planning/README.md#dates) | `DateOnly` and `AddDays` | CLR date arithmetic | Planning, More charts | Resolve a Monday, a timeline origin, and appointment dates |
 | [`cui_date_picker`](../../ui/gui/inputs/date-picker.md) | `DatePickers.DatePicker` | Adopted | Inputs | Due date and its calendar popup |
 | [`cui_date_range_picker`](../../ui/gui/pickers/date-range-picker.md) | `DateRangePickers.DateRangePicker` | Adopted | Pickers | Select dates with or without presets |
+| [`cui_date_to_days`](../../ui/gui/planning/README.md#dates) | `DateOnly.DayNumber` | CLR date arithmetic | Planning, More charts | Convert dates to ordinal day numbers |
+| [`cui_date_today`](../../ui/gui/planning/README.md#dates) | `DateTime.Today` | CLR date arithmetic | Planning, More charts | Read the local calendar day |
+| [`cui_delta_time`](../../ui/gui/motion/README.md#playback-clock) | `Canvas.Painter.DeltaTime` | Adopted | Motion | Read native frame delta in a canvas. Motion uses its own playback clock. |
 | [`cui_dialog`](../../ui/gui/overlays/dialog.md) | `Dialogs.Dialog` | Adopted | Buttons, Overlays | Options > Delete opens the project confirmation |
 | [`cui_dialog_footer`](../../ui/gui/overlays/action-footer.md) | `ActionFooters.ActionFooter` | Adopted | Buttons, Overlays | Cancel and Delete project actions |
+| [`cui_dock`](../../ui/gui/motion/dock.md) | `Docks.Dock` | Adopted | Motion | Center the icon dock in the row |
+| [`cui_dock_item`](../../ui/gui/motion/dock.md) | `Docks.Entry.Item` | Adopted | Motion | Show icons with status dots, badges and labels |
+| [`cui_dock_separator`](../../ui/gui/motion/dock.md) | `Docks.Entry.Separator` | Adopted | Motion | Separate the shortcuts from Settings and Trash |
 | [`cui_donut_chart`](../../ui/gui/charts/donut-chart.md) | `DonutCharts.DonutChart` | Adopted | Charts | Platform shares with slice and legend hover |
 | [`cui_draw_circle`](../../ui/gui/canvas-and-bars/painting.md) | `Painting.Surface.Circle` | Adopted | Buttons shell | Paint the accent swatch and its ring |
 | [`cui_dropped_file`](../../ui/gui/capture/dropzone.md#interaction) | Dropzone accepted paths | Adopted | Capture | Show the first accepted path from the tall dropzone |
@@ -92,15 +121,25 @@ Record each reviewed `cui_*` function once. Link to the gallery pages that exerc
 | [`cui_empty_state`](../../ui/gui/feedback/empty-state.md) | `EmptyStates.EmptyState` | Adopted | Feedback | Create a project from the empty view |
 | [`cui_expandable_card`](../../ui/gui/disclosure/expandable-card.md) | ExpandableCards.ExpandableCard | Adopted | Disclosure | Open the Billing and Security details |
 | [`cui_expandable_text`](../../ui/gui/disclosure/expandable-text.md) | ExpandableTexts.ExpandableText | Adopted | Disclosure | Open and close a two-line text preview |
+| [`cui_fader`](../../ui/gui/audio/fader.md) | `Faders.Fader` | Adopted | Audio | Edit gain on six channel strips with stereo levels |
+| [`cui_feature_flags`](../../ui/gui/more-developer-tools/feature-flags.md) | `FeatureFlagEditors.FeatureFlags` | Adopted | More developer tools | Edit environment toggles and rollout shares |
+| [`cui_file_browser`](../../ui/gui/files/file-browser.md) | `FileBrowsers.FileBrowser` | Adopted | Files | Navigate the local fixture and choose a file |
+| [`cui_file_picker`](../../ui/gui/files/file-picker.md) | `FilePickers.FilePicker` | Adopted | Files | Open and save files through the native modal |
 | [`cui_filter_bar`](../../ui/gui/data-grid/filter-bar.md) | FilterBars.FilterBar | Adopted | Data grid | Choose filter values and enter a search |
-| [`cui_gap`](../../ui/gui/layout/spacing.md#fixed-gaps-and-spacers) | `Elements.Gap` | Adopted | Buttons shell, Reader | Fixed space between sections of destinations |
+| [`cui_fs_list`](../../ui/gui/files/file-browser.md) | `FileListings.Source` | Adopted | Files | Use the native local listing or supply an FPAS reader |
+| [`cui_funnel`](../../ui/gui/more-charts/funnel.md) | `Funnels.Funnel` | Adopted | More charts | Show the four conversion stages |
+| [`cui_gantt`](../../ui/gui/planning/gantt.md) | `Gantts.Gantt` | Adopted | Planning | Move and resize tasks with days, milestones and dependencies |
+| [`cui_gap`](../../ui/gui/layout/spacing.md#fixed-gaps-and-spacers) | `Elements.Gap` | Adopted | Buttons shell, Reader, More charts | Fixed space between sections of destinations |
 | [`cui_gauge`](../../ui/gui/charts/gauge.md) | `Gauges.Gauge` | Adopted | Charts | CPU and memory gauges in a centered row |
-| [`cui_heading`](../../ui/gui/text-and-display/text.md) | `Texts.Text` with a heading appearance | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays, Feedback, Data display, Charts, Actions, Smart inputs, Pickers, Capture, Disclosure, Reader, Data grid, Code, Social and media | Four heading levels |
+| [`cui_gradient_text`](../../ui/gui/motion/gradient-text.md) | `GradientTexts.GradientText` | Adopted | Motion | Draw the animated Kiln 2.4 title |
+| [`cui_graph_view`](../../ui/gui/developer-tools/dependency-graph.md) | `DependencyGraphs.DependencyGraph` | Adopted | Developer tools | Inspect and fit the dependency graph |
+| [`cui_heading`](../../ui/gui/text-and-display/text.md) | `Texts.Text` with a heading appearance | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays, Feedback, Data display, Charts, Actions, Smart inputs, Pickers, Capture, Disclosure, Reader, Data grid, Code, Social and media, Planning, More charts, Motion, AI, Audio, Files, Developer tools, More developer tools | Four heading levels |
+| [`cui_heatmap`](../../ui/gui/more-charts/heatmap.md) | `Heatmaps.Heatmap` | Adopted | More charts | Plot requests by weekday and hour |
 | [`cui_histogram_slider`](../../ui/gui/pickers/histogram-slider.md) | `HistogramSliders.HistogramSlider` | Adopted | Pickers | Adjust two price endpoints over 24 bins |
 | [`cui_hold_button`](../../ui/gui/actions/hold-button.md) | `HoldButtons.HoldButton` | Adopted | Buttons | A completed hold shows the Deleted toast |
 | [`cui_hover_card`](../../ui/gui/disclosure/hover-card.md) | HoverCards.HoverCard | Adopted | Disclosure | Show the profile card from the inline link |
-| [`cui_icon`](../../ui/gui/text-and-display/icon.md) | `Icons.Icon` | Adopted | Overlays, Data display, Actions, Disclosure | Ellipsis in the context-menu target |
-| [`cui_icon_button`](../../ui/gui/actions/icon-button.md) | `IconButtons.IconButton` | Adopted | Buttons, Overlays, Smart inputs | Copy, Share, Like and Delete icons with tooltips |
+| [`cui_icon`](../../ui/gui/text-and-display/icon.md) | `Icons.Icon` | Adopted | Overlays, Data display, Actions, Disclosure, Planning | Ellipsis in the context-menu target |
+| [`cui_icon_button`](../../ui/gui/actions/icon-button.md) | `IconButtons.IconButton` | Adopted | Buttons, Overlays, Smart inputs, Motion | Copy, Share, Like and Delete icons with tooltips |
 | [`cui_image`](../../ui/gui/text-and-display/image.md) | Images.Image | Adopted | Disclosure | Display the rounded landscape inside the veil |
 | [`cui_image_compare`](../../ui/gui/social-and-media/image-compare.md) | ImageComparisons.ImageCompare | Adopted | Social and media | Compare the grayscale and color landscape |
 | [`cui_image_create`](../../ui/gui/text-and-display/image.md#usage) | MediaImages.Source.Rgba | Managed resource | Disclosure, Social and media | Upload the generated landscape |
@@ -109,70 +148,105 @@ Record each reviewed `cui_*` function once. Link to the gallery pages that exerc
 | [`cui_inline_edit`](../../ui/gui/smart-inputs/inline-edit.md) | `InlineEdits.InlineEdit` | Adopted | Smart inputs | Edit and commit the title or owner in place |
 | [`cui_input`](../../ui/gui/inputs/text-field.md) | `TextFields.TextField` | Adopted | Overview, Inputs, Buttons, Overlays, Smart inputs | Name and email in the profile dialog |
 | [`cui_json_view`](../../ui/gui/code/json-viewer.md) | JsonViews.JsonView | Adopted | Code | Fold JSON objects and arrays and show a parse error |
-| [`cui_label`](../../ui/gui/text-and-display/text.md) | `Elements.Styled` with `Label` | Adopted | Inputs, Buttons, Navigation, Overlays, Capture | Form captions and the Recent section in Notifications |
+| [`cui_kanban_begin`](../../ui/gui/planning/kanban.md) | `Kanbans.Kanban` | Adopted | Planning | Start the four-column board |
+| [`cui_kanban_card_begin`](../../ui/gui/planning/kanban.md) | `Kanbans.Card` | Adopted | Planning | Build an interactive card with a stable ID |
+| [`cui_kanban_card_end`](../../ui/gui/planning/kanban.md) | `Kanbans.Card` | Adopted | Planning | Close the composed card body |
+| [`cui_kanban_column_begin`](../../ui/gui/planning/kanban.md) | `Kanbans.Column` | Adopted | Planning | Show the caption, count, color dot, width and work limit |
+| [`cui_kanban_column_end`](../../ui/gui/planning/kanban.md) | `Kanbans.Column` | Adopted | Planning | Close the column after its cards |
+| [`cui_kanban_end`](../../ui/gui/planning/kanban.md) | `Kanbans.Kanban` | Adopted | Planning | Report a card move to the model |
+| [`cui_keymap`](../../ui/gui/developer-tools/keymap.md) | `Keymaps.Keymap` | Adopted | Developer tools | Display shortcut categories and conflicts |
+| [`cui_knob`](../../ui/gui/audio/knob.md) | `Knobs.Knob` | Adopted | Audio | Adjust cutoff, resonance, attack and pan |
+| [`cui_kv_editor`](../../ui/gui/developer-tools/key-value-editor.md) | `KeyValueEditors.KeyValueEditor` | Adopted | Developer tools, More developer tools | Edit the sample header rows |
+| [`cui_label`](../../ui/gui/text-and-display/text.md) | `Elements.Styled` with `Label` | Adopted | Inputs, Buttons, Navigation, Overlays, Capture, More charts | Form captions and the Recent section in Notifications |
+| [`cui_last_id`](../../ui/gui/overlays/guided-tour.md) | `Tours.Step.Target` | Adopted | Audio | Resolve tour anchors through stable control IDs |
 | [`cui_last_rect`](../../ui/gui/layout/layout-inspection.md#read-the-bounds) | `Session.Snapshot` control bounds and `CuiWindow.LastRectangle` | Adopted | Selection | Read the Bluetooth row bounds for input tests |
+| [`cui_level_meter`](../../ui/gui/audio/level-meter.md) | `LevelMeters.LevelMeter` | Adopted | Audio | Draw the horizontal stereo master meter |
 | [`cui_line_chart`](../../ui/gui/charts/line-chart.md) | `LineCharts.LineChart` | Adopted | Charts | Smooth revenue and stacked dither fills with crosshairs |
 | [`cui_link`](../../ui/gui/disclosure/link.md) | Links.Link | Adopted | Disclosure | Activate and focus an inline link |
 | [`cui_list_item`](../../ui/gui/data-display/list-item.md) | `ListItems.ListItem` | Adopted | Buttons, Overlays, Data display | Notifications with initials and a subtitle |
+| [`cui_loader`](../../ui/gui/motion/loader.md) | `Loaders.Loader` | Adopted | Motion | Draw dots, bars, pulse, orbit and grid |
 | [`cui_make_id`](../../ui/gui/text-and-display/image.md#usage) | GUI texture owner | Managed resource | Social and media | Derive native texture IDs from the widget ID |
 | [`cui_menu`](../../ui/gui/actions/dropdown-menu.md) | `Menus.Menu` | Adopted | Buttons | Labeled Options and icon-only More actions |
-| [`cui_menu_item`](../../ui/gui/actions/dropdown-menu.md) | `Menus.Entry.Action` | Adopted | Buttons, Overlays, Actions | Icons, shortcut captions and a danger item |
+| [`cui_menu_item`](../../ui/gui/actions/dropdown-menu.md) | `Menus.Entry.Action` | Adopted | Buttons, Overlays, Actions, Files | Icons, shortcut captions and a danger item |
 | [`cui_menu_label`](../../ui/gui/actions/dropdown-menu.md) | `Menus.Entry.Label` | Adopted | Buttons | Project section caption |
-| [`cui_menu_separator`](../../ui/gui/actions/dropdown-menu.md) | `Menus.Entry.Separator` | Adopted | Buttons, Overlays, Actions | Line above Delete |
+| [`cui_menu_separator`](../../ui/gui/actions/dropdown-menu.md) | `Menus.Entry.Separator` | Adopted | Buttons, Overlays, Actions, Files | Line above Delete |
 | [`cui_meter`](../../ui/gui/feedback/meter.md) | `Meters.Meter` | Adopted | Feedback | Show storage use and the warning threshold |
 | [`cui_metric`](../../ui/gui/overview/metric.md) | `Metrics.Metric` | Adopted | Overview | Three tiles, including a delta and sparkline for Frame time |
 | [`cui_money_input`](../../ui/gui/smart-inputs/money-field.md) | `MoneyFields.MoneyField` | Decimal adapter | Smart inputs | Edit USD and EUR amounts with native text input and CLR decimal |
+| [`cui_month_calendar`](../../ui/gui/planning/month-calendar.md) | `MonthCalendars.MonthCalendar` | Adopted | Planning | Browse months, select a day and open appointments |
 | [`cui_multi_select`](../../ui/gui/pickers/multi-select.md) | `MultiSelects.MultiSelect` | Adopted | Pickers | Search and change a checklist with selected chips |
-| [`cui_muted`](../../ui/gui/text-and-display/text.md) | `Texts.Text` with `Appearance.Muted` | Adopted | Actions, Pickers, Capture, Disclosure, Data grid | Small muted action results |
+| [`cui_muted`](../../ui/gui/text-and-display/text.md) | `Texts.Text` with `Appearance.Muted` | Adopted | Actions, Pickers, Capture, Disclosure, Data grid, Files | Small muted action results |
 | [`cui_nav_item`](../../ui/gui/navigation/sidebar.md) | `Navigation.Item` in `Navigation.Sidebar` | Adopted | Buttons shell | Select a gallery destination |
 | [`cui_nav_section`](../../ui/gui/navigation/sidebar.md) | `Navigation.Section` | Adopted | Buttons shell | Components and Extended captions |
+| [`cui_now_playing`](../../ui/gui/motion/now-playing.md) | `NowPlaying.NowPlaying` | Adopted | Motion | Show transport, track time, artwork and seek bar |
 | [`cui_number`](../../ui/gui/inputs/number-field.md) | `NumberFields.NumberField` | Adopted | Inputs | Seats with native fill width, bounds, and step buttons |
 | [`cui_otp_input`](../../ui/gui/inputs/one-time-code.md) | `OneTimeCodes.OneTimeCodeInput` | Adopted | Inputs | Six-box verification code and completion |
 | [`cui_pagination`](../../ui/gui/navigation/pagination.md) | `Paginations.Pagination` | Adopted | Navigation | Move through twelve pages with native compact layout |
 | [`cui_password_strength`](../../ui/gui/inputs/password-strength.md) | `PasswordStrengthMeters.PasswordStrengthMeter` | Adopted | Inputs | Live estimate under New password |
 | [`cui_pattern_meter`](../../ui/gui/charts/pattern-meter.md) | `PatternMeters.PatternMeter` | Adopted | Charts | Storage parts, grayscale and keyboard inspection |
-| [`cui_pop_id`](../../ui/gui/host.md#frame-preparation-and-presentation) | Host identity scopes | Host owned | Actions, Reader | Close each swipe row scope |
+| [`cui_pipeline`](../../ui/gui/developer-tools/pipeline.md) | `Pipelines.Pipeline` | Adopted | Developer tools | Draw grouped stages and select jobs |
+| [`cui_pop_id`](../../ui/gui/host.md#frame-preparation-and-presentation) | Host identity scopes | Host owned | Actions, Reader, Motion, Audio | Close each swipe row scope |
 | [`cui_popover`](../../ui/gui/overlays/popover.md) | `Popovers.Popover` | Adopted | Overlays, Smart inputs | Show the Filters controls in an anchored panel |
 | [`cui_popover_close`](../../ui/gui/overlays/popover.md#interaction) | Model visibility update | Adopted | Overlays, Smart inputs | Apply closes the Filters panel |
 | [`cui_popover_open`](../../ui/gui/disclosure/confirm-popover.md) | Model-owned Open state | Adopted | Disclosure | Open the confirmation from its trigger |
 | [`cui_popover_toggle`](../../ui/gui/overlays/popover.md#interaction) | Model visibility update | Adopted | Overlays, Smart inputs | The Filters button toggles the panel |
 | [`cui_presence`](../../ui/gui/social-and-media/presence.md) | Presences.Presence | Adopted | Social and media | Show idle avatars and an overflow count |
-| [`cui_progress`](../../ui/gui/feedback/progress-bar.md) | `ProgressBars.ProgressBar` | Adopted | Feedback, Data grid | Show determinate and indeterminate progress with plain and dither fills |
+| [`cui_problems`](../../ui/gui/developer-tools/problems-panel.md) | `ProblemsPanels.Problems` | Adopted | Developer tools | Filter grouped diagnostics and navigate their rows |
+| [`cui_progress`](../../ui/gui/feedback/progress-bar.md) | `ProgressBars.ProgressBar` | Adopted | Feedback, Data grid, Planning | Show determinate and indeterminate progress with plain and dither fills |
 | [`cui_progress_ring`](../../ui/gui/feedback/progress-ring.md) | `ProgressRings.ProgressRing` | Adopted | Feedback | Show both goal percentages |
-| [`cui_push_id_int`](../../ui/gui/host.md#frame-preparation-and-presentation) | Stable widget IDs and host identity scopes | Host owned | Actions, Reader | Identify each swipe row independently |
+| [`cui_prompt_suggestions`](../../ui/gui/ai/prompt-suggestions.md) | `PromptSuggestions.PromptSuggestions` | Adopted | AI | Fill the draft from one of four cards |
+| [`cui_push_id_int`](../../ui/gui/host.md#frame-preparation-and-presentation) | Stable widget IDs and host identity scopes | Host owned | Actions, Reader, Motion, Audio | Identify each swipe row independently |
+| [`cui_query_builder`](../../ui/gui/developer-tools/query-builder.md) | `QueryBuilders.QueryBuilder` | Adopted | Developer tools | Edit nested groups and conditions |
+| [`cui_query_text`](../../ui/gui/developer-tools/query-builder.md) | `Fpas.Ui.Gui.QueryBuilders.Description` | Adopted | Developer tools | Format the current query as text below the editor |
+| [`cui_radar_chart`](../../ui/gui/more-charts/radar-chart.md) | `RadarCharts.RadarChart` | Adopted | More charts | Compare two series around six axes |
+| [`cui_radial_gauge`](../../ui/gui/more-charts/radial-gauge.md) | `RadialGauges.RadialGauge` | Adopted | More charts | Show bands, a target and a ring |
 | [`cui_radio`](../../ui/gui/selection/radio-button.md) | `RadioButtons.RadioButton` | Adopted | Selection | Three save-frequency choices in a card |
 | [`cui_radio_cards`](../../ui/gui/selection/radio-cards.md) | `RadioCards.RadioCards` | Adopted | Selection | Choose a save destination with a description, icon and optional badge |
 | [`cui_range_calendar`](../../ui/gui/pickers/date-range-calendar.md) | `DateRangeCalendars.DateRangeCalendar` | Adopted | Pickers | Link the two-month calendar to the Stay field |
 | [`cui_range_slider`](../../ui/gui/selection/range-slider.md) | `RangeSliders.RangeSlider` | Adopted | Selection | Adjust the two price endpoints |
 | [`cui_rating`](../../ui/gui/selection/rating.md) | `Ratings.Rating` | Adopted | Selection | Set or clear a five-star rating |
 | [`cui_reactions`](../../ui/gui/actions/reactions.md) | `Reactions.Reactions` | Adopted | Actions | Toggle four independent reaction counts |
+| [`cui_reasoning`](../../ui/gui/ai/reasoning.md) | `Reasonings.Reasoning` | Adopted | AI | Expand the supplied reasoning and show its duration |
+| [`cui_regex_tester`](../../ui/gui/more-developer-tools/regex-tester.md) | `RegexTesters.RegexTester` | Adopted | More developer tools | Mark matches and groups in sample text |
 | [`cui_reorder_begin`](../../ui/gui/data-display/reorderable-list.md) | `ReorderableLists.ReorderableList` | Adopted | Data display | Start the list with a model-owned task order |
 | [`cui_reorder_end`](../../ui/gui/data-display/reorderable-list.md) | `ReorderableLists.ReorderableList` | Adopted | Data display | Save a changed drop and show the Order saved toast |
 | [`cui_reorder_item`](../../ui/gui/data-display/reorderable-list.md) | `ReorderableLists.ReorderableList` | Adopted | Data display | Draw the native grip with a title and badge |
+| [`cui_request_bar`](../../ui/gui/more-developer-tools/http-request-bar.md) | `RequestBars.RequestBar` | Adopted | More developer tools | Edit the HTTP method and URL |
 | [`cui_request_redraw`](../../ui/gui/host.md#invalidation-and-inspection) | `Frames.Redraw` and `CuiWindow.RequestFrame` | Adopted | Actions | Request a frame while timed feedback is active |
-| [`cui_row`](../../ui/gui/layout/row.md) | `Elements.Row` | Adopted | Overview, Buttons, Selection, Navigation, Overlays, Feedback, Data display, Actions, Smart inputs, Pickers, Capture, Disclosure, Reader, Code, Social and media | Wrapping actions, padded team rows and the copy command |
+| [`cui_response_actions`](../../ui/gui/ai/response-actions.md) | `ResponseActions.ResponseActions` | Adopted | AI | Copy the sample answer, vote and regenerate |
+| [`cui_response_status`](../../ui/gui/more-developer-tools/http-response-status.md) | `ResponseStatuses.ResponseStatus` | Adopted | More developer tools | Show the sample HTTP result |
+| [`cui_row`](../../ui/gui/layout/row.md) | `Elements.Row` | Adopted | Overview, Buttons, Selection, Navigation, Overlays, Feedback, Data display, Actions, Smart inputs, Pickers, Capture, Disclosure, Reader, Code, Social and media, Planning, More charts, Motion, AI, Audio, Files | Wrapping actions, padded team rows and the copy command |
 | [`cui_ruler_slider`](../../ui/gui/pickers/ruler-slider.md) | `RulerSliders.RulerSlider` | Adopted | Pickers | Adjust height and temperature with the native tapes |
+| [`cui_sankey`](../../ui/gui/more-charts/sankey.md) | `Sankeys.Sankey` | Adopted | More charts | Follow eight flows between conversion nodes |
+| [`cui_scatter_chart`](../../ui/gui/more-charts/scatter-chart.md) | `ScatterCharts.ScatterChart` | Adopted | More charts | Plot frame times and node counts with bubble sizes |
+| [`cui_schedule_picker`](../../ui/gui/developer-tools/schedule-picker.md) | `SchedulePickers.SchedulePicker` | Adopted | Developer tools | Edit the cron expression and preview the next runs |
 | [`cui_scroll`](../../ui/gui/layout/scroll-view.md) | `Elements.ScrollView` | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays, Reader | Shared scrolling content area |
 | [`cui_scroll_to`](../../ui/gui/layout/scroll-view.md#request-a-scroll-offset) | `Scrolls.To` | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays | Sidebar selection moves the main viewport to the start with native scroll motion |
 | [`cui_scrub`](../../ui/gui/smart-inputs/scrub-field.md) | `ScrubFields.ScrubField` | Adopted | Smart inputs | Drag, fine-adjust or type the three bounded values |
 | [`cui_search`](../../ui/gui/inputs/search-field.md) | `SearchFields.SearchField` | Adopted | Inputs | Search projects with native clear action |
-| [`cui_secondary`](../../ui/gui/text-and-display/text.md) | `Elements.Styled` with `Secondary` | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays, Feedback, Data display, Charts, Actions, Smart inputs, Pickers, Capture, Disclosure, Data grid, Code, Social and media | Card and section descriptions |
+| [`cui_secondary`](../../ui/gui/text-and-display/text.md) | `Elements.Styled` with `Secondary` | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays, Feedback, Data display, Charts, Actions, Smart inputs, Pickers, Capture, Disclosure, Data grid, Code, Social and media, Planning, More charts, Motion, AI, Files, Developer tools, More developer tools | Card and section descriptions |
 | [`cui_segmented`](../../ui/gui/actions/segmented-control.md) | `SegmentedControls.SegmentedControl` | Adopted | Buttons | View choices with icons and a small date range selector |
 | [`cui_select`](../../ui/gui/inputs/select.md) | `Selects.Select` | Adopted | Inputs | Country and searchable Language lists |
 | [`cui_separator`](../../ui/gui/layout/divider.md) | `Elements.Divider` | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays | Desktop sidebar divider |
 | [`cui_set_accent`](../../ui/gui/host.md#system-appearance) | `Themes.Light/Dark` with an accent | Adopted | Buttons shell, Overlays | Swatch clicks and the palette change the accent |
+| [`cui_set_clipboard_text`](../../ui/gui/host.md#clipboard) | `Clipboard.WriteText` | Adopted | Files | Copy a project node name through the GUI host |
 | [`cui_set_theme`](../../ui/gui/host.md#system-appearance) | `Desktop` theme provider | Adopted | Overview, Buttons shell, Overlays | Primary+J and the theme selector switch appearance |
 | [`cui_sheet`](../../ui/gui/overlays/sheet.md) | `Sheets.Sheet` | Adopted | Buttons shell, Overlays | Compact navigation drawer and Notifications |
+| [`cui_shimmer_text`](../../ui/gui/motion/shimmer-text.md) | `ShimmerTexts.ShimmerText` | Adopted | Motion | Draw the highlighted waiting message |
 | [`cui_shortcut`](../../ui/gui/host.md#application-shortcuts) | `Shortcuts.Binding` and the native palette shortcut | Adopted | Overview, Buttons shell | Primary+J and Primary+K |
 | [`cui_shortcut_recorder`](../../ui/gui/smart-inputs/shortcut-recorder.md) | `ShortcutRecorders.ShortcutRecorder` | Adopted | Smart inputs | Record, cancel and clear a key combination |
 | [`cui_signature_pad`](../../ui/gui/capture/signature-pad.md) | SignaturePads.SignaturePad | Adopted | Capture | Draw ink strokes on a 520-unit pad and clear the ink |
 | [`cui_skeleton`](../../ui/gui/feedback/skeleton.md) | `Skeletons.Skeleton` | Adopted | Feedback | Use fixed, fill and percentage widths |
 | [`cui_skeleton_group`](../../ui/gui/feedback/skeleton-group.md) | `SkeletonGroups.SkeletonGroup` | Adopted | Feedback | Share the dither sweep across loading placeholders |
 | [`cui_slider`](../../ui/gui/selection/slider.md) | `Sliders.Slider` | Adopted | Selection, Overlays | Continuous volume and stepped brightness with a percent format |
-| [`cui_spacer`](../../ui/gui/layout/spacing.md#fixed-gaps-and-spacers) | `Elements.Spacer()` | Adopted | Buttons shell | Flexible space before the version badge |
+| [`cui_source_list`](../../ui/gui/ai/source-list.md) | `SourceLists.SourceList` | Adopted | AI | Show the three sources in a scrollable row |
+| [`cui_spacer`](../../ui/gui/layout/spacing.md#fixed-gaps-and-spacers) | `Elements.Spacer()` | Adopted | Buttons shell, Planning, AI | Flexible space before the version badge |
 | [`cui_speed_dial`](../../ui/gui/actions/speed-dial.md) | `SpeedDials.SpeedDial` | Adopted | Actions | Open Create and display the chosen action |
 | [`cui_spinner`](../../ui/gui/feedback/spinner.md) | `Spinners.Spinner` | Adopted | Feedback | Show the default arc, dither styles and themed inline spinners |
+| [`cui_split_bar`](../../ui/gui/more-charts/split-bar.md) | `SplitBars.SplitBar` | Adopted | More charts | Divide time into five proportional sections |
 | [`cui_split_button`](../../ui/gui/actions/split-button.md) | `SplitButtons.SplitButton` | Adopted | Actions | Save and Export with a related command menu |
+| [`cui_spotlight`](../../ui/gui/motion/spotlight-card.md) | `Spotlights.Spotlight` | Adopted | Motion | Draw three flexible cards with a beam on the middle card |
+| [`cui_stack_trace`](../../ui/gui/more-developer-tools/stack-trace.md) | `StackTraces.StackTrace` | Adopted | More developer tools | Fold library groups and inspect source |
 | [`cui_state`](../../ui/gui/text-and-display/image.md#usage) | GUI texture owner | Managed resource | Disclosure, Social and media | Cache a texture for the widget in its window |
 | [`cui_state_on_free`](../../ui/gui/text-and-display/image.md#usage) | GUI texture owner | Managed resource | Disclosure, Social and media | Release native state when its owner retires |
 | [`cui_status_button`](../../ui/gui/actions/status-button.md) | `StatusButtons.StatusButton` | Adopted | Actions | Show busy and success feedback for Save changes |
@@ -181,37 +255,66 @@ Record each reviewed `cui_*` function once. Link to the gallery pages that exerc
 | [`cui_swipe_item_begin`](../../ui/gui/actions/swipe-actions.md) | `SwipeActions.SwipeItem` | Adopted | Actions | Open a swipe row with commands on both sides |
 | [`cui_swipe_item_end`](../../ui/gui/actions/swipe-actions.md) | `SwipeActions.SwipeItem` | Adopted | Actions | Accept one side and action index after a swipe |
 | [`cui_switch`](../../ui/gui/selection/switch.md) | `Switches.Switch` | Adopted | Buttons, Selection, Overlays | Public profile and notification preferences |
+| [`cui_tab_bar`](../../ui/gui/motion/tab-bar.md) | `TabBars.TabBar` | Adopted | Motion | Select one of four tabs and show an Inbox badge |
 | [`cui_table`](../../ui/gui/data-display/table.md) | `Tables.Table` | Adopted | Data display, Data grid | Sortable columns, selection and mixed cell content |
 | [`cui_table_cell`](../../ui/gui/data-display/table.md) | `Tables.Cell.Content` | Adopted | Data display, Data grid | Compose an avatar and name, an email or a badge in a cell |
 | [`cui_table_cell_text`](../../ui/gui/data-display/table.md) | `Tables.Cell.Text` | Adopted | Data display, Data grid | Draw plain role and right-aligned revenue cells |
 | [`cui_table_row`](../../ui/gui/data-display/table.md) | `Tables.Row` | Adopted | Data display, Data grid | Keep one selected person across sort changes |
 | [`cui_tabs`](../../ui/gui/navigation/tabs.md) | `Tabs.Tabs` | Adopted | Navigation | Underline tabs with in-place content and pill tabs with icons |
 | [`cui_tag_input`](../../ui/gui/inputs/tag-input.md) | `TagInputs.TagInput` | Adopted | Inputs | Editable Topics list |
-| [`cui_text`](../../ui/gui/text-and-display/formatted-text.md) | `Elements.Styled` and `Elements.FormattedText` | Adopted | Overview, Buttons, Overlays, Feedback, Data display, Actions, Disclosure, Reader, Data grid, Social and media | Introduction, single-line team labels and the monospaced install command |
+| [`cui_terminal`](../../ui/gui/files/terminal.md) | `Terminals.Terminal` | Adopted | Files | Display the ANSI terminal and submit an input line |
+| [`cui_terminal_clear`](../../ui/gui/files/terminal.md) | `Terminal revision` | Adopted | Files | Clear the output on the clear command |
+| [`cui_terminal_init`](../../ui/gui/files/terminal.md) | `Terminals.Options` | Adopted | Files | Allocate history with byte and line capacities |
+| [`cui_terminal_printf`](../../ui/gui/files/terminal.md) | `Terminal output` | Adopted | Files | Format text in FPAS and append it to output |
+| [`cui_terminal_write`](../../ui/gui/files/terminal.md) | `Terminal output` | Adopted | Files | Append the welcome message and built-in command output |
+| [`cui_test_explorer`](../../ui/gui/more-developer-tools/test-explorer.md) | `TestExplorers.TestExplorer` | Adopted | More developer tools | Browse suites and request test runs |
+| [`cui_text`](../../ui/gui/text-and-display/formatted-text.md) | `Elements.Styled` and `Elements.FormattedText` | Adopted | Overview, Buttons, Overlays, Feedback, Data display, Actions, Disclosure, Reader, Data grid, Social and media, Planning, Motion, AI, Developer tools | Introduction, single-line team labels and the monospaced install command |
+| [`cui_text_reveal`](../../ui/gui/motion/text-reveal.md) | `TextReveals.TextReveal` | Adopted | Motion | Replay the release-build text by word |
 | [`cui_textarea`](../../ui/gui/inputs/text-area.md) | `TextAreas.TextArea` | Adopted | Inputs | Full-width multiline About field |
 | [`cui_theme_switcher`](../../ui/gui/actions/theme-switcher.md) | `ThemeSwitchers.ThemeSwitcher` | Adopted | Actions | Choose Light, Dark or System in a compact row |
 | [`cui_theme_toggle`](../../ui/gui/actions/theme-toggle.md) | `ThemeToggles.ThemeToggle` | Adopted | Actions | Toggle between light and dark with stable focus |
 | [`cui_ticker`](../../ui/gui/social-and-media/ticker.md) | Tickers.Ticker | Adopted | Social and media | Scroll the six figures and trends |
-| [`cui_time`](../../ui/gui/canvas-and-bars/painting.md) | `Painting.Surface.Time` and the MVU session clock | Adopted | Feedback, Actions, Disclosure | Complete the upload after two seconds |
+| [`cui_time`](../../ui/gui/canvas-and-bars/painting.md) | `Painting.Surface.Time` and the MVU session clock | Adopted | Feedback, Actions, Disclosure, AI | Complete the upload after two seconds |
 | [`cui_time_dial`](../../ui/gui/pickers/time-dial.md) | `TimeDials.TimeDial` | Adopted | Pickers | Set hours and minutes on the analog face |
+| [`cui_time_histogram`](../../ui/gui/more-developer-tools/time-histogram.md) | `TimeHistograms.TimeHistogram` | Adopted | More developer tools | Select time ranges on stacked bars |
 | [`cui_time_picker`](../../ui/gui/pickers/time-picker.md) | `TimePickers.TimePicker` | Adopted | Pickers | Select 24-hour or 12-hour time with native columns |
 | [`cui_timeline_item`](../../ui/gui/feedback/timeline-item.md) | `TimelineItems.TimelineItem` | Adopted | Feedback | Show three activity entries and end the connector on the final entry |
-| [`cui_toast`](../../ui/gui/overlays/toast.md) | `Toasts.Show` | Adopted | Overview, Buttons, Inputs, Navigation, Overlays, Feedback, Data display, Actions, Disclosure, Social and media | Workspace, hold, project and code completion feedback |
+| [`cui_toast`](../../ui/gui/overlays/toast.md) | `Toasts.Show` | Adopted | Overview, Buttons, Inputs, Navigation, Overlays, Feedback, Data display, Actions, Disclosure, Social and media, Planning, Motion, AI, Files | Workspace, hold, project and code completion feedback |
 | [`cui_toc`](../../ui/gui/reader/table-of-contents.md) | TableOfContents.TableOfContents | Adopted | Reader | Jump to a section and track the active entry |
 | [`cui_toc_anchor`](../../ui/gui/reader/scroll-anchor.md) | ScrollAnchors.ScrollAnchor | Adopted | Reader | Mark each article heading with a zero-height destination |
 | [`cui_toggle_group`](../../ui/gui/actions/toggle-group.md) | `ToggleGroups.ToggleGroup` | Adopted | Actions | Independent icon toggles and exclusive alignment |
+| [`cui_tool_call`](../../ui/gui/ai/tool-call.md) | `ToolCalls.ToolCall` | Adopted | AI | Expand Search input and output and show file progress |
 | [`cui_tooltip`](../../ui/gui/overlays/tooltip.md) | `Tooltips.Tooltip` | Adopted | Buttons shell, Overlays | Show the name of the hovered accent |
+| [`cui_tour`](../../ui/gui/overlays/guided-tour.md) | `Tours.Tour` | Adopted | Audio | Explain the knob, meter and fader in three steps |
+| [`cui_trace_sort`](../../ui/gui/developer-tools/trace-viewer.md) | `TraceGeometry.SortSpans` | Adopted | Developer tools | Sort spans by track, depth and start time |
+| [`cui_trace_view`](../../ui/gui/developer-tools/trace-viewer.md) | `TraceViewers.TraceViewer` | Adopted | Developer tools | Select spans, measure time and collapse lanes |
 | [`cui_tree_begin`](../../ui/gui/data-display/tree.md) | `Trees.Branch and Trees.Leaf` | Adopted | Data display | Render folders and source files with their native icons |
 | [`cui_tree_cell`](../../ui/gui/data-grid/tree-cell.md) | TreeTables.TreeCell | Adopted | Data grid | Show branching and indentation in an ordinary table |
 | [`cui_tree_clicked`](../../ui/gui/data-display/tree.md) | `Trees.Branch and Trees.Leaf` | Adopted | Data display | Select a component file without changing other leaf rows |
 | [`cui_tree_end`](../../ui/gui/data-display/tree.md) | `Trees.Branch` | Adopted | Data display | End an expanded folder body |
+| [`cui_tree_move`](../../ui/gui/data-grid/tree-table.md) | `Fpas.Ui.Gui.TreeTables.Move` | Adopted | Files | Move sample project nodes and rebase their indices |
+| [`cui_tree_table_begin`](../../ui/gui/data-grid/tree-table.md) | `TreeTables.TreeTable` | Adopted | Files | Begin the native project tree table |
+| [`cui_tree_table_end`](../../ui/gui/data-grid/tree-table.md) | `TreeTables.Change` | Adopted | Files | Adopt native row and drop proposals |
+| [`cui_tree_table_menu`](../../ui/gui/data-grid/tree-table.md) | `TreeTables.TreeTable Menu` | Adopted | Files | Open the menu for a project node |
+| [`cui_tree_table_name`](../../ui/gui/data-grid/tree-table.md) | `TreeTables.Node.Label` | Adopted | Files | Draw a folder or file glyph beside the node name |
+| [`cui_tree_table_row`](../../ui/gui/data-grid/tree-table.md) | `TreeTables.Node` | Adopted | Files | Draw the visible nodes with size and kind cells |
+| [`cui_treemap`](../../ui/gui/more-charts/treemap.md) | `Treemaps.Treemap` | Adopted | More charts | Compare the areas of ten bundle sizes |
+| [`cui_typewriter`](../../ui/gui/motion/typewriter.md) | `Typewriters.Typewriter` | Adopted | Motion, AI | Replay the streamed text and its caret |
 | [`cui_typing_indicator`](../../ui/gui/social-and-media/typing-indicator.md) | TypingIndicators.TypingIndicator | Adopted | Social and media | Show the participant who is typing |
+| [`cui_uptime`](../../ui/gui/more-developer-tools/uptime.md) | `Uptimes.Uptime` | Adopted | More developer tools | Inspect day-level service availability |
+| [`cui_url_params`](../../ui/gui/more-developer-tools/http-request-bar.md#query-parameters) | `Fpas.Ui.Gui.UrlParameters.Parse` | Adopted | More developer tools | Read the parameter rows from the URL |
+| [`cui_url_set_params`](../../ui/gui/more-developer-tools/http-request-bar.md#query-parameters) | `Fpas.Ui.Gui.UrlParameters.Replace` | Adopted | More developer tools | Apply parameter edits to the URL |
 | [`cui_user_menu`](../../ui/gui/actions/user-menu.md) | `UserMenus.UserMenu` | Adopted | Actions | Open the account menu from a fixed-width trigger |
 | [`cui_veil`](../../ui/gui/disclosure/veil.md) | Veils.Veil | Adopted | Disclosure | Reveal and cover a picture, sample identifier and spoiler |
 | [`cui_viewport_size`](../../ui/gui/layout/layout-inspection.md#read-the-bounds) | `Viewport.LogicalWidth` | Adopted | Overview, Buttons, Inputs, Selection, Navigation, Overlays | Desktop sidebar and compact layout |
 | [`cui_virtual_list`](../../ui/gui/data-display/virtual-list.md) | `VirtualLists.VirtualList` | Adopted | Data display | Realize the viewport range of a 10,000-invoice list |
+| [`cui_waffle`](../../ui/gui/more-charts/waffle.md) | `Waffles.Waffle` | Adopted | More charts | Show the platform shares of 100 installs |
 | [`cui_wants_keyboard`](../../ui/gui/host.md#application-shortcuts) | GUI host shortcut guard | Adopted | Overview, Buttons shell | Native editors keep keyboard ownership during Primary+J |
+| [`cui_waterfall`](../../ui/gui/developer-tools/network-waterfall.md) | `NetworkWaterfalls.NetworkWaterfall` | Adopted | Developer tools | Inspect timing bars and select requests |
+| [`cui_waveform`](../../ui/gui/motion/waveform.md) | `Waveforms.Waveform` | Adopted | Motion | Show and seek within 96 audio peaks |
+| [`cui_week_calendar`](../../ui/gui/planning/week-calendar.md) | `WeekCalendars.WeekCalendar` | Adopted | Planning | Move and resize timed appointments |
 | [`cui_wheel_picker`](../../ui/gui/pickers/wheel-picker.md) | `WheelPickers.WheelPicker` | Adopted | Pickers | Operate the three joined date wheels |
+| [`cui_word_rotate`](../../ui/gui/motion/rotating-words.md) | `WordRotations.WordRotate` | Adopted | Motion | Cycle through four destinations |
 
 ## Overview evidence
 
@@ -792,3 +895,230 @@ checks widget options, input and layout, including carousel auto-advance.
 
 See [CUI-066](../cui-upstream-bugs.md#cui-066) through
 [CUI-076](../cui-upstream-bugs.md#cui-076) for the native findings.
+
+## Planning evidence
+
+Use the tenth extended page of CUI commit `6864776f1a77b920a26f4ec51f5c4cf1be0b04a6`.
+The [function table](#cui-functions) covers the 23 calls from the page and
+its section helper. The
+[Planning guide](../../ui/gui/planning/README.md#planning-gallery-page)
+describes the four sections and the date calculations.
+
+Use X11, the software renderer at 100% scale, and reduced motion. Run
+both galleries in the same local time zone. Compare the visible page
+body at 2300 pixels of height in both themes. Use widths 360, 567, 568,
+759, 760, 800, 920, and 1240 pixels.
+
+At width 1240, move a card between columns and reorder within a column.
+Scroll the board, then activate an Add button and a card. Move and
+resize a week appointment and a Gantt task. Scroll the timeline.
+Advance the month, go back, and select a day.
+
+Of 30 capture pairs, 22 match pixel for pixel. All light and interaction
+captures match. The eight dark captures differ only at the Kanban card
+shadows, by at most three levels in each RGB channel. See
+[CUI-076](../cui-upstream-bugs.md#cui-076).
+
+The [native Planning tests](../../../src/Fpas.Ui.Gui.Cui/native/tests/planning.c)
+check input and layout for all four widgets. The
+[FPAS interaction contract](../../../tests/Fixtures/gui-host/PlanningInteractionContract.fpas)
+checks date navigation, model-owned edits and interrupted drags.
+
+See [CUI-077](../cui-upstream-bugs.md#cui-077) through
+[CUI-086](../cui-upstream-bugs.md#cui-086) for the native findings.
+
+## More charts evidence
+
+Use the eleventh extended page of CUI commit `6864776f1a77b920a26f4ec51f5c4cf1be0b04a6`.
+The [function table](#cui-functions) covers 24 original calls, including the
+section helper and date operations. The
+[More charts guide](../../ui/gui/more-charts/README.md#more-charts-gallery-page)
+describes the composition and chart order.
+
+Use X11, reduced motion and the software renderer at 100% scale. Use the
+same local date in both galleries. Compare the visible page body at 4200
+pixels of height in both themes. Use widths 360, 567, 568, 759, 760,
+800, 920 and 1240 pixels.
+
+At width 1240, inspect the chart marks and legends with the pointer.
+Zoom and pan the candlestick chart, then navigate with Home and End.
+Apply Shuffle and check that both galleries retain all six labels and
+show the new amounts in descending order.
+
+Of 35 capture pairs, 31 match pixel for pixel. All 16 layout captures
+match. FPAS ignores the calendar gap and keeps the candlestick plot
+visible in the two keyboard-focus captures. Shuffle produces different
+random amounts in each gallery.
+
+The [native tests](../../../src/Fpas.Ui.Gui.Cui/native/tests/more_charts.c)
+check labels, animated ranks, the candlestick and the focus ring. The
+[Treemap contract](../../../tests/Fixtures/gui-host/TreemapContract.fpas)
+checks activation and selection messages in the FPAS model.
+
+See [CUI-087](../cui-upstream-bugs.md#cui-087) through
+[CUI-095](../cui-upstream-bugs.md#cui-095) for the native findings.
+
+## Motion evidence
+
+The reference is CUI revision `6864776f1a77b920a26f4ec51f5c4cf1be0b04a6`.
+Its [Motion page](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L945)
+uses a text-effects card, three equally weighted spotlight cards, five loaders
+in a row, and a centered dock. Two equally weighted columns hold the grid of
+control tiles and the playback controls. The
+[FPAS gallery](../../ui/gui/motion/README.md#motion-gallery-page) uses this
+structure and places an additional rolling number example below it.
+
+The Linux X11 comparison uses the software renderer at scale 1. Both
+windows are 2200 pixels tall. The 16 pairs cover widths of 1240, 920,
+800, 760, 759, 568, 567, and 360 pixels in light and dark themes. The
+player is paused and set to the same position. The captures end with the
+original tab bar. CUI still animates the loaders under reduced motion.
+Outside the loader regions, five light captures match exactly. The other
+three differ by one channel level on one pixel at the active tab edge.
+Dark captures also show a player card shadow difference of at most three
+levels per color channel after switching themes. At 1240 pixels, the player
+card matches exactly when CUI starts in dark mode. See
+[CUI-076](../cui-upstream-bugs.md#cui-076).
+
+With motion enabled, both galleries replay the typewriter and text reveal,
+rotate words, animate the loaders, magnify the dock icons on hover and
+advance the player. Pausing keeps the seek position. The controls in both
+galleries show the Files and Next track toasts, update the five settings
+tiles, seek in the waveform on click and drag, select an Inbox tab, and
+show the spotlight glow on hover.
+
+The native tests cover reduced motion, text timing and options, hover and
+disabled state, the dock and tab layout, and audio seek input. The page uses
+the [FPAS playback clock](../../ui/gui/motion/README.md#playback-clock).
+See [CUI-096 through CUI-106](../cui-upstream-bugs.md#cui-096) for the native
+findings.
+
+## AI evidence
+
+The reference is [CUI revision `6864776`](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L1035).
+Both layouts use a 1.6-to-1 width ratio for the conversation and plan columns.
+The composer and suggestions use the native controls. The standalone model
+picker in the [FPAS gallery](../../ui/gui/ai/README.md#ai-gallery-page) follows
+the original examples.
+
+The Linux X11 comparison uses the software renderer at scale 1 with reduced
+motion. Each window is 2200 pixels tall. The 16 pairs cover widths of 1240,
+920, 800, 760, 759, 568, 567, and 360 pixels in light and dark themes. All
+pixels match in the original page body after the layout settles.
+
+Both galleries expand the reasoning and tool payloads and show the citation
+preview and context breakdown. Selecting a suggestion fills the draft.
+The composer selects a model, removes an attachment and shows the attach toast.
+Send, Stop and Regenerate update the conversation and plan. A response
+finishes while another page is visible. While the response runs, elapsed time
+and loader phase can differ between captures.
+
+Native tests cover input ownership, horizontal focus, layout changes and
+the composer recorder. The FPAS gallery contract also runs in software and
+OpenGL and checks text input, voting and the response clock.
+
+See the [response clock](../../ui/gui/ai/README.md#response-clock) and the
+[native findings](../cui-upstream-bugs.md#cui-107).
+
+## Audio evidence
+
+The reference is [CUI revision `6864776`](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L1119).
+The tour button sits above a wrapping row. The synth and mixer use the same
+native controls, grouping, padding and gaps. The Cutoff knob, master meter
+and Bass fader anchor the three guided tour steps.
+
+The Linux X11 comparison uses the software renderer at scale 1. It holds
+the synthetic signal at the first phase in both galleries. The 16 capture
+pairs use widths of 1240, 920, 800, 760, 759, 568, 567, and 360 pixels at a
+height of 2200 pixels in light and dark themes. The entire page body matches
+after the layout settles.
+
+All 14 captures in the input sequence match at the same signal phase. The
+sequence covers the three tour steps, Back, Done and Escape. It also covers
+knob drag and reset, pan adjustment, and fader drag, wheel, Home and End.
+With a live signal, the master and channel meters change in both galleries.
+
+The Audio gallery contract passes with the software renderer and OpenGL.
+The native tests cover clip reset, focus ownership, drag release and all
+three tour targets.
+
+See the [signal clock](../../ui/gui/audio/README.md#signal-clock) and the
+[native findings](../cui-upstream-bugs.md#cui-115).
+
+## Files evidence
+
+The reference uses the unchanged [CUI revision `6864776`](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L1277).
+The browser and picker read the same temporary fixture files in the two
+processes. The file browser and dialog buttons precede the 14-node project
+tree and terminal. The standalone FPAS path bar follows those sections.
+
+The Linux X11 comparison uses the software renderer at scale 1. The 16 view
+pairs use eight widths from 360 to 1240 pixels and both themes. Thirteen
+pairs match exactly in the original page body. At 800 pixels, the corner
+of the tree table differs in up to 30 pixels. At 360 pixels in dark mode,
+the terminal border differs by one channel level on a single line.
+
+The Open and Save as dialog panels match exactly. The underlying browser
+and button row use the FPAS disabled appearance while a dialog is open.
+Both galleries navigate folders, filter the listing, and return a path from
+each dialog. The project tree matches for a stable right click, Copy name,
+Info, moving to the top level, dragging into a folder, and Reset. The
+terminal matches for `help`, `build`, history recall and `clear`.
+
+The Files and Code gallery contract passes with the software renderer and
+OpenGL. Native tests cover the keyboard menu, clipboard text, tree moves
+and input ownership.
+
+See the [Files gallery](../../ui/gui/files/README.md#files-gallery-page) and
+the [native findings](../cui-upstream-bugs.md#cui-121).
+
+## Developer tools evidence
+
+The [reference page](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L1510)
+and the FPAS page use the same ten sections, maximum widths and sample data.
+FPAS prepares the trace with the native sort and formats the edited query
+with the native query description function. The schedule preview uses the
+same fixed clock and UTC in both galleries.
+
+The Linux X11 comparison uses the software renderer at scale 1. All 16
+page bodies match pixel for pixel at widths of 360, 567, 568, 759, 760,
+800, 920 and 1240 pixels in light and dark themes.
+
+Fifteen of 16 input captures match. The sequence covers trace zoom,
+measurement and lane folding, waterfall selection, dependency selection,
+zoom and fit, commit and pipeline selection, diagnostic filters, the
+key-value editor, query groups, schedule presets and keymap modifiers. The
+one difference is the FPAS timing tooltip over a waterfall bar.
+
+The Developer tools gallery contract passes in software and OpenGL.
+Native tests also cover retained selection, popover focus, disabled input,
+responsive layout and schedule buffer limits.
+
+See the [Developer tools gallery](../../ui/gui/developer-tools/README.md#developer-tools-gallery-page)
+and the [native findings](../cui-upstream-bugs.md#cui-128).
+
+## More developer tools evidence
+
+The [reference page](https://github.com/yappologistic/CUI/blob/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6/examples/gallery_more.c#L1684)
+and the FPAS page use the same section order, maximum widths and gaps.
+The HTTP section groups the request bar, parameters and response status.
+FPAS uses the CUI query functions for the URL and parameter edits.
+
+The Linux X11 comparison uses the software renderer at scale 1. It covers
+widths of 360, 567, 568, 759, 760, 800, 920 and 1240 pixels in light and dark
+themes. The original example uses two different domains in the regex
+sample. The comparison uses the FPAS sample in both galleries. All 16
+settled page bodies then match pixel for pixel.
+
+All 18 input captures match at 1240 pixels. The sequence covers test suite
+folding and filtering, stack disclosure, blame hover, and coverage sorting
+and folding. It also covers regex edits, the request method menu, URL and
+parameter edits, endpoint selection and filtering, rollout and flag
+controls, uptime hover, and histogram range selection and clearing.
+
+The Developer tools gallery contract passes in software and OpenGL.
+Focused tests also cover keyboard focus, hidden rows, UTF-8 labels,
+responsive layouts and URL buffer limits.
+
+See the [More developer tools gallery](../../ui/gui/more-developer-tools/README.md#more-developer-tools-gallery-page)
+and the [native findings](../cui-upstream-bugs.md#cui-137).

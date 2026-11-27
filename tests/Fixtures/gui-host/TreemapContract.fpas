@@ -1,0 +1,142 @@
+// [Documentation](../../../docs/ui/gui/more-charts/treemap.md)
+
+unit GalleryTreemapContract;
+
+uses Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Widgets.Charts.Treemaps as Trees;
+
+uses GalleryHostAssertions as A;
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+
+type Msg = variant
+  Inspect(Index: int);
+  Select(Index: int);
+  Activate(Index: int);
+end variant;
+
+function View(Selected: int; _Viewport: L.Viewport): E.Element of Msg;
+begin
+  const Items: array of Charts.Item := [
+    new Charts.Item('One', 30.0F),
+    new Charts.Item('Two', 10.0F)
+  ];
+  const Settings: Trees.Options := new Trees.Options(Height := 120.0F);
+  const Inspect: E.Element of int := Trees.Treemap of int(
+    'inspect', Items, Settings, OnActivate := function(Index: int): int => Index
+  );
+  return E.Column of Msg(
+    Composition.Map of (int, Msg)(Inspect, Msg.Inspect),
+    Trees.Treemap of Msg('select', Items, Settings, Selected, Msg.Select, Msg.Activate)
+  );
+end function;
+
+// Checks native activation and selection messages through the normal GUI view.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+  function Update(Selected: int; Message: Msg): Mvu.Transition of (int, Msg);
+  begin
+    case Message of
+      when Msg.Inspect(const Index: int):
+        Observed.Add('inspect ' + Index.ToString());
+      when Msg.Select(const Index: int):
+        Observed.Add('select ' + Index.ToString());
+        return new Mvu.Transition of (int, Msg)(Index, []);
+      when Msg.Activate(const Index: int):
+        Observed.Add('activate ' + Index.ToString());
+    end case;
+
+    return new Mvu.Transition of (int, Msg)(Selected, []);
+  end function;
+
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+  end procedure;
+
+  function Bounds(Session: Gui.Session of Msg; Id: string): Cui.CuiRectangle;
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Id = Id then
+        return Item.Bounds;
+      end if;
+    end for;
+
+    raise new Sys.InvalidOperationException('Missing treemap bounds: ' + Id);
+  end function;
+
+  procedure Step(Session: Gui.Session of Msg);
+  begin
+    A.Check(Session.Step(), 'Treemap session closed.');
+  end procedure;
+
+  procedure Click(Session: Gui.Session of Msg; Id: string);
+  begin
+    const Area: Cui.CuiRectangle := Bounds(Session, Id);
+    X := Area.X + 12.0F;
+    Y := Area.Y + 12.0F;
+    Step(Session);
+    Button := 1;
+    Step(Session);
+    Button := 0;
+    Step(Session);
+    Step(Session);
+  end procedure;
+begin
+  const Observed: Lists.List of string := new Lists.List of string();
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas treemap contracts',
+    560,
+    390,
+    Renderer,
+    true
+  );
+  A.Check(
+    Window.IsSoftware = (Renderer = Cui.CuiRenderer.Software),
+    'The requested renderer fell back.'
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session of Msg := Host.Start of (int, Msg)(
+    -1,
+    Update,
+    View,
+    Window,
+    32,
+    Inject
+  );
+  Step(Session);
+  Step(Session);
+  Click(Session, 'inspect');
+  A.Check(
+    Observed.Count = 1 and Observed[0] = 'inspect 0',
+    'Activation without selection was lost.'
+  );
+
+  Click(Session, 'select');
+  A.Check(
+    Observed.Count = 3 and Observed[1] = 'select 0' and Observed[2] = 'activate 0',
+    'Selection must reach Update before activation.'
+  );
+  Click(Session, 'select');
+  A.Check(
+    Observed.Count = 5 and Observed[3] = 'select -1' and Observed[4] = 'activate 0',
+    'Activation must report the clicked index when selection toggles off.'
+  );
+end procedure;
+
+end unit;

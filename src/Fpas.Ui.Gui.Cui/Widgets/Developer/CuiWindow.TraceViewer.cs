@@ -25,8 +25,9 @@ public sealed partial class CuiWindow
     /// <param name="Width">Width supplied to CUI.</param>
     /// <param name="Enabled">Enabled supplied to CUI.</param>
     /// <param name="Links">Native dependencies between sorted span indices.</param>
+    /// <param name="Focus">Whether to request keyboard focus.</param>
     /// <returns>Values proposed by CUI.</returns>
-    public unsafe CuiTraceResult TraceViewer(string Id, CuiDevTrack[] Tracks, CuiDevSpan[] Spans, CuiDevMarker[] Markers, double Start, double Stop, float Scroll, double MarkStart, double MarkEnd, int Selection, float Height, float RowHeight, int WidthKind, float Width, bool Enabled, CuiTraceLink[]? Links = null)
+    public unsafe CuiTraceResult TraceViewer(string Id, CuiDevTrack[] Tracks, CuiDevSpan[] Spans, CuiDevMarker[] Markers, double Start, double Stop, float Scroll, double MarkStart, double MarkEnd, int Selection, float Height, float RowHeight, int WidthKind, float Width, bool Enabled, CuiTraceLink[]? Links = null, bool Focus = false)
     {
         CheckFrame();
         CheckExtent(WidthKind, Width, nameof(Width));
@@ -42,7 +43,8 @@ public sealed partial class CuiWindow
             links[i] = new() { From = link.From, To = link.To, Tone = link.Tone,
                 Width = link.Width, Dashed = link.Dashed ? (byte)1 : (byte)0 };
         }
-        NativeMethods.DevTraceViewer(context, Stable(Id), PackTrack(memory, Tracks), Tracks.Length, PackSpan(memory, Spans), Spans.Length, PackMarker(memory, Markers), Markers.Length, Start, Stop, Scroll, MarkStart, MarkEnd, Selection, Height, RowHeight, WidthKind, Width, Enabled ? 1 : 0, out var result, memory.Copy<NativeTraceLink>(links), links.Length, out int hoveredLink);
+        int flags = (Enabled ? 1 : 0) | (Focus ? 2 : 0);
+        NativeMethods.DevTraceViewer(context, Stable(Id), PackTrack(memory, Tracks), Tracks.Length, PackSpan(memory, Spans), Spans.Length, PackMarker(memory, Markers), Markers.Length, Start, Stop, Scroll, MarkStart, MarkEnd, Selection, Height, RowHeight, WidthKind, Width, flags, out var result, memory.Copy<NativeTraceLink>(links), links.Length, out int hoveredLink);
         return new(result.ToManaged(), hoveredLink);
     }
 

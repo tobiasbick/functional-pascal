@@ -80,6 +80,8 @@ The byte limit can cut a character that uses more than one byte.
 The [FPAS tooltip](../ui/gui/overlays/tooltip.md) checks the UTF-8 length
 before rendering. The same limit applies to button tooltip text and its
 shortcut caption together.
+The [FPAS source list](../ui/gui/ai/source-list.md) ends the URL tooltip at
+a complete character and preserves the source URL.
 
 <a id="cui-025"></a>
 
@@ -470,7 +472,8 @@ draws those lines in the native code viewport.
 At CUI revision `6864776`, leading tabs mixed with spaces can render
 at a different position from the equivalent space indentation. The
 [FPAS code block](../ui/gui/code/code-block.md) expands tabs for rendering.
-Copy preserves the original source bytes.
+The [tool call](../ui/gui/ai/tool-call.md) uses the same rendering for its
+payload. Copy preserves the original source bytes.
 
 <a id="cui-065"></a>
 
@@ -575,6 +578,678 @@ slides and keeps the child's input active.
 ## CUI-076 — Resting shadows can retain the previous theme strength
 
 At CUI revision `6864776`, a switch from light to dark keeps the light
-theme's resting shadow. The lower cards of the Social and media deck use
-that shadow. The [FPAS theme](../ui/gui/host.md#system-appearance) applies
-the dark theme's resting shadow, which matches a dark theme at startup.
+theme's resting shadow. The lower cards of the Social and media deck and
+the Motion player use that shadow. The
+[FPAS theme](../ui/gui/host.md#system-appearance) applies the dark theme's
+resting shadow, which matches a dark theme at startup.
+
+<a id="cui-077"></a>
+
+## CUI-077 — A week calendar drag can lose its final movement
+
+At CUI revision `6864776`, the week calendar can ignore a pointer move and
+release delivered in one frame. The
+[FPAS week calendar](../ui/gui/planning/week-calendar.md) applies the final
+pointer position before it ends the drag.
+
+<a id="cui-078"></a>
+
+## CUI-078 — Weekday captions can disagree with the start date
+
+At CUI revision `6864776`, the week calendar always starts its weekday
+captions on Monday. The dates come from the supplied start date.
+The [FPAS week calendar](../ui/gui/planning/week-calendar.md) aligns the
+captions with that date, including localized names.
+
+<a id="cui-079"></a>
+
+## CUI-079 — Gantt ignores the height option
+
+At CUI revision `6864776`, Gantt uses the combined height of the header and
+task rows. The [FPAS Gantt chart](../ui/gui/planning/gantt.md) uses a scroll
+viewport for an explicit height. Task captions and bars scroll together.
+
+<a id="cui-080"></a>
+
+## CUI-080 — Month selection can fail for a date before 1970
+
+At CUI revision `6864776`, the month calendar treats negative Unix day
+numbers as missing dates. The
+[FPAS month calendar](../ui/gui/planning/month-calendar.md) maps the native
+calendar dates so selections before 1970 work.
+
+<a id="cui-081"></a>
+
+## CUI-081 — Focusing the month grid can navigate away from the displayed month
+
+At CUI revision `6864776`, the grid can restore a focus day from another
+month on Tab. The [FPAS month calendar](../ui/gui/planning/month-calendar.md)
+keeps the initial keyboard focus within the displayed month.
+
+<a id="cui-082"></a>
+
+## CUI-082 — Kanban can report a drop for a card that left its source column
+
+At CUI revision `6864776`, the drag retains the source column after the
+application removes or transfers the card. The
+[FPAS board](../ui/gui/planning/kanban.md) cancels the drag when the card
+leaves its source column.
+
+<a id="cui-083"></a>
+
+## CUI-083 — Gantt can retain its old layout after a width change
+
+At CUI revision `6864776`, a container resize can leave the Gantt chart in
+its old narrow or wide layout. The [FPAS Gantt chart](../ui/gui/planning/gantt.md)
+requests a frame when the measured width crosses the layout threshold.
+
+<a id="cui-084"></a>
+
+## CUI-084 — Dragging a long appointment can produce a negative start time
+
+At CUI revision `6864776`, the week calendar can produce a negative start
+time if the event is longer than the visible time range. The
+[FPAS week calendar](../ui/gui/planning/week-calendar.md) keeps the event's
+hours when it cannot fit within the visible range.
+
+<a id="cui-085"></a>
+
+## CUI-085 — A keyboard lift can retain input after focus moves
+
+At CUI revision `6864776`, a lifted Kanban card can consume Enter after Tab
+moves focus to another control. The
+[FPAS board](../ui/gui/planning/kanban.md) cancels the keyboard lift when
+focus moves away from the card.
+
+<a id="cui-086"></a>
+
+## CUI-086 — A disabled week calendar can consume wheel input
+
+At CUI revision `6864776`, the disabled week calendar can intercept wheel
+input. The [FPAS week calendar](../ui/gui/planning/week-calendar.md) leaves
+wheel input to the enclosing scroll area when the calendar is disabled.
+
+<a id="cui-087"></a>
+
+## CUI-087 — Heatmap gaps can activate adjacent cells
+
+At CUI revision `6864776`, the heatmap and calendar heatmap can highlight
+or activate a cell from the gap next to it. FPAS uses the painted cell
+bounds for [heatmap](../ui/gui/more-charts/heatmap.md) and
+[calendar heatmap](../ui/gui/more-charts/calendar-heatmap.md) input.
+
+<a id="cui-088"></a>
+
+## CUI-088 — The candlestick cursor can outlive its selected period
+
+At CUI revision `6864776`, replacing the period series can leave a stale
+keyboard cursor. The [FPAS candlestick chart](../ui/gui/more-charts/candlestick.md)
+keeps the cursor within the current series and clears it when the series
+is empty.
+
+<a id="cui-089"></a>
+
+## CUI-089 — Waffle gaps can activate adjacent squares
+
+At CUI revision `6864776`, a pointer in the gap between squares can
+highlight or activate a nearby square. The
+[FPAS waffle chart](../ui/gui/more-charts/waffle.md) uses the painted square
+bounds for pointer input and preserves legend activation.
+
+<a id="cui-090"></a>
+
+## CUI-090 — Funnel ignores the height option
+
+At CUI revision `6864776`, the funnel uses fixed stage and connector
+heights for every value of `cui_funnel_opts.height`. The
+[FPAS funnel](../ui/gui/more-charts/funnel.md) uses the native stage sizing.
+
+<a id="cui-091"></a>
+
+## CUI-091 — Bar list input can follow the target rank during an animation
+
+At CUI revision `6864776`, a moving row can appear under the pointer while
+the native hit uses the destination rank. The
+[FPAS bar list](../ui/gui/more-charts/bar-list.md) uses the visible row
+and reports its original input index.
+
+<a id="cui-092"></a>
+
+## CUI-092 — A passive radial gauge can intercept card input
+
+At CUI revision `6864776`, a radial gauge registers a hit on its face.
+An enclosing card can then miss pointer input. The
+[FPAS radial gauge](../ui/gui/more-charts/radial-gauge.md) leaves that input
+to the enclosing card.
+
+<a id="cui-093"></a>
+
+## CUI-093 — A wrapped radar legend can overlap the next widget
+
+At CUI revision `6864776`, the radar chart reserves one legend row. Long
+series names can wrap below the chart. The
+[FPAS radar chart](../ui/gui/more-charts/radar-chart.md) reserves space for
+the wrapped legend when the chart width changes.
+
+<a id="cui-094"></a>
+
+## CUI-094 — Activity rings can accept input on an undrawn ring
+
+At CUI revision `6864776`, a ring that has no space to draw can still
+receive pointer input inside the chart. The
+[FPAS activity rings](../ui/gui/more-charts/activity-rings.md) give pointer
+input to visible rings. The legend can still activate the listed goals.
+
+<a id="cui-095"></a>
+
+## CUI-095 — Keyboard focus can replace the candlestick plot
+
+At CUI revision `6864776`, a keyboard focus ring replaces the chart's
+paint operation. The focus ring remains visible while the plot and its
+crosshair disappear. The
+[FPAS candlestick chart](../ui/gui/more-charts/candlestick.md) paints the
+native plot and then draws the focus ring.
+
+<a id="cui-096"></a>
+
+## CUI-096 — Loaders keep moving with reduced motion
+
+At CUI revision `6864776`, the loader advances and requests more frames when
+reduced motion is on. The [FPAS loader](../ui/gui/motion/loader.md) draws a
+still indicator and leaves other widgets' frame requests in place.
+The [agent status](../ui/gui/ai/agent-status.md) uses the same still indicator.
+
+<a id="cui-097"></a>
+
+## CUI-097 — The typewriter caret does not blink
+
+At CUI revision `6864776`, the typewriter draws the caret at constant opacity
+while text appears. The [FPAS typewriter](../ui/gui/motion/typewriter.md) blinks
+the caret while the animation runs, including during the initial delay.
+
+<a id="cui-098"></a>
+
+## CUI-098 — Text reveal groups words across tabs and newlines
+
+At CUI revision `6864776`, only ASCII spaces start a new step in the text
+reveal. A tab or newline can group adjacent words into one step. The
+[FPAS text reveal](../ui/gui/motion/text-reveal.md) separates these steps and
+preserves the original whitespace in the text.
+
+<a id="cui-099"></a>
+
+## CUI-099 — Keyboard focus can replace the waveform
+
+At CUI revision `6864776`, a keyboard focus ring replaces the waveform paint
+operation. The [FPAS waveform](../ui/gui/motion/waveform.md) paints the peaks
+and draws the focus ring over them.
+
+<a id="cui-100"></a>
+
+## CUI-100 — An audio control can lose the pointer release position
+
+At CUI revision `6864776`, a pointer move and release between frames can leave
+an audio control at the previous position. The
+[FPAS waveform](../ui/gui/motion/waveform.md),
+[player](../ui/gui/motion/now-playing.md), [knob](../ui/gui/audio/knob.md)
+and [fader](../ui/gui/audio/fader.md) use the recorded release position to
+complete the gesture.
+
+<a id="cui-101"></a>
+
+## CUI-101 — A static text gradient changes direction
+
+At CUI revision `6864776`, a static text gradient reaches the second color
+near the middle and returns toward the first color. The
+[FPAS gradient text](../ui/gui/motion/gradient-text.md) blends from the first
+color toward the second across the text.
+
+<a id="cui-102"></a>
+
+## CUI-102 — A disabled spotlight can still respond to the pointer
+
+At CUI revision `6864776`, a spotlight can draw a pointer glow inside a
+disabled scope. The [FPAS spotlight](../ui/gui/motion/spotlight-card.md) checks
+whether it can accept pointer input before drawing the hover effect.
+
+<a id="cui-103"></a>
+
+## CUI-103 — A still spotlight can keep requesting frames
+
+At CUI revision `6864776`, a beamless spotlight with reduced motion can
+request frames while the pointer stays still over it. The
+[FPAS spotlight](../ui/gui/motion/spotlight-card.md) stops requesting hover
+frames once the glow settles.
+
+<a id="cui-104"></a>
+
+## CUI-104 — The tab bar selection can stay at its old position after resize
+
+At CUI revision `6864776`, a tab bar can draw its selection indicator at the
+old position when the parent changes width. The
+[FPAS tab bar](../ui/gui/motion/tab-bar.md) requests a frame when its geometry
+changes so the indicator moves to the selected tab.
+
+<a id="cui-105"></a>
+
+## CUI-105 — The dock can overflow when it first appears
+
+At CUI revision `6864776`, the first dock frame uses the full icon size
+before the layout accounts for the item count. The
+[FPAS dock](../ui/gui/motion/dock.md) uses the current entries to size the
+first frame.
+
+<a id="cui-106"></a>
+
+## CUI-106 — Dock padding can keep requesting frames without magnification
+
+At CUI revision `6864776`, a compact dock can request frames while the pointer
+stays still over its padding, even when magnification is off. The
+[FPAS dock](../ui/gui/motion/dock.md) leaves the dock still and preserves the
+wake-up time for item labels.
+
+<a id="cui-107"></a>
+
+## CUI-107 — A covered prompt suggestion can activate from the keyboard
+
+At CUI revision `6864776`, Enter or Space can activate a focused suggestion
+behind an open popover. The
+[FPAS prompt suggestions](../ui/gui/ai/prompt-suggestions.md) leave those keys
+to the popover while it owns keyboard input.
+
+<a id="cui-108"></a>
+
+## CUI-108 — A tool call can reopen when its payload returns
+
+At CUI revision `6864776`, an open tool call keeps its expanded state after
+both payloads disappear. If a payload returns, the panel opens without input.
+The [FPAS tool call](../ui/gui/ai/tool-call.md) clears expansion when it has no
+payload.
+
+<a id="cui-109"></a>
+
+## CUI-109 — A composer can miss Enter in the same frame as text input
+
+At CUI revision `6864776`, the composer can process Enter against an empty
+draft before it adds the new text. The
+[FPAS composer](../ui/gui/voice/composer.md) checks the edited draft before
+submitting.
+
+<a id="cui-110"></a>
+
+## CUI-110 — A recorder can lose its height during a take
+
+At CUI revision `6864776`, a composer with a wrapped draft can shrink during
+a recording when the hidden editor's geometry expires. The
+[FPAS composer](../ui/gui/voice/composer.md) retains the editor width while
+recording.
+
+<a id="cui-111"></a>
+
+## CUI-111 — An agent plan connector can follow old row positions
+
+At CUI revision `6864776`, the plan draws its connector from the preceding
+frame's rows. The connector can stay out of place after a row wraps until
+another frame runs. The [FPAS agent plan](../ui/gui/ai/agent-plan.md) uses the
+row positions from the current layout.
+
+<a id="cui-112"></a>
+
+## CUI-112 — A source card can receive focus outside the visible list
+
+At CUI revision `6864776`, Tab can focus a clipped card without scrolling it
+into view. The [FPAS source list](../ui/gui/ai/source-list.md) scrolls to show
+the focused card.
+
+<a id="cui-113"></a>
+
+## CUI-113 — A disabled recorder can consume Escape
+
+At CUI revision `6864776`, a previously focused recorder can consume Escape
+and propose cancel within a disabled scope. The
+[FPAS composer](../ui/gui/voice/composer.md) leaves Escape available to the
+enclosing controls when the recorder cannot accept input.
+
+<a id="cui-114"></a>
+
+## CUI-114 — A source icon can cut a non-ASCII character
+
+At CUI revision `6864776`, the source list and citation preview use only the
+first byte of a domain name for its icon. The
+[FPAS source list](../ui/gui/ai/source-list.md) and
+[citation](../ui/gui/ai/citation.md) draw the complete first character.
+
+<a id="cui-115"></a>
+
+## CUI-115 — A removed meter channel can still reset a clip
+
+At CUI revision `6864776`, changing from two channels to one can retain a clip
+from the discarded channel. A pointer release can report a reset for this
+hidden clip. The [FPAS level meter](../ui/gui/audio/level-meter.md) retires
+removed channels and cancels the reset gesture when no clip remains.
+
+<a id="cui-116"></a>
+
+## CUI-116 — A stepped audio control can stop short of its upper bound
+
+At CUI revision `6864776`, End snaps to a lower step when the upper bound
+falls between steps. The [FPAS knob](../ui/gui/audio/knob.md) and
+[fader](../ui/gui/audio/fader.md) apply the upper bound directly for End.
+
+<a id="cui-117"></a>
+
+## CUI-117 — A mirrored level meter can place its clip light at the quiet end
+
+At CUI revision `6864776`, a right-to-left container mirrors the clip light
+while the horizontal bars still increase from left to right. The
+[FPAS level meter](../ui/gui/audio/level-meter.md) keeps its internal layout
+aligned with the scale and follows the parent layout direction as a unit.
+
+<a id="cui-118"></a>
+
+## CUI-118 — A wheel event can reach the previous audio control after Tab
+
+At CUI revision `6864776`, Tab can move focus while a wheel event in the same
+frame still changes the knob or fader that had focus. The
+[FPAS knob](../ui/gui/audio/knob.md) and [fader](../ui/gui/audio/fader.md)
+use the current focus for wheel input.
+
+<a id="cui-119"></a>
+
+## CUI-119 — A dimmed control can consume guided tour navigation keys
+
+At CUI revision `6864776`, a dimmed fader can retain focus. Right can then
+change the fader and advance the tour. The
+[FPAS guided tour](../ui/gui/overlays/guided-tour.md) routes keys to its own
+controls or to the active target within the spotlight.
+
+<a id="cui-120"></a>
+
+## CUI-120 — Wheel input can scroll through the guided tour scrim
+
+At CUI revision `6864776`, a wheel event over the dimmed area can scroll
+the underlying content. The
+[FPAS guided tour](../ui/gui/overlays/guided-tour.md) blocks this input on
+the scrim.
+
+<a id="cui-121"></a>
+
+## CUI-121 — A file browser can keep a listing after its options change
+
+At CUI revision `6864776`, changing Hidden or MaximumEntries in the same
+folder can retain the old listing. A refresh can still use the previous
+entry limit. The [FPAS file browser](../ui/gui/files/file-browser.md)
+applies both options to the current listing request.
+
+<a id="cui-122"></a>
+
+## CUI-122 — A disabled terminal can accept a shortcut
+
+At CUI revision `6864776`, a terminal with retained input focus can handle
+Ctrl+L inside a disabled scope. The
+[FPAS terminal](../ui/gui/files/terminal.md) applies the input scope before
+processing terminal shortcuts.
+
+<a id="cui-123"></a>
+
+## CUI-123 — A terminal can initially wrap at the wrong width
+
+At CUI revision `6864776`, a newly inserted terminal can use its fallback
+width to wrap output after an idle frame. The
+[FPAS terminal](../ui/gui/files/terminal.md) requests another frame when
+the laid-out output width changes.
+
+<a id="cui-124"></a>
+
+## CUI-124 — A filtered-out file can remain selected
+
+At CUI revision `6864776`, a browser can keep a selection after a filter
+excludes its row. An Open picker can still accept that path. The
+[FPAS browser](../ui/gui/files/file-browser.md) and
+[picker](../ui/gui/files/file-picker.md) use the visible selection.
+
+<a id="cui-125"></a>
+
+## CUI-125 — A tree menu can use the pointer position after the press
+
+At CUI revision `6864776`, a right press and a move to another row in the
+same frame can open the menu for the later row. The
+[FPAS tree menu](../ui/gui/data-grid/tree-table.md) uses the native
+right-click input path and has the same batching limit.
+
+<a id="cui-126"></a>
+
+## CUI-126 — A terminal can ignore ANSI italic styling
+
+At CUI revision `6864776`, the terminal recognizes the ANSI italic command
+and draws the text with the regular glyphs. The
+[FPAS terminal](../ui/gui/files/terminal.md) uses the same native painter.
+
+<a id="cui-127"></a>
+
+## CUI-127 — A disabled file picker can accept a browser shortcut
+
+At CUI revision `6864776`, F5 can refresh the file browser inside a
+disabled picker. The [FPAS picker](../ui/gui/files/file-picker.md)
+applies the enabled state to browser shortcuts as well as dialog actions.
+
+<a id="cui-128"></a>
+
+## CUI-128 — A disabled trace viewer can still zoom
+
+At CUI revision `6864776`, the trace viewer can change its visible interval
+in response to the wheel while disabled. The
+[FPAS trace viewer](../ui/gui/developer-tools/trace-viewer.md) applies its
+enabled state to wheel input.
+
+<a id="cui-129"></a>
+
+## CUI-129 — A waterfall timing bar can miss its tooltip
+
+At CUI revision `6864776`, hovering a timing bar reports the request index
+and can omit the timing tooltip. The
+[FPAS network waterfall](../ui/gui/developer-tools/network-waterfall.md)
+lets the native tooltip track the hovered bar.
+
+<a id="cui-130"></a>
+
+## CUI-130 — A dependency node can activate when disabled during a press
+
+At CUI revision `6864776`, disabling the dependency graph during a press can
+leave an activation pending on release. The
+[FPAS dependency graph](../ui/gui/developer-tools/dependency-graph.md)
+clears the held gesture when the control is disabled.
+
+<a id="cui-131"></a>
+
+## CUI-131 — Developer widgets can handle keys beneath an open popup
+
+At CUI revision `6864776`, a focused widget can handle selection or
+activation keys while a popup covers it. This affects the
+[trace viewer](../ui/gui/developer-tools/trace-viewer.md),
+[network waterfall](../ui/gui/developer-tools/network-waterfall.md),
+[dependency graph](../ui/gui/developer-tools/dependency-graph.md),
+[commit graph](../ui/gui/developer-tools/commit-graph.md),
+[pipeline](../ui/gui/developer-tools/pipeline.md),
+[problems panel](../ui/gui/developer-tools/problems-panel.md),
+[keymap](../ui/gui/developer-tools/keymap.md),
+[test explorer](../ui/gui/more-developer-tools/test-explorer.md),
+[stack trace](../ui/gui/more-developer-tools/stack-trace.md),
+[API explorer](../ui/gui/more-developer-tools/api-explorer.md) and
+[request bar](../ui/gui/more-developer-tools/http-request-bar.md).
+The covered request URL can also accept queued text. FPAS leaves that input
+to the popup.
+
+<a id="cui-132"></a>
+
+## CUI-132 — A commit graph can initially use the wrong column layout
+
+At CUI revision `6864776`, a newly mounted narrow commit graph can draw
+the wide author and date columns and stay in that layout until another
+frame runs. The [FPAS commit graph](../ui/gui/developer-tools/commit-graph.md)
+requests a frame when the actual width differs from the layout width.
+
+<a id="cui-133"></a>
+
+## CUI-133 — A developer widget can retain its layout after resize
+
+At CUI revision `6864776`, the pipeline, problems panel and keymap can retain
+their old layout after their parent changes width. The
+[FPAS pipeline](../ui/gui/developer-tools/pipeline.md),
+[problems panel](../ui/gui/developer-tools/problems-panel.md) and
+[keymap](../ui/gui/developer-tools/keymap.md) request a frame when their
+laid-out width changes. The [test explorer](../ui/gui/more-developer-tools/test-explorer.md),
+[stack trace](../ui/gui/more-developer-tools/stack-trace.md),
+[blame view](../ui/gui/more-developer-tools/blame.md),
+[API explorer](../ui/gui/more-developer-tools/api-explorer.md),
+[feature flags](../ui/gui/more-developer-tools/feature-flags.md) and
+[request bar](../ui/gui/more-developer-tools/http-request-bar.md) also
+request a frame when their width changes.
+
+<a id="cui-134"></a>
+
+## CUI-134 — A query can report a change to an empty choice every frame
+
+At CUI revision `6864776`, a choice field with an empty first option can
+report a change on idle frames while the condition already has that value.
+The [FPAS query builder](../ui/gui/developer-tools/query-builder.md) emits
+a change when the edited query actually differs.
+
+<a id="cui-135"></a>
+
+## CUI-135 — A schedule preset can be shortened to a different schedule
+
+At CUI revision `6864776`, a short expression buffer can truncate a preset
+with several weekdays to its first weekday. The
+[FPAS schedule picker](../ui/gui/developer-tools/schedule-picker.md) retains
+the previous expression if the complete edit does not fit.
+
+<a id="cui-136"></a>
+
+## CUI-136 — A disabled developer widget can still accept wheel input
+
+At CUI revision `6864776`, the wheel can scroll a disabled diagnostic list,
+test explorer or blame view. The
+[FPAS problems panel](../ui/gui/developer-tools/problems-panel.md),
+[test explorer](../ui/gui/more-developer-tools/test-explorer.md) and
+[blame view](../ui/gui/more-developer-tools/blame.md) block wheel input
+while disabled.
+
+<a id="cui-137"></a>
+
+## CUI-137 — A question mark in a URL fragment can start a query
+
+At CUI revision `6864776`, the URL helpers can treat a question mark inside
+a fragment as the query delimiter. Replacing the query can then duplicate
+part of the fragment. The [FPAS query parameter functions](../ui/gui/more-developer-tools/http-request-bar.md#query-parameters)
+identify the fragment before they pass the query to CUI.
+
+<a id="cui-138"></a>
+
+## CUI-138 — URL replacement can truncate a fragment or reject an exact fit
+
+At CUI revision `6864776`, URL replacement can truncate a fragment longer
+than 255 bytes. It can also reject an unescaped byte even when the result
+fits. The [FPAS query parameter functions](../ui/gui/more-developer-tools/http-request-bar.md#query-parameters)
+preserve the complete fragment and check the length of the encoded result.
+
+<a id="cui-139"></a>
+
+## CUI-139 — Keyboard input can reach a hidden endpoint
+
+At CUI revision `6864776`, the API explorer can move the selection into a
+folded group. Enter can also toggle an endpoint that the current filter
+excludes. The [FPAS API explorer](../ui/gui/more-developer-tools/api-explorer.md)
+limits keyboard navigation and activation to visible endpoints.
+
+<a id="cui-140"></a>
+
+## CUI-140 — A regex match chip can omit its final character
+
+At CUI revision `6864776`, a match chip can omit the last character when
+that character uses multiple UTF-8 bytes. The
+[FPAS regex tester](../ui/gui/more-developer-tools/regex-tester.md) keeps
+complete characters in match labels.
+
+<a id="cui-141"></a>
+
+## CUI-141 — An open rollout popup can keep an obsolete anchor
+
+At CUI revision `6864776`, a change to the rollout percentage can replace
+the popup trigger while the popup stays open. Resizing can leave the popup
+at the old position. Removing the environment can also leave it open.
+The [FPAS feature flag editor](../ui/gui/more-developer-tools/feature-flags.md)
+follows the current trigger and closes the popup when the environment goes away.
+
+<a id="cui-142"></a>
+
+## CUI-142 — Coverage can retain a path after the caller replaces its data
+
+At CUI revision `6864776`, the coverage tree caches caller-owned paths.
+The [FPAS coverage adapter](../ui/gui/more-developer-tools/coverage.md)
+refreshes the cached paths when it supplies the current frame's data.
+
+<a id="cui-143"></a>
+
+## CUI-143 — Coverage hides children beyond the per-folder limit
+
+At CUI revision `6864776`, the coverage display includes up to 512 children
+per folder. The aggregate can include children beyond this display limit.
+The [FPAS coverage widget](../ui/gui/more-developer-tools/coverage.md)
+uses the same native tree.
+
+<a id="cui-144"></a>
+
+## CUI-144 — Sorting coverage can move selection to a different file
+
+At CUI revision `6864776`, sorting can keep the same selected row index
+after the rows change order. The
+[FPAS coverage widget](../ui/gui/more-developer-tools/coverage.md) keeps the
+selection on the same file when it sorts the rows.
+
+<a id="cui-145"></a>
+
+## CUI-145 — Uptime can label a historical end date as Today
+
+At CUI revision `6864776`, uptime uses the last date in its tooltips and
+always labels the end of the axis Today. The start label counts all bars,
+including the end bar. The [FPAS uptime widget](../ui/gui/more-developer-tools/uptime.md)
+uses the native axis labels.
+
+<a id="cui-146"></a>
+
+## CUI-146 — Copying a stack trace can omit text and frames
+
+At CUI revision `6864776`, CUI allocates the clipboard buffer without
+counting the heading and message lengths. A long message can fill the
+buffer and leave no space for the frames. The
+[FPAS stack trace](../ui/gui/more-developer-tools/stack-trace.md) includes
+the full heading, message and frames in the copied text.
+
+<a id="cui-147"></a>
+
+## CUI-147 — A replacement stack trace can retain stale expansion state
+
+At CUI revision `6864776`, changing the source locations or previews while
+keeping the function names can retain the old expansion state. The
+[FPAS stack trace](../ui/gui/more-developer-tools/stack-trace.md) updates
+the expansion state when the trace changes.
+
+<a id="cui-148"></a>
+
+## CUI-148 — Enter can open a test excluded by the filter
+
+At CUI revision `6864776`, the test explorer can retain the selected test
+when a filter hides its row. Enter can then open the hidden test. The
+[FPAS test explorer](../ui/gui/more-developer-tools/test-explorer.md)
+limits activation to a visible test.
+
+<a id="cui-149"></a>
+
+## CUI-149 — A request bar action can lose focus when its label changes
+
+At CUI revision `6864776`, the request bar can retain keyboard focus on the
+Send button after the application switches to Cancel. A second Enter can
+then fail to cancel. The
+[FPAS request bar](../ui/gui/more-developer-tools/http-request-bar.md) moves
+the action focus to the button for the new loading state.

@@ -2,6 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.TestExplorer;
 
+uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
@@ -59,8 +60,29 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root of TMsg(Frame, Id, Role, '', Enabled, Result.Count.ToString());
-  if Enabled and (Result.Action >= 0 or Result.Hover >= 0 or Result.Flags <> 0) then
+  const Passed: int := cast Result.X as int;
+  const Failed: int := cast Result.Y as int;
+  const Skipped: int := cast Result.Z as int;
+  const Observed: string := Result.Index.ToString() + ',' + Passed.ToString() + ',' +
+    Failed.ToString() + ',' + Skipped.ToString() + ',' + Result.Count.ToString();
+  var Previous: string := '-1,0,0,0,0';
+  for Control: App.Control in Frame.Previous do
+    if Control.Id = Id and Control.Role = Role then
+      Previous := Control.Value;
+      break;
+    end if;
+  end for;
+
+  P.Root of TMsg(
+    Frame, Id, Role, '', Enabled, if Frame.AcceptInput then
+      Observed
+    else
+      Previous
+    end if
+  );
+  if Enabled and (Previous <> Observed or Result.Action >= 0 or Result.Hover >= 0
+    or Result.Flags <> 0)
+  then
     Frame.Messages.Add(
       Changed(
         new D.Event(
@@ -68,9 +90,9 @@ begin
           Result.Action,
           Result.Hover,
           Result.Flags <> 0,
-          cast Result.X as int,
-          cast Result.Y as int,
-          cast Result.Z as int,
+          Passed,
+          Failed,
+          Skipped,
           Result.Count
         )
       )

@@ -12,8 +12,8 @@ uses System as Sys;
 
 // State owned by the Planning page.
 public type Model = record
-  // Current day used for the visible examples.
-  public Today: Sys.DateOnly := Sys.DateOnly.FromDateTime(Sys.DateTime.Today);
+  // Date override for the examples. Null uses the local date during each view.
+  public Today: Sys.DateOnly? := null;
   // Card order in each column.
   public Columns: array of array of int := [[1, 2, 3], [4, 5], [6], [7, 8]];
   // The current week's appointments.

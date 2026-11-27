@@ -31,14 +31,21 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Step.Title / Detail / Status` | Supply the title. Detail defaults to empty and Status to Pending. |
-| `Title / Enabled` | Empty / true. Empty Title uses the native heading. |
+| `Step.Title` | Supply the step title. |
+| `Step.Detail` | null. Supply text to show a supporting line. Failed steps show this line in the danger color. |
+| `Step.Status` | Pending. Also accepts Running, Done, Failed and Skipped. |
+| `Title` | null displays "Plan". Pass an empty string for a blank heading. |
+| `Enabled` | true. |
 | `Changed` | Pass a mapper to handle step activation, or null for a passive plan. |
 
 ## Interaction
 
-Update each step in the model as work progresses. When activation is
-enabled, use the proposed zero-based index to open step details.
+Update each step in the model as work progresses. The progress count includes
+Done and Skipped. Running steps use the native motion effects and respect
+reduced motion.
+
+Click a row to send its zero-based index when activation is enabled. The
+plan rows only accept pointer input.
 
 ## See also
 
@@ -58,3 +65,4 @@ enabled, use the proposed zero-based index to open step details.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
   - [agent_plan.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/agent_plan.c)
   - [agent_plan.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/agent_plan.h)
+- [Native AI card tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/ai_cards.c)

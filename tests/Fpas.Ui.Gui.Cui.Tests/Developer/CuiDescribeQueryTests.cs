@@ -45,4 +45,33 @@ public sealed class CuiDescribeQueryTests
     {
         Assert.Equal("", CuiWindow.DescribeQuery([], []));
     }
+
+    /// <summary>Rejects a choice that cannot round-trip through a rule's native buffer.</summary>
+    [Fact]
+    public void ChoiceValuesMustFitInNativeRule()
+    {
+        string choice = new string('t', 61) + "é";
+        Assert.Equal("Status is " + choice,
+            CuiWindow.DescribeQuery([new("Status", 2, [choice])], [new(0, false, false, 0, 0, choice)]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            CuiWindow.DescribeQuery([new("Status", 2, [choice + "x"])], []));
+    }
+
+    /// <summary>An empty first choice does not send an edit on an idle frame.</summary>
+    /// <param name="renderer">Native renderer used for presentation.</param>
+    [GuiTheory]
+    [InlineData(CuiRenderer.Software)]
+    [InlineData(CuiRenderer.OpenGl)]
+    public void EmptyChoiceDoesNotProposeUnchangedRules(CuiRenderer renderer)
+    {
+        using var window = new CuiWindow("Query builder", 640, 300, renderer, continuous: true);
+        CuiDevField[] fields = [new("Status", 2, ["", "Open"])];
+        CuiDevRule[] rules = [new(0, true, false, 0, 0, ""), new(1, false, false, 0, 0, "")];
+        for (int i = 0; i < 2; ++i)
+        {
+            Assert.True(window.NextFrame());
+            Assert.Same(rules, window.QueryBuilder("query", fields, rules, 8, 0, false, 1, 0, true));
+            window.Present();
+        }
+    }
 }

@@ -37,7 +37,7 @@ end unit;
 | `Grouped` | False. True continues the previous group with tighter spacing and suppresses author and time above the bubble. |
 | `LastInGroup` | False. True shows the avatar for incoming messages and permits a receipt for grouped outgoing messages. |
 | `Author` | Null. Supplies the incoming sender label and avatar initials. |
-| `Time` | Null. Supplies the incoming time or the time after an outgoing receipt. |
+| `Time` | Null. Supplies the incoming time above a group or the time after a visible outgoing receipt. |
 | `Status` | Null. Supplies the outgoing receipt on an ungrouped or final bubble. |
 | `Avatar` | Empty. Pass a local image path to replace the incoming sender's initials. |
 | `Markdown` | False. True renders compact Markdown inside the bubble. |
@@ -59,6 +59,7 @@ function.
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_chat_message)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Conversation/ChatMessages.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
+- [AI gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Markdown](../code/markdown.md)
 - [Chat divider](chat-divider.md)
 - [Social and media](README.md)

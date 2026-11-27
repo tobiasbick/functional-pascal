@@ -36,11 +36,11 @@ const char *fpas_cui_emoji_picker(cui_ctx *ui, const char *id, char *recent, siz
     /* CUI-037: when the emoji cannot fit, leave history unchanged and still return the selection.
        See docs/future/cui-upstream-bugs.md#cui-037. */
     char short_history[sizeof((cui__em_str){0}.s)];
-    const bool small = recent && capacity > 0 && capacity < sizeof short_history;
-    if (small) memcpy(short_history, recent, strlen(recent) + 1);
+    const bool use_short_history = recent && capacity > 0 && capacity < sizeof short_history;
+    if (use_short_history) memcpy(short_history, recent, strlen(recent) + 1);
     const cui_emoji_picker_opts options = {
         .width = fpas_extent(width_kind, width), .height = height, .size = size,
-        .recent = small ? short_history : recent, .recent_cap = capacity, .tone = tone,
+        .recent = use_short_history ? short_history : recent, .recent_cap = capacity, .tone = tone,
         .placeholder = placeholder, .empty_text = empty_text ? cui__frame_strdup(ui, empty_text, -1) : NULL,
         .hint = hint, .group_names = names, .no_search = !search, .no_preview = !preview, .no_tone = !tone_selector
     };
@@ -53,7 +53,7 @@ const char *fpas_cui_emoji_picker(cui_ctx *ui, const char *id, char *recent, siz
     cui_push_disabled(ui, !enabled);
     const char *picked = cui_emoji_picker_ex(ui, id, &options);
     cui_pop_disabled(ui);
-    if (small && picked && strlen(picked) < capacity)
+    if (use_short_history && picked && strlen(picked) < capacity)
         memcpy(recent, short_history, strlen(short_history) + 1);
     if (!allowed) ui->scroll_target = scroll;
     if (allowed && !search && ui->focus == search_key) ui->focus = grid;

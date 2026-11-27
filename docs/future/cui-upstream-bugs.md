@@ -1545,3 +1545,17 @@ At CUI revision `6864776`, CUI ignores a clip push when the stack is full.
 A matching pop can then remove a valid outer clip, so drawing can extend
 past the canvas. [FPAS canvas painting](../ui/gui/canvas-and-bars/painting.md)
 checks capacity before adding a clip and pops only the clips it accepts.
+
+<a id="cui-177"></a>
+
+## CUI-177 — The emoji picker filters by the neutral skin tone
+
+At CUI revision `6864776`, `cui_emoji_picker_ex` checks the neutral glyph
+when it builds the list. The picker hides an emoji if the font lacks the neutral
+glyph, even if the font supports the selected skin tone. In Segoe UI Emoji on
+Windows, searching for `woman astronaut` with the medium skin tone reproduces
+the issue. The same search succeeds with Noto Color Emoji on Linux.
+
+The [FPAS emoji picker test](../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiEmojiPickerTests.cs)
+uses the rainbow flag to check that a short history still returns the complete
+selection without losing the previous entry.

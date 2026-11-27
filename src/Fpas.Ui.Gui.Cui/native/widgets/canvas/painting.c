@@ -17,7 +17,7 @@ CUI_API float fpas_cui_canvas_animate(cui_ctx *ui, cui_id canvas, const char *id
     float target, float duration, float bounce) {
     const cui_id key = cui__hash_str(id, canvas);
     const bool pending = ui->animating;
-    float value;
+    float value = target;
     if (duration == 0) {
         value = cui_animate(ui, key, target);
     } else {

@@ -255,7 +255,7 @@ static bool tree_cell_releases_chevron(void) {
 static bool tree_cell_pixels(void) {
     enum { WIDTH = 400, HEIGHT = 230 };
     static unsigned char pixels[2][WIDTH * HEIGHT * 4];
-    static const cui_table_column column = { .title = "Name", .width = CUI_FILL };
+    const cui_table_column column = { .title = "Name", .width = CUI_FILL };
     const char *labels[] = { "src", "ui", "button.c" };
     const char *ids[] = { "src-name", "ui-name", "button-name" };
     const char *icons[] = { CUI_ICON_FOLDER, NULL, CUI_ICON_FILE };

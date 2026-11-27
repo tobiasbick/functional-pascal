@@ -16,7 +16,7 @@ int fpas_cui_waveform(cui_ctx *ui, const char *id, const float *peaks, int count
     const float original = progress ? *progress : 0;
     cui__wf2_state *before = cui__state_lazy(ui, key, sizeof *before, false);
     if (before && (!interactive || !ui->window_focused)) before->dragging = false;
-    float fraction;
+    float fraction = original;
     const bool release = interactive && fpas_drag_release(ui, key, before && before->dragging, &fraction);
     if (release) *progress = fraction;
     if (interactive && (flags & 2)) ui->focus_next_request = key;

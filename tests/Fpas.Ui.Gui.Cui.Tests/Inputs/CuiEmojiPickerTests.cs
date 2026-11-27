@@ -30,15 +30,15 @@ public sealed class CuiEmojiPickerTests
     [GuiFact]
     public void ShortHistoryStillReturnsCompleteEmoji()
     {
-        const string prior = "😀", astronaut = "👩🏽‍🚀";
+        const string prior = "😀", rainbowFlag = "🏳️‍🌈";
         using var window = new CuiWindow("Emoji history capacity", 600, 450, CuiRenderer.Software, continuous: true);
-        if (!window.LoadSystemEmojiFont() || !window.SupportsEmoji(astronaut)) return;
+        if (!window.LoadSystemEmojiFont() || !window.SupportsEmoji(rainbowFlag)) return;
         window.SetReducedMotion(true);
         Draw(focus: 1);
-        Draw(query: "woman astronaut");
+        Draw(query: "rainbow flag");
         Draw();
         var result = Draw(enter: true);
-        Assert.Equal(astronaut, result.Emoji);
+        Assert.Equal(rainbowFlag, result.Emoji);
         Assert.Equal(prior, result.Recent);
 
         CuiEmojiPickerResult Draw(int focus = 0, string? query = null, bool enter = false)
@@ -46,7 +46,7 @@ public sealed class CuiEmojiPickerTests
             Assert.True(window.NextFrame());
             if (query is not null) window.InputText(query);
             if (enter) { window.SetKey(2, true); window.SetKey(2, false); }
-            var result = window.EmojiPicker("picker", prior, 10, 3, 0, 0, 160, 0,
+            var result = window.EmojiPicker("picker", prior, 10, 0, 0, 0, 160, 0,
                 null, null, null, null, true, true, true, true, focus, null);
             window.Present();
             return result;

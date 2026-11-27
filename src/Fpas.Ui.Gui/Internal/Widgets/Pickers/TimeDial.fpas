@@ -18,7 +18,7 @@ uses System.Globalization as Culture;
 // - `Id`: Stable dial identity.
 // - `Value`: Model-owned time.
 // - `OnChange`: Maps a proposed time to a message.
-// - `Size`: Face diameter or zero for CUI's default.
+// - `Size`: Face diameter. Nonpositive uses CUI's default.
 // - `Enabled`: Whether the dial accepts input.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;

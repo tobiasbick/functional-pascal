@@ -17,6 +17,8 @@ uses Fpas.Ui.Widgets.Collections.ReorderableLists as Reorders;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 uses Fpas.Ui.Widgets.Collections.Trees as Trees;
 uses Fpas.Ui.Widgets.Editors.NodeEditors as Nodes;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes;
 uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
 uses Fpas.Ui.Widgets.Overlays.Veils as Veils;
 uses Fpas.Ui.Widgets.Planning.Kanbans as Kanbans;
@@ -59,8 +61,20 @@ procedure VerifyContainer(Renderer: Cui.CuiRenderer; Kind: int);
 
   function View(Open: bool; Viewport: L.Viewport): E.Element of bool;
   begin
+    const Base: E.Element of bool := E.Text of bool('Dialog anchor');
+    const Anchor: E.Element of bool := if Kind = 15 then
+      Palettes.CommandPalette of bool(
+        'covered-palette',
+        Base,
+        false,
+        [],
+        function(Shown: bool): bool => false
+      )
+    else
+      Base
+    end if;
     const Dialog: E.Element of bool := Dialogs.Dialog of bool(
-      'modal', E.Text of bool('Dialog anchor'),
+      'modal', Anchor,
       Buttons.Button of bool('inside', 'Finish', false), Open,
       new Dialogs.Options('Composed dialog'), false
     );
@@ -79,7 +93,7 @@ procedure VerifyContainer(Renderer: Cui.CuiRenderer; Kind: int);
       );
       when 5: Reorders.ReorderableList of bool(
         'order',
-        [Dialog],
+        [[Dialog]],
         [0],
         function(Order: array of int): bool => true
       );
@@ -96,6 +110,7 @@ procedure VerifyContainer(Renderer: Cui.CuiRenderer; Kind: int);
         function(Event: Kanbans.Event): bool => true,
         new Kanbans.Options(Enabled := Kind = 11)
       );
+      when 15: Dialog;
       else Nodes.NodeEditor of bool(
         'nodes',
         new Nodes.View(),
@@ -112,6 +127,14 @@ procedure VerifyContainer(Renderer: Cui.CuiRenderer; Kind: int);
 
   procedure Inject();
   begin
+    if Palette then
+      const Key: int := cast Keys.Key.K as int;
+      const Modifier: int := cast Keys.PrimaryModifier() as int;
+      Window.SetKey(Key, true, Modifier);
+      Window.SetKey(Key, false, Modifier);
+      Palette := false;
+    end if;
+
     if Escape then
       Window.SetKey(3, true);
       Window.SetKey(3, false);
@@ -119,6 +142,7 @@ procedure VerifyContainer(Renderer: Cui.CuiRenderer; Kind: int);
     end if;
   end procedure;
 begin
+  var Palette: bool := false;
   var Escape: bool := false;
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'Composed modal contract', 700, 500, Renderer, true
@@ -152,6 +176,18 @@ begin
     'A composed modal must disable the background.'
   );
 
+  if Kind = 15 then
+    Palette := true;
+    discard Window.TryWake();
+    Assert(Session.Step(), 'The covered palette frame closed unexpectedly.');
+    discard Window.TryWake();
+    Assert(Session.Step(), 'The covered palette transition closed unexpectedly.');
+    Assert(
+      Control(Session, 'inside').Enabled,
+      'A covered palette must leave the active dialog open.'
+    );
+  end if;
+
   Escape := true;
   discard Window.TryWake();
   Assert(Session.Step(), 'The composed modal did not process Escape.');
@@ -165,7 +201,7 @@ end procedure;
 // - `Renderer`: Native renderer used for every composed view.
 public procedure Verify(Renderer: Cui.CuiRenderer);
 begin
-  for Kind: int := 0 to 14 do
+  for Kind: int := 0 to 15 do
     VerifyContainer(Renderer, Kind);
   end for;
 end procedure;

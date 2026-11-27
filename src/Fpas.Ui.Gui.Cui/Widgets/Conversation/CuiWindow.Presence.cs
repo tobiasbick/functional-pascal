@@ -11,13 +11,13 @@ public sealed partial class CuiWindow
     /// <summary>Draws the native group of users who are present.</summary>
     /// <param name="id">Stable widget identity.</param>
     /// <param name="users">Users in strip order.</param>
-    /// <param name="maximum">Number of visible avatars before overflow.</param>
-    /// <param name="size">Avatar size in logical points.</param>
+    /// <param name="maximum">Number of visible avatars before overflow, or zero for five.</param>
+    /// <param name="size">Avatar size in logical points, or zero for 30.</param>
     public unsafe void Presence(string id, CuiPresenceUser[] users, int maximum, float size)
     {
         CheckFrame();
         CheckFeedbackNumber(size, nameof(size));
-        if (maximum <= 0) throw new ArgumentOutOfRangeException(nameof(maximum));
+        if (maximum < 0) throw new ArgumentOutOfRangeException(nameof(maximum));
         using var memory = new ChartMemory();
         var data = new NativePresenceUser[users.Length];
         for (int i = 0; i < data.Length; i++)

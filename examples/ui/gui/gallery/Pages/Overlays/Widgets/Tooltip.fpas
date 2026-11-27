@@ -5,7 +5,7 @@ unit GuiGallery.Pages.Overlays.Widgets.Tooltip;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
-uses Fpas.Ui.Widgets.Overlays.Tooltips as Tips;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Overlays.State as State;
@@ -19,25 +19,24 @@ function Help(
   Shortcut: string := ''
 ): E.Element of State.Msg;
 begin
-  return Tips.Tooltip of State.Msg(
-    Icons.IconButton of State.Msg(Id, Sys.Char.ConvertFromUtf32(Glyph), Label, State.Msg.Preview),
-    Label, Shortcut
+  return Icons.IconButton of State.Msg(
+    Id, Sys.Char.ConvertFromUtf32(Glyph), Label, State.Msg.Preview,
+    new Icons.Options(Shortcut := Shortcut)
   );
 end function;
 
 // Builds the native gallery's icon toolbar with pointer hints.
 //
 // ## Returns
-// The Tooltips section of the Overlays page.
-public function View(): E.Element of State.Msg;
+// The section heading and native card for the tooltip examples.
+public function View(): array of E.Element of State.Msg;
 begin
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
+  return [
     G.Heading of State.Msg(Strings.Get('Heading.Tooltips')),
-    G.Card of State.Msg(
-      12, [
+    Cards.Card of State.Msg(
+      'overlays-tooltip-card', [
         E.Row of State.Msg(
-          new L.Flow(Gap := G.Points(4), Wrap := true),
+          new L.Flow(Gap := G.Points(4), Wrap := true, Clip := false),
           Help('tooltip-bold', $E05D, 'Bold', 'Ctrl B'),
           Help('tooltip-italic', $E0FB, 'Italic', 'Ctrl I'),
           Help('tooltip-underline', $E19A, 'Underline', 'Ctrl U'),
@@ -48,7 +47,7 @@ begin
         )
       ]
     )
-  );
+  ];
 end function;
 
 end unit;

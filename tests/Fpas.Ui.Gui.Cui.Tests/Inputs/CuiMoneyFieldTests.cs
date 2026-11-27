@@ -95,6 +95,33 @@ public sealed class CuiMoneyFieldTests
         Assert.Equal(123.45m, field.Draw(key: 40, mods: 2));
     }
 
+    /// <summary>Opening the editor removes digit grouping and lets the user type into an initial zero.</summary>
+    /// <param name="pointer">Use a pointer click to open the editor.</param>
+    [GuiTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void FocusStartsWithPlainDigits(bool pointer)
+    {
+        using var field = new Field(CuiRenderer.Software) { Model = 1249.50m };
+        field.Draw();
+        if (pointer)
+        {
+            var bounds = field.Window.GetControlRectangle("amount");
+            field.Draw(point: bounds, pressed: true);
+            field.Draw(point: bounds, pressed: false);
+            field.Draw();
+        }
+        else field.Draw(focus: true);
+        Assert.True(field.Window.ControlFocused("amount"));
+        field.Draw(key: 11); // Home
+        field.Draw(key: 8); // Right
+        Assert.Equal(149.50m, field.Draw(key: 5)); // Delete the second digit.
+
+        field.Model = 0m;
+        field.Draw(focus: true);
+        Assert.Equal(7m, field.Draw(text: "7"));
+    }
+
     /// <summary>Formats invariantly, retires drafts without inspection and survives disappearance/discard.</summary>
     /// <param name="track">Whether inspection is requested.</param>
     [GuiTheory]
@@ -150,10 +177,13 @@ public sealed class CuiMoneyFieldTests
             return Draw(text: text, enabled: enabled);
         }
 
-        internal decimal Draw(bool focus = false, string? text = null, int key = 0, int mods = 0, bool enabled = true)
+        internal decimal Draw(bool focus = false, string? text = null, int key = 0, int mods = 0, bool enabled = true,
+            CuiRectangle? point = null, bool? pressed = null)
         {
             Assert.True(Window.NextFrame());
-            Window.MovePointer(-1, -1);
+            if (point is { } bounds) Window.MovePointer(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
+            else Window.MovePointer(-1, -1);
+            if (pressed.HasValue) Window.SetLeftButton(pressed.Value);
             if (key != 0) { Window.SetKey(key, true, mods); Window.SetKey(key, false, mods); }
             if (text is not null) { Window.SetKey(0, false); Window.InputText(text); }
             Window.BeginColumn();

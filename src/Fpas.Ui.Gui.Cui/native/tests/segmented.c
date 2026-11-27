@@ -24,7 +24,7 @@ static bool verify(cui_ctx *ui) {
     fpas_cui_theme_read(ui, before);
     before[0] = 0xff352719u;
     before[4] = 0xffc7d9ebu;
-    fpas_cui_theme(ui, 1, 2, before);
+    fpas_cui_theme(ui, 1, 2, before, NULL, 0);
     int nodes[4];
     if (frame(ui, 1, 0, 1, 1, true, nodes) != -1) return false;
     if (fpas_cui_last_node(ui) != nodes[0]) return false;

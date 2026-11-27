@@ -9,7 +9,7 @@ public sealed partial class CuiWindow
     /// <summary>Draws CUI's shortcut recorder and its optional clear action.</summary>
     /// <param name="id">Stable application identity.</param>
     /// <param name="value">Model-owned combination.</param>
-    /// <param name="placeholder">Literal empty-state caption.</param>
+    /// <param name="placeholder">Literal empty-state caption, or null for the native default.</param>
     /// <param name="widthKind">Content zero, fill one, fixed two or percentage three.</param>
     /// <param name="width">Logical extent or percentage.</param>
     /// <param name="enabled">Whether recording and clearing accept input.</param>
@@ -17,14 +17,15 @@ public sealed partial class CuiWindow
     /// <param name="clearControl">Clear action tracking ID, or null to omit tracking.</param>
     /// <param name="focusClear">Whether to focus the native clear action.</param>
     /// <returns>The proposed combination and visible native affordances.</returns>
-    public unsafe CuiShortcutRecorderResult ShortcutRecorder(string id, CuiKeyCombination value, string placeholder,
+    public unsafe CuiShortcutRecorderResult ShortcutRecorder(string id, CuiKeyCombination value, string? placeholder,
         int widthKind, float width, bool enabled, bool focus, string? clearControl, bool focusClear = false)
     {
         CheckFrame(); string identity = Stable(id);
-        CheckKeyCombination(value); CheckSmartWidth(widthKind, width); Utf8.Validate(placeholder, nameof(placeholder));
+        CheckKeyCombination(value); CheckSmartWidth(widthKind, width);
+        if (placeholder is not null) Utf8.Validate(placeholder, nameof(placeholder));
         int key = value.Key, modifiers = value.Modifiers;
         int* nodes = stackalloc int[2];
-        NativeMethods.ShortcutRecorder(context, identity, ref key, ref modifiers, Optional(placeholder),
+        NativeMethods.ShortcutRecorder(context, identity, ref key, ref modifiers, placeholder,
             widthKind, width, enabled ? 1 : 0, focusClear ? 2 : focus ? 1 : 0, nodes);
         if (clearControl is not null)
         {

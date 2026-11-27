@@ -12,11 +12,12 @@ internal static partial class NativeMethods
     internal static unsafe partial nint DataGridBegin(nint context, string id,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] titles,
         float* widths, int* flags, int columns, int rows, byte* selected, int* state,
-        int heightKind, float height, float rowHeight, int options, int* range, int* headers);
+        int heightKind, float height, float rowHeight, int widthKind, float width,
+        int options, int* range, int* headers);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_data_grid_row", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int DataGridRow(nint context, int row, string id);
+    internal static partial int DataGridRow(nint context, int row, string id, out int clicked);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_data_grid_cell", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

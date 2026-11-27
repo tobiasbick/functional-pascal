@@ -32,14 +32,22 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Tags` | Nonempty single-line strings without commas or surrounding ASCII spaces. |
-| `Label / Placeholder` | Empty. |
+| `Label` | Empty omits the caption. |
+| `Placeholder` | null uses CUI's “Add a tag” hint for an empty list. An empty string hides the hint. |
 | `MaxTags` | 64. Accepts 1 through 64. |
 | `MaxUtf8Bytes` | 2047, including comma-space separators. Accepts 1 through 2047. |
 | `Enabled` | true. |
+| `Width` | Fill. Fixed and Percent size the field and its caption. Content uses CUI's fill default. |
 
 ## Interaction
 
-Enter or comma commits the draft. Backspace in an empty draft removes the last tag. Each existing tag has a remove button. Update the model with the proposed array. Use `RemoveId(Id, Index)` to identify a remove button in GUI snapshots.
+Enter or comma commits the draft. Backspace in an empty draft removes the last tag.
+Each existing tag has a remove button. Update the model with the proposed array.
+Use `RemoveId(Id, Index)` to identify a remove button in GUI snapshots.
+
+The count limit applies to each tag in a pasted comma-separated batch.
+At the limit, the draft field stops accepting edits and the existing tags stay removable.
+The FPAS limit keeps the full list within CUI's visible tag slots. [CUI-020](../../../future/cui-upstream-bugs.md#cui-020)
 
 ## See also
 

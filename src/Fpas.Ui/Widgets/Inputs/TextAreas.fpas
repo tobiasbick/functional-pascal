@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Inputs.TextAreas;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 uses System as Sys;
@@ -23,8 +24,8 @@ public type Options = record
   public Prefix: string := '';
   // Muted text after the editable value.
   public Suffix: string := '';
-  // Editor height in logical points. Zero uses 96 and a negative value fills the available height.
-  public Height: int := 96;
+  // Editor height in logical units. Zero uses 96 and a negative value fills the available height.
+  public Height: float := 96.0F;
   // Show the native clear button while the editable value is nonempty.
   public Clearable: bool := false;
   // Allow focus and selection while preventing edits.
@@ -35,6 +36,10 @@ public type Options = record
   public ControlSize: B.Size := B.Size.Medium;
   // Maximum value size in UTF-8 bytes, excluding the terminator.
   public MaxUtf8Bytes: int := 4095;
+  // Explicit native width. Null uses the default width of the active host.
+  public Width: L.Extent? := null;
+  // Request native focus on the first presentation of an enabled GUI field.
+  public Autofocus: bool := false;
 end record;
 
 // Builds a wrapping multiline editor.

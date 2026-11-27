@@ -31,14 +31,19 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Description / Icon` | Empty. CUI supplies the default icon for the tone. |
-| `Tone` | Neutral. Success, Warning and Danger are used in the gallery. |
-| `Dismissible / Enabled` | false / true. Dismissible adds a close control. |
+| `Description` | Null omits the supporting text. An empty string reserves a blank line in the GUI. |
+| `Icon` | Null uses CUI's icon for the selected tone. An empty string draws no glyph. |
+| `Tone` | `Neutral`. Also accepts `Info`, `Success`, `Warning`, `Danger`, `Violet`, `Teal`, `Rose` and `Accent`. |
+| `Dismissible` | False. True adds a close control. |
+| `Enabled` | True. False disables the close control. |
 | `OnDismiss` | Optional message factory called once when the close action is used. |
 
 ## Interaction
 
-Click the close button or focus it and press Enter or Space. CUI keeps the alert hidden while the same ID remains in the view. Present a frame without the alert to release its native dismissal state. Use `DismissId(Id)` to address the close button.
+Click the close button or focus it and press Enter or Space. CUI keeps the
+alert hidden while the same ID remains in the view. Present a frame without the
+alert to release its native dismissal state. Use `DismissId(Id)` to address the
+close button.
 
 ## See also
 

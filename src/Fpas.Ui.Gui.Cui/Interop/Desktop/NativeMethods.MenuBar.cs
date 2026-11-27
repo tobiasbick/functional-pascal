@@ -16,5 +16,7 @@ internal static partial class NativeMethods
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_menu_bar_menu", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial int MenuBarMenu(nint ui, string title, int mnemonic, float width, int enabled, string[] keys, string[] labels, string[] icons, string[] shortcuts, int* flags, int count, int* nodes, out int open, out int highlighted);
+    internal static unsafe partial int MenuBarMenu(nint ui, string title, int mnemonic, float width, int enabled,
+        string[] keys, string[] labels, string[] icons, string[] shortcuts, NativeMenuRow* rows, int count,
+        int* nodes, out int open, out int highlighted);
 }

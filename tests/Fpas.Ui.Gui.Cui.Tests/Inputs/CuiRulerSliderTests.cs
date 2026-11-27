@@ -1,9 +1,10 @@
 // [Documentation](../../../docs/ui/gui/pickers/ruler-slider.md)
 using Fpas.Tests.Support;
+using Fpas.Ui.Gui.Cui.Widgets.Charts;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Inputs;
 
-/// <summary>Checks rendering at a ruler bound between ticks.</summary>
+/// <summary>Checks native ruler formatting, geometry and values between ticks.</summary>
 public sealed class CuiRulerSliderTests
 {
     /// <summary>Scrolling at the bound keeps both the displayed value and the proposal in range.</summary>
@@ -38,11 +39,38 @@ public sealed class CuiRulerSliderTests
                 window.MovePointer(-1, -1);
             if (scroll != 0) window.Wheel(scroll);
             window.BeginColumn(12);
-            float value = window.RulerSlider("ruler", "Value", maximum, 0, maximum, 1, 10, 9, 0,
-                1, "", enabled: true, focus: false, track: true);
+            float value = window.RulerSlider("ruler", "Value", maximum, 0, maximum, 1, 10, 9, 0, 0,
+                new(1), null, enabled: true, focus: false, track: true);
             window.EndColumn();
             window.Present();
             return value;
+        }
+    }
+
+    /// <summary>Applies percentage width and preserves a blank unit separately from an omitted unit.</summary>
+    [GuiFact]
+    public void RulerPreservesNativeWidthAndOptionalText()
+    {
+        const int width = 360, height = 240;
+        using var window = new CuiWindow("Ruler options", width, height, CuiRenderer.Software, continuous: true);
+        using var directory = new TemporaryDirectory();
+        window.SetReducedMotion(true);
+        var format = new CuiChartFormat(2, Notation: CuiValueNotation.Scientific);
+        uint[] omitted = Draw("omitted", null, null);
+        Assert.False(omitted.SequenceEqual(Draw("scientific", format, null)));
+        Assert.False(omitted.SequenceEqual(Draw("blank-unit", null, "")));
+
+        uint[] Draw(string name, CuiChartFormat? numberFormat, string? unit)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            window.RulerSlider("ruler", "Value", 1.2f, 0, 2, .1f, 5, 9, 3, 50,
+                numberFormat, unit, enabled: true, focus: false, track: true);
+            window.Present();
+            Assert.Equal(width * .5f, window.GetControlRectangle("ruler").Width);
+            string capture = directory.File(name + ".png");
+            window.CapturePng(capture);
+            return PngAssertions.ReadPixels(capture, width, height);
         }
     }
 }

@@ -5,6 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Inputs.ScrubField;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Data;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Inputs.ScrubFields as S;
 
@@ -21,7 +22,7 @@ uses System.Globalization as Culture;
 // - `Minimum`: Inclusive lower bound.
 // - `Maximum`: Inclusive upper bound.
 // - `OnChange`: Maps a value proposal.
-// - `Settings`: Native step, precision and presentation.
+// - `Settings`: Native step, number format and presentation.
 
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
@@ -39,7 +40,7 @@ begin
   const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   const Proposed: float := Frame.Window.ScrubField(
     Token, Label, Value, Minimum, Maximum, Settings.Step,
-    Settings.DecimalPlaces, Settings.Suffix, Settings.Icon, Width.Kind, Width.Value,
+    Data.Format(Settings.Format), Settings.Suffix, Settings.Icon, Width.Kind, Width.Value,
     Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled), not Frame.PaintingClosed
   );
   if Enabled and Proposed <> Value then

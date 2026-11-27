@@ -5,6 +5,9 @@ using System.Runtime.InteropServices.Marshalling;
 
 namespace Fpas.Ui.Gui.Cui.Interop;
 
+[StructLayout(LayoutKind.Sequential)]
+internal readonly record struct NativeMenuRow(int Flags, int Font, float TextSize);
+
 internal static partial class NativeMethods
 {
     [LibraryImport(Library, EntryPoint = "fpas_cui_menu", StringMarshalling = StringMarshalling.Utf8)]
@@ -14,6 +17,6 @@ internal static partial class NativeMethods
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] labels,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] icons,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] shortcuts,
-        int* flags, int count, int variant, int placement, float width, int iconOnly, int enabled,
+        NativeMenuRow* rows, int count, int variant, int placement, float width, int iconOnly, int enabled,
         int focus, int contextMenu, int* nodes, out int open, out int highlighted, out uint owner);
 }

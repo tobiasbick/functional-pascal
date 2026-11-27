@@ -80,11 +80,11 @@ public sealed class CuiConfirmButtonTests
     {
         using var window = new CuiWindow("Confirm validation", 480, 320, CuiRenderer.Software, continuous: true);
         Assert.True(window.NextFrame());
-        Assert.Throws<ArgumentOutOfRangeException>(() => Draw(timeout: 0));
         Assert.Throws<ArgumentOutOfRangeException>(() => Draw(timeout: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => Draw(variant: 3));
         Assert.Throws<ArgumentOutOfRangeException>(() => Draw(size: 3));
         Assert.Throws<ArgumentException>(() => window.ConfirmButton("id", "Delete", "Bad\0label", "", 3000, 2, 0, true, false));
+        Draw(timeout: 0);
 
         void Draw(int timeout = 3000, int variant = 2, int size = 0) =>
             window.ConfirmButton("id", "Delete", "Confirm", "", timeout, variant, size, true, false);

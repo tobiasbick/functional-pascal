@@ -8,5 +8,7 @@ internal static partial class NativeMethods
 {
     [LibraryImport(Library, EntryPoint = "fpas_cui_chat_message", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void ChatMessage(nint ui, string id, string text, string? author, string? time, string? status, string? avatar, int flags, int enabled);
+    internal static partial nint ChatMessage(nint ui, string id, string text, string? author,
+        string? time, string? status, string? avatar, int flags, int enabled,
+        out int offset, out int line, out int check, out nint hovered, out int hoverChanged);
 }

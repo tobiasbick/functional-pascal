@@ -32,10 +32,12 @@ end procedure;
 // - `Location`: View path for diagnostics.
 public procedure CheckPanel(Settings: P.Options; Location: string);
 begin
-  if Settings.Width < 0 or Settings.Padding < 0 or Settings.Gap < 0
+  if not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0F
+    or not Sys.Single.IsFinite(Settings.Padding) or Settings.Padding < 0.0F
+    or not Sys.Single.IsFinite(Settings.Gap) or Settings.Gap < 0.0F
     or not Sys.Enum.IsDefined of M.Placement(Settings.Position)
   then
-    R.Reject(Location, 'A popover needs nonnegative dimensions and a valid placement.');
+    R.Reject(Location, 'A popover needs finite nonnegative dimensions and a valid placement.');
   end if;
 end procedure;
 
@@ -46,20 +48,17 @@ end procedure;
 // - `Location`: View path for diagnostics.
 public procedure CheckQuestion(Settings: C.Options; Location: string);
 begin
-  R.CheckText(Settings.Title, Location + '/title');
-  R.CheckText(Settings.Description, Location + '/description');
+  R.CheckText(Settings.Title ?? '', Location + '/title');
+  R.CheckText(Settings.Description ?? '', Location + '/description');
   R.CheckText(Settings.ConfirmLabel, Location + '/confirm');
   R.CheckText(Settings.CancelLabel, Location + '/cancel');
-  if Sys.String.IsNullOrWhiteSpace(
-    Settings.Title
-  ) or Sys.String.IsNullOrWhiteSpace(Settings.ConfirmLabel)
-    or Sys.String.IsNullOrWhiteSpace(
-    Settings.CancelLabel
-  ) or not Sys.Enum.IsDefined of M.Placement(Settings.Position)
+  if Sys.String.IsNullOrWhiteSpace(Settings.ConfirmLabel)
+    or Sys.String.IsNullOrWhiteSpace(Settings.CancelLabel)
+    or not Sys.Enum.IsDefined of M.Placement(Settings.Position)
   then
     R.Reject(
       Location,
-      'A confirmation popover needs a question, action captions and a valid placement.'
+      'A confirmation popover needs action captions and a valid placement.'
     );
   end if;
 end procedure;

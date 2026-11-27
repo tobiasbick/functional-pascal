@@ -51,15 +51,20 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Combination.Key / Modifiers` | None / None. Combine modifier flags with `or`. |
-| `Placeholder` | Empty uses CUI's Click to record text. |
-| `Width / Enabled` | Content / true. |
+| `Placeholder` | `null` displays **Click to record**. An empty string hides the caption and keeps the keyboard icon. |
+| `Width` | Content has a preferred width of 220 logical pixels. Fill, fixed, and percentage widths are also available. |
+| `Enabled` | `true`. |
 
 ## Interaction
 
 Click the recorder or focus it and press Enter or Space. Then press the
-desired combination. Escape cancels, and unmodified Tab leaves recording.
-While recording, unmodified Backspace or Delete clears the shortcut.
-The clear button is available for an assigned combination.
+desired combination. Unmodified Escape cancels. Unmodified Tab moves
+focus and ends recording. While recording, unmodified Backspace or
+Delete clears the shortcut. The clear button is visible for an assigned
+combination when the recorder is idle.
+
+When CUI receives a key press and a modifier release in the same frame,
+the recorded combination can omit the modifier. [CUI-038](../../../future/cui-upstream-bugs.md#cui-038)
 
 The callback proposes the combination for the model. Use the recorded
 value with the action that handles the shortcut. For a passive preview,

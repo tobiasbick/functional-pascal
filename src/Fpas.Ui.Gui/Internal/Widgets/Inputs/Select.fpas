@@ -6,6 +6,8 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.Selects as S;
 
 uses System as Sys;
@@ -44,6 +46,7 @@ begin
   else
     function(Index: int): string => C.Token('select-option', S.OptionId(Id, Index))
   end if;
+  const Width: Sizing.NativeExtent := Sizing.Extent(Settings.Width ?? L.Extent.Content);
   const Result: CuiInputs.CuiSelectResult := Frame.Window.Select(
     Token,
     Labels.ToArray(),
@@ -54,7 +57,7 @@ begin
     Settings.Searchable,
     Enabled,
     C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
-    Track
+    Track, Width.Kind, Width.Value
   );
   if Enabled and Result.Selected <> Selected then
     Frame.Messages.Add(OnChange(Result.Selected));
@@ -69,10 +72,8 @@ begin
   end if;
   const Caption: string := if Result.Selected >= 0 then
     Labels[Result.Selected]
-  elsif Settings.Placeholder <> '' then
-    Settings.Placeholder
   else
-    'Select'
+    Settings.Placeholder ?? 'Select'
   end if;
   Frame.Labels.Add(Caption);
   Frame.Controls.Add(

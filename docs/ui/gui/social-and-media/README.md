@@ -20,12 +20,27 @@ when its pixels change. These widgets require the GUI host.
 | [Image compare](image-compare.md) | Reveal before and after images with a divider. |
 | [Card stack](card-stack.md) | Present cards that can be dismissed left or right. |
 
+## Social and media gallery page
+
+Chat and Comments share a row with two equal growth weights and a
+24-unit gap. Presence, the sales counter and its button share a row.
+The ticker and carousel use the page width.
+
+The viewer and cropper share a wrapping row with growth weights of three
+and two. Their minimum widths are 280 and 240 logical units. The image
+comparison and card stack share a row with two equal growth weights.
+The card stack is centered in its column.
+
+The image examples use the same 640 by 400 landscape. The comparison
+pairs the color landscape with its grayscale version.
+
 ## See also
 
 - [UI handbook](../README.md)
 - [Media examples in the gallery](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Voice](../voice/README.md)
 - [Social and media in the gallery](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
+- [CUI gallery comparison](../../../future/cui-compare/README.md#social-and-media-evidence)
 
 ## Source files
 

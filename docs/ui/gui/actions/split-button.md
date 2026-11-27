@@ -30,16 +30,20 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Variant / ControlSize` | Primary / Medium |
-| `Icon` | Empty |
-| `Enabled` | true |
+| `Variant` | Primary. Use a native button variant such as Outline. |
+| `ControlSize` | Medium. Small and Large are also available. |
+| `Icon` | Empty. Provide a native glyph for the main action. |
+| `Items` | Supply ordered commands with unique keys, literal labels, and messages. Each `Item.Icon` is optional. |
+| `Enabled` | true. Disabling the button closes its menu and blocks both halves. |
 
 ## Interaction
 
-Tab visits the main action and the chevron separately. Down on the chevron
-opens the menu. Use arrows and Enter to choose a command, or Escape to
-dismiss. Closing the menu restores focus to the chevron. Use unique keys for
-the nonempty set of commands.
+Click the main action to send its message. Click the chevron to open or close
+the menu. Choose an item to send its message and close the menu.
+
+Tab visits the main action and the chevron separately. Enter and Space activate
+the focused half. Down also opens the menu from the chevron. Use Up or Down to
+highlight a command and Enter to choose it. Escape closes the menu.
 
 ## See also
 

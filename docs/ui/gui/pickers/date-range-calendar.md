@@ -36,7 +36,13 @@ end unit;
 
 ## Interaction
 
-Choose a day for the first endpoint, then choose the second. The callback receives both partial and complete proposals. Store either value in the model to keep the inline calendar and picker in sync. Each calendar keeps its own displayed month, and the navigation arrows can move across year boundaries.
+Choose the first and second endpoints in either order. The highlight previews
+the interval while you hover a day after the first choice. Tab moves focus and
+Enter activates the focused day or month arrow.
+
+The callback receives partial and complete proposals. Store either value in the
+model to keep a calendar and a picker in sync. Each calendar keeps its own
+displayed month. The navigation arrows move across year boundaries.
 
 ## See also
 

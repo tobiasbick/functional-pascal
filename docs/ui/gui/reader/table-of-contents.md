@@ -35,15 +35,24 @@ end unit;
 | --- | --- |
 | `ScrollId` | The ID of an uncontrolled `ScrollView` in the same CUI scope. Each scroll view accepts one outline. |
 | `Items` | One to 64 entries with nonempty titles. List them in the order of their anchors in the scroll view. |
-| `Item.Anchor / Item.Level` | A distinct anchor ID for each entry and an indentation level from 0 to 4. Level defaults to 0. |
-| `OnActiveChange / Enabled` | null / true. The callback observes changes after the initial frame. |
+| `Item.Title` | Literal text in the outline row. |
+| `Item.Anchor` | A distinct anchor ID for each entry. |
+| `Item.Level` | Zero. CUI adds 12 logical units of indentation per level, up to level 4. |
+| `OnActiveChange` | Null. Supply a callback to observe changes after the initial frame. |
+| `Enabled` | True. Allows focus and activation. The marker continues to track scrolling when disabled. |
 
 ## Interaction
 
-Click an entry or focus it and press Enter to scroll to its anchor. Use
-`ItemId(Id, Index)` to request focus for an entry by its zero-based index.
-As the article scrolls, CUI moves the active marker and updates the progress
-rail. The GUI snapshot exposes the active anchor ID as the outline's value.
+Click an entry or press Enter or Space while it has focus. CUI scrolls the
+anchor toward an inset 12 logical units below the top of the viewport.
+The available scroll range limits the destination near either end.
+
+Use `ItemId(Id, Index)` to request focus for an entry by its zero-based index.
+The active marker follows the last heading that reaches the upper 30 percent
+of the viewport. The first entry is the default before the first layout.
+The final entry is active at the end of a scrollable article. The rail shows
+scroll progress.
+The GUI snapshot exposes the active anchor ID as the outline's value.
 
 Place each marker inside the target scroll view. Keep the outline and its
 target in the same CUI scope. A viewport inside a dialog cannot be targeted

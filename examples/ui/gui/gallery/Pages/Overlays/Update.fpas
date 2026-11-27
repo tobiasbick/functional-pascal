@@ -50,20 +50,7 @@ begin
       when S.Msg.DeleteProject: [
         Toasts.Show of S.Msg(
           'Project deleted',
-          new Toasts.Options(Appearance := Toasts.Tone.Danger, ActionLabel := 'Undo'),
-          function(): S.Msg => S.Msg.Preview
-        )
-      ];
-      when S.Msg.ArchiveMessage: [
-        Toasts.Show of S.Msg(
-          'Message archived', new Toasts.Options(ActionLabel := 'Undo', ShowTimer := true),
-          function(): S.Msg => S.Msg.UndoArchive
-        )
-      ];
-      when S.Msg.UndoArchive: [
-        Toasts.Show of S.Msg(
-          'Message restored',
-          new Toasts.Options(Appearance := Toasts.Tone.Success)
+          new Toasts.Options(Appearance := Toasts.Tone.Danger, ActionLabel := 'Undo')
         )
       ];
       else [];

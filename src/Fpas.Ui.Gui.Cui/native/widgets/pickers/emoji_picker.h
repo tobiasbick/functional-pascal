@@ -5,15 +5,17 @@
 /** Draws CUI's emoji picker.
  * @param ui Current drawing context.
  * @param id Stable picker identity.
- * @param recent Null-terminated UTF-8 recent emoji in CUI's format.
+ * @param recent Null-terminated UTF-8 recent emoji in CUI's format, or null for native storage.
  * @param capacity Size of the recent buffer in bytes.
- * @param tone Model-owned skin tone, updated when chosen.
- * @param width Logical width, or zero for CUI's default.
+ * @param tone Model-owned skin tone, or null for native storage.
+ * @param width_kind Native width extent kind.
+ * @param width Logical width or percentage for the selected extent.
  * @param height Logical grid height, or zero for CUI's default.
  * @param size Logical emoji size, or zero for CUI's default.
  * @param placeholder Optional search placeholder.
  * @param empty_text Optional text for empty results.
  * @param hint Optional preview hint.
+ * @param group_names Optional array of ten native group captions.
  * @param search Whether to show the search field.
  * @param preview Whether to show the preview.
  * @param tone_selector Whether to show skin tone controls.
@@ -22,6 +24,7 @@
  * @param nodes Optional array of 20 native nodes for inspection.
  * @return Selected UTF-8 text, valid until the next frame, or null. */
 CUI_API const char *fpas_cui_emoji_picker(cui_ctx *ui, const char *id, char *recent, size_t capacity,
-    int *tone, float width, float height, float size, const char *placeholder, const char *empty_text,
-    const char *hint, int search, int preview, int tone_selector, int enabled, int focus, int *nodes);
+    int *tone, int width_kind, float width, float height, float size, const char *placeholder,
+    const char *empty_text, const char *hint, const char *const *group_names,
+    int search, int preview, int tone_selector, int enabled, int focus, int *nodes);
 #endif

@@ -13,6 +13,16 @@ require the GUI host.
 | [Emoji picker](emoji-picker.md) | Browse or search emoji and insert a selection. |
 | [Text field affixes](../inputs/text-field.md#prefix-and-suffix) | Show a fixed prefix or unit beside editable text. |
 
+## Smart inputs gallery page
+
+The title and owner share a native column with a gap of six logical units.
+The scrub fields, affix fields and recorders use wrapping rows. The Money
+section places two 240-unit boxes in one row. The amounts use exact decimals.
+
+The message and its emoji trigger share a fill row with a maximum width of
+480 logical units. The message accepts 159 UTF-8 bytes. The anchored picker
+keeps the recent emoji and skin tone in the gallery model.
+
 ## See also
 
 - [UI handbook](../README.md)

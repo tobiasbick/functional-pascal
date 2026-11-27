@@ -29,12 +29,18 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Text` | A nonblank caption. The caption and shortcut together must fit 255 UTF-8 bytes, including six separator bytes when a shortcut is supplied. |
-| `Shortcut` | Empty. Bind the gesture separately. |
+| `Text` | A nonblank caption without the middle-dot delimiter with two spaces on each side. The caption and shortcut together must fit 255 UTF-8 bytes, including six separator bytes when a shortcut is supplied. |
+| `Shortcut` | Empty. CUI shows space-separated keys next to the caption. Bind the gesture separately. |
 
 ## Interaction
 
-CUI opens the tooltip after about 550 ms of hover. Moving directly to another tooltipped control switches the hint immediately while the tooltip is warm. The target keeps its input and layout.
+CUI opens the tooltip after about 550 ms of hover. Moving to another control
+with a tooltip switches the hint immediately during the native warm interval.
+The target keeps its input and layout. CUI suppresses the tooltip during a
+pointer press.
+
+Use the built-in tooltip on buttons and icon buttons. The Overlays toolbar uses
+the icon buttons' tooltip and shortcut options. [Icon button](../actions/icon-button.md)
 
 ## See also
 

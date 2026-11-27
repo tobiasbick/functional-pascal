@@ -9,9 +9,9 @@ uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
 uses Fpas.Ui.Widgets.Actions.SegmentedControls as Segments;
 uses Fpas.Ui.Widgets.Canvas.Canvases as Canvases;
+uses Fpas.Ui.Widgets.Canvas.Painting as Painting;
 uses Fpas.Ui.Widgets.Containers.Stacks as Stacks;
 uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
-uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 uses Fpas.Ui.Widgets.Navigation.Navigation as N;
 uses Fpas.Ui.Widgets.Overlays.Tooltips as Tips;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
@@ -113,29 +113,37 @@ begin
   );
 end function;
 
-function ThemeControl(Model: Shared.Model; Colors: Themes.Palette): E.Element of State.Msg;
+function ThemeControl(Model: Shared.Model): E.Element of State.Msg;
   function Swatch(Index: int): E.Element of State.Msg;
+    procedure Paint(Surface: Painting.Surface);
+    begin
+      const X: float := Surface.Width() / 2.0F;
+      const Y: float := Surface.Height() / 2.0F;
+      if Selected then
+        Surface.Circle(X, Y, X, Surface.Color(Themes.ColorToken.Foreground));
+      end if;
+
+      const BaseRadius: float := if Selected then
+        X - 2.0F
+      else
+        X
+      end if;
+      Surface.Circle(X, Y, BaseRadius, Surface.Color(Themes.ColorToken.SurfaceMuted));
+      Surface.Circle(X, Y, X - 4.0F, AccentColors[Index]);
+    end procedure;
   begin
     const Accent: Themes.Accent := cast Index as Themes.Accent;
     const Name: string := Accent.ToString().ToLowerInvariant();
-    const Dot: Canvases.Shape := Canvases.Shape.Circle(11.0F, 11.0F, 7.0F, AccentColors[Index]);
-    const Shapes: array of Canvases.Shape := if Accent = Model.Accent then
-      [
-        Canvases.Shape.Circle(11.0F, 11.0F, 11.0F, Colors.Foreground),
-        Canvases.Shape.Circle(11.0F, 11.0F, 9.0F, Colors.SurfaceMuted),
-        Dot
-      ]
-    else
-      [Dot]
-    end if;
+    const Selected: bool := Accent = Model.Accent;
     const Extent: L.Extent := L.Extent.Fixed(L.Measure.Logical(22));
     return Tips.Tooltip of State.Msg(
       Canvases.Canvas of State.Msg(
-        'accent-' + Name, Shapes,
+        'accent-' + Name, [],
         function(_Event: Canvases.Event): State.Msg => State.Msg.Shared(
           Shared.Msg.SetAccent(Accent)
         ),
-        new Canvases.Options(Width := Extent, Height := Extent)
+        new Canvases.Options(Width := Extent, Height := Extent),
+        Paint := Paint
       ),
       Strings.Get('Accent.' + Accent.ToString())
     );
@@ -178,11 +186,17 @@ begin
           Align := L.Alignment.Center, Justify := L.Justification.Center,
           Background := Colors.Foreground, CornerRadius := 9.0F
         ),
-        E.FormattedText of State.Msg('F', Motion.Font.Display, 16.0F, Colors.Background)
+        E.FormattedText of State.Msg(
+          'F',
+          G.Font.Display,
+          16.0F,
+          Colors.Background,
+          LineHeight := 1.0F
+        )
       ),
       new L.Flex(Width := Side, Height := Side)
     ),
-    E.FormattedText of State.Msg(Title, Motion.Font.Medium, 15.0F, Colors.Foreground),
+    E.FormattedText of State.Msg(Title, G.Font.Medium, 15.0F, Colors.Foreground, NoWrap := true),
     E.Spacer of State.Msg(),
     E.Size of State.Msg(
       E.Row of State.Msg(
@@ -206,7 +220,7 @@ end function;
 public function HeaderText(Model: State.Model): E.Element of State.Msg;
 begin
   return E.FormattedText of State.Msg(
-    Title, Motion.Font.Medium, 15.0F, Update.ThemeFor(Model).Colors.Foreground
+    Title, G.Font.Medium, 15.0F, Update.ThemeFor(Model).Colors.Foreground
   );
 end function;
 
@@ -226,7 +240,7 @@ begin
     E.ScrollView of State.Msg('navigation-scroll', NavigationItems(Model.Active)),
     new L.Flex(Basis := L.Extent.Fill)
   );
-  const Footer: E.Element of State.Msg := ThemeControl(Model.Shared, Colors);
+  const Footer: E.Element of State.Msg := ThemeControl(Model.Shared);
   case DrawerViewportHeight of
     when is int as Height:
       // The sheet body scrolls. Bound the inner column so its footer remains visible.

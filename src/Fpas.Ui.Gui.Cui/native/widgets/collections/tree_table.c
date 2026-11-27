@@ -15,13 +15,16 @@ int fpas_cui_tree_cell(cui_ctx *ui, const char *id, const char *label, const cha
     int depth, int *open, int enabled, int *part) {
     const int root = ui->node_count;
     const cui_id key = cui_make_id(ui, id) ^ 0x7CE1u;
+    const bool branch = *open >= 0;
+    /* [CUI-058](../../../../../docs/future/cui-upstream-bugs.md#cui-058): release the removed chevron. */
+    if (!branch) fpas_clear_interaction(ui, key);
     bool expanded = *open > 0;
     cui_push_disabled(ui, !enabled);
-    const bool changed = cui_tree_cell(ui, id, depth, *open >= 0, &expanded, icon);
+    const bool changed = cui_tree_cell(ui, id, depth, branch, branch ? &expanded : NULL, icon);
     cui_pop_disabled(ui);
     fpas_text(ui, fpas_label_node(ui, root), label);
-    *part = *open < 0 ? root : fpas_find(ui, key);
-    if (*open < 0) ui->nodes[root].id = key;
+    *part = branch ? fpas_find(ui, key) : root;
+    if (!branch) ui->nodes[root].id = key;
     else *open = expanded;
     ui->last_node = root;
     ui->last_id = ui->nodes[root].id;

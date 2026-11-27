@@ -2,6 +2,7 @@
 
 unit Fpas.Ui.Internal.Validation.Structure.MenuRules;
 
+uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Overlays.Menus as M;
@@ -59,6 +60,12 @@ begin
           or Item.Shortcut.Contains(#10) or Item.Shortcut.Contains(#13)
         then
           Rules.Reject(Path, 'Menu captions and shortcut hints must fit one line.');
+        end if;
+
+        if not Sys.Enum.IsDefined of G.Font(Item.Font) or not Sys.Single.IsFinite(Item.TextSize)
+          or Item.TextSize < 0.0
+        then
+          Rules.Reject(Path, 'A menu command needs a CUI font and finite nonnegative text size.');
         end if;
       when M.Entry.Label(const Text: string):
         Rules.CheckText(Text, At + '/label');

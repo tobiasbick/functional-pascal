@@ -13,16 +13,22 @@ public sealed partial class CuiWindow
     public void Tooltip(string text, string shortcut = "")
     {
         CheckFrame();
-        Utf8.Validate(text, nameof(text));
+        CheckTooltipText(text, shortcut, nameof(text));
+        NativeMethods.Tooltip(context, text, Optional(shortcut));
+    }
+
+    private static void CheckTooltipText(string text, string shortcut, string parameter, bool allowEmpty = false)
+    {
+        Utf8.Validate(text, parameter);
         Utf8.Validate(shortcut, nameof(shortcut));
-        ArgumentException.ThrowIfNullOrWhiteSpace(text);
+        if (allowEmpty && text.Length == 0) return;
+        ArgumentException.ThrowIfNullOrWhiteSpace(text, parameter);
         if (text.Contains("  ·  ", StringComparison.Ordinal))
-            throw new ArgumentException("The caption contains CUI's shortcut delimiter.", nameof(text));
+            throw new ArgumentException("The caption contains CUI's shortcut delimiter.", parameter);
         int length = Utf8.Encoding.GetByteCount(text)
             + (shortcut.Length == 0 ? 0 : 6 + Utf8.Encoding.GetByteCount(shortcut));
         if (length > 255)
-            throw new ArgumentException("Tooltip text and its shortcut must fit in 255 UTF-8 bytes.", nameof(text));
-        NativeMethods.Tooltip(context, text, Optional(shortcut));
+            throw new ArgumentException("Tooltip text and its shortcut must fit in 255 UTF-8 bytes.", parameter);
     }
 
     /// <summary>Reads the tooltip rendered by CUI in the completed frame.</summary>

@@ -6,6 +6,8 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.MultiSelects as M;
 uses Fpas.Ui.Widgets.Inputs.Selects as S;
 
@@ -48,6 +50,7 @@ begin
   else
     function(Index: int): string => C.Token('multi-select-option', S.OptionId(Id, Index))
   end if;
+  const Width: Sizing.NativeExtent := Sizing.Extent(Settings.Width ?? L.Extent.Content);
   const Result: CuiInputs.CuiMultiSelectResult := Frame.Window.MultiSelect(
     Token,
     Labels.ToArray(),
@@ -59,7 +62,7 @@ begin
     Settings.Searchable,
     Enabled,
     C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
-    Track
+    Track, Width.Kind, Width.Value
   );
   const Proposal: (array of bool)? := Result.Selection;
   if Proposal <> null then
@@ -70,13 +73,14 @@ begin
     return;
   end if;
 
-  if Settings.Label <> '' then
-    Frame.Labels.Add(Settings.Label);
+  const Label: string := Settings.Label ?? '';
+  if Label <> '' then
+    Frame.Labels.Add(Label);
   end if;
 
   Frame.Controls.Add(
     new App.Control(
-      Id, Settings.Label, 'multi-select', new Cui.CuiRectangle(), Enabled,
+      Id, Label, 'multi-select', new Cui.CuiRectangle(), Enabled,
       Value := Sys.String.Join(', ', Captions.ToArray())
     )
   );

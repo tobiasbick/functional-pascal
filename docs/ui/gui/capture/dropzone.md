@@ -53,16 +53,27 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Accept` | Empty accepts any extension. Otherwise separate extensions with semicolons and omit the dots. |
-| `Title / Description / Icon` | Empty. Empty title and description use the native text. |
-| `Compact / Height / Enabled` | false / 0 / true. Height overrides the default height of the tall target. |
+| `Title` | Null uses “Drop files here”. An empty string hides the title. |
+| `Description` | Null uses “or click to browse”. An empty string hides the supporting text. |
+| `Icon` | Null uses the upload glyph. An empty string leaves the icon background without a glyph. |
+| `Compact` | False. A compact target is 64 logical points high and ignores `Height`. |
+| `Height` | Zero gives the tall target its default height of 168 logical points. |
+| `Width` | `Fill`. CUI treats `Content` as `Fill` and supports fixed and percentage widths. |
+| `Enabled` | True. An enabled target can receive drops and browse activation. |
 | `OnBrowse` | null. Supply a message factory to handle browse activation. |
 
 ## Interaction
 
-CUI picks out accepted files from a desktop drop and sends a detached array
-of paths through `OnDrop`. Handle the browse message by returning the chooser
-command. Confirming a matching selection sends a message. Cancellation leaves
-the model as it was. Check file size and content in the application.
+CUI receives up to 64 paths from a desktop drop. Extension matching ignores
+letter case. `OnDrop` receives a new array with accepted paths in drop order.
+If every path is rejected, the target displays feedback without sending a
+message. The array stays available after the frame. Drop and drag feedback
+follow the visible target when its container clips it.
+
+Click the target or activate it with Enter or Space when focused to invoke
+`OnBrowse`. Handle the browse message by returning the chooser command.
+Confirming a matching selection sends a message. Cancellation leaves the
+model as it was. Check file size and content in the application.
 
 ## See also
 

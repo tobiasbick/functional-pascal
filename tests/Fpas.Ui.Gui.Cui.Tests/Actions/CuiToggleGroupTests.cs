@@ -4,6 +4,22 @@ namespace Fpas.Ui.Gui.Cui.Tests.Actions;
 /// <summary>Checks the native toggle group's caption and selection transport.</summary>
 public sealed class CuiToggleGroupTests
 {
+    /// <summary>Applies the tooltip byte limit only to labels shown as native tooltips.</summary>
+    [GuiFact]
+    public void IconOnlyLabelsFitTheNativeTooltipBuffer()
+    {
+        using var window = new CuiWindow("Toggle group tooltip", 480, 320, CuiRenderer.Software);
+        Assert.True(window.NextFrame());
+        string caption = new string('\u00e9', 127) + "a";
+        string[] icons = ["\uE05D"];
+        bool[] selected = [true];
+        Assert.Throws<ArgumentException>(() => window.ToggleGroup("too-long", [caption + "b"], icons,
+            selected, 0, false, true, true, 0, null));
+        window.ToggleGroup("icon", [caption], icons, selected, 0, false, true, true, 0, null);
+        window.ToggleGroup("label", [caption + "b"], null, selected, 0, false, true, true, 0, null);
+        window.Present();
+    }
+
     /// <summary>Preserves the last flag of a full group and leaves the caller's selection intact.</summary>
     [GuiFact]
     public void LastToggleKeepsItsLiteralCaptionAndProposesWithoutMutatingInput()

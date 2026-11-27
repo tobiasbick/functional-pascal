@@ -17,7 +17,7 @@ uses GuiGallery.Shared.Sections as G;
 public function View(Model: S.Model): E.Element of S.Msg;
 begin
   return E.Row of S.Msg(
-    new L.Flow(Gap := G.Points(24), Align := L.Alignment.Center),
+    new L.Flow(Gap := G.Points(24), Align := L.Alignment.Center, Clip := false),
     D.Countdown of S.Msg('disclosure-launch', Model.SecondsLeft),
     D.Countdown of S.Msg(
       'disclosure-sale', Model.SecondsLeft - 172800.0,

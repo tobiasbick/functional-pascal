@@ -42,7 +42,7 @@ public sealed class CuiImageUpdateTests
         {
             Assert.True(window.NextFrame());
             window.BeginColumn(8, 0);
-            window.DisplayImage("picture", source, 2, 80, 2, 80, 0, 0xffffffff);
+            window.DisplayImage("picture", source, 2, 80, 2, 80, 0, default);
             window.EndColumn();
             window.Present();
             string path = directory.File("image.png");

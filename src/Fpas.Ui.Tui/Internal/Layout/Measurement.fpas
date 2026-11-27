@@ -337,7 +337,7 @@ begin
       return Horizontal and (Explicit or Strip.Settings.FullWidth);
     when E.Element.Sparkline(_, _, const Fill: bool, _):
       return Horizontal and Fill;
-    when E.Element.Spinner(_, _, _):
+    when E.Element.Spinner(_, _):
       return false;
     when E.Element.Pager(_), E.Element.Breadcrumb(_):
       return Horizontal;
@@ -526,7 +526,7 @@ begin
       end if;
     when E.Element.CellGrid(_, _, _):
       return 1;
-    when E.Element.Spinner(_, _, _):
+    when E.Element.Spinner(_, _):
       return 1;
     when E.Element.Sparkline(_, const Width: int, _, _):
       return if Horizontal then

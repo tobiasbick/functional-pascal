@@ -2,6 +2,7 @@
 
 unit Fpas.Ui.Internal.Validation.Inputs.SmartInputRules;
 
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
 uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
 uses Fpas.Ui.Layout as L;
@@ -26,7 +27,11 @@ end procedure;
 public procedure Inline(Value: string; Settings: I.Options; At: string);
 begin
   R.CheckText(Value, At + '/value');
-  R.CheckText(Settings.Placeholder, At + '/placeholder');
+  const Placeholder: string? := Settings.Placeholder;
+  if Placeholder <> null then
+    R.CheckText(Placeholder, At + '/placeholder');
+  end if;
+
   if Settings.MaxUtf8Bytes < 1 or Settings.MaxUtf8Bytes > 511
     or Text.Encoding.UTF8.GetByteCount(
     Value
@@ -63,8 +68,9 @@ public procedure Scrub(
 );
 begin
   R.CheckText(Label, At + '/label');
-  R.CheckText(Settings.Suffix, At + '/suffix');
-  R.CheckText(Settings.Icon, At + '/icon');
+  R.CheckText(Settings.Suffix ?? '', At + '/suffix');
+  R.CheckText(Settings.Icon ?? '', At + '/icon');
+  Chart.Format(Settings.Format, At + '/format');
   if not Sys.Single.IsFinite(
     Value
   ) or not Sys.Single.IsFinite(Minimum) or not Sys.Single.IsFinite(Maximum)
@@ -72,10 +78,26 @@ begin
     Maximum - Minimum
   )
     or not Sys.Single.IsFinite(Settings.Step) or Settings.Step < 0.0F
-    or (Settings.Step > 0.0F and not Sys.Single.IsFinite((Maximum - Minimum) / Settings.Step))
-    or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 6
   then
-    R.Reject(At, 'Invalid finite scrub value, bounds, step or precision.');
+    R.Reject(At, 'Invalid finite scrub value, bounds or step.');
+  end if;
+
+  const Increment: float := if Settings.Step > 0.0F then
+    Settings.Step
+  else
+    (Maximum - Minimum) / 100.0F
+  end if;
+  const Fine: float := if Increment > 0.0F then
+    Increment / 10.0F
+  else
+    0.1F
+  end if;
+  // CUI-039: native dragging divides the current value by the fine step before rounding.
+  if Fine <= 0.0F or not Sys.Single.IsFinite(
+    Sys.MathF.Max(Sys.MathF.Abs(Minimum), Sys.MathF.Abs(Maximum)) / Fine
+  )
+  then
+    R.Reject(At, 'The scrub step is too small for fine dragging within its bounds.');
   end if;
 
   Width(Settings.Width, At);
@@ -124,7 +146,7 @@ end procedure;
 public procedure Shortcut(Value: K.Combination; Settings: K.Options; At: string);
 begin
   Combination(Value, At);
-  R.CheckText(Settings.Placeholder, At + '/placeholder');
+  R.CheckText(Settings.Placeholder ?? '', At + '/placeholder');
   Width(Settings.Width, At);
 end procedure;
 

@@ -3,8 +3,8 @@
 unit Fpas.Ui.Widgets.Overlays.Veils;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Appearance and interaction settings for a native veil.
 public type Options = record
@@ -16,8 +16,8 @@ public type Options = record
   public Toggle: bool := false;
   // Corner radius in logical points.
   public Radius: float := 0.0F;
-  // Cover color, or null to use the theme.
-  public Color: G.Color? := null;
+  // Theme or RGBA cover color. Automatic uses SurfaceMuted.
+  public Color: C.Color := C.Color.Automatic;
   // Preferred width.
   public Width: L.Extent := L.Extent.Content;
   // Whether the cover accepts input.

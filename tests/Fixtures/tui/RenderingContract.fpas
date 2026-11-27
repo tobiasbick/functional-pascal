@@ -19,7 +19,6 @@ uses Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation;
 uses Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes;
 uses Fpas.Ui.Validation as V;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
-uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 uses Fpas.Ui.Widgets.Charts.Sparklines as Sparks;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
@@ -396,7 +395,7 @@ procedure ActivityAndPlots();
     return E.Column of int(
       Spin.Spinner of int(
         'activity', 40.0F,
-        new Spin.Options(Color := Charts.Color.Rgba(new G.Color(255, 0, 0, 255)))
+        new Spin.Options(Color := new G.Color(255, 0, 0, 255))
       ),
       Sparks.Sparkline of int('signed', [-3.0F, -1.0F, 0.0F]),
       Sparks.Sparkline of int('empty', []),

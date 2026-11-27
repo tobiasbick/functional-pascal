@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.EditingTools.View;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.IconButtons as Button;
@@ -12,7 +13,6 @@ uses Fpas.Ui.Widgets.Editors.FlameGraphs as F;
 uses Fpas.Ui.Widgets.Editors.GradientEditors as Ramp;
 uses Fpas.Ui.Widgets.Editors.PropertyInspectors as I;
 uses Fpas.Ui.Widgets.Editors.TimelineEditors as T;
-uses Fpas.Ui.Widgets.Motion.Motion as Text;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
 
 uses Gallery.Shared.Strings as Strings;
@@ -40,7 +40,7 @@ function Flame(Model: M.Model; Colors: Theme.Palette): E.Element of M.Msg;
 begin
   var LabelText: E.Element of M.Msg := E.FormattedText of M.Msg(
     'Click a span to select it',
-    Text.Font.Body,
+    Graphics.Font.Body,
     13.0F,
     Colors.TextMuted
   );
@@ -51,7 +51,7 @@ begin
       Locale.CultureInfo.InvariantCulture
     ) + ' ms';
     LabelText := E.Styled of M.Msg(
-      E.FormattedText of M.Msg(Label, Text.Font.Body, 13.0F, Colors.TextSecondary),
+      E.FormattedText of M.Msg(Label, Graphics.Font.Body, 13.0F, Colors.TextSecondary),
       S.Role.Tabular
     );
   end if;
@@ -60,7 +60,12 @@ begin
     new L.Flow(Gap := G.Points(10), Clip := false),
     E.Row of M.Msg(
       new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
-      E.FormattedText of M.Msg('Frames 4812 to 4813', Text.Font.Medium, 13.0F, Colors.Foreground),
+      E.FormattedText of M.Msg(
+        'Frames 4812 to 4813',
+        Graphics.Font.Medium,
+        13.0F,
+        Colors.Foreground
+      ),
       LabelText
     ),
     F.FlameGraph of M.Msg('capture', Capture.Spans, Model.Flame, M.Msg.Flame)
@@ -73,7 +78,7 @@ begin
     return [
       E.FormattedText of M.Msg(
         'Select a key or a track name to edit its curve here.',
-        Text.Font.Body,
+        Graphics.Font.Body,
         13.0F,
         Colors.TextMuted
       )
@@ -87,7 +92,7 @@ begin
   end for;
 
   return [
-    E.FormattedText of M.Msg(Track.Name, Text.Font.Medium, 13.0F, Colors.Foreground),
+    E.FormattedText of M.Msg(Track.Name, Graphics.Font.Medium, 13.0F, Colors.Foreground),
     C.CurveEditor of M.Msg(
       'track-curve-' + Index.ToString(), Keys.ToArray(), Model.Timeline.KeyIndex,
       function(Value: C.Event): M.Msg => M.Msg.TrackCurve(Index, Value),
@@ -125,8 +130,13 @@ begin
           'Play'
         end if, M.Msg.Playback, new Button.Options()
       ),
-      E.FormattedText of M.Msg('Shot 4', Text.Font.Medium, 13.0F, Colors.Foreground),
-      E.FormattedText of M.Msg('5 seconds at 24 fps', Text.Font.Body, 13.0F, Colors.TextSecondary)
+      E.FormattedText of M.Msg('Shot 4', Graphics.Font.Medium, 13.0F, Colors.Foreground),
+      E.FormattedText of M.Msg(
+        '5 seconds at 24 fps',
+        Graphics.Font.Body,
+        13.0F,
+        Colors.TextSecondary
+      )
     )
   );
   Items.Add(
@@ -181,7 +191,7 @@ begin
         new L.Flow(Gap := G.Points(10), Clip := false),
         E.FormattedText of M.Msg(
           'Flame color over lifetime',
-          Text.Font.Medium,
+          Graphics.Font.Medium,
           13.0F,
           Colors.Foreground
         ),

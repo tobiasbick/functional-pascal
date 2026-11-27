@@ -2,10 +2,18 @@
 
 unit GuiDocCaptures.Pages.Charts;
 
+uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Sparklines as Sparklines;
 
+uses GuiDocCaptures.Rendering.Presented as Presented;
 uses GuiDocCaptures.Rendering.Regions as Regions;
 uses GuiGallery.App.State as Gallery;
+uses GuiGallery.App.Update as Update;
+uses GuiGallery.Shared.Sections as G;
 
 // Captures the chart widgets and their variants on the Charts page.
 // ## Parameters
@@ -20,7 +28,32 @@ begin
   Regions.Shot(Session, Output, 'donut-chart', 'platforms');
   Regions.Shot(Session, Output, 'pattern-meter', 'storage');
   Regions.Shot(Session, Output, 'gauge', 'cpu', 'memory');
-  Regions.Shot(Session, Output, 'sparkline', 'chart-sparkline');
+end procedure;
+
+// Captures the standalone sparkline sample for the Charts handbook.
+// ## Parameters
+// - `Output`: Directory for the full-frame image and crop bounds.
+public procedure CaptureSparkline(Output: string);
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas sparkline',
+    160,
+    80,
+    Cui.CuiRenderer.Software,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session of Gallery.Msg := Host.Start of (Gallery.Model, Gallery.Msg)(
+    new Gallery.Model(), Update.Update,
+    function(_Model: Gallery.Model; _Size: L.Viewport): E.Element of Gallery.Msg => E.Column of Gallery.Msg(
+      new L.Flow(PaddingStart := G.Points(8), PaddingTop := G.Points(8)),
+      Sparklines.Sparkline of Gallery.Msg('sparkline', [3.0F, 5.0F, 4.0F, 8.0F, 6.0F, 9.0F, 8.0F])
+    ),
+    Window, 16
+  );
+  Presented.Step(Session);
+  Presented.Step(Session);
+  Regions.Shot(Session, Output, 'sparkline', 'sparkline');
 end procedure;
 
 // Captures the pattern meter after selecting the grayscale option.

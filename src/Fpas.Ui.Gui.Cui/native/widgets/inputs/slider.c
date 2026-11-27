@@ -18,7 +18,7 @@ static int fpas_finish_slider(cui_ctx *ui, cui_id group, cui_id track, const cha
 }
 
 int fpas_cui_slider(cui_ctx *ui, const char *id, const char *label, float *value,
-    float minimum, float maximum, float step, int show_value, int decimal_places, int percent,
+    float minimum, float maximum, float step, int show_value, const char *format, int width_kind, float width,
     int enabled, int focus, int *track) {
     const cui_id group = cui_make_id(ui, id);
     const cui_id key = group ^ 0x51u;
@@ -30,12 +30,9 @@ int fpas_cui_slider(cui_ctx *ui, const char *id, const char *label, float *value
          cui_key_pressed(ui, CUI_KEY_HOME) || cui_key_pressed(ui, CUI_KEY_END));
     const bool adjusting = allowed && (keyboard || fpas_slider_dragging(ui, key));
 
-    /* Construct the numeric format here so CUI receives exactly one conversion. */
-    char format[16];
-    snprintf(format, sizeof format, "%%.%df%s", decimal_places, percent ? "%%" : "");
     const cui_slider_opts options = {
         .step = adjusting ? step : 0, .show_value = show_value != 0,
-        .format = format, .disabled = !enabled
+        .format = format, .disabled = !enabled, .width = fpas_extent(width_kind, width)
     };
     float next = *value;
     cui_slider_ex(ui, cui__frame_printf(ui, "x%s", id), &next, minimum, maximum, &options);

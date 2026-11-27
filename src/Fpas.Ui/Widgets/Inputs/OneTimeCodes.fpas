@@ -25,7 +25,7 @@ end record;
 // - `Value`: Model-owned partial or complete ASCII alphanumeric code.
 // - `OnChange`: Maps a proposed code to a message.
 // - `Settings`: Optional presentation and length.
-// - `OnComplete`: Maps a newly entered complete code to a message after its change.
+// - `OnComplete`: Maps a native completion to a message. The host sends any change first.
 // ## Returns
 // A graphical code input.
 public function OneTimeCodeInput of TMsg(

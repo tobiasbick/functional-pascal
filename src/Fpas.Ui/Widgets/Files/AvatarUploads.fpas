@@ -14,12 +14,12 @@ public const ImageExtensions: string := 'png;jpg;jpeg;bmp;gif;tga';
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable avatar identity.
-// - `Name`: Name used for initials.
-// - `Path`: Model-owned image path. Null shows initials.
+// - `Name`: Display name used for the initials and their background color.
+// - `Path`: Model-owned image path. Null or an unavailable image shows initials.
 // - `OnDrop`: Maps a successfully decoded drop to a message. Accept by storing the path.
-// - `OnBrowse`: Optional message factory for opening a file dialog.
-// - `Size`: Logical diameter. Zero selects the native default.
-// - `Enabled`: Whether the avatar accepts input.
+// - `OnBrowse`: Optional message factory for opening a file dialog on click, Enter or Space.
+// - `Size`: Finite logical diameter. Nonpositive values use 88.
+// - `Enabled`: Whether the avatar accepts focus, browse activation and file drops.
 // ## Returns
 // The graphical uploadable avatar.
 public function AvatarUpload of TMsg(

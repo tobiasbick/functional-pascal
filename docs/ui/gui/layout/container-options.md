@@ -18,6 +18,7 @@ All four containers use native CUI layout.
 With `Clip := null`, columns and non-wrapping rows clip their children.
 Wrapping rows, layered stacks and grids let child paint extend past their bounds.
 A container with scrolling always clips to its viewport.
+CUI enables both axes when the native box sets horizontal scrolling.
 Constrain the container on the scroll axis so the contents can overflow.
 Supply a stable ID to preserve the native position as the view changes.
 CUI generates an ID for an unnamed scrolling container.
@@ -29,6 +30,8 @@ them vertically. See [Layered stack](stack.md) for the supported placements.
 The grid positions children at cell origins. Keep `Align` and `Justify` at their
 defaults in the grid itself.
 
+Use [sizing](../../layout/sizing.md) to set native width and height.
+Each axis accepts its own bounds and growth weight.
 Set `Gap` and the `Padding` fields to control [spacing](spacing.md).
 Set `ReadingDirection` to override the [inherited direction](reading-direction.md).
 Set `Scope` to add a [focus scope](focus-scopes.md).

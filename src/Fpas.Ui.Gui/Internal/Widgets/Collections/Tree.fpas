@@ -22,7 +22,7 @@ uses System as Sys;
 // - `Open`: Model expansion, or null for a leaf.
 // - `Children`: Elements under the expanded branch.
 // - `Change`: Optional expansion mapper for a branch.
-// - `Activate`: Optional activation mapper for a leaf.
+// - `Activate`: Optional activation mapper for the row.
 // - `Settings`: Appearance and input settings.
 // - `Visit`: Host traversal for the expanded children.
 public procedure Draw of TMsg(

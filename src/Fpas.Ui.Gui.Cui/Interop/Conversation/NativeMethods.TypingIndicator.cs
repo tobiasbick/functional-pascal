@@ -8,5 +8,5 @@ internal static partial class NativeMethods
 {
     [LibraryImport(Library, EntryPoint = "fpas_cui_typing_indicator", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void TypingIndicator(nint ui, string id, string name);
+    internal static partial void TypingIndicator(nint ui, string id, string? name);
 }

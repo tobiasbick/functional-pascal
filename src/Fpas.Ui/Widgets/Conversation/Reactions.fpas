@@ -8,8 +8,8 @@ uses Fpas.Ui.Elements as E;
 public type Item = record
   // Accessible name used for inspection.
   public Label: string;
-  // CUI icon-font glyph.
-  public Icon: string;
+  // CUI icon-font glyph, or null for a count-only pill.
+  public Icon: string?;
   // Nonnegative count, below MaxValue when inactive so it can be incremented.
   public Count: int;
   // Whether the current user has reacted.
@@ -34,7 +34,7 @@ end function;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable group identity.
-// - `Items`: Nonempty list of reactions in positional identity order.
+// - `Items`: Reactions in positional identity order.
 // - `OnChange`: Maps the changed index and proposed item to a message.
 // - `Enabled`: Whether the group accepts input.
 // ## Returns
@@ -46,7 +46,6 @@ public function Reactions of TMsg(
   Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
-requires Items.Length > 0;
 begin
   return (E.Element of TMsg).ReactionGroup(Id, Items, OnChange, Enabled);
 end function;

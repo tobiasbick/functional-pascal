@@ -1,6 +1,8 @@
 // [Documentation](../../../../../docs/ui/gui/canvas-and-bars/painting.md)
 #ifndef FPAS_CUI_PAINTING_H
 #define FPAS_CUI_PAINTING_H
+/** Resolves the given CUI color token to packed straight RGBA. */
+CUI_API uint32_t fpas_cui_canvas_color(cui_ctx *ui, int token);
 CUI_API void fpas_cui_canvas_primitive(cui_ctx *ui, int kind, float x, float y, const float *values, uint32_t color, uint32_t second, const char *text);
 CUI_API void fpas_cui_canvas_points(cui_ctx *ui, float x, float y, const cui_vec2 *points, int count, float thickness, uint32_t color, int kind);
 CUI_API cui_text_metrics fpas_cui_canvas_measure(cui_ctx *ui, int font, float size, const char *text);

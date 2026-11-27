@@ -32,8 +32,9 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Subtitle / Trailing` | Empty. Use Trailing for short text such as a duration. |
-| `Avatar / Icon` | Empty. Supply a name to display initials or a CUI glyph for an icon. |
+| `Subtitle` | Null. A supplied subtitle uses the taller two-line row, including an empty subtitle. |
+| `Trailing` | Null. Supply short text such as a duration at the right edge. |
+| `Avatar / Icon` | Both default to null. Supply a name to display initials or a CUI glyph for an icon. The avatar takes precedence. |
 | `Selected / Enabled` | false / true. |
 | `OnActivate` | Optional message factory. |
 
@@ -54,6 +55,7 @@ An enabled row with an action accepts a click, Enter or Space while focused. The
 ## Source files
 
 - [Shared CUI list entries](../../../../examples/ui/gui/gallery/Shared/ListEntries.fpas)
+- [List item native test](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiListItemTests.cs)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
   - [ListItem.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/ListItem.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Collections/`

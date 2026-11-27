@@ -7,7 +7,7 @@ public sealed partial class CuiWindow
 {
     /// <summary>Draws a native tab strip with a model-owned selection.</summary>
     /// <param name="id">Stable strip identity.</param>
-    /// <param name="labels">One through 32 literal captions.</param>
+    /// <param name="labels">One through 32 literal captions. An empty caption displays the icon alone.</param>
     /// <param name="icons">One glyph per tab, with empty strings for text-only tabs.</param>
     /// <param name="selected">Current selected index.</param>
     /// <param name="variant">Zero for underline or one for pill.</param>
@@ -30,12 +30,16 @@ public sealed partial class CuiWindow
         if (focus < 0 || focus > count) throw new ArgumentOutOfRangeException(nameof(focus));
         if (trackingIds is not null && trackingIds.Length != count + 1)
             throw new ArgumentException("Supply strip and tab tracking IDs.", nameof(trackingIds));
-        foreach (string label in labels)
+        for (int index = 0; index < count; ++index)
         {
+            string label = labels[index], icon = icons[index];
             Utf8.Validate(label, nameof(labels));
-            ArgumentException.ThrowIfNullOrWhiteSpace(label, nameof(labels));
+            Utf8.Validate(icon, nameof(icons));
+            if (label.Length == 0)
+                ArgumentException.ThrowIfNullOrWhiteSpace(icon, nameof(icons));
+            else
+                ArgumentException.ThrowIfNullOrWhiteSpace(label, nameof(labels));
         }
-        foreach (string icon in icons) Utf8.Validate(icon, nameof(icons));
         int* nodes = stackalloc int[count + 1];
         int proposal = NativeMethods.Tabs(context, Stable(id), labels, icons, count, selected, variant,
             fullWidth ? 1 : 0, enabled ? 1 : 0, focus, nodes);

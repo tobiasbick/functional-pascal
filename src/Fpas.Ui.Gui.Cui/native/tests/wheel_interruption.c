@@ -1,7 +1,59 @@
 // [Documentation](../../../../docs/ui/gui/pickers/wheel-picker.md)
 /* Adapter-level black-box drag interruption probe; no private native state inspection. */
 #include "../fpas_cui.h"
+#include <math.h>
 #include <stdio.h>
+
+/** Checks native default and relative widths, and the visible row normalization. */
+static bool dimensions(void) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 400, 400, 1);
+    const char *items[] = { "First", "Second" };
+    const int widths[] = { 84, 400, 140, 200 };
+    const float bases[] = { 0, 0, 140, 50 };
+    const int rows[] = { 0, 1, 2, 4 };
+    const int heights[] = { 170, 34, 102, 170 };
+    bool ok = true;
+    for (int kind = 0; kind < 4; ++kind) {
+        cui_begin_frame(ui, .016f);
+        int node;
+        fpas_cui_wheel_picker(ui, "wheel", items, 2, 0, kind, bases[kind], rows[kind],
+            0, 0, 0, 1, 0, &node);
+        cui_end_frame(ui);
+        const cui_rect rect = cui_get_rect(ui, fpas_cui_node_key(ui, node));
+        ok &= rect.w == widths[kind] && rect.h == heights[kind];
+    }
+    cui_destroy(ui);
+    if (!ok) fprintf(stderr, "Wheel dimensions did not match native width and row defaults.\n");
+    return ok;
+}
+
+/** Checks separate inner and outer hour targets at the smallest supported face size. */
+static bool dial_hour(int target) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 400, 400, 1);
+    cui_set_reduced_motion(ui, true);
+    int nodes[4];
+    const int initial = 7 * 60 + 25;
+    cui_begin_frame(ui, .016f);
+    fpas_cui_time_dial(ui, "dial", initial, 100, 1, 0, nodes);
+    cui_end_frame(ui);
+    const cui_rect face = cui_get_rect(ui, fpas_cui_node_key(ui, nodes[3]));
+    const float radius = face.w * .5f - (target > 12 ? 56 : 22);
+    const float angle = (float)(target % 12) * .5235987756f;
+    cui_input_mouse_move(ui, face.x + face.w * .5f + sinf(angle) * radius,
+        face.y + face.h * .5f - cosf(angle) * radius);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+    cui_begin_frame(ui, .016f);
+    const int selected = fpas_cui_time_dial(ui, "dial", initial, 100, 1, 0, nodes);
+    cui_end_frame(ui);
+    cui_destroy(ui);
+    const bool ok = face.w == 160 && face.h == 160 && selected == target * 60 + 25;
+    if (!ok) fprintf(stderr, "Time dial picked %d for hour %d at the small requested size.\n", selected / 60, target);
+    return ok;
+}
 
 /** Proves a wheel drag works, then checks that disabling cancels the held gesture. */
 int main(void) {
@@ -33,7 +85,7 @@ int main(void) {
         if (frame == 8 || frame == 13) cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
         if (frame == 12) cui_input_mouse_move(ui, x, y - row);
         cui_begin_frame(ui, .016f);
-        selected = fpas_cui_wheel_picker(ui, "wheel", items, 20, selected, 160, 5,
+        selected = fpas_cui_wheel_picker(ui, "wheel", items, 20, selected, 2, 160, 5,
             0, 0, 0, frame != 5, 0, &node);
         cui_end_frame(ui);
         if (frame == 4) {
@@ -54,5 +106,5 @@ int main(void) {
         }
     }
     cui_destroy(ui);
-    return ok ? 0 : 1;
+    return ok && dimensions() && dial_hour(13) && dial_hour(23) && dial_hour(1) && dial_hour(11) ? 0 : 1;
 }

@@ -13,49 +13,57 @@ uses GuiGallery.Pages.Pickers.Widgets.RulerAndHistogram as RulerAndHistogram;
 uses GuiGallery.Pages.Pickers.Widgets.Time as Time;
 uses GuiGallery.Pages.Pickers.Widgets.WheelsAndDial as WheelsAndDial;
 uses GuiGallery.Shared.Sections as G;
+uses System.Collections.Generic as Lists;
 
 // Shows the original CUI Pickers page.
 // ## Parameters
 // - `Model`: Current picker state.
 // ## Returns
-// The five original sections in their display order.
-public function View(Model: State.Model): E.Element of State.Msg;
+// The direct children of the five sections in their display order.
+public function View(Model: State.Model): array of E.Element of State.Msg;
 begin
   const Languages: E.Element of State.Msg := Sample.View of State.Msg(
     Model.Languages,
     State.Msg.SetLanguages
   );
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
-    G.Heading of State.Msg(
-      Strings.Get('Heading.MultiSelect'),
-      Strings.Get('Heading.MultiSelectHint')
-    ),
-    E.Row of State.Msg(
-      new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start),
-      E.Size of State.Msg(
-        E.Column of State.Msg(Languages),
-        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(320)))
+  const Parts: Lists.List of E.Element of State.Msg := new Lists.List of E.Element of State.Msg();
+  Parts.AddRange(
+    [
+      G.Heading of State.Msg(
+        Strings.Get('Heading.MultiSelect'),
+        Strings.Get('Heading.MultiSelectHint')
+      ),
+      E.Row of State.Msg(
+        new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start, Clip := false),
+        E.Size of State.Msg(
+          E.Column of State.Msg(new L.Flow(Clip := false), Languages),
+          new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(320)))
+        )
+      ),
+      G.Heading of State.Msg(
+        Strings.Get('Heading.DateRange'),
+        Strings.Get('Heading.DateRangeHint')
       )
-    ),
-    G.Heading of State.Msg(
-      Strings.Get('Heading.DateRange'),
-      Strings.Get('Heading.DateRangeHint')
-    ),
-    DateRange.View(Model),
-    G.Heading of State.Msg(Strings.Get('Heading.Time'), Strings.Get('Heading.TimeHint')),
-    Time.View(Model),
-    G.Heading of State.Msg(
-      Strings.Get('Heading.WheelsAndDial'),
-      Strings.Get('Heading.WheelsAndDialHint')
-    ),
-    WheelsAndDial.View(Model),
-    G.Heading of State.Msg(
-      Strings.Get('Heading.RulerAndHistogram'),
-      Strings.Get('Heading.RulerAndHistogramHint')
-    ),
-    RulerAndHistogram.View(Model)
+    ]
   );
+  Parts.AddRange(DateRange.View(Model));
+  Parts.AddRange(
+    [
+      G.Heading of State.Msg(Strings.Get('Heading.Time'), Strings.Get('Heading.TimeHint')),
+      Time.View(Model),
+      G.Heading of State.Msg(
+        Strings.Get('Heading.WheelsAndDial'),
+        Strings.Get('Heading.WheelsAndDialHint')
+      ),
+      WheelsAndDial.View(Model),
+      G.Heading of State.Msg(
+        Strings.Get('Heading.RulerAndHistogram'),
+        Strings.Get('Heading.RulerAndHistogramHint')
+      ),
+      RulerAndHistogram.View(Model)
+    ]
+  );
+  return Parts.ToArray();
 end function;
 
 end unit;

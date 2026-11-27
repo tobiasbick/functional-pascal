@@ -13,7 +13,7 @@ uses GuiGallery.Pages.Disclosure.State as S;
 // - `Model`: Current Disclosure model.
 // ## Returns
 // The native banner and its reopening action.
-public function View(Model: S.Model): E.Element of S.Msg;
+public function View(Model: S.Model): array of E.Element of S.Msg;
 begin
   const Banner: E.Element of S.Msg := Banners.Banner of S.Msg(
     'release-banner',
@@ -24,16 +24,16 @@ begin
     new Banners.Options(ActionLabel := 'Read the notes')
   );
   if Model.BannerOpen then
-    return Banner;
+    return [Banner];
   end if;
 
-  return E.Column of S.Msg(
+  return [
     Banner,
     Buttons.Button of S.Msg(
       'show-release-banner', 'Show the banner again', S.Msg.SetBanner(true),
       new Buttons.Options(ControlSize := Buttons.Size.Small)
     )
-  );
+  ];
 end function;
 
 end unit;

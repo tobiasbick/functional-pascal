@@ -3,7 +3,7 @@
 unit GuiGallery.Pages.Navigation.View;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Navigation.State as State;
@@ -18,20 +18,26 @@ uses GuiGallery.Shared.Sections as G;
 // ## Parameters
 // - `Model`: Current gallery state.
 // ## Returns
-// The tabs, breadcrumb, pagination and stepper previews.
-public function View(Model: State.Model): E.Element of State.Msg;
+// The section headings and native cards in page order.
+public function View(Model: State.Model): array of E.Element of State.Msg;
 begin
-  const Trail: E.Element of State.Msg := Breadcrumb.View();
-  const Pager: E.Element of State.Msg := Pagination.View(Model);
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
+  return [
     G.Heading of State.Msg(Strings.Get('Text.Tabs'), Strings.Get('Heading.TabsHint')),
-    G.Card of State.Msg(16, Tabs.Rows(Model)),
+    Cards.Card of State.Msg(
+      'navigation-tabs-card',
+      Tabs.Rows(Model),
+      new Cards.Options(Gap := 16.0F)
+    ),
     G.Heading of State.Msg(Strings.Get('Heading.BreadcrumbAndPagination')),
-    G.Card of State.Msg(18, [Trail, Pager]),
+    Cards.Card of State.Msg(
+      'navigation-pages-card', [Breadcrumb.View(), Pagination.View(Model)],
+      new Cards.Options(Gap := 18.0F)
+    ),
     G.Heading of State.Msg(Strings.Get('Heading.Stepper')),
-    G.Card of State.Msg(18, Stepper.Rows(Model))
-  );
+    Cards.Card of State.Msg(
+      'navigation-stepper-card', Stepper.Rows(Model), new Cards.Options(Gap := 18.0F)
+    )
+  ];
 end function;
 
 end unit;

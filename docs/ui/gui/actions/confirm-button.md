@@ -28,15 +28,21 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `ConfirmLabel` | Click to confirm |
-| `TimeoutMilliseconds` | 3000 |
-| `Variant / ControlSize / Enabled` | Secondary / Medium / true |
+| `ConfirmLabel` | `Click to confirm`. An empty caption leaves the warning icon alone. |
+| `TimeoutMilliseconds` | Zero uses CUI's three-second default. A positive value sets a custom interval. |
+| `Icon` | Null omits the resting glyph. An empty string reserves the glyph's space. |
+| `Variant` | `Secondary`. `Default` also uses the native secondary appearance. Other choices are `Primary`, `Destructive`, `Outline`, `Ghost` and `Link`. |
+| `ControlSize` | `Medium`. Also accepts `Small` and `Large`. |
+| `Enabled` | True. False rejects input and clears confirmation. |
 
 ## Interaction
 
-The first click, Enter or Space arms the button. The second activation
-within the time limit sends its message once. Escape, clicking outside or
-letting the limit expire disarms it.
+The first click, Enter or Space arms the button. CUI shows the destructive
+appearance, warning icon and countdown. A visible focus ring replaces the
+countdown. The second activation within the time limit sends its message once.
+
+Escape while focused or hovered, a click outside or timeout disarms the button.
+Removing, disabling or covering the button with a modal also clears its state.
 
 ## See also
 

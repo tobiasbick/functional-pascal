@@ -221,7 +221,7 @@ begin
       const FLabel: string,
       const FChecked: bool,
       const FOnChange: function(bool): TChild,
-      const FDescription: string,
+      const FDescription: string?,
       const FEnabled: bool,
       const FIndeterminate: bool, const FHideLabel: bool
     ):
@@ -240,8 +240,9 @@ begin
       const FLabel: string,
       const FOn: bool,
       const FOnChange: function(bool): TChild,
-      const FDescription: string,
-      const FEnabled: bool
+      const FDescription: string?,
+      const FEnabled: bool,
+      const FHideLabel: bool
     ):
       return (E.Element of TParent).SwitchAction(
         FId,
@@ -249,14 +250,15 @@ begin
         FOn,
         function(A0: bool): TParent => Messages(FOnChange(A0)),
         FDescription,
-        FEnabled
+        FEnabled,
+        FHideLabel
       );
     when E.Element.RadioAction(
       const FId: string,
       const FLabel: string,
       const FSelected: bool,
       const FOnSelect: function(): TChild,
-      const FDescription: string,
+      const FDescription: string?,
       const FEnabled: bool
     ):
       return (E.Element of TParent).RadioAction(
@@ -384,16 +386,16 @@ begin
     when E.Element.ChipAction(
       const FId: string,
       const FLabel: string,
-      const FSelected: bool,
-      const FOnChange: function(bool): TChild,
-      const FIcon: string,
+      const FSelected: bool?,
+      const FOnChange: function(bool?): TChild,
+      const FIcon: string?,
       const FEnabled: bool
     ):
       return (E.Element of TParent).ChipAction(
         FId,
         FLabel,
         FSelected,
-        function(A0: bool): TParent => Messages(FOnChange(A0)),
+        function(A0: bool?): TParent => Messages(FOnChange(A0)),
         FIcon,
         FEnabled
       );

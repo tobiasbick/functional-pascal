@@ -1,4 +1,4 @@
-// [Documentation](../../../docs/ui/gui/editing-tools/timeline-editor.md)
+// [Documentation](../../../docs/ui/gui/feedback/timeline-item.md)
 using Fpas.Tests.Support;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Display;

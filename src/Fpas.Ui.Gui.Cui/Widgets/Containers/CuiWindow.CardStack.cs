@@ -10,14 +10,15 @@ public sealed partial class CuiWindow
     /// <param name="count">Number of supplied cards.</param>
     /// <param name="widthKind">Encoded width extent.</param>
     /// <param name="width">Logical width or percentage.</param>
-    /// <param name="height">One card's height.</param>
-    /// <param name="visible">Number of visible cards.</param>
+    /// <param name="height">One card's height in logical units. Zero uses 320.</param>
+    /// <param name="visible">Number of visible cards. Zero uses three.</param>
     /// <param name="enabled">Accepts deck input.</param>
     /// <param name="focus">Requests focus for the top card.</param>
     public void BeginCardStack(string id, int count, int widthKind, float width, float height, int visible, bool enabled, bool focus)
     {
         CheckFrame();
-        if (count < 0 || visible < 0) throw new ArgumentOutOfRangeException(nameof(count));
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        ArgumentOutOfRangeException.ThrowIfNegative(visible);
         CheckExtent(widthKind, width, nameof(width));
         CheckFeedbackNumber(height, nameof(height));
         int root = NativeMethods.CardStackBegin(context, Stable(id), count, widthKind, width, height, visible,
@@ -30,6 +31,7 @@ public sealed partial class CuiWindow
     public void BeginCardStackItem(int depth)
     {
         RequireLayout(Layout.CardStack);
+        ArgumentOutOfRangeException.ThrowIfNegative(depth);
         NativeMethods.CardStackItemBegin(context, depth);
         layouts.Add(new(Layout.CardStackItem));
     }

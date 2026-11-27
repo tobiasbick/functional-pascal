@@ -16,7 +16,7 @@ function Row of TMsg(
   Description: string;
   Enabled: bool;
   Mixed: bool := false;
-  Compact: bool := false
+  CompactWidth: int? := null
 ): E.Element of TMsg;
 begin
   return (E.Element of TMsg).Action(
@@ -35,12 +35,8 @@ begin
       Variant := S.ButtonVariant.Ghost,
       Description := Description,
       ArrowFocus := false,
-      FillWidth := not Compact,
-      FixedWidth := if Compact then
-        3
-      else
-        null
-      end if,
+      FillWidth := CompactWidth = null,
+      FixedWidth := CompactWidth,
       Padding := 0,
       Joined := true,
       Center := false
@@ -58,6 +54,7 @@ end function;
 // - `Change`: Maps activation to a proposed value.
 // - `Description`: Optional supporting text within the same hit target.
 // - `Enabled`: Whether input may activate the row.
+// - `HideLabel`: Draw just the switch marker.
 // ## Returns
 // A terminal action with a visible and inspectable Boolean state.
 public function Switch of TMsg(
@@ -66,15 +63,39 @@ public function Switch of TMsg(
   On: bool;
   Change: function(bool): TMsg;
   Description: string;
-  Enabled: bool
+  Enabled: bool;
+  HideLabel: bool
 ): E.Element of TMsg;
 begin
   const Marker: string := if On then
-    '[─●] On   '
+    '[─●]'
   else
-    '[●─] Off  '
+    '[●─]'
   end if;
-  return Row of TMsg(Id, Label, On, Change, 'switch', Marker + Label, Description, Enabled);
+  const Status: string := if On then
+    ' On   '
+  else
+    ' Off  '
+  end if;
+  return Row of TMsg(
+    Id, Label, On, Change, 'switch',
+    if HideLabel then
+      Marker
+    else
+      Marker + Status + Label
+    end if,
+    if HideLabel then
+      ''
+    else
+      Description
+    end if,
+    Enabled,
+    CompactWidth := if HideLabel then
+      4
+    else
+      null
+    end if
+  );
 end function;
 
 // Builds a controlled checkbox with a single focus stop.
@@ -120,7 +141,12 @@ begin
       ''
     else
       Description
-    end if, Enabled, Mixed, HideLabel
+    end if, Enabled, Mixed,
+    if HideLabel then
+      3
+    else
+      null
+    end if
   );
 end function;
 

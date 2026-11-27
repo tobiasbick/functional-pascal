@@ -6,7 +6,7 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 
-// Presents CUI's chip and forwards proposed selection changes.
+// Presents CUI's chip and forwards its selection proposals and activations.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -14,17 +14,17 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `Frame`: Current frame and message queue.
 // - `Id`: Stable identity.
 // - `Label`: Literal caption.
-// - `Selected`: Model-owned selection.
-// - `OnChange`: Maps proposed selection to a message.
-// - `Icon`: Optional glyph in the unselected state.
+// - `Selected`: Model-owned selection, or null for a stateless chip.
+// - `OnChange`: Maps a proposed selection or stateless activation to a message.
+// - `Icon`: Glyph for the unselected state. Null omits the icon.
 // - `Enabled`: Model-owned input permission.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
   Id: string;
   Label: string;
-  Selected: bool;
-  OnChange: function(bool): TMsg;
-  Icon: string;
+  Selected: bool?;
+  OnChange: function(bool?): TMsg;
+  Icon: string?;
   Enabled: bool
 );
 begin
@@ -39,13 +39,20 @@ begin
     C.WantsFocus of TMsg(Frame, Id, Token, Allowed)
   )
   then
-    Frame.Messages.Add(OnChange(not Selected));
+    const Proposal: bool? := if Selected = null then
+      null
+    else
+      not Selected.Value
+    end if;
+    Frame.Messages.Add(OnChange(Proposal));
   end if;
 
   C.Track of TMsg(
     Frame, new App.Control(
       Id, Label, 'chip', new Cui.CuiRectangle(), Allowed,
-      Value := if Selected then
+      Value := if Selected = null then
+        ''
+      elsif Selected.Value then
         'true'
       else
         'false'

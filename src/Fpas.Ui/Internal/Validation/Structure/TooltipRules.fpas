@@ -85,6 +85,7 @@ begin
       _,
       _,
       _,
+      _,
       _
     ), E.Element.RadioAction(
       _,
@@ -138,6 +139,40 @@ begin
   end case;
 end function;
 
+// Checks that a caption and shortcut fit the CUI tooltip buffer.
+// ## Parameters
+// - `Caption`: Literal tooltip caption.
+// - `Shortcut`: Optional shortcut hint.
+// - `Location`: View path for diagnostics.
+// - `AllowEmpty`: Whether the widget can omit its tooltip.
+public procedure CheckCaption(
+  Caption: string;
+  Shortcut: string;
+  Location: string;
+  AllowEmpty: bool := false
+);
+begin
+  R.CheckText(Caption, Location + '/text');
+  R.CheckText(Shortcut, Location + '/shortcut');
+  if AllowEmpty and Caption = '' then
+    return;
+  end if;
+
+  if Sys.String.IsNullOrWhiteSpace(Caption) or Caption.Contains('  ·  ') then
+    R.Reject(Location, 'A tooltip needs a caption without the CUI shortcut delimiter.');
+  end if;
+
+  const Length: int := Text.Encoding.UTF8.GetByteCount(Caption) +
+    (if Shortcut = '' then
+      0
+    else
+      6 + Text.Encoding.UTF8.GetByteCount(Shortcut)
+    end if);
+  if Length > 255 then
+    R.Reject(Location, 'Tooltip text and its shortcut must fit in 255 UTF-8 bytes.');
+  end if;
+end procedure;
+
 // Validates the native caption and the resolved single-control anchor.
 //
 // ## Type parameters
@@ -156,22 +191,7 @@ public procedure Check of TMsg(
   Location: string
 );
 begin
-  R.CheckText(Caption, Location + '/text');
-  R.CheckText(Shortcut, Location + '/shortcut');
-  if Sys.String.IsNullOrWhiteSpace(Caption) or Caption.Contains('  ·  ') then
-    R.Reject(Location, 'A tooltip needs a caption without the CUI shortcut delimiter.');
-  end if;
-
-  const Length: int := Text.Encoding.UTF8.GetByteCount(Caption) +
-    (if Shortcut = '' then
-      0
-    else
-      6 + Text.Encoding.UTF8.GetByteCount(Shortcut)
-    end if);
-  if Length > 255 then
-    R.Reject(Location, 'Tooltip text and its shortcut must fit in 255 UTF-8 bytes.');
-  end if;
-
+  CheckCaption(Caption, Shortcut, Location);
   if not HasAnchor of TMsg(Target, Subviews) then
     R.Reject(Location, 'A tooltip needs one interactive target control.');
   end if;

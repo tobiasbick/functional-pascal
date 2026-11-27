@@ -1,5 +1,6 @@
 // [Documentation](../../../docs/ui/gui/overlays/README.md)
 using Fpas.Tests.Support;
+using Fpas.Ui.Gui.Cui.Widgets.Actions;
 using Fpas.Ui.Gui.Cui.Widgets.Canvas;
 using Fpas.Ui.Gui.Cui.Widgets.Overlays;
 
@@ -42,6 +43,74 @@ public sealed class CuiWidgetOptionTests
             var result = window.UserMenu("account", "Example Person", "Account", "online", true,
                 [new(CuiMenuEntryKind.Action, "profile", "Profile")], 0, 0, true, focus, ["account", "profile"], path);
             window.Present(); return result;
+        }
+    }
+
+    /// <summary>Preserves CUI's blank user detail and gray status independently of omission.</summary>
+    [GuiFact]
+    public void UserMenuDistinguishesEmptyDetailAndStatusFromOmission()
+    {
+        const int width = 360, height = 240;
+        using var window = new CuiWindow("Optional account details", width, height, CuiRenderer.Software, continuous: true);
+        using var directory = new TemporaryDirectory();
+        window.SetReducedMotion(true);
+        uint[] omitted = Draw("omitted", null, null);
+        Assert.False(omitted.SequenceEqual(Draw("blank-detail", "", null)));
+        Assert.False(omitted.SequenceEqual(Draw("gray-status", null, "")));
+
+        uint[] Draw(string key, string? detail, string? status)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            window.UserMenu("account", "Example Person", detail, status, false,
+                [new(CuiMenuEntryKind.Action, "profile", "Profile")], 0, 0, true, false, ["account", "profile"]);
+            window.Present();
+            string file = directory.File(key + ".png");
+            window.CapturePng(file);
+            return PngAssertions.ReadPixels(file, width, height);
+        }
+    }
+
+    /// <summary>CUI draws label-only and glyph-only actions and distinguishes a blank trigger from the default plus.</summary>
+    [GuiFact]
+    public void SpeedDialPreservesOptionalNativeParts()
+    {
+        const int width = 360, height = 260;
+        using var window = new CuiWindow("Optional speed dial parts", width, height, CuiRenderer.Software, continuous: true);
+        using var directory = new TemporaryDirectory();
+        window.SetReducedMotion(true);
+        Assert.False(Draw(null).Open);
+        uint[] plus = Pixels("plus");
+        Assert.False(Draw("").Open);
+        Assert.False(plus.SequenceEqual(Pixels("blank")));
+
+        Draw(focus: 1);
+        var opened = Draw(enter: true);
+        Assert.True(opened.Open);
+        Assert.Equal([0, 1], opened.VisibleActions);
+        Assert.True(window.GetControlRectangle("action-0").Width < window.GetControlRectangle("action-1").Width);
+        Assert.True(Draw(focus: 2).Open);
+        Assert.True(window.ControlFocused("action-0"));
+        var chosen = Draw(enter: true);
+        Assert.Equal(0, chosen.Choice);
+        Assert.False(chosen.Open);
+
+        CuiSpeedDialResult Draw(string? icon = null, int focus = 0, bool enter = false)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            if (enter) { window.SetKey(2, true); window.SetKey(2, false); }
+            var result = window.SpeedDial("dial", [null, "Caption only"], ["\ue0cc", null],
+                icon, null, 2, true, focus, index => "action-" + index);
+            window.Present();
+            return result;
+        }
+
+        uint[] Pixels(string name)
+        {
+            string file = directory.File(name + ".png");
+            window.CapturePng(file);
+            return PngAssertions.ReadPixels(file, width, height);
         }
     }
 

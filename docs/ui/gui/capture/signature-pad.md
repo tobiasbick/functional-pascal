@@ -1,7 +1,7 @@
 # Signature pad
 
 Use a signature pad to record handwritten strokes. The gallery uses a
-520-point-wide pad with a native Clear button. Available in **GUI**.
+520-unit-wide pad with a native Clear button. Available in **GUI**.
 
 ![Signature pad with a sample stroke in the FPAS gallery](images/signature-pad.png)
 
@@ -30,19 +30,25 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Height / Placeholder` | 0 / empty. CUI supplies its default height and instruction. |
-| `Ink / Enabled` | null / true. Null uses the theme ink. |
+| `Id` | Stable pad ID. Retain it while the pad holds ink. |
+| `Width` | `Fill`. A fixed logical width or a percentage sets the native width. `Content` also fills the available width. |
+| `Height` | Nonpositive uses 180 logical units. |
+| `Placeholder` | Null uses `Sign here`. An empty string hides the instruction. |
+| `Ink` | `Charts.Color.Automatic` uses the foreground. Choose a theme token or explicit RGBA with nonzero alpha to override it. |
+| `Enabled` | true. Set to false to keep the ink and disable drawing and clearing. |
 | `OnChange` | null. Supply a mapper to read the detached signature on changes. |
 
 ## Interaction
 
 Draw with the mouse or a pen. CUI varies the width with stroke speed and
-keeps the ink for the widget's stable ID. Clear removes the ink. Use
+keeps the ink for the widget's stable ID. A narrower pad scales older ink
+toward the signature line. Clear removes the ink. Use
 `ClearId(Id)` to address the button while it is visible.
 
 The change message contains `Points` in logical drawing coordinates and
-`StrokeEnds` as exclusive indices into that array. Save the detached data
-in the model if you need it after the pad is removed.
+`StrokeEnds` as exclusive indices into that array. Clear reports an empty
+snapshot. Save the detached data in the model if you need it after the pad is
+removed.
 
 ## See also
 

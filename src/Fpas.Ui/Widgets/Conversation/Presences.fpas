@@ -19,9 +19,9 @@ end record;
 
 // Native presence options.
 public type Options = record
-  // Limit before a count badge is shown.
+  // Limit before a count badge is shown. Zero uses five.
   public MaximumVisible: int := 5;
-  // Avatar size in logical points.
+  // Avatar size in logical points. Zero uses 30.
   public Size: float := 30.0F;
 end record;
 

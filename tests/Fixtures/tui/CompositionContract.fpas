@@ -358,7 +358,7 @@ begin
   RejectOutline(
     E.Row of string(
       Article(), Popovers.Popover of string(
-        'popup', Trigger, Toc.TableOfContents of string('outline', 'article', [First, Last]),
+        'popup', Trigger, [Toc.TableOfContents of string('outline', 'article', [First, Last])],
         true, 'close'
       )
     ),

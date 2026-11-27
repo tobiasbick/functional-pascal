@@ -33,12 +33,17 @@ end unit;
 | --- | --- |
 | `Items` | Options in model order. Each has a label and an optional icon. |
 | `Selected` | Zero-based index, or -1 before a choice is made. |
-| `Label / Placeholder` | Empty. CUI displays Select for an unselected field without a placeholder. |
+| `Label` | Empty. Set a caption to display it above the trigger. |
+| `Placeholder` | Null displays Select. An empty string leaves the unselected trigger blank. |
 | `Searchable / Enabled` | false / true. |
+| `Width` | Null uses CUI sizing. A labeled select fills its parent. An unlabeled select prefers 220 logical units. Set `Fill`, `Fixed`, or `Percent` to override the width. |
 
 ## Interaction
 
-Open the popup with the pointer or Enter. Choosing a row reports its original index even when search filters the list. Escape dismisses the popup and focus returns to the trigger. Use `OptionId(Id, Index)` to inspect a visible row.
+Click the trigger or press Enter, Space, Up, or Down when it has focus.
+Choosing a row reports its original index even when search filters the list.
+Escape dismisses the popup and returns focus to the trigger. Use
+`OptionId(Id, Index)` to inspect a visible row.
 
 ## See also
 

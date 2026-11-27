@@ -33,14 +33,24 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Items` | A nonempty array. Description, icon and badge default to empty. |
+| `Items` | A nonempty array in display order. |
+| `Item.Title` | Required literal title. CUI wraps long titles. |
+| `Item.Description / Item.Icon / Item.Badge` | null omits the corresponding part. An empty string draws that part without text or glyphs. |
 | `Selected` | A zero-based index, or -1 for no selection. |
-| `Columns` | 0 lets CUI choose. Set a positive value to cap the number of columns. |
+| `Columns` | 0 uses one column per card for up to three cards, and two columns for more cards. A positive value sets the maximum. |
 | `Enabled` | true. |
 
 ## Interaction
 
-Click a card or select it with Enter or Space. Arrow keys move focus and propose a new selection together. CUI reduces the number of columns as the available width shrinks. Use `ItemId(Id, Index)` to focus a particular card.
+Click a card or focus it and press Enter or Space. Arrow keys move focus by
+one card and propose that selection. The first and last cards bound this
+movement. CUI reverses the Left and Right keys in a right-to-left layout.
+Activating the selected card sends no message.
+
+CUI reduces the number of columns as the available width shrinks. The grid
+uses 220 logical units as the minimum column width when deciding how many
+columns fit. Use `ItemId(Id, Index)` to focus a particular card. Request focus
+on the group to focus the selected card or, with no selection, the first card.
 
 ## See also
 
@@ -62,3 +72,5 @@ Click a card or select it with Enter or Space. Arrow keys move focus and propose
 - `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
   - [radio_cards.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/radio_cards.c)
   - [radio_cards.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/radio_cards.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiRadioTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiRadioTests.cs)

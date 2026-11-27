@@ -20,7 +20,8 @@ public sealed partial class CuiWindow
     {
         ArgumentNullException.ThrowIfNull(options);
         var presentation = new CuiEditorOptions(options.Label, options.Placeholder, options.Icon, options.Hint,
-            options.Error, options.Prefix, options.Suffix, options.Size, options.ReadOnly, options.MaxUtf8Bytes);
+            options.Error, options.Prefix, options.Suffix, options.Size, options.ReadOnly, options.MaxUtf8Bytes,
+            options.WidthKind, options.Width, options.Autofocus);
         return DrawEditor(EditorKind.TextField, id, value, presentation, 0, options.Password, options.Clearable,
             enabled, focus, track, clearControl, revealControl);
     }

@@ -6,6 +6,7 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
 uses Fpas.Ui.Widgets.Charts.ActivityRings as Rings;
 uses Fpas.Ui.Widgets.Charts.BarLists as Bars;
 uses Fpas.Ui.Widgets.Charts.CalendarHeatmaps as CalendarHeat;
@@ -20,6 +21,7 @@ uses Fpas.Ui.Widgets.Charts.ScatterCharts as Scatter;
 uses Fpas.Ui.Widgets.Charts.SplitBars as Splits;
 uses Fpas.Ui.Widgets.Charts.Treemaps as Trees;
 uses Fpas.Ui.Widgets.Charts.Waffles as Waffles;
+uses Fpas.Ui.Widgets.Collections.FilterBars as FilterBars;
 uses Fpas.Ui.Widgets.Display.IconGlyphs as Glyphs;
 uses Fpas.Ui.Widgets.Display.Icons as Icons;
 uses Fpas.Ui.Widgets.Planning.Gantts as Gantts;
@@ -271,6 +273,21 @@ begin
   );
 end procedure;
 
+procedure FilterIdentities();
+begin
+  const Bar: E.Element of int := FilterBars.FilterBar of int(
+    'filter', [new FilterBars.Field('Status', ['Open'])], new FilterBars.Value([1u], ''),
+    function(Value: FilterBars.Value): int => cast Value.Selected[0] as int
+  );
+  discard V.Prepare of int(Bar, V.Target.Graphical);
+  for Id: string in ['filter/search', 'filter/add', 'filter/clear', 'filter/chip/0'] do
+    Reject(
+      E.Column of int(Bar, Buttons.Button of int(Id, 'Duplicate', 0)),
+      V.Target.Graphical, 'Duplicate ID ' + Id
+    );
+  end for;
+end procedure;
+
 // Checks public preflight for graphical styles, dates, chart data and native limits.
 public procedure Verify();
 begin
@@ -281,6 +298,7 @@ begin
   RankedAndScaledCharts();
   CandleSeries();
   HeatAndPartToWholeCharts();
+  FilterIdentities();
 end procedure;
 
 end unit;

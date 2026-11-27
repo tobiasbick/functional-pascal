@@ -7,6 +7,14 @@ static cui_id fpas_progress_state(cui_ctx *ui, const char *label, int node) {
     return cui__hash(&node, sizeof node, id) ^ 0xA11A11u;
 }
 
+/* CUI's solid fill is at least as wide as the track is high. */
+static void fpas_paint_solid_progress(cui_ctx *ui, cui_node *node, void *data) {
+    const bool clip = node->rect.w < node->rect.h;
+    if (clip) cui_push_clip(ui, node->rect);
+    cui__paint_progress(ui, node, data);
+    if (clip) cui_pop_clip(ui);
+}
+
 int fpas_cui_alert(cui_ctx *ui, const char *id, const char *title,
     const char *description, const char *icon, int tone, int dismissible,
     int enabled, int focus, int *node, int *dismiss, unsigned int *key) {
@@ -18,8 +26,8 @@ int fpas_cui_alert(cui_ctx *ui, const char *id, const char *title,
     if (enabled && dismissible && !cui_is_disabled(ui) && focus)
         ui->focus_next_request = close;
     const cui_alert_opts options = {
-        .description = *description ? description : NULL, .tone = (cui_tone)tone,
-        .icon = *icon ? icon : NULL, .dismissible = dismissible != 0
+        .description = description, .tone = (cui_tone)tone,
+        .icon = icon, .dismissible = dismissible != 0
     };
     const int first = ui->node_count;
     cui_push_disabled(ui, !enabled);
@@ -50,6 +58,7 @@ void fpas_cui_progress(cui_ctx *ui, const char *id, float value,
         .height = height, .label = caption, .show_value = show_value != 0, .dither = dither != 0
     };
     cui_progress_ex(ui, value, &options);
+    if (!indeterminate && !dither) ui->nodes[ui->last_node].paint = fpas_paint_solid_progress;
     cui_pop_id(ui);
     ui->nodes[first].id = key;
     if (caption) fpas_literal(ui, first, label, CUI_C(ui, FOREGROUND));
@@ -59,12 +68,17 @@ void fpas_cui_progress(cui_ctx *ui, const char *id, float value,
 
 static cui_color fpas_chart_color(int palette, uint32_t rgba);
 
+/** Resolves a default, explicit RGBA color, or active theme token. */
+static cui_color fpas_spinner_color(int token, uint32_t rgba) {
+    return token > 0 ? CUI_TOKEN_COLOR(token) : fpas_chart_color(token, rgba);
+}
+
+/** Draws the selected native spinner with stable inspection identity. */
 void fpas_cui_spinner_styled(cui_ctx *ui, const char *id, float size, int style,
     int color, uint32_t rgba, int track, uint32_t track_rgba) {
     const cui_id key = cui_make_id(ui, id);
     const cui_spinner_opts options = { .style = style,
-        .color = color == -2 ? CUI_COLOR_BACKGROUND : fpas_chart_color(color, rgba),
-        .track = fpas_chart_color(track, track_rgba) };
+        .color = fpas_spinner_color(color, rgba), .track = fpas_spinner_color(track, track_rgba) };
     cui_spinner_ex(ui, size, &options);
     ui->nodes[ui->last_node].id = key;
     ui->last_id = key;
@@ -113,6 +127,7 @@ void fpas_cui_meter(cui_ctx *ui, const char *id, const char *label,
     /* The native meter contains a caption row followed by its progress leaf.
        Retain that leaf's positional interpolation state with the meter. */
     const int bar = ui->nodes[ui->nodes[first].first].next;
+    ui->nodes[bar].paint = fpas_paint_solid_progress;
     cui_push_id(ui, caption);
     const cui_id animation = fpas_progress_state(ui, NULL, bar);
     cui_pop_id(ui);

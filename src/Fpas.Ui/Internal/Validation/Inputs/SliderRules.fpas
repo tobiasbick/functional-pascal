@@ -2,12 +2,18 @@
 
 unit Fpas.Ui.Internal.Validation.Inputs.SliderRules;
 
+uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
 uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LayoutRules;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.HistogramSliders as Histograms;
 uses Fpas.Ui.Widgets.Inputs.RulerSliders as Rulers;
 uses Fpas.Ui.Widgets.Inputs.Sliders as S;
 
 uses System as Sys;
+uses System.Text.RegularExpressions as Rx;
+
+const FloatingFormat: string := '\A(?:[^%]|%%)*(?:%[-+ #0]*[0-9]{0,3}(?:\.[0-9]{0,3})?l?[aAeEfFgG](?:[^%]|%%)*)?\z';
 
 // Checks finite ordered bounds and endpoints before calling the native slider.
 //
@@ -44,7 +50,7 @@ begin
   end if;
 end procedure;
 
-// Checks the scalar slider's increment and display precision.
+// Checks the scalar slider's increment, width and native value format.
 //
 // ## Parameters
 // - `Settings`: Model-owned step and display options.
@@ -54,9 +60,20 @@ public procedure CheckOptions(Settings: S.Options; Span: float; Location: string
 begin
   if not Sys.Single.IsFinite(Settings.Step) or Settings.Step < 0.0F
     or (Settings.Step > 0.0F and not Sys.Single.IsFinite(Span / Settings.Step))
-    or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 6
   then
-    Rules.Reject(Location, 'A slider needs a finite step and zero through six decimal places.');
+    Rules.Reject(Location, 'A slider needs a finite nonnegative step within its numeric range.');
+  end if;
+
+  LayoutRules.CheckExtent(Settings.Width, Rules.Profile.Graphical, Location + '/width');
+  const Format: string? := Settings.Format;
+  if Format <> null then
+    Rules.CheckText(Format, Location + '/format');
+    if not Rx.Regex.IsMatch(Format, FloatingFormat, Rx.RegexOptions.NonBacktracking) then
+      Rules.Reject(
+        Location + '/format',
+        'A slider format accepts at most one fixed floating-point conversion.'
+      );
+    end if;
   end if;
 end procedure;
 
@@ -87,14 +104,24 @@ begin
 
   if Settings.MajorEvery < 1 or not Sys.Single.IsFinite(cast Settings.MajorEvery as float * Step)
     or not Sys.Single.IsFinite(Settings.Spacing) or Settings.Spacing < 1.0F
-    or not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0F
-    or Settings.Width / Settings.Spacing > 8388608.0F
-    or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 6
   then
-    Rules.Reject(Location, 'Invalid ruler dimensions, major tick interval or decimal precision.');
+    Rules.Reject(Location, 'Invalid ruler spacing or major tick interval.');
   end if;
 
-  Rules.CheckText(Settings.UnitLabel, Location + '/unit');
+  const WidthAt: string := Location + '/width';
+  case Settings.Width of
+    when L.Extent.Fixed(const Distance: L.Measure):
+      if LayoutRules.CheckMeasure(Distance, Rules.Profile.Graphical, WidthAt) /
+        Settings.Spacing > 8388608.0
+      then
+        Rules.Reject(WidthAt, 'The ruler width must keep its tick indices representable.');
+      end if;
+    else
+      LayoutRules.CheckExtent(Settings.Width, Rules.Profile.Graphical, WidthAt);
+  end case;
+
+  Chart.Format(Settings.Format, Location + '/format');
+  Rules.CheckText(Settings.UnitLabel ?? '', Location + '/unit');
 end procedure;
 
 // Checks histogram data and display options.
@@ -108,24 +135,17 @@ public procedure CheckHistogram(
   Location: string
 );
 begin
-  if Bins.Length = 0 then
-    Rules.Reject(Location, 'A histogram needs at least one bin.');
-  end if;
-
   for Bin: float in Bins do
     if not Sys.Single.IsFinite(Bin) or Bin < 0.0F then
       Rules.Reject(Location, 'Histogram bin heights must be finite and nonnegative.');
     end if;
   end for;
 
-  if not Sys.Single.IsFinite(Settings.Height) or Settings.Height < 0.0F
-    or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 6
-  then
-    Rules.Reject(Location, 'Invalid histogram height or decimal precision.');
+  if not Sys.Single.IsFinite(Settings.Height) or Settings.Height < 0.0F then
+    Rules.Reject(Location, 'Invalid histogram bar height.');
   end if;
 
-  Rules.CheckText(Settings.Prefix, Location + '/prefix');
-  Rules.CheckText(Settings.Suffix, Location + '/suffix');
+  Chart.Format(Settings.Format, Location + '/format');
 end procedure;
 
 end unit;

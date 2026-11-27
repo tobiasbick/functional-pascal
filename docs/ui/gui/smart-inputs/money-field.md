@@ -53,15 +53,18 @@ decimal parsing and formatting; neither the model nor the native boundary
 converts an amount to `double`.
 
 At rest, amounts have comma grouping and the selected number of fractional
-digits. Editing retains the typed draft, including incomplete signs or a trailing
-decimal point. Use ASCII digits, an optional leading sign, a decimal point and
+digits. When the editor gains focus, it shows the amount without grouping.
+An initial zero opens an empty draft and shows the zero placeholder. Editing
+retains the typed draft, including incomplete signs or a trailing decimal
+point. Use ASCII digits, an optional leading sign, a decimal point and
 optional correctly grouped commas. This format is independent of CLR culture.
 
 Only complete, exactly representable input produces a `decimal` proposal. Empty,
 incomplete, malformed, overflowing or overly precise input leaves the amount
 unchanged and shows native error feedback. Decimal parsing also rejects values
-that .NET would otherwise round to fit its 96-bit coefficient. Enter or loss of
-focus restores the accepted amount's formatted text. Type `0` to clear an amount.
+that .NET would otherwise round to fit its 96-bit coefficient. Enter restores
+the accepted amount's editable text. Leaving the field restores comma grouping.
+Type `0` to clear an amount.
 
 Model replacements and rejected proposals reconcile the draft with the model.
 Changing `DecimalPlaces` requires a model amount that fits the new precision;

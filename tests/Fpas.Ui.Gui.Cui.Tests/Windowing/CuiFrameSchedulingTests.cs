@@ -4,9 +4,12 @@ namespace Fpas.Ui.Gui.Cui.Tests.Windowing;
 /// <summary>Checks CUI deadlines in the real event-driven native window loop.</summary>
 public sealed class CuiFrameSchedulingTests
 {
-    /// <summary>A native deadline wakes an idle owner and does not turn it into a continuous loop.</summary>
-    [GuiFact]
-    public async Task EarliestDeadlineWakesAnIdleWindowOnce()
+    /// <summary>Requests one extra frame from an idle native owner.</summary>
+    /// <param name="delay">Zero requests an immediate frame; a positive value selects a deadline.</param>
+    [GuiTheory]
+    [InlineData(0.0f)]
+    [InlineData(.05f)]
+    public async Task FrameRequestWakesAnIdleWindowOnce(float delay)
     {
         var timeout = TimeSpan.FromSeconds(10);
         var ready = new TaskCompletionSource<CuiWindow>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -27,7 +30,7 @@ public sealed class CuiFrameSchedulingTests
                     if (Volatile.Read(ref stage) == 1)
                     {
                         window.RequestFrame(30);
-                        window.RequestFrame(.05f);
+                        window.RequestFrame(delay);
                         Volatile.Write(ref stage, 2);
                     }
                     else if (Volatile.Read(ref stage) == 2)

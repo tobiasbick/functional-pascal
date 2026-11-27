@@ -4,7 +4,7 @@ unit GuiGallery.Pages.Capture.View;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Files.AvatarUploads as A;
 uses Fpas.Ui.Widgets.Files.Dropzones as D;
 uses Fpas.Ui.Widgets.Files.SignaturePads as P;
@@ -17,9 +17,22 @@ uses System.Collections.Generic as Lists;
 
 function Target(Id: string; Settings: D.Options): E.Element of C.Msg;
 begin
-  const Accept: string := Settings.Accept;
   return D.Dropzone of C.Msg(
-    Id, C.Msg.Dropped, function(): C.Msg => C.Msg.Browse(Accept), Settings
+    Id,
+    if Settings.Compact then
+      function(Paths: array of string): C.Msg => C.Msg.CompactDrop
+    else
+      C.Msg.Dropped
+    end if,
+    Settings := Settings
+  );
+end function;
+
+function Box(Child: E.Element of C.Msg; Width: L.Extent): E.Element of C.Msg;
+begin
+  return E.Size of C.Msg(
+    E.Column of C.Msg(new L.Flow(Clip := false), Child),
+    new L.Flex(Width := new L.AxisSize(Basis := Width))
   );
 end function;
 
@@ -27,10 +40,9 @@ end function;
 // ## Parameters
 // - `Model`: Current file selections.
 // ## Returns
-// The Dropzone, Avatar upload and Signature sections.
-public function View(Model: C.Model): E.Element of C.Msg;
+// The direct children of the three sections.
+public function View(Model: C.Model): array of E.Element of C.Msg;
 begin
-  const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
   const Children: array of E.Element of C.Msg := [
     G.Heading of C.Msg(Strings.Get('Heading.Dropzone'), Strings.Get('Heading.DropzoneHint')),
     Target(
@@ -38,15 +50,15 @@ begin
       new D.Options(Description := 'PNG, JPG or PDF, up to 25 MB', Accept := C.Files)
     ),
     E.Row of C.Msg(
-      new L.Flow(Gap := G.Points(12), Wrap := true),
-      E.Size of C.Msg(
+      new L.Flow(Gap := G.Points(12), Wrap := true, Clip := false),
+      Box(
         Target(
           'capture-attach',
           new D.Options(Title := 'Attach a file', Description := 'Any type', Compact := true)
         ),
-        Fill
+        L.Extent.Fill
       ),
-      E.Size of C.Msg(
+      Box(
         Target(
           'capture-images', new D.Options(
             Title := 'Add images',
@@ -56,7 +68,7 @@ begin
             Compact := true
           )
         ),
-        Fill
+        L.Extent.Fill
       )
     )
   ];
@@ -71,34 +83,30 @@ begin
         'capture-avatar',
         'Maya Okafor',
         Model.Avatar,
-        C.Msg.SetAvatar,
-        function(): C.Msg => C.Msg.BrowseAvatar
+        C.Msg.SetAvatar
       ),
       E.Column of C.Msg(
-        new L.Flow(Gap := G.Points(4)),
-        E.Styled of C.Msg(E.Text of C.Msg('Profile photo'), S.Role.Label),
-        E.Styled of C.Msg(E.Text of C.Msg('At least 256 by 256 pixels.'), S.Role.Secondary)
+        new L.Flow(Gap := G.Points(4), Clip := false),
+        Texts.Text of C.Msg('Profile photo', Texts.Appearance.Label),
+        Texts.Text of C.Msg('At least 256 by 256 pixels.', Texts.Appearance.Secondary)
       )
     ),
     G.Heading of C.Msg(
       Strings.Get('Heading.Signature'),
       Strings.Get('Heading.SignatureHint')
     ),
-    E.Row of C.Msg(
-      new L.Flow(Align := L.Alignment.Start),
-      E.Size of C.Msg(
-        P.SignaturePad of C.Msg('capture-signature', Settings := new P.Options(Height := 180.0F)),
-        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(520)))
-      )
+    Box(
+      P.SignaturePad of C.Msg('capture-signature', Settings := new P.Options(Height := 180.0F)),
+      L.Extent.Fixed(L.Measure.Logical(520))
     )
   ];
   const Parts: Lists.List of E.Element of C.Msg := new Lists.List of E.Element of C.Msg(Children);
   if Model.Last <> '' then
-    Parts.Add(E.Styled of C.Msg(E.Text of C.Msg(Model.Last), S.Role.Muted));
+    Parts.Add(Texts.Text of C.Msg(Model.Last, Texts.Appearance.Muted));
   end if;
 
   Parts.AddRange(Remaining);
-  return E.Column of C.Msg(new L.Flow(Gap := G.Points(20), Clip := false), Parts.ToArray());
+  return Parts.ToArray();
 end function;
 
 end unit;

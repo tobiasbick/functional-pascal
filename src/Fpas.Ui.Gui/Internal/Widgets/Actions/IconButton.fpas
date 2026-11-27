@@ -2,9 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.IconButton;
 
+uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Core.Values as Values;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
 
 // Draws a native icon button and routes its activation.
@@ -30,6 +33,16 @@ begin
   const Enabled: bool := State.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('icon-button', Id);
   const Focus: bool := C.WantsFocus of TMsg(State, Id, Token, Enabled);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
+  const Color: G.Color? := Settings.Color;
+  const Rgba: uint := if Color = null then
+    0U
+  elsif Color.Alpha = 0 then
+    // CUI uses all-zero RGBA to select its default foreground.
+    1U
+  else
+    Values.Pack(Color)
+  end if;
   if State.Window.IconButton(
     Token,
     Icon,
@@ -40,7 +53,10 @@ begin
     Enabled,
     Settings.Loading,
     Settings.Selected,
-    Focus
+    Focus,
+    Width.Kind,
+    Width.Value,
+    Rgba
   )
   then
     State.Messages.Add(Message);

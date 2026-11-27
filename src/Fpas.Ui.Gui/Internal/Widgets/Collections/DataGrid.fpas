@@ -64,6 +64,7 @@ end function;
 // - `Change`: Maps native changes to application messages.
 // - `Settings`: Viewport and input settings.
 // - `DoubleClick`: Optional action for a double-clicked row.
+// - `RowClick`: Optional message from a native row click.
 // - `Visit`: Host traversal for composed cell content.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
@@ -75,6 +76,7 @@ public procedure Draw of TMsg(
   Change: function(D.Value): TMsg;
   Settings: D.Options;
   DoubleClick: Sys.Func of (int, TMsg)?;
+  RowClick: Sys.Func of (int, TMsg)?;
   Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
   procedure Children(Items: array of E.Element of TMsg);
@@ -97,6 +99,7 @@ begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('data-grid', Id);
   const Height: S.NativeExtent := S.Extent(Settings.Height);
+  const Width: S.NativeExtent := S.Extent(Settings.Width);
   const SortOrder: T.Sort? := Current.Order;
   const Order: int := if SortOrder = null then
     -2
@@ -147,7 +150,9 @@ begin
     Height.Value,
     Settings.RowHeight,
     Options,
-    Track
+    Track,
+    Width.Kind,
+    Width.Value
   );
   for Index: int := 0 to Defs.Length - 1 do
     if Native.Headers[Index] then
@@ -164,13 +169,17 @@ begin
   end for;
 
   const Selection: (array of bool)? := Current.Selected;
+  var Clicked: int := -1;
   for Index: int := Native.First to Native.Last - 1 do
     const Row: D.Row of TMsg := Build(Index);
     if Row.Id = '' or Row.Cells.Length <> Defs.Length then
       raise new Sys.ArgumentException('A native data row needs an ID and one cell per column.');
     end if;
 
-    Frame.Window.DataGridRow(Index, C.Token('grid-row', Row.Id), not Frame.PaintingClosed);
+    if Frame.Window.DataGridRow(Index, C.Token('grid-row', Row.Id), not Frame.PaintingClosed) then
+      Clicked := Index;
+    end if;
+
     if not Frame.PaintingClosed then
       Frame.Controls.Add(
         new App.Control(
@@ -229,6 +238,14 @@ begin
 
   if Enabled and Changed then
     Frame.Messages.Add(Change(new D.Value(Selected, Sort(State), State[2], State[3], Offset)));
+  end if;
+
+  if Enabled and Clicked >= 0 then
+    case RowClick of
+      when is Sys.Func of (int, TMsg) as Notify:
+        Frame.Messages.Add(Notify.Invoke(Clicked));
+      else
+    end case;
   end if;
 
   if Enabled and Activated >= 0 then

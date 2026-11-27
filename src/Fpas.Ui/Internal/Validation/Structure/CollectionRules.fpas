@@ -67,13 +67,13 @@ end procedure;
 
 // Checks that the native reorder array is a permutation.
 // ## Parameters
-// - `Count`: Number of child elements.
+// - `Count`: Number of rows.
 // - `Order`: Model-owned display order.
 // - `At`: Diagnostic location.
 public procedure Reorder(Count: int; Order: array of int; At: string);
 begin
-  if Count < 1 or Count > 256 or Order.Length <> Count then
-    R.Reject(At, 'A reorderable list needs one to 256 items and a matching order.');
+  if Count > 256 or Order.Length <> Count then
+    R.Reject(At, 'A reorderable list needs at most 256 items and a matching order.');
   end if;
 
   const Seen: array of bool := new bool[Count];

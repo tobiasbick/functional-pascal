@@ -28,7 +28,7 @@ begin
   const Token: string := C.Token(Role, Id);
   Frame.Window.Counter(
     Token, Value, Colors.Format(Settings.Format), Settings.Size,
-    Colors.Color(Settings.Color), Settings.GroupThousands
+    Colors.Color(Settings.Color), Settings.GroupThousands, cast Settings.Font as int
   );
   P.Root of TMsg(
     Frame,

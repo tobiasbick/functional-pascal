@@ -38,13 +38,20 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Steps` | Ordered steps with a title, optional description and action label, and Done defaulting to false. |
-| `Title / Description / Enabled` | Empty / empty / true. |
-| `OnAction` | Optional callback receiving the index of the active step. |
+| `Steps` | Ordered steps with a title and a `Done` flag. Completion defaults to false. |
+| `Step.Description` | Null omits the description. An empty string draws an empty description. |
+| `Step.ActionLabel` | Null omits the action. An empty caption shows the arrow. |
+| `Title` | Null uses “Get started”. An empty string hides the title. |
+| `Description` | Null shows “n of m complete”. An empty string hides the progress caption. |
+| `Enabled` | True. Allows input on step circles and actions. |
+| `OnAction` | Null. Supply a callback if a step has an action caption value. |
 
 ## Interaction
 
-Click or activate a completion circle with the keyboard to propose a new flag. The first incomplete step reveals its description and optional button. That button sends its step index, and the update function decides whether it is complete. Use `StepId` and `ActionId` to inspect the corresponding controls.
+Click or activate a completion circle with the keyboard to propose a new flag.
+The first incomplete step reveals its description and action.
+The action sends a zero-based step index. The update function decides whether
+to complete the step. Use `StepId` and `ActionId` to inspect the controls.
 
 ## See also
 

@@ -14,6 +14,7 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_range_picker", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial int RangePicker(nint context, string id, ref int start, ref int end,
-        string? label, string? placeholder, float width, int presets, int enabled, int focus,
+        string? label, string? placeholder, int widthKind, float width, int presets, int enabled,
+        int focus,
         out int trigger, int* parts, int* nodes, out int count, out int open);
 }

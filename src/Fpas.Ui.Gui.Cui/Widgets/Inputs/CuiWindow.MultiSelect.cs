@@ -11,17 +11,19 @@ public sealed partial class CuiWindow
     /// <param name="labels">Nonempty list of choice captions.</param>
     /// <param name="icons">One glyph or empty string per choice.</param>
     /// <param name="selected">One flag per choice.</param>
-    /// <param name="label">Optional caption above the trigger.</param>
-    /// <param name="placeholder">Optional empty-selection caption.</param>
+    /// <param name="label">Caption above the trigger, or null to omit the label wrapper.</param>
+    /// <param name="placeholder">Empty-selection caption, or null for CUI's Select caption.</param>
     /// <param name="maxChips">Visible chip limit, or zero for CUI's default.</param>
     /// <param name="searchable">Whether the list includes a search field.</param>
     /// <param name="enabled">Whether the picker accepts input.</param>
     /// <param name="focus">Whether to focus the trigger.</param>
     /// <param name="trackOption">Maps option indices to tracking identities, or null.</param>
+    /// <param name="widthKind">Content zero, fill one, fixed two or percentage three.</param>
+    /// <param name="width">Logical width or percentage.</param>
     /// <returns>The selection proposal and native popup state.</returns>
     public unsafe CuiMultiSelectResult MultiSelect(string id, string[] labels, string[] icons, bool[] selected,
-        string label, string placeholder, int maxChips, bool searchable, bool enabled, bool focus,
-        Func<int, string>? trackOption)
+        string? label, string? placeholder, int maxChips, bool searchable, bool enabled, bool focus,
+        Func<int, string>? trackOption, int widthKind = 0, float width = 0)
     {
         CheckFrame();
         ArgumentNullException.ThrowIfNull(labels);
@@ -30,8 +32,9 @@ public sealed partial class CuiWindow
         if (labels.Length == 0 || labels.Length != icons.Length || labels.Length != selected.Length)
             throw new ArgumentException("Supply one selection flag and glyph per choice.");
         ArgumentOutOfRangeException.ThrowIfNegative(maxChips);
-        Utf8.Validate(label, nameof(label));
-        Utf8.Validate(placeholder, nameof(placeholder));
+        CheckExtent(widthKind, width, nameof(width));
+        if (label is not null) Utf8.Validate(label, nameof(label));
+        if (placeholder is not null) Utf8.Validate(placeholder, nameof(placeholder));
         int[] flags = new int[labels.Length], nodes = new int[labels.Length + 1];
         for (int i = 0; i < labels.Length; i++)
         {
@@ -43,7 +46,7 @@ public sealed partial class CuiWindow
         int open;
         fixed (int* values = flags, parts = nodes)
             changed = NativeMethods.MultiSelect(context, Stable(id), labels, icons, labels.Length, values,
-                Optional(label), Optional(placeholder), maxChips, searchable ? 1 : 0, enabled ? 1 : 0,
+                label, placeholder, maxChips, searchable ? 1 : 0, widthKind, width, enabled ? 1 : 0,
                 focus ? 1 : 0, parts, out open) != 0;
         bool[]? proposal = changed ? Array.ConvertAll(flags, value => value != 0) : null;
         if (trackOption is null) return new(proposal, open != 0, []);

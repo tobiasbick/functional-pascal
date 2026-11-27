@@ -10,12 +10,15 @@
  * @param max Inclusive upper bound.
  * @param label Optional caption.
  * @param suffix Optional unit text.
- * @param step Positive increment.
+ * @param step Nonnegative increment. Zero uses one.
  * @param decimals Display precision.
  * @param enabled Whether the field accepts input.
  * @param focus Whether to request editor focus.
+ * @param width_kind Native width kind, or zero for the upstream default.
+ * @param width Native fixed-width or percentage value.
  * @param nodes Receives the editor, decrease and increase nodes. */
 CUI_API void fpas_cui_number_field(cui_ctx *ui, const char *id, double *value, double min, double max,
-    const char *label, const char *suffix, double step, int decimals, int enabled, int focus, int *nodes);
+    const char *label, const char *suffix, double step, int decimals, int enabled, int focus,
+    int width_kind, float width, int *nodes);
 
 #endif

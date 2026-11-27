@@ -3,21 +3,37 @@
 
 int fpas_cui_multi_select(cui_ctx *ui, const char *id, const char *const *labels,
     const char *const *icons, int count, int *selected, const char *label, const char *placeholder,
-    int max_chips, int searchable, int enabled, int focus, int *nodes, int *open) {
+    int max_chips, int searchable, int width_kind, float width, int enabled, int focus, int *nodes, int *open) {
     const cui_id key = cui_make_id(ui, id);
     const cui_id popup_key = key ^ 0x3517u;
+    const cui_id navigation_key = popup_key ^ 0x4E4156u;
     cui_push_id_int(ui, (int)popup_key);
     const cui_id search = cui_make_id(ui, "#q");
     const cui_id list = cui_make_id(ui, "#list");
     cui_pop_id(ui);
-    fpas_own(ui, key, popup_key ^ 0x4E4156u, search, popup_key);
+    fpas_own(ui, key, navigation_key, search, popup_key);
 
     const bool allowed = enabled && !cui_is_disabled(ui);
-    const cui_popup *popup = cui__popup_get(ui, popup_key, false);
+    cui_popup *popup = cui__popup_get(ui, popup_key, false);
     const bool was_open = popup && popup->open;
-    const bool escape = was_open && cui_key_pressed(ui, CUI_KEY_ESCAPE);
+    const bool top = was_open && cui__popup_is_topmost(ui, popup);
+    const bool escape = top && cui_key_pressed(ui, CUI_KEY_ESCAPE);
     if (!allowed && was_open) cui__popup_set(ui, popup_key, false);
     if (allowed && focus) ui->focus_next_request = key;
+
+    /* CUI-043 (docs/future/cui-upstream-bugs.md#cui-043): an exiting menu
+       retains its paint pass, but its old highlight must not receive keys. */
+    if ((!was_open || escape) && (cui_key_pressed(ui, CUI_KEY_ENTER) || cui_key_pressed(ui, CUI_KEY_SPACE))) {
+        cui__menu_nav *navigation = cui__state_lazy(ui, navigation_key, sizeof *navigation, false);
+        if (navigation) navigation->highlight = -1;
+    }
+
+    /* CUI-042 (docs/future/cui-upstream-bugs.md#cui-042): printable space
+       belongs to the active search field, not the highlighted checkbox. */
+    const uint8_t space_pressed = ui->kpressed[CUI_KEY_SPACE];
+    const bool search_space = space_pressed && allowed && top && searchable &&
+        (ui->focus == search || popup->opened_frame + 1 == ui->frame) &&
+        memchr(ui->text_in, ' ', (size_t)ui->text_in_len);
     bool *values = cui__frame_alloc(ui, (size_t)count * sizeof *values);
     const char **glyphs = cui__frame_alloc(ui, (size_t)count * sizeof *glyphs);
     for (int i = 0; i < count; ++i) {
@@ -26,11 +42,14 @@ int fpas_cui_multi_select(cui_ctx *ui, const char *id, const char *const *labels
         nodes[i + 1] = -1;
     }
     const cui_multi_select_opts options = { .label = label, .placeholder = placeholder,
-        .icons = glyphs, .max_chips = max_chips, .searchable = searchable != 0 };
+        .icons = glyphs, .max_chips = max_chips, .searchable = searchable != 0,
+        .width = fpas_extent(width_kind, width) };
     const int first_node = ui->node_count;
+    if (search_space) ui->kpressed[CUI_KEY_SPACE] = 0;
     cui_push_disabled(ui, !allowed);
     const bool changed = cui_multi_select_ex(ui, id, labels, count, values, &options);
     cui_pop_disabled(ui);
+    if (search_space) ui->kpressed[CUI_KEY_SPACE] = space_pressed;
 
     const int field = fpas_find(ui, key);
     nodes[0] = field;

@@ -3,13 +3,14 @@
 unit Fpas.Ui.Widgets.Pickers.EmojiPickers;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Model-owned state for the native emoji palette.
 public type State = record
-  // Recent emoji, newest first and space separated, up to 255 UTF-8 bytes.
-  public Recent: string := '';
-  // Skin tone from zero (default) through five (dark).
-  public Tone: int := 0;
+  // Recent emoji, newest first and space separated. Null uses CUI's own history.
+  public Recent: string? := '';
+  // Skin tone from zero (default) through five (dark). Null lets CUI keep the tone.
+  public Tone: int? := 0;
 end record;
 
 // Native palette changes offered to the application.
@@ -22,18 +23,22 @@ end record;
 
 // Presentation and input options for the native palette.
 public type Options = record
-  // Logical width. Zero selects CUI's default.
-  public Width: float := 0.0F;
+  // Width extent. Content fills the available width up to 360 logical units.
+  public Width: L.Extent := L.Extent.Content;
   // Logical grid height. Zero selects CUI's default.
   public Height: float := 0.0F;
   // Logical glyph size. Zero selects CUI's default.
   public Size: float := 0.0F;
   // Optional search placeholder.
-  public Placeholder: string := '';
+  public Placeholder: string? := null;
   // Optional caption when the search returns no results.
-  public EmptyText: string := '';
+  public EmptyText: string? := null;
   // Optional preview caption before an emoji is highlighted.
-  public Hint: string := '';
+  public Hint: string? := null;
+  // Recent-history buffer capacity including the terminating byte.
+  public RecentCapacity: int := 256;
+  // Optional captions for Recent and the nine Unicode groups, in native order.
+  public GroupNames: (array of string)? := null;
   // Whether to show search.
   public Search: bool := true;
   // Whether to show the emoji preview.

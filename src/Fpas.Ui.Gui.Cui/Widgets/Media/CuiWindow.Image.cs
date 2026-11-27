@@ -15,17 +15,21 @@ public sealed partial class CuiWindow
     /// <param name="heightKind">heightKind for the native widget.</param>
     /// <param name="height">height for the native widget.</param>
     /// <param name="radius">radius for the native widget.</param>
-    /// <param name="tint">tint for the native widget.</param>
-    public unsafe void DisplayImage(string id, CuiMediaImage source, int widthKind, float width, int heightKind, float height, float radius, uint tint)
+    /// <param name="tint">Automatic, theme color, or explicit tint.</param>
+    public unsafe void DisplayImage(string id, CuiMediaImage source, int widthKind, float width,
+        int heightKind, float height, float radius, CuiChartColor tint)
     {
         CheckFrame();
         CheckExtent(widthKind, width, nameof(width));
         CheckExtent(heightKind, height, nameof(height));
+        ValidateDistance(radius, nameof(radius));
+        if (!tint.IsValid) throw new ArgumentOutOfRangeException(nameof(tint));
         using var memory = new ChartMemory();
         fixed (byte* bytes = source.Pixels)
         {
             var image = MediaSource(source, memory, bytes);
-            NativeMethods.DisplayImage(context, Stable(id), in image, widthKind, width, heightKind, height, radius, tint);
+            NativeMethods.DisplayImage(context, Stable(id), in image, widthKind, width, heightKind,
+                height, radius, tint.Palette, tint.Rgba);
         }
     }
 }

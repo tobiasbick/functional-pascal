@@ -5,6 +5,8 @@ unit Fpas.Ui.Gui.Internal.Widgets.Inputs.SearchField;
 uses Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Input.Editor as Editor;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.SearchFields as F;
 
 uses System as Sys;
@@ -31,6 +33,7 @@ public procedure Draw of TMsg(
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('search-field', Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width ?? L.Extent.Content);
   const Native: CuiInputs.CuiEditorOptions := new CuiInputs.CuiEditorOptions(
     Settings.Label,
     Settings.Placeholder,
@@ -41,15 +44,28 @@ begin
     Settings.Suffix,
     cast Settings.ControlSize as int,
     Settings.ReadOnly,
-    Settings.MaxUtf8Bytes
+    Settings.MaxUtf8Bytes, Width.Kind, Width.Value, Settings.Autofocus
   );
   const Result: CuiInputs.CuiTextFieldResult := Frame.Window.SearchField(
     Token, Value, Native, Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
-    not Frame.PaintingClosed, C.Token('button', F.ClearId(Id))
+    not Frame.PaintingClosed, C.Token('button', F.ClearId(Id)),
+    Settings.Password, C.Token('button', F.RevealId(Id))
   );
   Editor.Publish of TMsg(
-    Frame, Id, 'search-field', Value, Result, OnChange, OnSubmit, Enabled,
-    Settings.Label, Settings.Hint, Settings.Error, Settings.Prefix, Settings.Suffix
+    Frame,
+    Id,
+    'search-field',
+    Value,
+    Result,
+    OnChange,
+    OnSubmit,
+    Enabled,
+    Settings.Label,
+    Settings.Hint,
+    Settings.Error,
+    Settings.Prefix,
+    Settings.Suffix,
+    Settings.Password
   );
 end procedure;
 

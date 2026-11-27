@@ -6,6 +6,7 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Display.IconGlyphs as Glyphs;
 uses Fpas.Ui.Widgets.Inputs.Checkboxes as Checks;
 uses Fpas.Ui.Widgets.Inputs.Sliders as Sliders;
 uses Fpas.Ui.Widgets.Overlays.Popovers as P;
@@ -13,7 +14,6 @@ uses Fpas.Ui.Widgets.Overlays.Popovers as P;
 uses GuiGallery.Pages.Overlays.State as State;
 uses GuiGallery.Shared.Sections as G;
 uses GuiGallery.Shared.State as Demo;
-uses System as Sys;
 
 // Builds the Filters button and the CUI gallery's filter controls.
 //
@@ -26,10 +26,9 @@ public function View(Model: State.Model; Data: Demo.Model): E.Element of State.M
 begin
   const Trigger: E.Element of State.Msg := B.Button of State.Msg(
     'filters-trigger', 'Filters', State.Msg.SetFilters(not Model.Filters),
-    new B.Options(Icon := Sys.Char.ConvertFromUtf32($E0DC))
+    new B.Options(Icon := Glyphs.Filter)
   );
-  const Content: E.Element of State.Msg := E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(10)),
+  const Children: array of E.Element of State.Msg := [
     E.Styled of State.Msg(E.Text of State.Msg('Filter results'), S.Role.Label),
     Checks.Checkbox of State.Msg(
       'filters-active',
@@ -57,21 +56,20 @@ begin
       new Sliders.Options(ShowValue := true)
     ),
     E.Row of State.Msg(
-      new L.Flow(Gap := G.Points(8)),
-      E.Size of State.Msg(E.Column of State.Msg(), new L.Flex(Basis := L.Extent.Fill)),
+      new L.Flow(Gap := G.Points(8), Justify := L.Justification.End, Clip := false),
       B.Button of State.Msg(
         'filters-apply', 'Apply', State.Msg.SetFilters(false),
         new B.Options(Variant := S.ButtonVariant.Primary, ControlSize := B.Size.Small)
       )
     )
-  );
+  ];
   return P.Popover of State.Msg(
     'filters',
     Trigger,
-    Content,
+    Children,
     Model.Filters,
     State.Msg.SetFilters(false),
-    new P.Options(Width := 280)
+    new P.Options(Width := 280.0F)
   );
 end function;
 

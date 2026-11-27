@@ -3,6 +3,8 @@
 unit Fpas.Ui.Internal.Validation.Inputs.EditorRules;
 
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Inputs.SearchFields as S;
 uses Fpas.Ui.Widgets.Inputs.TextAreas as A;
@@ -62,6 +64,17 @@ begin
   R.CheckText(Suffix, At + '/suffix');
 end procedure;
 
+procedure CheckPlacement(Width: L.Extent?; Autofocus: bool; Profile: R.Profile; Location: string);
+begin
+  if Width <> null or Autofocus then
+    R.RequireProfile(Profile, R.Profile.Graphical, Location);
+  end if;
+
+  if Width <> null then
+    LR.CheckExtent(Width, Profile, Location + '/width');
+  end if;
+end procedure;
+
 // Validates a single-line text field and reserves its native action identities.
 //
 // ## Parameters
@@ -87,6 +100,8 @@ begin
     R.RequireProfile(Profile, R.Profile.Graphical, Path);
   end if;
   const At: string := Identify(Id, Path);
+  CheckPlacement(Settings.Width, Settings.Autofocus, Profile, At);
+
   if Settings.Clearable then
     discard Identify(F.ClearId(Id), At + '/clear');
   end if;
@@ -102,7 +117,7 @@ begin
   );
 end procedure;
 
-// Validates a search field and reserves its clear action identity.
+// Validates a search field and reserves its native action identities.
 //
 // ## Parameters
 // - `Id`: Stable editor identity.
@@ -124,11 +139,20 @@ begin
   if Profile = R.Profile.Portable then
     R.Reject(Path, 'A search field requires the terminal or graphical profile.');
   end if;
+
+  if Settings.Password then
+    R.RequireProfile(Profile, R.Profile.Graphical, Path);
+  end if;
   const At: string := Identify(Id, Path);
+  CheckPlacement(Settings.Width, Settings.Autofocus, Profile, At);
   discard Identify(S.ClearId(Id), At + '/clear');
-  CheckValue(Value, Settings.MaxUtf8Bytes, Settings.ControlSize, false, false, At);
+  if Settings.Password then
+    discard Identify(S.RevealId(Id), At + '/reveal');
+  end if;
+
+  CheckValue(Value, Settings.MaxUtf8Bytes, Settings.ControlSize, Settings.Password, false, At);
   CheckChrome(
-    Settings.Label, Settings.Placeholder, Settings.Icon, Settings.Hint, Settings.Error,
+    Settings.Label, Settings.Placeholder ?? '', Settings.Icon, Settings.Hint, Settings.Error,
     Settings.Prefix, Settings.Suffix, At
   );
 end procedure;
@@ -158,6 +182,11 @@ begin
     R.RequireProfile(Profile, R.Profile.Graphical, Path);
   end if;
   const At: string := Identify(Id, Path);
+  CheckPlacement(Settings.Width, Settings.Autofocus, Profile, At);
+  if not Sys.Single.IsFinite(Settings.Height) then
+    R.Reject(At + '/height', 'A text area height must be finite.');
+  end if;
+
   if Settings.Clearable then
     discard Identify(A.ClearId(Id), At + '/clear');
   end if;

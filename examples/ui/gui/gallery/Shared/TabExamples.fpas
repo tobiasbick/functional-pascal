@@ -21,13 +21,15 @@ public const UnderlineId: string := 'tabs';
 // - `Pill`: Index in the pill strip.
 // - `Choose`: Maps an underline selection to a message.
 // - `ChoosePill`: Maps a pill selection to a message.
+// - `Graphical`: Use the native column insets and label style on the GUI.
 // ## Returns
 // Both tab strips and the selected underline tab's content.
 public function Rows of TMsg(
   Selected: int;
   Pill: int;
   Choose: function(int): TMsg;
-  ChoosePill: function(int): TMsg
+  ChoosePill: function(int): TMsg;
+  Graphical: bool := false
 ): array of E.Element of TMsg;
 begin
   const Underline: array of T.Item := [
@@ -41,26 +43,29 @@ begin
     new T.Item(Strings.Get('Text.Password'), Sys.Char.ConvertFromUtf32($E10B)),
     new T.Item(Strings.Get('Text.Billing'), Sys.Char.ConvertFromUtf32($E0AA))
   ];
-  const Inset: E.Element of TMsg := E.Size of TMsg(
-    E.Column of TMsg(),
-    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(4)))
+  const Caption: E.Element of TMsg := E.Text of TMsg(Underline[Selected].Label);
+  const Hint: E.Element of TMsg := E.Styled of TMsg(
+    E.Text of TMsg(Strings.Get('Text.TabsHint')), S.Role.Secondary
+  );
+  const Gap: L.Spacing := L.Spacing.Fixed(L.Measure.Logical(6));
+  const Inset: L.Measure := L.Measure.Logical(4);
+  const TerminalInset: E.Element of TMsg := E.Size of TMsg(
+    E.Column of TMsg(), new L.Flex(Basis := L.Extent.Fixed(Inset))
   );
   return [
     T.Tabs of TMsg(UnderlineId, Underline, Selected, Choose),
-    E.Column of TMsg(
-      Inset,
+    if Graphical then
       E.Column of TMsg(
-        new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(6))),
-        E.Text of TMsg(Underline[Selected].Label),
-        E.Styled of TMsg(
-          E.Text of TMsg(
-            Strings.Get('Text.TabsHint')
-          ),
-          S.Role.Secondary
-        )
-      ),
-      Inset
-    ),
+        new L.Flow(Gap := Gap, PaddingY := L.Spacing.Fixed(Inset), Clip := false),
+        E.Styled of TMsg(Caption, S.Role.Label), Hint
+      )
+    else
+      E.Column of TMsg(
+        TerminalInset,
+        E.Column of TMsg(new L.Flow(Gap := Gap), Caption, Hint),
+        TerminalInset
+      )
+    end if,
     T.Tabs of TMsg(
       'pill-tabs', Pills, Pill, ChoosePill,
       new T.Options(Appearance := T.Variant.Pill)

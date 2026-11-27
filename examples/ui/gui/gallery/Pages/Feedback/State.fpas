@@ -4,16 +4,20 @@ unit GuiGallery.Pages.Feedback.State;
 
 uses Fpas.Ui.Widgets.Actions.StatusButtons as Work;
 
-// Model for the status spinner example.
+// State owned by the Feedback page.
 public type Model = record
+  // Retain the storage alert's dismissal across page changes.
+  public StorageDismissed: bool := false;
   // Current upload phase.
   public Status: Work.Status := Work.Status.Idle;
   // Number of starts. Odd jobs succeed and even jobs fail.
   public Runs: int := 0;
 end record;
 
-// Upload actions from the gallery.
+// Actions from the Feedback page.
 public type Msg = variant
+  // Dismiss the storage alert.
+  DismissStorage;
   // Starts a simulated upload.
   Upload;
   // Completes the current upload.

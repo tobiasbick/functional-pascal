@@ -10,6 +10,7 @@ Use a histogram slider to show a data distribution behind two range handles. Ava
 unit Docs.Ui.Pickers.HistogramSlider;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 uses Fpas.Ui.Widgets.Inputs.HistogramSliders as W;
 uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
 
@@ -22,7 +23,8 @@ public function View(Price: R.Interval): E.Element of R.Interval;
 begin
   return W.HistogramSlider of R.Interval('picker-price', 'Price',
     [4.0F, 13.0F, 28.0F, 35.0F, 18.0F, 6.0F], Price, 0.0F, 240.0F,
-    function(Value: R.Interval): R.Interval => Value, new W.Options(Prefix := '$'));
+    function(Value: R.Interval): R.Interval => Value,
+    new W.Options(Format := new Charts.ValueFormat(Prefix := '$')));
 end function;
 
 end unit;
@@ -32,11 +34,11 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Bins` | A nonempty array of finite, nonnegative bin heights in range order. |
+| `Bins` | Finite, nonnegative bin heights in range order. An empty array omits the bars and keeps the range control. |
 | `Value / Minimum / Maximum` | An ordered RangeSliders.Interval inside finite, increasing bounds. |
-| `Height` | 0 selects CUI's default bar height. |
-| `DecimalPlaces` | 0. Accepts 0 through 6. |
-| `Prefix / Suffix / Enabled` | Empty / empty / true. Affixes appear in each endpoint caption. |
+| `Height` | 0 uses CUI's bar height of 56 logical units. |
+| `Format` | `null` displays zero fractional digits. A [value format](../charts/README.md#value-format) applies to both endpoints. |
+| `Enabled` | `true`. |
 
 ## Interaction
 
@@ -61,3 +63,5 @@ Drag either handle to change its endpoint. Focus the slider and press Space to s
 - `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
   - [histogram_slider.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/histogram_slider.c)
   - [histogram_slider.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/histogram_slider.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiHistogramSliderTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiHistogramSliderTests.cs)

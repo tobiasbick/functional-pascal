@@ -50,16 +50,27 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Name / Path` | Supply the display name and a model-owned image path. Null displays initials. |
-| `OnBrowse` | null. Supply a message factory to handle browse activation. |
-| `Size / Enabled` | 88 logical points / true. Zero size selects the native default. |
+| `Id` | Stable widget identity. |
+| `Name` | Display name for the initials and their background color. |
+| `Path` | Model-owned image path. Null or an unavailable image displays initials. |
+| `OnDrop` | Maps the path of a decoded drop to an application message. |
+| `OnBrowse` | null. Supply a message factory to handle a click or press of Enter or Space while focused. |
+| `Size` | 88 logical points. The diameter must be finite. Nonpositive values use 88. |
+| `Enabled` | true. Controls focus, browse activation and file drops. |
 
 ## Interaction
 
-CUI proposes a dropped image after decoding it. Store the proposed path to
-accept the new photo. Use `ImageExtensions` for the file chooser to match
-the drop filter. The chooser returns a path, so validate the file when
-handling the selection.
+CUI draws a pencil badge and shows a camera overlay while the pointer or a
+file drag is over the visible avatar. CUI takes the first dropped path with a
+`png`, `jpg`, `jpeg`, `bmp`, `gif` or `tga` extension and proposes it only
+after decoding the image. A successful drop takes precedence over browse
+activation in the same frame.
+
+Store the proposed path to keep the new photo. FPAS owns the native texture
+and draws the model's path again on the next frame if the drop is declined.
+Use `ImageExtensions` to match the chooser's filter to the drop target.
+The chooser returns a path. Apply any application-specific image size
+requirements when handling either selection.
 
 ## See also
 
@@ -81,3 +92,4 @@ handling the selection.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/files/`
   - [avatar_upload.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/avatar_upload.c)
   - [avatar_upload.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/avatar_upload.h)
+- [Native media tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/media.c)

@@ -9,13 +9,13 @@ uses System as Sys;
 // Native list row appearance and input.
 public type Options = record
   // Optional secondary line.
-  public Subtitle: string := '';
+  public Subtitle: string? := null;
   // Optional muted right-hand text.
-  public Trailing: string := '';
+  public Trailing: string? := null;
   // Name for the leading initials avatar.
-  public Avatar: string := '';
+  public Avatar: string? := null;
   // Leading glyph when no avatar is supplied.
-  public Icon: string := '';
+  public Icon: string? := null;
   // Whether to show the active background.
   public Selected: bool := false;
   // Whether the row accepts input.

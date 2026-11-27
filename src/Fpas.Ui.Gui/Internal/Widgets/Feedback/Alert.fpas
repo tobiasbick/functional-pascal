@@ -45,8 +45,9 @@ begin
   if not Frame.PaintingClosed and (Result and 1) <> 0 then
     Frame.Controls.Add(new App.Control(Id, Title, 'alert', new Cui.CuiRectangle(), false));
     Frame.Labels.Add(Title);
-    if Settings.Description <> '' then
-      Frame.Labels.Add(Settings.Description);
+    const Description: string? := Settings.Description;
+    if Description <> null and Description <> '' then
+      Frame.Labels.Add(Description);
     end if;
 
     if Settings.Dismissible then

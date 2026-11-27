@@ -10,11 +10,14 @@
  * @param label Optional caption.
  * @param placeholder Optional empty-field text.
  * @param max_tags Maximum number of tags.
+ * @param width_kind Native width encoding.
+ * @param width Width in logical units or percentage where applicable.
  * @param enabled Whether the field accepts input.
  * @param focus Whether to focus the draft editor.
  * @param count Number of tags supplied in value.
  * @param nodes Receives the editor node followed by count remove-button nodes. */
 CUI_API void fpas_cui_tag_input(cui_ctx *ui, const char *id, char *value, size_t capacity,
-    const char *label, const char *placeholder, int max_tags, int enabled, int focus, int count, int *nodes);
+    const char *label, const char *placeholder, int max_tags, int width_kind, float width,
+    int enabled, int focus, int count, int *nodes);
 
 #endif

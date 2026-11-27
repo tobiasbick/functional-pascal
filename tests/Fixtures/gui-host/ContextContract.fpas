@@ -144,6 +144,11 @@ begin
   Step(Session);
   const Area: Cui.CuiRectangle := Control(Session, 'context').Bounds;
   Check(Area.Width > 0 and Area.Height > 0, 'The gallery needs a real context target.');
+  const Card: Gui.Control := Control(Session, 'ctx-area');
+  Check(
+    Card.Enabled and Sys.Object.Equals(Card.Bounds, Area),
+    'The context menu must attach to the native hoverable card.'
+  );
   Open(Session, Area);
   Check(
     Control(
@@ -159,9 +164,12 @@ begin
     Last = 'Copy' and Control(Session, 'context').Value = 'false',
     'Choosing must dispatch once and close.'
   );
+  X := -1.0F;
+  Y := -1.0F;
+  Step(Session);
   Check(
     Sys.Object.Equals(Control(Session, 'context').Bounds, Area),
-    'Attaching a context menu must preserve target geometry.'
+    'The context target must recover its resting bounds after the pointer leaves.'
   );
   Open(Session, Area);
   Key(Session, 3);

@@ -36,7 +36,7 @@ CUI_API void fpas_cui_group_style(cui_ctx *ui, int node, uint32_t background, in
                                   uint32_t border_rgba, int border_token, int elevation, float opacity);
 /** Draws text with explicit typography, reading direction, alignment and wrapping. */
 CUI_API void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba,
-                                     int direction, int alignment, int nowrap);
+                                     int direction, int alignment, int nowrap, int width_kind, float width, float line_height, int tabular);
 CUI_API void fpas_cui_box_details(cui_ctx *ui, int node, float top, float end, float bottom, float start, int direction);
 /** Applies node sizing on a parent axis.
  * @param ui Owner context.
@@ -110,12 +110,15 @@ CUI_API void fpas_cui_host_begin(cui_ctx *ui);
 /** Resolves native layout for current-frame scroll reconciliation.
  * @param ui Owner context. */
 CUI_API void fpas_cui_resolve_layout(cui_ctx *ui);
-/** Applies a shared palette atomically, without interpolating terminal-invisible states.
+/** Applies a shared palette and optional appearance transition.
  * @param ui Owner context.
  * @param dark Nonzero for dark appearance.
  * @param accent Validated CUI accent family ordinal.
- * @param colors Packed RGBA bytes in semantic token order, excluding NONE. */
-CUI_API void fpas_cui_theme(cui_ctx *ui, int dark, int accent, const uint32_t *colors);
+ * @param colors Packed RGBA bytes in semantic token order, excluding NONE.
+ * @param metrics Optional typography, geometry and elevation values.
+ * @param animate Whether to animate mode and accent changes. */
+CUI_API void fpas_cui_theme(cui_ctx *ui, int dark, int accent, const uint32_t *colors,
+    float *metrics, int animate);
 
 /** Reads the platform's application appearance through CUI.
  * @return -1 if unknown, 0 for light, or 1 for dark. */

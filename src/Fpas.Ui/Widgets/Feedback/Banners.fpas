@@ -12,9 +12,9 @@ public type Options = record
   // Tone used by the announcement and its action.
   public Tone: S.Tone := S.Tone.Accent;
   // Optional native icon glyph.
-  public Icon: string := '';
-  // Action caption. Empty hides the action.
-  public ActionLabel: string := '';
+  public Icon: string? := null;
+  // Action caption. Null omits the action and empty draws only the arrow.
+  public ActionLabel: string? := null;
   // Whether the action and close button accept input.
   public Enabled: bool := true;
 end record;

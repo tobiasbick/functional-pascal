@@ -35,7 +35,13 @@ end unit;
 
 ## Interaction
 
-Activate the swatch to open CUI's palette. Use the hue strip, the saturation and value surface, or one of eight presets. The callback receives the proposed color. Escape closes the palette and returns focus to the swatch.
+Click the swatch or press Enter or Space while the swatch has focus.
+Use the hue strip, the saturation and value surface, or one of eight presets.
+The callback receives the proposed color. Escape closes the palette and
+returns focus to the swatch. Disabling the control closes its palette.
+
+Use `ColorPickers.HueId`, `SurfaceId`, and `PresetId` to find parts in the
+frame snapshot while the palette is open. Preset indices run from zero to seven.
 
 ## See also
 

@@ -26,8 +26,8 @@ public type Options = record
   public SuccessLabel: string := 'Done';
   // Caption shown on failure.
   public ErrorLabel: string := 'Failed';
-  // Optional native glyph before the resting caption.
-  public Icon: string := '';
+  // Native glyph before the resting caption. Null omits its space.
+  public Icon: string? := null;
   // Resting appearance. Default resolves to primary.
   public Variant: S.ButtonVariant := S.ButtonVariant.Primary;
   // Requested control size.

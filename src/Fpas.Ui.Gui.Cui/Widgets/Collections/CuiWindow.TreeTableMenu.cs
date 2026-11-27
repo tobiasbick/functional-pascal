@@ -30,13 +30,14 @@ public sealed partial class CuiWindow
     {
         var scope = RequireLayout(Layout.TreeTableMenu);
         var (id, popup, visible) = ((string, uint, bool))scope.Data!;
-        var (keys, labels, icons, shortcuts, flags) = PackMenuEntries(entries, trackingIds);
+        var (keys, labels, icons, shortcuts, rowOptions) = PackMenuEntries(entries, trackingIds);
         int[] nodes = new int[entries.Length + 1];
         int choice, open, highlighted;
         uint owner;
-        fixed (int* bits = flags, parts = nodes)
+        fixed (NativeMenuRow* rows = rowOptions)
+        fixed (int* parts = nodes)
             choice = NativeMethods.TreeTableMenuEnd(context, popup, scope.Node, visible ? 1 : 0, keys, labels, icons, shortcuts,
-                bits, entries.Length, parts, out open, out highlighted, out owner);
+                rows, entries.Length, parts, out open, out highlighted, out owner);
         layouts.RemoveAt(layouts.Count - 1);
         TrackModal(id + "/menu", owner);
         if (trackingIds is not null)

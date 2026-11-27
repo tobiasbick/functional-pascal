@@ -54,13 +54,18 @@ begin
   elsif (Result and 2) <> 0 then
     Frame.Messages.Add(Dismiss);
   elsif (Result and 4) <> 0 then
-    Frame.Labels.Add(Settings.Title);
-    if Settings.Description <> '' then
-      Frame.Labels.Add(Settings.Description);
+    const Title: string? := Settings.Title;
+    const Description: string? := Settings.Description;
+    if Title <> null then
+      Frame.Labels.Add(Title);
+    end if;
+
+    if Description <> null then
+      Frame.Labels.Add(Description);
     end if;
 
     Frame.Controls.Add(
-      new App.Control(Id, Settings.Title, 'confirm-popover', new Cui.CuiRectangle(), false)
+      new App.Control(Id, Title ?? '', 'confirm-popover', new Cui.CuiRectangle(), false)
     );
     Frame.Controls.Add(
       new App.Control(CancelId, Settings.CancelLabel, 'button', new Cui.CuiRectangle(), true)

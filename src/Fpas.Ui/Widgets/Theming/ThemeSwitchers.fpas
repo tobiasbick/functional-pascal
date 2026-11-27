@@ -35,7 +35,7 @@ end record;
 // - `OnChange`: Maps a different user selection to an application message.
 // - `Settings`: Availability of System and input permission.
 // ## Returns
-// A small segmented selector for either host, with independent focus stops.
+// A small graphical selector with independent focus stops.
 public function ThemeSwitcher of TMsg(
   Id: string;
   Selected: Selection;

@@ -3,15 +3,16 @@
 unit Fpas.Ui.Widgets.Pickers.TimePickers;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 uses System as Sys;
 
 // Presentation and input settings for the native time field.
 public type Options = record
-  // Optional caption above the field.
-  public Label: string := '';
-  // Logical field width. Zero selects CUI's default.
-  public Width: float := 0.0F;
+  // Caption above the field. Null omits the native label wrapper.
+  public Label: string? := null;
+  // Native width. Content uses CUI's default width policy.
+  public Width: L.Extent := L.Extent.Content;
   // Whether to show the hour with AM and PM.
   public TwelveHour: bool := false;
   // Increment of the choices in the minutes column, from one to sixty.

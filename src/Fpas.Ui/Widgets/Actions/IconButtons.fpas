@@ -3,6 +3,8 @@
 unit Fpas.Ui.Widgets.Actions.IconButtons;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 
 // Control sizes in CUI's native order.
@@ -29,6 +31,10 @@ public type Options = record
   public Selected: bool := false;
   // Shortcut hint displayed with the tooltip. Applications bind the key separately.
   public Shortcut: string := '';
+  // Native width. Content keeps the standard square size.
+  public Width: L.Extent := L.Extent.Content;
+  // Optional foreground color for the glyph and busy indicator.
+  public Color: G.Color? := null;
 end record;
 
 // Builds a named icon button whose identity survives icon and tooltip changes.

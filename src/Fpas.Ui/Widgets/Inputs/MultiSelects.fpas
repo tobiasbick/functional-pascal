@@ -3,20 +3,23 @@
 unit Fpas.Ui.Widgets.Inputs.MultiSelects;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.Selects as S;
 
 // Presentation and input options for a multi-select.
 public type Options = record
-  // Optional field caption.
-  public Label: string := '';
-  // Caption for the empty field. Empty uses CUI's placeholder.
-  public Placeholder: string := '';
+  // Field caption. Null omits the native label wrapper.
+  public Label: string? := null;
+  // Caption for the empty field. Null uses the native Select caption.
+  public Placeholder: string? := null;
   // Enable search in the popup.
   public Searchable: bool := false;
   // Maximum visible selections before a count appears. Zero uses three.
   public MaxChips: int := 0;
   // Whether the picker accepts input.
   public Enabled: bool := true;
+  // Native GUI width. Null uses CUI's width for the current label.
+  public Width: L.Extent? := null;
 end record;
 
 // Builds a picker with multiple independent choices.

@@ -36,14 +36,14 @@ void fpas_cui_menu_bar_end(cui_ctx *ui) {
 
 int fpas_cui_menu_bar_menu(cui_ctx *ui, const char *title, int mnemonic, float width,
     int enabled, const char *const *keys, const char *const *labels, const char *const *icons,
-    const char *const *shortcuts, const int *flags, int count, int *nodes, int *open, int *highlighted) {
+    const char *const *shortcuts, const fpas_cui_menu_row *rows, int count, int *nodes, int *open, int *highlighted) {
     const char *caption = cui__frame_strdup(ui, title, -1);
     const cui_id key = cui_make_id(ui, caption), popup = key ^ 0x3E40B4u;
     const cui_menu_bar_menu_opts opts = { .mnemonic = (char)mnemonic, .width = width, .disabled = !enabled };
     const bool visible = cui_menu_bar_menu_begin(ui, caption, &opts);
     const int trigger = fpas_find(ui, key);
     const int chosen = fpas_menu_rows(ui, popup, visible, keys, labels, icons, shortcuts,
-        flags, count, nodes, highlighted);
+        rows, count, nodes, highlighted);
     if (visible) cui_menu_bar_menu_end(ui);
     fpas_menu_snapshot(ui, enabled && !cui_is_disabled(ui), trigger, key, popup,
         count, nodes, open, highlighted);

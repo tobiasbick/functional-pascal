@@ -10,7 +10,7 @@ C function or adding another spelling for an existing operation.
 | Native capability | FPAS entry point |
 | --- | --- |
 | Window, placement, minimum/fixed dimensions, native title and size | [`Gui.Options`, `Gui.Start`/`Run` and `Windows` commands](ui/gui/app-chrome/window.md) |
-| Native close decision, redraw and delayed wakeup | `OnCloseRequested`, `Closing.Cancel`, `Mvu.Exit`, `Frames.Redraw` |
+| Native close decision, `cui_request_redraw`, `cui_request_wakeup` | `OnCloseRequested`, `Closing.Cancel`, `Mvu.Exit`, [`Frames.Redraw`](ui/gui/host.md#invalidation-and-inspection) |
 | System appearance, palette, typography, geometry, elevation and motion | `StartThemed`/`RunThemed`, `Themes.Theme`, `ThemeMetrics.Options` |
 | Font copying, role replacement, four direct fallback faces, emoji loading/support | `Fonts.Apply` and its typed operations |
 | Native calendar/file-browser caption table | `Localization.Set`; native storage owns a copy |
@@ -24,9 +24,14 @@ C function or adding another spelling for an existing operation.
 | `cui_separator` | [`Elements.Divider()`](ui/gui/layout/divider.md) uses CUI's direction and theme border color. |
 | `cui_viewport_size` | `CuiWindow.ViewportSize` supplies the logical drawable size for the graphical `View` and [`Snapshot().Size`](ui/gui/layout/layout-inspection.md#read-the-bounds). |
 | `cui_split` | [`SplitViews.SplitView`](ui/gui/app-chrome/split-view.md) exposes the orientation, minimum pane sizes and divider proposals. |
-| Finalized rectangles and stable layout identities | Named containers and controls expose bounds in [`Snapshot().Controls`](ui/gui/host.md#invalidation-and-inspection). |
-| `cui_scroll`, `cui_scroll_to`, `cui_scroll_reveal` | [`Elements.ScrollView`](ui/gui/layout/scroll-view.md) uses native viewport extents, padding, gap, edge fades and wheel routing. `Layout.ScrollPosition` sets a vertical offset or reveals a child. |
+| `cui_last_rect` and finalized rectangles | [`CuiWindow.LastRectangle`](ui/gui/cui.md#layout-and-control-inspection) reads the previous native layout. Named controls expose finalized bounds in [`Snapshot().Controls`](ui/gui/host.md#invalidation-and-inspection). |
+| `cui_scroll`, `cui_scroll_to`, `cui_scroll_reveal` | [`Elements.ScrollView`](ui/gui/layout/scroll-view.md) uses native viewport extents, padding, gap, edge fades and wheel routing. `Layout.ScrollPosition` controls the model-owned position. [`Scrolls.To`](ui/gui/layout/scroll-view.md#request-a-scroll-offset) moves a host-owned viewport. |
+| `cui_table`, `cui_table_row`, `cui_table_cell`, `cui_table_cell_text` | [`Tables.Table`](ui/gui/data-display/table.md) renders sortable headings, selectable rows and literal or composed cells. |
+| `cui_tree_begin`, `cui_tree_clicked`, `cui_tree_end` | [`Trees.Branch` and `Trees.Leaf`](ui/gui/data-display/tree.md) represent the hierarchy, expansion and activation. |
+| `cui_reorder_begin`, `cui_reorder_item`, `cui_reorder_end` | [`ReorderableLists.ReorderableList`](ui/gui/data-display/reorderable-list.md) renders each row's children and proposes a permutation on drop. |
+| `cui_accordion_begin`, `cui_accordion_end` | [`Accordions.Accordion`](ui/gui/data-display/accordion.md) renders each entry with model-owned expansion and a body. |
 | `cui_virtual_list` | [`VirtualLists.VirtualList`](ui/gui/data-display/virtual-list.md) builds rows in CUI's requested viewport range. |
+| `cui_line_chart`, `cui_bar_chart`, `cui_donut_chart`, `cui_pattern_meter`, `cui_gauge` | The [chart widgets](ui/gui/charts/README.md) render native charts and expose typed options. |
 | Window and text reading direction | [`Desktop.Options`, `Layout.Flow`, and `Texts.Options`](ui/gui/layout/reading-direction.md) configure inheritance and overrides. |
 | Rectangular texture updates | `MediaImages.Update` returns an immutable RGBA source with a dirty rectangle |
 | Canvas click, hover/press changes and optional two-axis wheel ownership | `Canvas` callbacks; unchanged pointer states emit no message |
@@ -44,6 +49,7 @@ retains its semantic palette and cell-based widget subset.
 | Header family | Classification |
 | --- | --- |
 | `cui_create/destroy`, renderer/platform installation, viewport setup and frame begin/end, redraw scheduling, frame count | Host/backend lifecycle. CUI's app loop and the GUI session own it. Custom painting can read native time/delta; `Frames.Redraw` schedules work. |
+| `cui_time`, `cui_delta_time` | CUI supplies frame timing to [custom painting](ui/gui/canvas-and-bars/painting.md). Use the MVU session clock for background work such as the [Feedback upload](ui/gui/feedback/status-spinner.md#interaction). |
 | `cui_input_*`, dropped-file counts/drag state, cursor, mouse/key levels and `cui_wants_*` | Platform input and native ownership. Applications consume typed widget proposals, drop zones and application bindings. Test injection remains a low-level binding service. |
 | `cui_make_id`, ID stack, last-ID/rect/hover queries, raw retained state and state destructors | Binding implementation. Stable application IDs and session snapshots provide the application contract. Raw native pointers are not exposed. |
 | `cui_set_theme`, `cui_get_theme_mode`, `cui_set_accent`, `cui_get_accent`, token/color resolution and accent names | Covered by the model's theme, semantic colors and accent enum. No second imperative application theme state. |

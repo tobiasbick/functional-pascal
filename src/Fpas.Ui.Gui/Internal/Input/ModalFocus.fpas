@@ -21,6 +21,29 @@ uses Fpas.Ui.Widgets.Planning.Kanbans as Kanbans;
 uses System as Sys;
 uses System.Collections.Generic as Generic;
 
+// Finds the top modal among siblings in presentation order.
+// ## Type parameters
+// - `TMsg`: Message type.
+// ## Parameters
+// - `Children`: Siblings in presentation order.
+// - `Prepared`: Resolved subviews.
+// - `Previous`: Previously visible dock tabs, when available.
+// ## Returns
+// The top modal identity or null.
+public function TopModalIn of TMsg(
+  Children: array of E.Element of TMsg;
+  Prepared: V.Prepared of TMsg;
+  Previous: (array of App.Control)?
+): string?;
+begin
+  var Found: string? := null;
+  for Child: E.Element of TMsg in Children do
+    Found := TopModal of TMsg(Child, Prepared, Previous) ?? Found;
+  end for;
+
+  return Found;
+end function;
+
 // Finds the last/deepest active modal scope in traversal order.
 //
 // ## Type parameters
@@ -209,15 +232,7 @@ begin
       const Children: array of E.Element of TMsg,
       _
     ):
-      var Found: string? := null;
-      for Child: E.Element of TMsg in Children do
-        const Next: string? := TopModal of TMsg(Child, Prepared, Previous);
-        if Next <> null then
-          Found := Next;
-        end if;
-      end for;
-
-      return Found;
+      return TopModalIn of TMsg(Children, Prepared, Previous);
     when E.Element.Table(_, _, const Rows: array of Tables.Row of TMsg, _, _, _, _):
       var Found: string? := null;
       for Row: Tables.Row of TMsg in Rows do
@@ -234,11 +249,11 @@ begin
 
       return Found;
     when E.Element.ReorderableList(
-      _, const Items: array of E.Element of TMsg, const Order: array of int, _, _
+      _, const Items: array of array of E.Element of TMsg, const Order: array of int, _, _
     ):
       var Found: string? := null;
       for Index: int in Order do
-        Found := TopModal of TMsg(Items[Index], Prepared, Previous) ?? Found;
+        Found := TopModalIn of TMsg(Items[Index], Prepared, Previous) ?? Found;
       end for;
 
       return Found;
@@ -292,9 +307,16 @@ begin
       if Open and Settings.Enabled then
         return TopModal of TMsg(Content, Prepared, Previous);
       end if;
-    when E.Element.Popover(_, _, const Content: E.Element of TMsg, const Open: bool, _, _):
+    when E.Element.Popover(
+      _,
+      _,
+      const Children: array of E.Element of TMsg,
+      const Open: bool,
+      _,
+      _
+    ):
       if Open then
-        return TopModal of TMsg(Content, Prepared, Previous);
+        return TopModalIn of TMsg(Children, Prepared, Previous);
       end if;
     when E.Element.Styled(const Child: E.Element of TMsg, _):
       return TopModal of TMsg(Child, Prepared, Previous);

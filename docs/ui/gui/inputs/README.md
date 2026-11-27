@@ -19,11 +19,18 @@ widgets available in the TUI.
 
 ## Inputs gallery page
 
-The three original sections use native cards.
-The Text fields and Pickers grids use two columns when both fit. About spans
-the first card. Password and New password share a value. The first field
-shows validation, and the second has a strength meter. Completing the
-verification code shows the Code entered toast.
+The three sections use [native cards](../feedback/card.md) with a gap of
+16 logical units. Text fields and Pickers use a [responsive grid](../feedback/grid.md).
+Each grid fits up to two columns with a minimum width of 260 logical units
+and a gap of 16. About spans the first card.
+
+The page uses [columns](../layout/column.md) to group Verification code,
+New password and Brand color with related content. Password and New password
+share a value. The first field shows validation. The second has a strength
+meter. Completing the verification code shows the Code entered toast.
+
+The shared gallery shell uses [rows](../layout/row.md) for the sidebar,
+compact header and centered page area. The Inputs cards use grids and columns.
 
 ## See also
 

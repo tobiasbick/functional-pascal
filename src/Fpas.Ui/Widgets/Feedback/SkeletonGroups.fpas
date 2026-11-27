@@ -5,11 +5,11 @@ unit Fpas.Ui.Widgets.Feedback.SkeletonGroups;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 
-// Native skeletongroup options.
+// Native skeleton group options.
 public type Options = record
-  // Native width.
+  // Fill, a fixed logical width or a percentage of the parent.
   public Width: L.Extent := L.Extent.Fill;
-  // Spacing, or zero for the native default.
+  // Spacing in logical units. Zero uses the native default of 8.
   public Gap: float := 0.0F;
   // Use a shared sweep of ordered dots.
   public Dither: bool := false;

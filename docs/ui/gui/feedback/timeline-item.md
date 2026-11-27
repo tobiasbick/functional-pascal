@@ -31,8 +31,10 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Title` | A nonempty literal heading. |
-| `Time / Description` | Empty. Format any timestamp in the application before passing the caption. |
-| `Icon / Tone` | Empty uses CUI's dot. The tone defaults to Neutral. |
+| `Time` | Empty omits the caption. Format timestamps before passing the caption. |
+| `Description` | Empty omits the supporting text. CUI wraps the description to the available width. |
+| `Icon` | Empty uses CUI's dot. Pass a glyph from `IconGlyphs` to replace it. |
+| `Tone` | Neutral. The tone sets the icon and its surrounding fill and border. |
 | `Last` | false. Set true on the final item to omit its connector and trailing space. |
 
 ## Interaction
@@ -49,4 +51,5 @@ Place items in the order the reader should see them. CUI wraps the text and alig
 ## Source files
 
 - [TimelineItem.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Planning/TimelineItem.fpas)
+- [CuiTimelineTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiTimelineTests.cs)
 - [timeline.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/timeline.c)

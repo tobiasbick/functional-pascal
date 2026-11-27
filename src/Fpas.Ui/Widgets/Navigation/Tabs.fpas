@@ -6,10 +6,12 @@ uses Fpas.Ui.Elements as E;
 
 // One tab in stable positional order.
 public type Item = record
-  // Literal tab caption.
+  // Literal tab caption and accessible name.
   public Label: string;
   // Optional CUI icon glyph.
   public Icon: string := '';
+  // Hide the GUI caption. The tab requires an icon and keeps its terminal caption.
+  public IconOnly: bool := false;
 end record;
 
 // Tab-strip appearance.

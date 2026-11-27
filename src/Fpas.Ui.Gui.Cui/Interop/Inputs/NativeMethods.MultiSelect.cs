@@ -13,5 +13,5 @@ internal static partial class NativeMethods
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] labels,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] icons,
         int count, int* selected, string? label, string? placeholder, int maxChips, int searchable,
-        int enabled, int focus, int* nodes, out int open);
+        int widthKind, float width, int enabled, int focus, int* nodes, out int open);
 }

@@ -3,6 +3,8 @@
 unit Fpas.Ui.Widgets.Inputs.RulerSliders;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // Presentation and input settings for a native ruler.
 public type Options = record
@@ -12,12 +14,12 @@ public type Options = record
   public MajorEvery: int := 10;
   // Logical points between ticks, at least one.
   public Spacing: float := 9.0F;
-  // Logical width. Zero fills the available width.
-  public Width: float := 0.0F;
-  // Display precision from zero through six decimal places.
-  public DecimalPlaces: int := 0;
-  // Optional unit caption beside the value.
-  public UnitLabel: string := '';
+  // Logical or percentage width. Content and Fill use the available width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Value and tick format. Null shows zero fractional digits.
+  public Format: Charts.ValueFormat? := null;
+  // Unit caption beside the value. Null omits the caption.
+  public UnitLabel: string? := null;
   // Whether the ruler accepts input.
   public Enabled: bool := true;
 end record;

@@ -15,10 +15,10 @@ end enum;
 
 // A command exposed by a native swipe row.
 public type Item = record
-  // Visible action label.
-  public Label: string;
+  // Visible action label, or null to omit it.
+  public Label: string?;
   // Optional CUI glyph.
-  public Icon: string := '';
+  public Icon: string? := null;
   // Semantic background tone.
   public Tone: S.Tone := S.Tone.Neutral;
 end record;

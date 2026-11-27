@@ -1,6 +1,6 @@
 # Hover card
 
-Use a hover card for a preview anchored to an interactive control. The gallery opens a profile preview over the @jonas link. Available in **GUI**.
+Use a hover card for a preview anchored to an interactive control. The gallery opens a profile preview from the @jonas link. Available in **GUI**.
 
 ![Hover card in the FPAS gallery](images/hover-card.png)
 
@@ -31,13 +31,25 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Trigger` | Supply a single interactive control or a card with `Hoverable` enabled. |
-| `Position / Width` | BottomStart / 300 logical points. Zero width uses the default. |
+| `Position` | `BottomStart`. CUI can flip the preferred side to fit the available space. |
+| `Width` | 300 logical units. Zero uses the default. |
 | `Delay` | 0.45 seconds. Zero uses the default. |
-| `Enabled` | true. |
+| `Enabled` | `true`. The trigger must also accept input. |
 
 ## Interaction
 
-Rest the pointer on the link to open the card after the delay. It remains open while the pointer is over the trigger or the card. Escape dismisses it until the pointer leaves the trigger. The link still sends its own activation message.
+Rest the pointer on the trigger to open the card after the delay. The card
+stays open while the pointer is over the trigger or the card. If the
+pointer leaves both, CUI waits 0.2 seconds before closing the card.
+Clicking the trigger or pressing Escape closes it. When the pointer is
+still over the trigger, it must leave before the card opens again.
+
+Disabling the card or its trigger closes the preview and resets its delay.
+The trigger keeps its own activation behavior.
+
+The preview waits while the pointer button is held. Releasing the button
+over the trigger opens the preview if the delay has elapsed.
+[CUI-051](../../../future/cui-upstream-bugs.md#cui-051)
 
 Declare dialogs and sheets outside the hover card body. If the body has scroll
 anchors, put them in a viewport inside that body.

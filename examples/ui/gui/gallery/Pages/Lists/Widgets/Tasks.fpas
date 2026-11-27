@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Lists.Widgets.Tasks;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Color;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Collections.ReorderableLists as R;
@@ -10,18 +11,20 @@ uses Fpas.Ui.Widgets.Feedback.Badges as B;
 
 uses GuiGallery.Pages.Lists.State as State;
 
-function Row(Id: string; Title: string; Label: string; Tone: S.Tone): E.Element of State.Msg;
+function Row(
+  Id: string;
+  Title: string;
+  Label: string;
+  Tone: S.Tone
+): array of E.Element of State.Msg;
 begin
-  return E.Size of State.Msg(
-    E.Row of State.Msg(
-      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(10)), Clip := false),
-      E.Size of State.Msg(
-        E.Styled of State.Msg(E.Text of State.Msg(Title), S.Role.SingleLine),
-        new L.Flex(Basis := L.Extent.Fill)
-      ),
-      B.Badge of State.Msg(Id, Label, new B.Options(Tone := Tone))
-    ), new L.Flex(Basis := L.Extent.Fill)
-  );
+  return [
+    E.FormattedText of State.Msg(
+      Title, Color.Font.Body, 0.0F, new Color.Color(0, 0, 0, 0),
+      NoWrap := true, Width := L.Extent.Fill
+    ),
+    B.Badge of State.Msg(Id, Label, new B.Options(Tone := Tone))
+  ];
 end function;
 
 // Presents the original draggable task rows.
@@ -31,7 +34,7 @@ end function;
 // The native reorderable list.
 public function View(Model: State.Model): E.Element of State.Msg;
 begin
-  return R.ReorderableList of State.Msg(
+  const Tasks: E.Element of State.Msg := R.ReorderableList of State.Msg(
     'task-order', [
       Row('task-docs', 'Write the release notes', 'Docs', S.Tone.Info),
       Row('task-video', 'Record the demo video', 'Video', S.Tone.Neutral),
@@ -39,6 +42,10 @@ begin
       Row('task-tag', 'Tag version 1.0', 'Release', S.Tone.Warning),
       Row('task-blog', 'Post the announcement', 'Blog', S.Tone.Teal)
     ], Model.TaskOrder, State.Msg.Reorder
+  );
+  return E.Size of State.Msg(
+    E.Column of State.Msg(new L.Flow(Clip := false), Tasks),
+    new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
   );
 end function;
 

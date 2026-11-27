@@ -9,20 +9,18 @@ uses Fpas.Ui.Elements as E;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable identity, independent of the caption.
-// - `Label`: Literal caption.
-// - `Value`: Fraction from zero through one.
-// - `Size`: Logical diameter; zero selects CUI's default of 140.
+// - `Label`: Literal caption, or null to omit it.
+// - `Value`: Finite reading. CUI clamps it to zero through one.
+// - `Size`: Finite logical diameter. Nonpositive values use CUI's default of 140.
 // ## Returns
 // A graphical element.
 public function Gauge of TMsg(
   Id: string;
-  Label: string;
+  Label: string?;
   Value: float;
   Size: float := 0.0F
 ): E.Element of TMsg;
 requires Id <> '';
-requires Value >= 0.0F and Value <= 1.0F;
-requires Size >= 0.0F;
 begin
   return (E.Element of TMsg).Gauge(Id, Label, Value, Size);
 end function;

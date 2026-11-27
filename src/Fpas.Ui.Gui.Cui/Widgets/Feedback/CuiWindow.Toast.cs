@@ -9,7 +9,7 @@ public sealed partial class CuiWindow
     /// <summary>Queues one notification for the native CUI overlay.</summary>
     /// <param name="title">Nonblank title, up to 127 UTF-8 bytes.</param>
     /// <param name="description">Optional secondary text, up to 191 UTF-8 bytes.</param>
-    /// <param name="tone">Native neutral, info, success, warning or danger tone.</param>
+    /// <param name="tone">Native CUI tone. Violet, teal, rose and accent use neutral toast presentation.</param>
     /// <param name="duration">Seconds until dismissal, zero for the native default, negative to keep.</param>
     /// <param name="action">Optional action caption, up to 47 UTF-8 bytes and without the ## delimiter.</param>
     /// <param name="showTimer">Whether to show the remaining time.</param>
@@ -24,7 +24,7 @@ public sealed partial class CuiWindow
         if (action.Length != 0 && (string.IsNullOrWhiteSpace(action) || action.Contains("##", StringComparison.Ordinal)))
             throw new ArgumentException("A toast action needs a visible caption without the ## delimiter.", nameof(action));
         if (!float.IsFinite(duration)) throw new ArgumentOutOfRangeException(nameof(duration));
-        if (tone is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(tone));
+        CheckTone(tone);
         return NativeMethods.Toast(context, title, Optional(description),
             tone, duration, Optional(action), showTimer ? 1 : 0);
     }

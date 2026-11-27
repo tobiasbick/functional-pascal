@@ -23,8 +23,11 @@ public enum CuiMenuEntryKind
 /// <param name="Enabled">Whether the command can be chosen.</param>
 /// <param name="Danger">Use the native danger color.</param>
 /// <param name="Checked">Show a check mark.</param>
+/// <param name="Font">Native font role for the command caption.</param>
+/// <param name="TextSize">Logical caption size, or zero for the theme body size.</param>
 public sealed record CuiMenuEntry(CuiMenuEntryKind Kind, string Key, string Label, string Icon = "",
-    string Shortcut = "", bool Enabled = true, bool Danger = false, bool Checked = false);
+    string Shortcut = "", bool Enabled = true, bool Danger = false, bool Checked = false,
+    int Font = 0, float TextSize = 0);
 
 /// <summary>The native menu's current interaction result.</summary>
 /// <param name="Choice">Chosen entry index, or minus one.</param>

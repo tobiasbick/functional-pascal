@@ -44,7 +44,7 @@ begin
     Frame.Controls.Add(
       new App.Control(
         Part,
-        Settings.ActionLabel,
+        Settings.ActionLabel ?? '',
         'empty-state-action',
         new Cui.CuiRectangle(),
         Enabled

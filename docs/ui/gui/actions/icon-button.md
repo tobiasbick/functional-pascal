@@ -29,21 +29,28 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Variant / ControlSize` | Ghost / Medium |
+| `Variant / ControlSize` | Ghost / Medium. Small and Large are also available. |
 | `Enabled / Loading / Selected` | true / false / false |
-| `Shortcut` | Empty |
+| `Tooltip` | Required. Names the action. Use a nonblank caption without the middle-dot delimiter with two spaces on each side. |
+| `Shortcut` | Empty. The caption and shortcut must fit 255 UTF-8 bytes, including six separator bytes for the shortcut. |
+| `Width` | Content uses the native square size. Fill, Fixed, and Percent set the width. |
+| `Color` | null. The button variant supplies the glyph and busy indicator color. |
+
+Use `Elements.Size` with a width growth weight to allocate a weighted share of a
+GUI row. [Sizing and units](../../layout/sizing.md#independent-gui-axes)
 
 ## Interaction
 
 Tab focuses the button. Click, Enter or Space sends its message. Busy
 buttons keep focus and suppress activation. The GUI uses the CUI icon font.
-Shortcut displays a hint.
+Shortcut displays a hint in the tooltip. Bind the key separately.
 
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_icon_button)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/IconButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/View.fpas)
+- [Tooltip toolbar](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Tooltip.fpas)
 - [Actions](README.md)
 
 ## Source files

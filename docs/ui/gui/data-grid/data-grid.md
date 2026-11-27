@@ -42,10 +42,12 @@ end unit;
 | `Columns` | Supply one to 32 columns. Each column has a heading, initial width, alignment, and options for sorting, resizing, and hiding. |
 | `Cell` | Supply one Text, Content or Editable cell per column. Editable capacity is at most 256 UTF-8 bytes including the terminator. |
 | `Selected / Order` | Both null. Provide a selection mask or sort record to enable each feature. |
-| `Cursor / Anchor` | Both minus one. When set, they index the displayed order. |
+| `Cursor / Anchor` | Both minus one. When set, they index the displayed order. Setting a cursor reveals its row. |
 | `Scroll` | Null for native scrolling. Supply a nonnegative vertical target in logical points to restore it and receive changes through the grid's proposal mapper. |
-| `Height / RowHeight` | Fill / 40 logical units. CUI treats `Content` as `Fill` for the viewport height. |
-| `Striped / HideCheckboxes / Enabled` | false / false / true. |
+| `Width / Height` | `Fill`. CUI treats `Content` as `Fill` for both dimensions. |
+| `RowHeight` | 40 logical units. The minimum is one logical unit. |
+| `Striped / HideCheckboxes / Enabled` | False / false / true. Hiding the checkboxes keeps row selection available. |
+| `OnRowClick / OnDoubleClick` | Both null. Each callback receives the clicked row's display index. |
 
 ## Column and viewport layout
 
@@ -53,6 +55,9 @@ Give each column an initial `Width` in logical units. CUI uses 150 logical
 units when `Width` is zero. Drag a column divider to resize the column. Set
 `Fixed` to true to disable this drag. CUI gives any remaining width to the
 last visible column.
+
+The grid retains resized widths by column position. Appended columns receive
+their initial widths.
 
 Use a `Priority` from 1 through 255 for a column that can hide. If the
 viewport narrows, CUI hides the largest positive priorities first. A priority
@@ -70,12 +75,30 @@ Click sortable headings to propose an order. Shift-click selects a range and
 Ctrl-click toggles one row. Store selections by stable row ID when sorting or
 filtering changes their positions.
 
-Double-click an editable cell to start a draft. Pressing Enter on the
-grid's focused row starts editing its first editable cell. During editing,
-Enter sends the text to the commit mapper, leaving the cell commits a changed
-draft, and Escape cancels. The grid also discards the draft if the row leaves
-the realized range, its identity changes, the cell stops being editable,
-its capacity changes, or the grid is disabled.
+Use the arrows, Page Up, Page Down, Home or End to move the keyboard cursor.
+Space toggles selection. Ctrl+A selects all rows and Escape clears selection.
+A checkbox click changes the selection and sets the origin for the next
+Shift range.
+
+`OnRowClick` observes clicks on the row itself. The grid sends any state
+proposal first. The row callback can report a repeated click when the grid
+state stays the same.
+
+### Editing
+
+Use `Cell.Editable` to draw single-line text with an optional leading array
+of elements, such as an avatar. Pass a capacity from 2 through 256 bytes
+including the UTF-8 terminator. The model caption must fit in that capacity.
+
+Double-click the text to start a draft. Enter on the focused grid row opens
+its first visible editable cell. Enter in the editor sends the draft to
+`OnCommit`. Moving focus out of the editor sends a changed draft. Store
+the proposed text in the model to accept it.
+
+Escape discards the draft. The grid also discards the draft when the row
+leaves the realized range or changes identity. Hiding the column, disabling
+or removing the grid, changing the capacity or removing the editor discards
+the draft. Undo applies within the current draft.
 
 Declare open modal scopes outside the row factory. The GUI validates realized
 `Content` children and `Editable` leading children before drawing them and

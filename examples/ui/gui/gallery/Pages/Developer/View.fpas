@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Developer.View;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Gui.Internal.Widgets.Developer.QueryBuilder as NativeQuery;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Developer.CommitGraphs as C;
@@ -127,7 +128,7 @@ begin
     ),
     Limit(
       680, 10,
-      E.FormattedText of M.Msg('Headers', Font.Font.Medium, 0.0F, Palette.Foreground),
+      E.FormattedText of M.Msg('Headers', Graphics.Font.Medium, 0.0F, Palette.Foreground),
       K.KeyValueEditor of M.Msg(
         'dev-headers',
         Model.Headers,
@@ -150,7 +151,7 @@ begin
       ),
       E.FormattedText of M.Msg(
         NativeQuery.Description(D.Fields, Model.Rules),
-        Font.Font.Body,
+        Graphics.Font.Body,
         12.0F,
         Palette.TextMuted
       )

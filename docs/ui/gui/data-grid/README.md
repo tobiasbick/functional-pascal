@@ -11,14 +11,27 @@ columns. These widgets require the GUI host.
 | [Tree table](tree-table.md) | Show nested rows with disclosure, selection and optional lazy children. |
 | [Tree cell](tree-cell.md) | Indent and expand a name in a table whose rows the model builds. |
 
-The application owns the displayed order and selection. When it changes the
-order, translate position-based proposals through the order that produced them.
+## Data grid gallery page
+
+The filter bar shows three fields and a search box. Its state is independent
+of the 2,000-person grid. The grid uses a 420-unit viewport and creates the
+visible rows on demand. Each name cell combines an avatar with an editor.
+Each score cell combines a progress bar with a tabular label.
+
+Equal sort keys keep their prior display order. FPAS keeps selections,
+cursor and range origin by person identity. A name edit updates the order
+immediately when the grid sorts by name.
+
+The source tree composes expandable names and right-aligned totals in an
+ordinary table. The following virtual tree example demonstrates lazy children,
+keyboard navigation and the context menu.
 
 ## See also
 
 - [UI handbook](../README.md)
 - [Data display](../data-display/README.md)
 - [Data grid in the gallery](../../../../examples/ui/gui/gallery/Pages/DataGrid/View.fpas)
+- [CUI gallery comparison](../../../future/cui-compare/README.md#data-grid-evidence)
 
 ## Source files
 

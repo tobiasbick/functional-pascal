@@ -6,9 +6,9 @@ uses Fpas.Ui.Elements as E;
 
 // Native avatar-group settings.
 public type Options = record
-  // Number of avatars before the overflow count.
+  // Number of avatars before the overflow count. Nonpositive values use four.
   public MaximumVisible: int := 4;
-  // Logical avatar diameter.
+  // Logical avatar diameter. Nonpositive values use 32.
   public Size: float := 32.0F;
 end record;
 

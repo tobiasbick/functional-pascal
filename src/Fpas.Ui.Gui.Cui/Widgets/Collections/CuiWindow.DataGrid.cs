@@ -24,12 +24,16 @@ public sealed partial class CuiWindow
     /// <param name="rowHeight">Logical row height.</param>
     /// <param name="options">Native input, striping, checkbox and focus bits.</param>
     /// <param name="headerId">Optional inspection key by column index.</param>
+    /// <param name="widthKind">Encoded viewport width kind.</param>
+    /// <param name="width">Fixed width or percentage.</param>
     /// <returns>Frame-local visible range and output buffers.</returns>
     public unsafe CuiGridFrame BeginDataGrid(string id, CuiGridColumn[] columns, int rows, bool[]? selected,
-        int[] state, int heightKind, float height, float rowHeight, int options, Func<int, string>? headerId)
+        int[] state, int heightKind, float height, float rowHeight, int options, Func<int, string>? headerId,
+        int widthKind = 1, float width = 0)
     {
         CheckFrame();
         CheckGridHeight(rows, heightKind, height, rowHeight);
+        CheckExtent(widthKind, width, nameof(width));
         if (selected is not null && selected.Length != rows)
             throw new ArgumentException("Expected one selection value per row.", nameof(selected));
         if (state.Length != 4 || state[0] < -2 || state[0] >= columns.Length ||
@@ -51,7 +55,7 @@ public sealed partial class CuiWindow
         fixed (byte* mask = selection)
             handle = NativeMethods.DataGridBegin(context, Stable(id), titles, w, f, titles.Length,
                 rows, selection is { Length: 0 } ? &emptySelection : mask, s,
-                heightKind, height, rowHeight, options, range, h);
+                heightKind, height, rowHeight, widthKind, width, options, range, h);
         var shown = new bool[columns.Length];
         var frame = new CuiGridFrame(range[0], range[1], selection, state, shown);
         layouts.Add(new(Layout.DataGrid, range[2], new GridOutput(handle, frame)));
@@ -67,14 +71,16 @@ public sealed partial class CuiWindow
     /// <param name="position">Row's current display index.</param>
     /// <param name="id">Stable row identity.</param>
     /// <param name="track">Whether to expose row geometry.</param>
-    public void DataGridRow(int position, string id, bool track)
+    /// <returns>Whether CUI registered a click on this row.</returns>
+    public bool DataGridRow(int position, string id, bool track)
     {
         var output = (GridOutput)RequireLayout(Layout.DataGrid).Data!;
         if (position != output.NextRow || position >= output.Frame.Last)
             throw new ArgumentOutOfRangeException(nameof(position), "Build the realized rows in order.");
-        int node = NativeMethods.DataGridRow(context, position, Stable(id));
+        int node = NativeMethods.DataGridRow(context, position, Stable(id), out int clicked);
         output.NextRow++;
         if (track) trackedNodes.Add(id, node);
+        return clicked != 0;
     }
 
     /// <summary>Advances to the next native grid cell.</summary>
@@ -90,7 +96,7 @@ public sealed partial class CuiWindow
 
     /// <summary>Draws native editable text in the current cell.</summary>
     /// <param name="value">Current model value.</param>
-    /// <param name="capacity">UTF-8 capacity including the terminator, at most 256.</param>
+    /// <param name="capacity">UTF-8 capacity from 2 to 256 bytes including the terminator.</param>
     /// <returns>Committed text, or null while idle, editing or canceled.</returns>
     public unsafe string? DataGridEdit(string value, int capacity)
     {

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Canvas.View;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
@@ -16,7 +17,6 @@ uses Fpas.Ui.Widgets.Canvas.SelectionRings as R;
 uses Fpas.Ui.Widgets.Desktop.Toolbars as T;
 uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
 uses Fpas.Ui.Widgets.Inputs.Checkboxes as Check;
-uses Fpas.Ui.Widgets.Motion.Motion as M;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
 
 uses Gallery.Shared.Strings as Strings;
@@ -109,7 +109,7 @@ begin
       [new N.Pin(1, 'Prompt', true, 1)],
       E.FormattedText of State.Msg(
         'A black bear, minimalist style, soft gradients',
-        M.Font.Body,
+        Graphics.Font.Body,
         12.0F,
         Colors.TextSecondary
       ),
@@ -121,7 +121,12 @@ begin
       Model.Positions[1].Y,
       'Negative',
       [new N.Pin(2, 'Avoid', true, 1)],
-      E.FormattedText of State.Msg('No text, no people', M.Font.Body, 12.0F, Colors.TextSecondary),
+      E.FormattedText of State.Msg(
+        'No text, no people',
+        Graphics.Font.Body,
+        12.0F,
+        Colors.TextSecondary
+      ),
       SampleBounds.NodeWidth
     ),
     new N.Node of State.Msg(
@@ -130,7 +135,12 @@ begin
       Model.Positions[2].Y,
       'Generate',
       [new N.Pin(3, 'Prompt', false, 1), new N.Pin(4, 'Avoid', false, 1)],
-      E.FormattedText of State.Msg('Steps 30 · dpm++ 2M', M.Font.Body, 12.0F, Colors.TextSecondary),
+      E.FormattedText of State.Msg(
+        'Steps 30 · dpm++ 2M',
+        Graphics.Font.Body,
+        12.0F,
+        Colors.TextSecondary
+      ),
       SampleBounds.NodeWidth,
       Ring := new R.Options(Tone := S.Tone.Warning, Name := 'Paul')
     )
@@ -231,7 +241,7 @@ begin
         new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
       ),
       E.Styled of State.Msg(
-        E.FormattedText of State.Msg(Bytes, M.Font.Body, 12.0F, Colors.TextMuted),
+        E.FormattedText of State.Msg(Bytes, Graphics.Font.Body, 12.0F, Colors.TextMuted),
         S.Role.Tabular
       )
     ),

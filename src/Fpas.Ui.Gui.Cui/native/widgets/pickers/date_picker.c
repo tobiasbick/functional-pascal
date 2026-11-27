@@ -1,8 +1,9 @@
 // [Documentation](../../../../../docs/ui/gui/inputs/date-picker.md)
 #include "../../fpas_cui.h"
 
+/** Submits the native date field and reports its visible parts. */
 int fpas_cui_date_picker(cui_ctx *ui, const char *id, int value, const char *label,
-    const char *placeholder, float width, int enabled, int focus,
+    const char *placeholder, int width_kind, float width, int enabled, int focus,
     int *trigger, int *parts, int *nodes, int *count) {
     const cui_id key = cui_make_id(ui, id), popup_key = key ^ 0xDA7Eu;
     const cui_popup *popup = cui__popup_get(ui, popup_key, false);
@@ -19,7 +20,7 @@ int fpas_cui_date_picker(cui_ctx *ui, const char *id, int value, const char *lab
     fpas_own(ui, key, calendar, 0, popup_key);
 
     const cui_date_opts options = {
-        .label = label, .placeholder = placeholder, .width = width > 0 ? CUI_PX(width) : CUI_FIT
+        .label = label, .placeholder = placeholder, .width = fpas_extent(width_kind, width)
     };
     const int first = ui->node_count;
     cui_push_disabled(ui, !enabled);

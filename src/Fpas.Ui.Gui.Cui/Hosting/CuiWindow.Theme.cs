@@ -5,7 +5,7 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    private const int ThemeColorCount = 34;
+    internal const int ThemeColorCount = 34;
 
     /// <summary>Gets the platform's app appearance, or null if CUI cannot determine it.</summary>
     public bool? SystemDark
@@ -17,12 +17,13 @@ public sealed partial class CuiWindow
         }
     }
 
-    /// <summary>Applies the shared theme's semantic palette atomically.</summary>
+    /// <summary>Applies the shared theme's semantic palette.</summary>
     /// <param name="dark">Whether to use dark typography and elevation defaults.</param>
     /// <param name="accent">CUI accent family: neutral=0 through rose=7.</param>
     /// <param name="colors">Exactly 34 packed RGBA colors in CUI semantic token order.</param>
     /// <param name="metrics">Optional 40-value typography/geometry/elevation contract; see ReadThemeMetrics.</param>
-    public unsafe void SetTheme(bool dark, int accent, uint[] colors, float[]? metrics = null)
+    /// <param name="animate">Use CUI's palette transition when the appearance or accent changes.</param>
+    public unsafe void SetTheme(bool dark, int accent, uint[] colors, float[]? metrics = null, bool animate = false)
     {
         CheckOpen(); ArgumentNullException.ThrowIfNull(colors);
         ArgumentOutOfRangeException.ThrowIfNegative(accent);
@@ -30,9 +31,9 @@ public sealed partial class CuiWindow
         if (colors.Length != ThemeColorCount)
             throw new ArgumentException($"Expected {ThemeColorCount} CUI semantic colors.", nameof(colors));
         if (metrics is not null) ValidateThemeMetrics(metrics);
-        fixed (uint* values = colors) NativeMethods.SetTheme(context, dark ? 1 : 0, accent, values);
-        if (metrics is not null)
-            fixed (float* values = metrics) NativeMethods.ThemeMetrics(context, values, 1);
+        fixed (uint* values = colors)
+        fixed (float* settings = metrics)
+            NativeMethods.SetTheme(context, dark ? 1 : 0, accent, values, settings, animate ? 1 : 0);
     }
 
     /// <summary>Copies the active palette in the same semantic order accepted by SetTheme.</summary>

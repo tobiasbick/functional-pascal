@@ -29,13 +29,15 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Title / Description` | Title is required. Limits are 127 and 191 UTF-8 bytes respectively. |
-| `Appearance` | Neutral. Info, Success, Warning and Danger are also available. |
+| `Appearance` | Neutral. Info, Success, Warning and Danger show their own icons. Violet, Teal, Rose and Accent use neutral presentation. |
 | `Duration` | 0 uses the default of four seconds, or six with the timer line. A negative duration keeps the toast open. |
-| `ActionLabel / ShowTimer` | Empty / false. See Undo toast for an action example. |
+| `ActionLabel` | Empty. Set a nonblank caption of up to 47 UTF-8 bytes without the `##` delimiter to add an action that closes the toast. |
+| `ShowTimer` | false. Show a draining line while the toast counts down. |
+| `OnAction` | Null. Supply a message factory to handle the action in the application. A factory requires an action caption. |
 
 ## Interaction
 
-The host shows the toast after committing the model and leaves focus in place. Hover to expand the stack and pause its timer. Use the dismiss button or swipe right to close a toast.
+The host shows the toast after committing the model and leaves focus in place. Hover to expand the stack and pause its timer. Use the dismiss button or swipe right to close a toast. The gallery's Archive a message example uses the default duration and closes through its Undo button.
 
 ## See also
 

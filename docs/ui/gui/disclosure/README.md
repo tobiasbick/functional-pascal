@@ -17,15 +17,30 @@ show progress within a page. These examples require the GUI host.
 | [Undo toast](undo-toast.md) | Give the user time to reverse an operation. |
 | [Veil](veil.md) | Visually cover a picture or spoiler until revealed. |
 
+## Disclosure gallery page
+
+The announcement sits above the section headings. The profile hover card
+opens from a link in a wrapping sentence. The confirmation opens from the
+branch button and updates the sample result in the same row.
+
+The Billing and Security cards share a column. Billing uses wrapped details
+and actions. The two countdowns share a centered row. The checklist sits in
+a 460-unit box and opens the first incomplete step.
+
+The archive button shows a timed Undo toast. The last panel contains three
+veils over a generated picture, a sample identifier and a spoiler.
+
 ## See also
 
 - [UI handbook](../README.md)
 - [Overlays](../overlays/README.md)
 - [Disclosure in the gallery](../../../../examples/ui/gui/gallery/Pages/Disclosure/View.fpas)
+- [CUI gallery comparison](../../../future/cui-compare/README.md#disclosure-evidence)
 
 ## Source files
 
 - [Clock.fpas](../../../../examples/ui/gui/gallery/Pages/Disclosure/Clock.fpas)
 - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Disclosure/State.fpas)
 - [DisclosureContract.fpas](../../../../tests/Fixtures/gui-host/DisclosureContract.fpas)
+- [DisclosureFeedbackContract.fpas](../../../../tests/Fixtures/gui-host/DisclosureFeedbackContract.fpas)
 - [CuiDisclosureTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiDisclosureTests.cs)

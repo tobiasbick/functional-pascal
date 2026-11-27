@@ -7,6 +7,18 @@ uses Fpas.Ui.Layout as L;
 
 uses System as Sys;
 
+// The native card's child layout.
+public type Arrangement = enum: byte
+  // Place children vertically.
+  Column;
+  // Place children horizontally.
+  Row;
+  // Layer children on top of one another.
+  Stack;
+  // Use native grid placement with one column.
+  Grid;
+end enum;
+
 // Presentation and input settings for a CUI card.
 public type Options = record
   // Preferred width.
@@ -25,11 +37,11 @@ public type Options = record
   public PaddingY: float := 0.0F;
   // Logical space between children. Zero uses the native default.
   public Gap: float := 0.0F;
-  // Arrange children in a row.
-  public Horizontal: bool := false;
+  // Arrange children using a native CUI layout.
+  public Direction: Arrangement := Arrangement.Column;
   // Cross-axis alignment.
   public Align: L.Alignment := L.Alignment.Default;
-  // Allow a horizontal card to wrap its children.
+  // Allow a row card to wrap its children.
   public Wrap: bool := false;
   // Use a muted borderless surface.
   public Muted: bool := false;

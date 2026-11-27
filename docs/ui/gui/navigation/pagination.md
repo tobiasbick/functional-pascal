@@ -30,14 +30,23 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
+| `Id` | A stable pager ID. |
 | `Page` | Current zero-based index. |
-| `PageCount` | A positive page count. Page must be below it. |
+| `PageCount` | A positive page count. `Page` must be less than `PageCount`. |
 | `OnChange` | Receives the proposed zero-based page. |
 | `Enabled` | true. |
 
 ## Interaction
 
-Click a page button or focus it with Tab and press Enter or Space. CUI displays one-based page numbers and fits the buttons and ellipses to the available width. Previous and Next are disabled at the respective ends.
+Click a page button or focus it with Tab and press Enter or Space. CUI displays
+one-based page numbers and highlights the model's current page. Previous and
+Next each step one page and are disabled at the corresponding ends. Set
+`Enabled` to `false` to disable every button.
+
+CUI shows all numbers for up to seven pages. For larger counts, CUI chooses a
+layout based on the parent's inner width. The compact layout keeps the first,
+current and last page numbers. The wide layout also shows nearby numbers. An
+ellipsis marks each omitted range.
 
 ## See also
 

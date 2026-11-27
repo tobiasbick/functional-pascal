@@ -4,7 +4,8 @@ unit Fpas.Ui.Gui.Internal.Widgets.Feedback.StatusSpinner;
 
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
-uses Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Gui.Internal.Core.Values as Colors;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Actions.StatusButtons as Buttons;
 uses Fpas.Ui.Widgets.Feedback.StatusSpinners as W;
 
@@ -26,7 +27,8 @@ begin
   const Role: string := 'status-spinner';
   const Token: string := C.Token(Role, Id);
   const Visible: bool := Frame.Window.StatusSpinner(
-    Token, cast Status as int, Settings.Size, Colors.Color(Settings.Color), Settings.Keep
+    Token, cast Status as int, Settings.Size, Colors.PackOptional(Settings.Color), Settings.Keep,
+    Size.ThemeToken(Settings.ThemeColor)
   );
   P.Root of TMsg(
     Frame, Id, Role, '', false, if Visible then

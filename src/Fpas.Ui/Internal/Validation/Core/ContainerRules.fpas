@@ -10,7 +10,12 @@ uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System as Sys;
 
-procedure CheckColor(Color: G.Color?; Token: Themes.ColorToken?; Location: string);
+// Checks a paint option with an explicit color or an active theme token.
+// ## Parameters
+// - `Color`: Optional literal color.
+// - `Token`: Optional theme token.
+// - `Location`: View location for diagnostics.
+public procedure CheckColor(Color: G.Color?; Token: Themes.ColorToken?; Location: string);
 begin
   if Token <> null then
     if Color <> null or not Sys.Enum.IsDefined of Themes.ColorToken(Token.Value) then

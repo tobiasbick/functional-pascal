@@ -223,7 +223,7 @@ begin
       return (E.Element of TParent).DonutChart(Id, Values, Labels, Settings);
     when E.Element.Gauge(
       const Id: string,
-      const Label: string,
+      const Label: string?,
       const Current: float,
       const Size: float
     ):

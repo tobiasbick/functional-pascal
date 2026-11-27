@@ -69,9 +69,36 @@ begin
     V.Target.Terminal,
     'Graphical profile'
   );
+  Reject(
+    F.TextField of string('field', '', Identity, new F.Options(Autofocus := true)),
+    V.Target.Terminal,
+    'Graphical profile'
+  );
+  Reject(
+    F.TextField of string('field', '', Identity, new F.Options(Width := L.Extent.Percent(101.0F))),
+    V.Target.Graphical,
+    'between zero and 100'
+  );
   const Search: E.Element of string := SearchFields.SearchField of string('query', '', Identity);
   discard V.Prepare of string(Search, V.Target.Terminal);
   Reject(Search, V.Target.Portable, 'terminal or graphical profile');
+  Reject(
+    SearchFields.SearchField of string(
+      'query',
+      '',
+      Identity,
+      new SearchFields.Options(Password := true)
+    ),
+    V.Target.Terminal,
+    'Graphical profile'
+  );
+  Reject(
+    SearchFields.SearchField of string(
+      'query', '', Identity, new SearchFields.Options(Password := true, MaxUtf8Bytes := 342)
+    ),
+    V.Target.Graphical,
+    'at most 341 bytes'
+  );
   discard V.Prepare of string(
     TextAreas.TextArea of string('about', '', Identity),
     V.Target.Portable
@@ -84,6 +111,16 @@ begin
     TextAreas.TextArea of string('about', 'line' + cast 13 as char, Identity),
     V.Target.Graphical,
     'LF line endings'
+  );
+  Reject(
+    TextAreas.TextArea of string(
+      'about',
+      '',
+      Identity,
+      new TextAreas.Options(Height := float.PositiveInfinity)
+    ),
+    V.Target.Graphical,
+    'height must be finite'
   );
   Reject(
     F.TextField of string('field', 'é', Identity, new F.Options(MaxUtf8Bytes := 1)),
@@ -337,19 +374,29 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
         'edit',
         Value,
         Msg.Edit,
-        new F.Options(Clearable := true, MaxUtf8Bytes := 5),
+        new F.Options(
+          Label := 'Editor', Clearable := true, MaxUtf8Bytes := 5,
+          Width := L.Extent.Fixed(L.Measure.Logical(210)), Autofocus := true
+        ),
         Msg.Submit
       ),
-      F.TextField of Msg('read-only', 'fixed', Msg.Edit, new F.Options(ReadOnly := true)),
+      F.TextField of Msg(
+        'read-only', 'fixed', Msg.Edit,
+        new F.Options(ReadOnly := true, Width := L.Extent.Percent(50.0F))
+      ),
       F.TextField of Msg(
         'disabled',
         'sample',
         Msg.Edit,
-        new F.Options(Password := true, Enabled := false)
+        new F.Options(Password := true, Enabled := false, Autofocus := true)
       ),
       SearchFields.SearchField of Msg(
         'query', Value, Msg.Edit,
-        new SearchFields.Options(Prefix := 'Projects:', Suffix := 'in scope'), Msg.Submit
+        new SearchFields.Options(
+          Placeholder := '', Prefix := 'Projects:', Suffix := 'in scope', Password := true,
+          Width := L.Extent.Fixed(L.Measure.Logical(230))
+        ),
+        Msg.Submit
       )
     );
   end function;
@@ -387,11 +434,16 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
       Step();
     end procedure;
   begin
-    discard Session.Post(Msg.Focus);
     Step();
+    Step();
+    const Editor: Gui.Control := Control of Msg(Session, 'edit');
     Check(
-      Control of Msg(Session, 'edit').Focused,
-      'The host must focus the editor by its stable ID.'
+      Editor.Focused and Editor.Bounds.Width = 210
+      and Sys.Math.Abs(
+        Control of Msg(Session, 'read-only').Bounds.Width * 2.0F -
+        Control of Msg(Session, 'disabled').Bounds.Width
+      ) <= 1.0F,
+      'The first enabled autofocus, fixed width and percentage width must reach CUI.'
     );
     Submit := true;
     Step();
@@ -414,11 +466,24 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
       ReadOnly.Focused and ReadOnly.Value = 'fixed' and Events.Count = 3,
       'A read-only field must allow focus without editing.'
     );
+    discard Session.Post(Msg.Focus);
+    Step();
+    Check(
+      Control of Msg(Session, 'edit').Focused,
+      'A later focus request must find the editor by its stable ID.'
+    );
     Click(F.RevealId('disabled'));
     Check(
       Control of Msg(Session, F.RevealId('disabled')).Text = 'Show password'
       and not Control of Msg(Session, F.RevealId('disabled')).Enabled,
       'A disabled password field must disable its reveal action.'
+    );
+    const Reveal: string := SearchFields.RevealId('query');
+    Check(Control of Msg(Session, 'query').Bounds.Width = 230, 'Search must use its native width.');
+    Click(Reveal);
+    Check(
+      Control of Msg(Session, Reveal).Text = 'Hide password',
+      'A masked search field must have a working native reveal button.'
     );
     Click('query');
     SubmissionText := 'éZ';
@@ -427,9 +492,10 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
     Step();
     Check(
       Events.Count = 5 and Events[3] = 'edit:éZ' and Events[4] = 'submit:éZ'
+      and Control of Msg(Session, 'query').Value = ''
       and Sys.Array.IndexOf of string(Session.Snapshot().Text, 'Projects:') >= 0
       and Sys.Array.IndexOf of string(Session.Snapshot().Text, 'in scope') >= 0,
-      'Search must submit the edited query without its displayed affixes.'
+      'Search must submit its query without affixes and omit the password from the snapshot.'
     );
   end procedure;
 begin

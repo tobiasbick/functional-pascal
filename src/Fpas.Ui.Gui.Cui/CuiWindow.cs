@@ -311,7 +311,8 @@ public sealed partial class CuiWindow : IDisposable
     /// <param name="text">Valid Unicode display text.</param>
     public void Text(string text) { CheckFrame(); Utf8.Validate(text, nameof(text)); NativeMethods.Text(context, text, 0); }
 
-    /// <summary>Gets the most recent widget's rectangle from the latest native layout.</summary>
+    /// <summary>Reads the last emitted widget's rectangle from the previous native layout.</summary>
+    /// <remarks>Returns a zero rectangle when the widget has no previous layout.</remarks>
     public CuiRectangle LastRectangle { get { CheckFrame(); return NativeMethods.LastRectangle(context); } }
 
     /// <summary>Renders the current completed view into a PNG after a frame has been presented.</summary>

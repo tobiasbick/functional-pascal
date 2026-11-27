@@ -1,6 +1,7 @@
 // [Documentation](../../../../../docs/ui/gui/selection/radio-cards.md)
 #include "../../fpas_cui.h"
 
+/** Builds native choices from literal captions and optional fields. */
 int fpas_cui_radio_cards(cui_ctx *ui, const char *id, const char *const *titles,
     const char *const *descriptions, const char *const *icons, const char *const *badges,
     int count, int selected, int columns, int enabled, int focus, int *nodes) {
@@ -9,9 +10,7 @@ int fpas_cui_radio_cards(cui_ctx *ui, const char *id, const char *const *titles,
     for (int i = 0; i < count; ++i) {
         choices[i] = (cui_choice){
             .title = titles[i],
-            .description = descriptions[i][0] ? descriptions[i] : NULL,
-            .icon = icons[i][0] ? icons[i] : NULL,
-            .badge = badges[i][0] ? badges[i] : NULL
+            .description = descriptions[i], .icon = icons[i], .badge = badges[i]
         };
     }
     const bool allowed = enabled && !cui_is_disabled(ui);

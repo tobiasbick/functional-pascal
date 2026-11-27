@@ -4,6 +4,25 @@ namespace Fpas.Ui.Gui.Cui.Tests.Display;
 /// <summary>Checks managed input and ordering for native reorder lists.</summary>
 public sealed class CuiReorderableListTests
 {
+    /// <summary>An empty list closes without proposing a change and accepts rows in a later frame.</summary>
+    [GuiFact]
+    public void EmptyReorderListCanGrow()
+    {
+        using var window = new CuiWindow("Empty reorder list", renderer: CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame());
+        Assert.Empty(window.BeginReorder("list", [], enabled: true));
+        Assert.False(window.EndReorder());
+        window.Present();
+
+        Assert.True(window.NextFrame());
+        Assert.Equal([0], window.BeginReorder("list", [0], enabled: true));
+        window.BeginReorderItem(0, enabled: true);
+        window.Text("First row");
+        window.EndReorderItem();
+        Assert.False(window.EndReorder());
+        window.Present();
+    }
+
     /// <summary>Rejects positions outside the permutation and keeps the list open.</summary>
     [GuiFact]
     public void ReorderListValidatesRowPositions()
@@ -49,7 +68,9 @@ public sealed class CuiReorderableListTests
             Assert.True(window.NextFrame());
             window.MovePointer(x, y);
             if (down is bool pressed) window.SetLeftButton(pressed);
-            int[] order = window.BeginReorder("list", [0, 1], enabled);
+            int[] original = [0, 1];
+            int[] order = window.BeginReorder("list", original, enabled);
+            Assert.Equal([0, 1], original);
             for (int position = 0; position < order.Length; position++)
             {
                 window.BeginReorderItem(position, enabled: true);

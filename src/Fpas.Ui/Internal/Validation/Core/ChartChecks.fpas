@@ -4,6 +4,7 @@ unit Fpas.Ui.Internal.Validation.Core.ChartChecks;
 
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
 uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System as Sys;
 
@@ -30,26 +31,50 @@ begin
 
   R.CheckText(Value.Prefix, At);
   R.CheckText(Value.Suffix, At);
-  if Value.DecimalPlaces < 0 or Value.DecimalPlaces > 6 then
-    R.Reject(At, 'Chart decimal places must be between zero and six.');
+  const Digits: int := Value.DecimalPlaces ?? 0;
+  if Digits < 0 or Digits > 999 or Value.FieldWidth < 0 or Value.FieldWidth > 999 then
+    R.Reject(At, 'Chart precision and field width must be between zero and 999.');
+  end if;
+
+  if not Sys.Enum.IsDefined of C.ValueNotation(Value.Notation)
+    or not Sys.Enum.IsDefined of C.ValuePadding(Value.Padding)
+    or not Sys.Enum.IsDefined of C.ValueSign(Value.Sign)
+  then
+    R.Reject(At, 'Unknown chart number notation, padding or sign.');
   end if;
 end procedure;
 
-// Validates a native chart palette reference.
+// Validates a native chart theme color.
 // ## Parameters
 // - `Value`: Chart color.
 // - `At`: Diagnostic location.
 public procedure Color(Value: C.Color; At: string);
 begin
   case Value of
-    when C.Color.Palette(const Index: int):
-      if Index < 1 or Index > 6 then
-        R.Reject(At, 'A chart palette index is one through six.');
+    when C.Color.Theme(const Token: Themes.ColorToken):
+      if not Sys.Enum.IsDefined of Themes.ColorToken(Token) then
+        R.Reject(At, 'A chart theme color needs a known token.');
       end if;
     else
       begin
       end;
   end case;
+end procedure;
+
+// Validates a native chart annotation.
+// ## Parameters
+// - `Value`: Annotation kind, coordinates and appearance.
+// - `At`: Diagnostic location.
+public procedure Annotation(Value: C.Annotation; At: string);
+begin
+  R.CheckText(Value.Label ?? '', At);
+  R.CheckText(Value.Detail ?? '', At);
+  Color(Value.Color, At);
+  if not Sys.Enum.IsDefined of C.AnnotationKind(Value.Kind)
+    or not Sys.Double.IsFinite(Value.X) or not Sys.Double.IsFinite(Value.Y)
+  then
+    R.Reject(At, 'Chart annotations need finite coordinates and a known kind.');
+  end if;
 end procedure;
 
 // Validates nonnegative shares with a finite total.

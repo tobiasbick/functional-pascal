@@ -3,15 +3,18 @@
 unit Fpas.Ui.Widgets.Feedback.StatusSpinners;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Widgets.Actions.StatusButtons as Buttons;
-uses Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
-// Native statusspinner options.
+// Native status spinner options.
 public type Options = record
   // Logical diameter, or zero for the default.
   public Size: float := 0.0F;
-  // Busy ring color.
-  public Color: Charts.Color := Charts.Color.Automatic;
+  // Explicit busy ring color. Omit it and ThemeColor for the native default.
+  public Color: G.Color? := null;
+  // Active theme busy ring color. Choose this or Color.
+  public ThemeColor: Themes.ColorToken? := null;
   // Retain the success or error marker.
   public Keep: bool := false;
 end record;

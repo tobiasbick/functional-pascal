@@ -18,7 +18,7 @@ uses GuiGallery.Shared.Sections as G;
 public function View(Model: State.Model): E.Element of State.Msg;
 begin
   return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(6)),
+    new L.Flow(Gap := G.Points(6), Clip := false),
     E.Styled of State.Msg(E.Text of State.Msg('Brand color'), S.Role.Label),
     P.ColorPicker of State.Msg('input-brand-color', Model.BrandColor, State.Msg.SetBrandColor)
   );

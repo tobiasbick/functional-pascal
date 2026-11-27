@@ -5,11 +5,12 @@ unit GalleryGridRenameContract;
 uses Fpas.Ui.Widgets.Collections.DataGrids as D;
 uses Fpas.Ui.Widgets.Collections.Tables as T;
 
+uses GuiGallery.Pages.DataGrid.People as P;
 uses GuiGallery.Pages.DataGrid.State as S;
 uses GuiGallery.Pages.DataGrid.Update as U;
 uses System as Sys;
 
-// Checks that a name edit preserves sorting and row identity in the gallery grid.
+// Checks stable sort ties and row identity across edits and sort changes.
 public procedure Verify();
 begin
   const Initial: S.Model := new S.Model();
@@ -42,6 +43,41 @@ begin
       'Queued selection must use the order that produced it.'
     );
   end if;
+
+  const TeamSort: T.Sort := new T.Sort(2, false);
+  const TeamMask: array of bool := new bool[Proposed.Order.Length];
+  TeamMask[Proposed.Grid.Cursor] := true;
+  const Teams: S.Model := U.Update(
+    Proposed, S.Msg.SetGrid(
+      Proposed.Grid with
+        Order := TeamSort;
+        Selected := TeamMask;
+      end with, Proposed.Order
+    )
+  );
+  if Teams.Order[Teams.Grid.Cursor] <> Person or Teams.Order[Teams.Grid.Anchor] <>
+    Proposed.Order[Proposed.Grid.Anchor] or not Teams.Selected[Person]
+  then
+    raise new Sys.InvalidOperationException(
+      'Sorting must preserve the selected person and range origin.'
+    );
+  end if;
+
+  const PreviousPositions: array of int := new int[Proposed.Order.Length];
+  for Index: int := 0 to Proposed.Order.Length - 1 do
+    PreviousPositions[Proposed.Order[Index]] := Index;
+  end for;
+
+  for Index: int := 1 to Teams.Order.Length - 1 do
+    const Earlier: int := Teams.Order[Index - 1];
+    const Later: int := Teams.Order[Index];
+    if P.At(
+      Earlier
+    ).Team = P.At(Later).Team and PreviousPositions[Earlier] > PreviousPositions[Later]
+    then
+      raise new Sys.InvalidOperationException('Equal sort keys must preserve display order.');
+    end if;
+  end for;
 
   const StillSorted: S.Model := U.Update(Initial, S.Msg.Rename(Person, 'Zebra'));
   for Index: int := 0 to Initial.Order.Length - 1 do

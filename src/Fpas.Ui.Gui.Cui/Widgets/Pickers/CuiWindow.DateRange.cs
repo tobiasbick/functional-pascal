@@ -31,26 +31,28 @@ public sealed partial class CuiWindow
     /// <param name="id">Stable trigger identity.</param>
     /// <param name="start">Start day number, or minus one.</param>
     /// <param name="end">End day number, or minus one.</param>
-    /// <param name="label">Optional label above the field.</param>
-    /// <param name="placeholder">Optional caption for an empty range.</param>
-    /// <param name="width">Logical width, or zero for CUI's default.</param>
+    /// <param name="label">Caption above the field. Null omits the wrapper and empty reserves its layout.</param>
+    /// <param name="placeholder">Caption for an empty range, or null for CUI's default.</param>
+    /// <param name="widthKind">Content, fill, fixed or percentage in that order.</param>
+    /// <param name="width">Fixed logical width or percentage, when selected.</param>
     /// <param name="presets">Whether to show native relative presets.</param>
     /// <param name="enabled">Whether input is accepted.</param>
     /// <param name="focus">Whether to request trigger focus.</param>
     /// <param name="trackPart">Maps native part codes to tracking IDs, or null.</param>
     /// <returns>The native proposal, popup state and visible parts.</returns>
-    public unsafe CuiDateRangeResult RangePicker(string id, int start, int end, string label,
-        string placeholder, float width, bool presets, bool enabled, bool focus, Func<int, string>? trackPart)
+    public unsafe CuiDateRangeResult RangePicker(string id, int start, int end, string? label,
+        string? placeholder, int widthKind, float width, bool presets, bool enabled, bool focus,
+        Func<int, string>? trackPart)
     {
         CheckFrame();
         ValidateDateRange(start, end);
-        Utf8.Validate(label, nameof(label));
-        Utf8.Validate(placeholder, nameof(placeholder));
-        if (!float.IsFinite(width) || width < 0) throw new ArgumentOutOfRangeException(nameof(width));
+        if (label is not null) Utf8.Validate(label, nameof(label));
+        if (placeholder is not null) Utf8.Validate(placeholder, nameof(placeholder));
+        CheckExtent(widthKind, width, nameof(width));
         int* parts = stackalloc int[72];
         int* nodes = stackalloc int[72];
         bool changed = NativeMethods.RangePicker(context, Stable(id), ref start, ref end,
-            Optional(label), Optional(placeholder), width, presets ? 1 : 0, enabled ? 1 : 0,
+            label, placeholder, widthKind, width, presets ? 1 : 0, enabled ? 1 : 0,
             focus ? 1 : 0, out int root, parts, nodes, out int count, out int open) != 0;
         return new(start, end, changed, open != 0, TrackCalendarParts(id, root, parts, nodes, count, trackPart));
     }

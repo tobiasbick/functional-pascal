@@ -42,18 +42,24 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Id / Label / Depth` | Stable cell ID, literal name and nonnegative indentation level. |
-| `Open / OnChange` | null / null. Pass a Boolean and a mapper for an expandable branch. |
-| `Icon` | Empty. Pass a native glyph to show an icon beside the name. |
+| `Id` | A stable cell ID. Cells with the same label still need distinct IDs. |
+| `Label` | Literal text. |
+| `Depth` | A nonnegative indentation level. |
+| `Open` | Null for a leaf. Pass `true` for an expanded branch or `false` for a collapsed branch. |
+| `OnChange` | Null for a read-only branch. Pass a mapper to receive the proposed Boolean after a click. |
+| `Icon` | Empty. Supply a CUI glyph to show an icon beside the name. |
 
 ## Interaction
 
-Place the tree cell inside `Tables.Cell.Content`. Use the branch's message
-to set its expansion in the model. Build the visible rows from that model
-so collapsing a branch removes its descendant rows.
+Place the tree cell inside `Tables.Cell.Content` or `DataGrids.Cell.Content`.
+Build the visible rows from the model. When a branch sends a message, store
+the proposed expansion in the model. Omit its descendants when it collapses.
 
-Set `Depth` to zero for a root. Increase `Depth` for each level below the
-root. The cell adds the indentation inside the assigned column width.
+Set `Depth` to zero for a root. Each level adds 18 logical units of
+indentation inside the column. A leaf reserves the same space as a chevron.
+The chevron accepts pointer input. Use a [tree table](tree-table.md) for
+keyboard navigation between branches. In a GUI snapshot, a branch reports
+the chevron bounds and a leaf reports the cell content bounds.
 
 ## See also
 

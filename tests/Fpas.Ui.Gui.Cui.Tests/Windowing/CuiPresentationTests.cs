@@ -6,6 +6,32 @@ namespace Fpas.Ui.Gui.Cui.Tests.Windowing;
 /// <summary>Checks explicit presentation, finalized first-frame geometry and native close.</summary>
 public sealed class CuiPresentationTests
 {
+    /// <summary>Fits an edge sheet to its requested width and reserves space for a supplied caption.</summary>
+    [GuiFact]
+    public void SheetUsesNativeWidthAndCaptionLayout()
+    {
+        using var window = new CuiWindow("Sheet sizing", width: 600, height: 480,
+            renderer: CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        var defaultSize = BodyBounds(0, null);
+        var fixedSize = BodyBounds(280.5f, null);
+        Assert.Equal(119.5f, defaultSize.Width - fixedSize.Width);
+        Assert.True(BodyBounds(280.5f, "").Y > fixedSize.Y);
+
+        CuiRectangle BodyBounds(float size, string? description)
+        {
+            Assert.True(window.NextFrame());
+            Assert.NotEqual(0, window.BeginSheet("sheet", "Title", description, 1, size, true, true, false, "close") & 1);
+            window.BeginColumn(padding: 0);
+            window.Text("Body");
+            window.EndColumn();
+            window.TrackLastControl("body");
+            window.EndSheet();
+            window.Present();
+            return window.GetControlRectangle("body");
+        }
+    }
+
     /// <summary>Implicit presentation retires controls and modal scopes omitted from the view.</summary>
     [GuiFact]
     public void ImplicitPresentationRetiresRemovedState()

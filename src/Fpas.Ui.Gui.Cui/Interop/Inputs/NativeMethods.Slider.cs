@@ -9,6 +9,6 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_slider", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int Slider(nint context, string id, string label, ref float value,
-        float minimum, float maximum, float step, int showValue, int decimalPlaces, int percent,
+        float minimum, float maximum, float step, int showValue, string? format, int widthKind, float width,
         int enabled, int focus, out int track);
 }

@@ -1,8 +1,10 @@
 // [Documentation](../../../../../docs/ui/gui/capture/signature-pad.md)
 #include "../../fpas_cui.h"
 
-int fpas_cui_signature_pad(cui_ctx *ui, const char *id, const char *placeholder, float height,
-    uint32_t rgba, int enabled, int focus_clear, int *node, int *clear) {
+/** Draws native ink and exposes the active pad and clear button nodes. */
+int fpas_cui_signature_pad(cui_ctx *ui, const char *id, const char *placeholder, int width_kind,
+    float width, float height, int ink_palette, uint32_t rgba, int enabled, int focus_clear,
+    int *node, int *clear) {
     const cui_id key = cui_make_id(ui, id), canvas = key ^ 0x5161u;
     cui_push_id(ui, id);
     const cui_id clear_key = cui_make_id(ui, "Clear");
@@ -14,8 +16,9 @@ int fpas_cui_signature_pad(cui_ctx *ui, const char *id, const char *placeholder,
         if (state) state->drawing = false;
     }
     const cui_signature_opts options = {
+        .width = fpas_extent(width_kind, width),
         .height = height, .placeholder = placeholder ? cui__frame_strdup(ui, placeholder, -1) : NULL,
-        .ink = { (uint8_t)rgba, (uint8_t)(rgba >> 8), (uint8_t)(rgba >> 16), (uint8_t)(rgba >> 24) }
+        .ink = fpas_chart_color(ink_palette == -1 && (rgba >> 24) == 0 ? 0 : ink_palette, rgba)
     };
     cui_push_disabled(ui, !enabled);
     const bool changed = cui_signature_pad_ex(ui, id, &options);

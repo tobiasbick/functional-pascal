@@ -1,4 +1,6 @@
 // [Documentation](../../../docs/ui/gui/smart-inputs/README.md)
+using Fpas.Tests.Support;
+using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Widgets.Inputs;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Inputs;
@@ -29,7 +31,7 @@ public sealed class CuiSmartInputTests
         Draw(x + 20, y, down: false, modifiers: 1);
         Draw(x + 20, y, down: true);
         Draw(x + 20, y, down: false);
-        Draw(x + 20, y, text: "17.25");
+        Draw(x + 20, y, text: "1.725e1");
         Draw(x + 20, y, key: 2);
         Assert.Equal(17.25f, value);
 
@@ -40,8 +42,36 @@ public sealed class CuiSmartInputTests
             Press(window, key);
             if (text is not null) window.InputText(text);
             window.BeginColumn();
-            value = window.ScrubField("scrub", "Opacity", value, 0, 100, .5f, 2, "%", "", 0, 0, true, false, true);
+            value = window.ScrubField("scrub", "Opacity", value, 0, 100, .5f,
+                new(DecimalPlaces: 2, Notation: CuiValueNotation.Scientific), "%", null, 0, 0, true, false, true);
             window.EndColumn(); GC.Collect(); window.Present();
+        }
+    }
+
+    /// <summary>Preserves the typed number format and the native layout of empty optional text.</summary>
+    [GuiFact]
+    public void ScrubPreservesFormatAndEmptyOptionalText()
+    {
+        const int width = 360, height = 240;
+        using var window = new CuiWindow("Scrub presentation", width, height, CuiRenderer.Software, continuous: true);
+        using var directory = new TemporaryDirectory();
+        window.SetReducedMotion(true);
+        uint[] baseline = Draw("default");
+        Assert.True(baseline.SequenceEqual(Draw("explicit-fixed", format: new(0))));
+        Assert.False(baseline.SequenceEqual(Draw("scientific", format: new(1, Notation: CuiValueNotation.Scientific))));
+        Assert.False(baseline.SequenceEqual(Draw("blank-suffix", suffix: "")));
+        Assert.False(baseline.SequenceEqual(Draw("blank-icon", icon: "")));
+
+        uint[] Draw(string name, CuiChartFormat? format = null, string? suffix = null, string? icon = null)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            window.ScrubField("scrub", "Radius", 12.5f, 0, 48, .5f,
+                format, suffix, icon, 2, 180, true, false, true);
+            window.Present();
+            string capture = directory.File(name + ".png");
+            window.CapturePng(capture);
+            return PngAssertions.ReadPixels(capture, width, height);
         }
     }
 
@@ -96,6 +126,29 @@ public sealed class CuiSmartInputTests
         }
     }
 
+    /// <summary>Preserves the native distinction between an absent and empty placeholder.</summary>
+    [GuiFact]
+    public void InlinePlaceholderAndIconFaceReachNativeLayout()
+    {
+        using var window = new CuiWindow("Inline empty caption", 520, 320, CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        Assert.True(Draw(null) > Draw(""));
+        Assert.True(Draw("Add an owner") > Draw(""));
+        Assert.True(Draw(null, 4, "\uE05D") > Draw("", 4));
+
+        float Draw(string? placeholder, int face = 1, string value = "")
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            window.BeginColumn();
+            var result = window.InlineEdit("caption", value, placeholder, face, 26, 127, 0, 0, true, false, true);
+            window.EndColumn();
+            window.Present();
+            Assert.Equal(value, result.Draft);
+            return window.GetControlRectangle("caption").Width;
+        }
+    }
+
     /// <summary>Uses native keys, numeric typing, cancellation, clamping and disabled admission.</summary>
     /// <param name="renderer">The native renderer under test.</param>
     [GuiTheory]
@@ -131,8 +184,8 @@ public sealed class CuiSmartInputTests
             window.MovePointer(-1, -1); Press(window, key);
             if (text is not null) window.InputText(text);
             window.BeginColumn();
-            float result = window.ScrubField("scrub", "Radius ## literal", model, 0, 100, 1, 1,
-                "px", "", 2, 180, enabled, focus, true);
+            float result = window.ScrubField("scrub", "Radius ## literal", model, 0, 100, 1, new(1),
+                "px", null, 2, 180, enabled, focus, true);
             window.EndColumn(); GC.Collect(); window.Present();
             return result;
         }
@@ -210,6 +263,12 @@ public sealed class CuiSmartInputTests
         Assert.Equal(model, Draw().Value);
         window.ForgetControl("shortcut");
         Assert.Equal(model, Draw().Value);
+        Draw(focus: true);
+        Assert.False(Draw(focusClear: true).ClearVisible);
+        model = new(30, 3);
+        Assert.True(Draw().ClearVisible);
+        Assert.True(window.ControlFocused("shortcut"));
+        Assert.False(window.ControlFocused("clear"));
 
         CuiShortcutRecorderResult Draw(bool focus = false, int key = 0, int mods = 0, bool focusClear = false)
         {
@@ -224,6 +283,30 @@ public sealed class CuiSmartInputTests
         }
     }
 
+    /// <summary>Preserves a blank shortcut caption and uses the native caption for an omitted value.</summary>
+    [GuiFact]
+    public void RecorderDistinguishesBlankPlaceholderFromOmission()
+    {
+        const int width = 360, height = 240;
+        using var window = new CuiWindow("Shortcut placeholder", width, height, CuiRenderer.Software, continuous: true);
+        using var directory = new TemporaryDirectory();
+        window.SetReducedMotion(true);
+        uint[] omitted = Draw("omitted", null);
+        Assert.True(omitted.SequenceEqual(Draw("default", "Click to record")));
+        Assert.False(omitted.SequenceEqual(Draw("blank", "")));
+
+        uint[] Draw(string name, string? placeholder)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            window.ShortcutRecorder("shortcut", new(0, 0), placeholder, 0, 0, true, false, "clear");
+            window.Present();
+            string capture = directory.File(name + ".png");
+            window.CapturePng(capture);
+            return PngAssertions.ReadPixels(capture, width, height);
+        }
+    }
+
     /// <summary>Rejects malformed options before changing native frame state.</summary>
     [GuiFact]
     public void InvalidSmartOptionsLeaveTheFrameUsable()
@@ -231,7 +314,12 @@ public sealed class CuiSmartInputTests
         using var window = new CuiWindow("Invalid smart inputs", 520, 320, CuiRenderer.Software, continuous: true);
         Assert.True(window.NextFrame());
         Assert.Throws<ArgumentOutOfRangeException>(() => window.InlineEdit("id", "text", "", 1, 0, 512, 0, 0, true, false, true));
-        Assert.Throws<ArgumentOutOfRangeException>(() => window.ScrubField("id", "Radius", 1, 0, 100, float.NaN, 0, "", "", 0, 0, true, false, true));
+        Assert.Throws<ArgumentOutOfRangeException>(() => window.ScrubField("id", "Radius", 1, 0, 100,
+            float.NaN, null, null, null, 0, 0, true, false, true));
+        Assert.Throws<ArgumentOutOfRangeException>(() => window.ScrubField("id", "Radius", .5f, 0, 1,
+            1e-38f, null, null, null, 0, 0, true, false, true));
+        Assert.Throws<ArgumentOutOfRangeException>(() => window.ScrubField("id", "Radius", 1, 0, 100,
+            .5f, new(1000), null, null, 0, 0, true, false, true));
         Assert.Throws<ArgumentOutOfRangeException>(() => window.MoneyField("id", 0m, "", "$", "", "", 29, 0, 0, true, false, true));
         Assert.Throws<ArgumentException>(() => window.MoneyField("id", .001m, "", "$", "", "", 2, 0, 0, true, false, true));
         Assert.Throws<ArgumentOutOfRangeException>(() => window.ShortcutRecorder("id", new(68, 0), "", 0, 0, true, false, "clear"));

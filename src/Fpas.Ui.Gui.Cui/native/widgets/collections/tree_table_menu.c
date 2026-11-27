@@ -12,11 +12,11 @@ int fpas_cui_tree_table_menu_begin(cui_ctx *ui, const char *id, int enabled, int
 
 int fpas_cui_tree_table_menu_end(cui_ctx *ui, unsigned int popup, int table, int visible,
     const char *const *keys, const char *const *labels, const char *const *icons,
-    const char *const *shortcuts, const int *flags, int count, int *nodes,
+    const char *const *shortcuts, const fpas_cui_menu_row *rows, int count, int *nodes,
     int *open, int *highlighted, unsigned int *owner) {
     const cui_id pid = popup;
     const int chosen = fpas_menu_rows(ui, pid, visible != 0, keys, labels, icons, shortcuts,
-        flags, count, nodes, highlighted);
+        rows, count, nodes, highlighted);
     if (visible) cui_tree_table_menu_end(ui);
     const cui_popup *state = cui__popup_get(ui, pid, false);
     *open = visible && state && state->open;

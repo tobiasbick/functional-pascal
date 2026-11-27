@@ -9,6 +9,7 @@ uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as App;
 uses Fpas.Ui.Validation as V;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
 uses Fpas.Ui.Widgets.Overlays.Tooltips as T;
 
 uses GuiGallery.App.State as State;
@@ -94,6 +95,27 @@ begin
     V.Target.Graphical,
     'interactive target'
   );
+  const Caption: string := new Sys.String(#233, 124);
+  discard V.Prepare of int(
+    Icons.IconButton of int(
+      'bold', Sys.Char.ConvertFromUtf32($E05D), Caption, 1,
+      new Icons.Options(Shortcut := 'B')
+    ),
+    V.Target.Graphical
+  );
+  Reject(
+    Icons.IconButton of int(
+      'bold', Sys.Char.ConvertFromUtf32($E05D), Caption, 1,
+      new Icons.Options(Shortcut := 'BB')
+    ),
+    V.Target.Graphical,
+    '255 UTF-8 bytes'
+  );
+  Reject(
+    B.Button of int('button', 'Button', 1, new B.Options(Tooltip := Caption, Shortcut := 'BB')),
+    V.Target.Graphical,
+    '255 UTF-8 bytes'
+  );
 
   var X: float := -1.0F;
   var Y: float := -1.0F;
@@ -108,8 +130,11 @@ begin
   Step(Session);
   const Bold: Gui.Control? := Find(Session, 'tooltip-bold');
   const Italic: Gui.Control? := Find(Session, 'tooltip-italic');
-  if Bold = null or Italic = null then
-    raise new Sys.InvalidOperationException('The tooltip toolbar must contain Bold and Italic.');
+  const Align: Gui.Control? := Find(Session, 'tooltip-align');
+  if Bold = null or Italic = null or Align = null then
+    raise new Sys.InvalidOperationException(
+      'The tooltip toolbar must contain Bold, Italic and Align left.'
+    );
   end if;
 
   Point(Bold.Bounds);
@@ -129,6 +154,10 @@ begin
     'A cold tooltip must open above its anchor while the host is idle.'
   );
   // CUI's warm interval is 400 ms. Encode the screenshot after the handoff.
+  Point(Align.Bounds);
+  Step(Session);
+  const NoShortcut: Gui.Control? := Find(Session, 'native-tooltip');
+  Check(NoShortcut <> null and NoShortcut.Text = 'Align left', 'Omit the empty shortcut.');
   Point(Italic.Bounds);
   Step(Session);
   const Warm: Gui.Control? := Find(Session, 'native-tooltip');
@@ -145,7 +174,7 @@ begin
   discard Window.TryWake();
   Step(Session);
   Step(Session);
-  Check(Presses = 1, 'The wrapped button must still deliver its normal activation.');
+  Check(Presses = 1, 'The icon button must still deliver its normal activation.');
 end procedure;
 
 end unit;

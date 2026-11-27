@@ -18,9 +18,8 @@ int fpas_cui_command_palette(cui_ctx *ui, const char *id, int *open, int enabled
     cui_command *commands = cui__frame_alloc(ui, (size_t)(count ? count : 1) * sizeof *commands);
     for (int index = 0; index < count; ++index) {
         commands[index] = (cui_command){
-            .title = titles[index], .icon = *icons[index] ? icons[index] : NULL,
-            .group = *groups[index] ? groups[index] : NULL,
-            .shortcut = *shortcuts[index] ? shortcuts[index] : NULL
+            .title = titles[index], .icon = icons[index],
+            .group = groups[index], .shortcut = shortcuts[index]
         };
     }
     const bool was_open = *open != 0;
@@ -60,6 +59,7 @@ int fpas_cui_command_palette(cui_ctx *ui, const char *id, int *open, int enabled
     return interactive ? selected : -1;
 }
 
-int fpas_cui_palette_shortcut(cui_ctx *ui) {
-    return !cui_wants_keyboard(ui) && cui_shortcut(ui, CUI_MOD_PRIMARY, CUI_KEY_K);
+int fpas_cui_palette_shortcut(cui_ctx *ui, uint32_t previous_editor) {
+    if (previous_editor && ui->focus == previous_editor) return 0;
+    return !cui_wants_keyboard(ui) && fpas_cui_take_shortcut(ui, CUI_MOD_PRIMARY, CUI_KEY_K);
 }

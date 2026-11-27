@@ -18,7 +18,8 @@ internal unsafe struct NativeChartAnnotation
     internal double X, Y;
     internal byte* Label;
     internal byte* Detail;
-    internal int Accent;
+    internal int Accent, Palette;
+    internal uint Rgba;
 }
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeChartOptions
@@ -32,6 +33,7 @@ internal unsafe struct NativeChartOptions
     internal float Minimum, Maximum;
     internal NativeChartAnnotation* Annotations;
     internal int AnnotationCount;
+    internal double XMinimum, XMaximum;
 }
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeMeterPart

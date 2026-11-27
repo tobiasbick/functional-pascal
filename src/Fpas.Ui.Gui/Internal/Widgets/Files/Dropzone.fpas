@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Files.Dropzones as D;
 
 uses System as Sys;
@@ -30,6 +31,7 @@ begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Role: string := 'dropzone';
   const Token: string := C.Token(Role, Id);
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   const Result: CuiFiles.CuiDropzoneResult := Frame.Window.Dropzone(
     Token,
     Settings.Title,
@@ -40,7 +42,9 @@ begin
     Settings.Compact,
     Enabled,
     C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
-    not Frame.PaintingClosed
+    not Frame.PaintingClosed,
+    Width.Kind,
+    Width.Value
   );
   if Result.Paths.Length > 0 then
     Frame.Messages.Add(OnDrop(Result.Paths));
@@ -55,12 +59,7 @@ begin
   if not Frame.PaintingClosed then
     Frame.Controls.Add(
       new App.Control(
-        Id, if Settings.Title = '' then
-          'Drop files here'
-        else
-          Settings.Title
-        end if,
-        Role, new Cui.CuiRectangle(), Enabled
+        Id, Settings.Title ?? 'Drop files here', Role, new Cui.CuiRectangle(), Enabled
       )
     );
   end if;

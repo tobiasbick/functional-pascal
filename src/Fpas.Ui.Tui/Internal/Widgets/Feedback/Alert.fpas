@@ -109,10 +109,11 @@ begin
       [(E.Element of TMsg).Sized(Heading, new E.Flex(Grow := 1)), Close], true, new E.Flow()
     );
   end if;
-  const Contents: array of E.Element of TMsg := if Settings.Description = '' then
+  const Description: string := Settings.Description ?? '';
+  const Contents: array of E.Element of TMsg := if Description = '' then
     [Header]
   else
-    [Header, (E.Element of TMsg).Label(Settings.Description)]
+    [Header, (E.Element of TMsg).Label(Description)]
   end if;
   return (E.Element of TMsg).Decorated(
     (E.Element of TMsg).Stack(Contents, false, new E.Flow(PaddingX := 1)),

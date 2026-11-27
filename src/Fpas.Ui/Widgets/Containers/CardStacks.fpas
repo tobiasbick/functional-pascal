@@ -7,19 +7,19 @@ uses Fpas.Ui.Layout as L;
 
 // Direction of a card dismissal.
 public type Direction = enum: byte
-  // The card left through the leading edge.
+  // The card left through the physical left edge.
   Left;
-  // The card left through the trailing edge.
+  // The card left through the physical right edge.
   Right;
 end enum;
 
 // Native card stack options.
 public type Options = record
-  // Preferred deck width.
+  // Preferred deck width. Content uses CUI's preferred width of 320 logical units.
   public Width: L.Extent := L.Extent.Content;
-  // Logical height of one card, or zero for the native default.
+  // Logical height of one card, or zero for 320 logical units.
   public Height: float := 0.0F;
-  // Number of visible cards, or zero for the native default.
+  // Number of visible cards, or zero for three.
   public Visible: int := 0;
   // Allow card dismissal.
   public Enabled: bool := true;

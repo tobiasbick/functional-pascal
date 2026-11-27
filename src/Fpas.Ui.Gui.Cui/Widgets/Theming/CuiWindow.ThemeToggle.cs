@@ -11,6 +11,7 @@ public sealed partial class CuiWindow
     /// <returns>Whether the user activated the action.</returns>
     public bool ThemeToggle(string id, bool dark, bool enabled, bool focus)
     {
+        // CUI-031: Keep the same control ID across glyph and tooltip changes.
         return IconButton(id, dark ? SunIcon : MoonIcon, dark ? "Switch to light" : "Switch to dark",
             "", 0, 0, enabled, false, false, focus);
     }

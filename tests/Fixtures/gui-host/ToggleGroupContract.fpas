@@ -75,6 +75,29 @@ begin
     Toggles.ToggleGroup of int('align', Items, [true, true], Change, Exclusive),
     V.Target.Graphical, 'exactly one selected item'
   );
+  const Caption: string := new Sys.String(#233, 127) + 'a';
+  const Icon: string := Sys.Char.ConvertFromUtf32($E05D);
+  const IconOnly: Toggles.Options := new Toggles.Options(IconOnly := true);
+  discard V.Prepare of int(
+    Toggles.ToggleGroup of int(
+      'format',
+      [new Toggles.Item(Caption, Icon)],
+      [true],
+      Change,
+      IconOnly
+    ),
+    V.Target.Graphical
+  );
+  Reject(
+    Toggles.ToggleGroup of int(
+      'format',
+      [new Toggles.Item(Caption + 'b', Icon)],
+      [true],
+      Change,
+      IconOnly
+    ),
+    V.Target.Graphical, '255 UTF-8 bytes'
+  );
 end procedure;
 
 // Exercises the two native Actions examples and saves the full page.

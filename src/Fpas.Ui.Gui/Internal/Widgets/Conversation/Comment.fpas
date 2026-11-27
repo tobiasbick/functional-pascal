@@ -43,15 +43,29 @@ begin
   else
     C.Token(Role, Id + '/reply')
   end if;
-  var Likes: int := Current.Likes;
-  var Liked: int := Enc.Bits(Current.Liked, 1);
+  var Likes: int := Current.Likes ?? -1;
+  var Liked: int := if Current.Liked = null then
+    -1
+  else
+    Enc.Bits(Current.Liked.Value, 1)
+  end if;
   const Result: int := Frame.Window.Comment(
     Token, Author, Text, Settings.Time, Settings.Depth, Settings.Badge,
     Enc.Bits(Settings.Edited, 1) + Enc.Bits(Enabled, 2), Focus, ref Likes, ref Liked,
     LikeId, ReplyId
   );
   if (Result and 1) <> 0 then
-    Frame.Messages.Add(Change(W.Event.Like(new W.Value(Likes, Liked <> 0))));
+    const Count: int? := if Likes < 0 then
+      null
+    else
+      Likes
+    end if;
+    const Active: bool? := if Liked < 0 then
+      null
+    else
+      Liked <> 0
+    end if;
+    Frame.Messages.Add(Change(W.Event.Like(new W.Value(Count, Active))));
   end if;
 
   if (Result and 2) <> 0 then
@@ -59,7 +73,13 @@ begin
   end if;
 
   P.Root of TMsg(Frame, Id, Role, Author, false, Text);
-  P.Part of TMsg(Frame, Id, Role, Parts[0], 'Like', Enabled, Likes.ToString());
+  P.Part of TMsg(
+    Frame, Id, Role, Parts[0], 'Like', Enabled, if Likes < 0 then
+      ''
+    else
+      Likes.ToString()
+    end if
+  );
   P.Part of TMsg(Frame, Id, Role, Parts[1], 'Reply', Enabled, '');
 end procedure;
 

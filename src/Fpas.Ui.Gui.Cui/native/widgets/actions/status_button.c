@@ -7,8 +7,14 @@ int fpas_cui_status_button(cui_ctx *ui, const char *id, const char *label, int s
     const cui_id key = cui_make_id(ui, id);
     cui__status_state *state = cui_state(ui, key ^ 0x57A7u, sizeof *state);
     if (enabled && focus) ui->focus_next_request = key;
-    const char *slots[] = { "a", "b", "c", "d" };
-    const char *captions[] = { label, busy_label, success_label, error_label };
+    const char *captions[] = {
+        label, busy_label ? busy_label : cui__frame_printf(ui, "%s\xe2\x80\xa6", label),
+        success_label ? success_label : "Done", error_label ? error_label : "Failed"
+    };
+    const char *slots[] = {
+        *captions[0] ? "a" : "", *captions[1] ? "b" : "",
+        *captions[2] ? "c" : "", *captions[3] ? "d" : ""
+    };
     const char *icons[] = { icon, "spin", CUI_ICON_CHECK, CUI_ICON_CIRCLE_ALERT };
     const int shown = state->m.init ? (int)state->shown : status;
     const fpas_morph_width saved = fpas_morph_begin(ui, &state->m, slots[shown], icons[shown], (cui_control_size)size);
@@ -17,7 +23,8 @@ int fpas_cui_status_button(cui_ctx *ui, const char *id, const char *label, int s
         .icon = icon, .variant = fpas_button_variant(variant), .size = (cui_control_size)size
     };
     cui_push_disabled(ui, !enabled);
-    const bool activated = cui_status_button_ex(ui, cui__frame_printf(ui, "a%s", id), (cui_status)status, &options);
+    const bool activated = cui_status_button_ex(ui, cui__frame_printf(ui, "%s%s", slots[0], id),
+        (cui_status)status, &options);
     cui_pop_disabled(ui);
     fpas_morph_captions(ui, "abcd", captions);
     fpas_morph_end(ui, &state->m, saved, captions[status], icons[status], options.size);

@@ -22,7 +22,7 @@ public readonly record struct CuiTextMetrics(float Width, float Height, float As
 
 /// <summary>Current canvas pointer state; emitted only when state or active coordinates change.</summary>
 /// <param name="Hovered">Whether native hit testing hovers this enabled canvas.</param>
-/// <param name="Pressed">Whether this frame starts a press.</param>
+/// <param name="Pressed">Whether CUI reports an active pointer press.</param>
 /// <param name="X">Canvas-local horizontal position.</param>
 /// <param name="Y">Canvas-local vertical position.</param>
 /// <param name="Width">Previously laid-out canvas width.</param>
@@ -59,6 +59,16 @@ public sealed class CuiCanvasPainter
     public double Time { get { Check(); return NativeMethods.CanvasTime(context); } }
     /// <summary>Gets the native frame duration in seconds.</summary>
     public float DeltaTime { get { Check(); return NativeMethods.CanvasDeltaTime(context); } }
+
+    /// <summary>Resolves a semantic token from the current interpolated palette.</summary>
+    /// <param name="token">CUI color token ordinal.</param>
+    /// <returns>Packed straight RGBA.</returns>
+    public uint Color(int token)
+    {
+        Check();
+        if (token is < 1 or > CuiWindow.ThemeColorCount) throw new ArgumentOutOfRangeException(nameof(token));
+        return NativeMethods.CanvasColor(context, token);
+    }
 
     private void Check()
     {

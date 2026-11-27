@@ -29,12 +29,15 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `SecondsLeft` | The remaining duration in seconds from the application clock. |
-| `Compact / HideDays` | false / false. HideDays folds days into hours. |
+| `SecondsLeft` | Finite remaining seconds up to 7,730,941,132,799. Negative values display zero. CUI discards fractions. |
+| `Compact` | False. Compact tiles use colons and omit the unit names. |
+| `HideDays` | False. When true, 2 days and 1 hour appear as 49 hours. |
 
 ## Interaction
 
-Refresh the remaining time from a clock in your application. The control displays that value and CUI rolls the digits as it changes.
+Refresh the remaining time from a clock in your application. CUI rolls the
+digits when a displayed unit changes. In reduced motion the digits update
+without animation.
 
 ## See also
 

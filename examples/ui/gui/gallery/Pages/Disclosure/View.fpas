@@ -3,11 +3,13 @@
 unit GuiGallery.Pages.Disclosure.View;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Containers.ExpandableCards as C;
 uses Fpas.Ui.Widgets.Containers.ExpandableTexts as T;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
 
 uses Gallery.Shared.SecurityCard as Security;
@@ -22,26 +24,39 @@ uses GuiGallery.Pages.Disclosure.Widgets.UndoToast as UndoToast;
 uses GuiGallery.Pages.Disclosure.Widgets.Veil as Veil;
 uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
+uses System.Collections.Generic as Lists;
 
-function Cards(Model: State.Model): E.Element of State.Msg;
+function Cards(Model: State.Model; Colors: Theme.Palette): E.Element of State.Msg;
 begin
   const Billing: E.Element of State.Msg := E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(10)),
+    new L.Flow(Gap := G.Points(10), Clip := false),
     E.Row of State.Msg(
-      new L.Flow(Gap := G.Points(40), Wrap := true),
+      new L.Flow(Gap := G.Points(40), Wrap := true, Clip := false),
       E.Column of State.Msg(
-        new L.Flow(Gap := G.Points(2)),
-        E.Styled of State.Msg(E.Text of State.Msg('This month'), S.Role.Caption),
-        E.Styled of State.Msg(E.Text of State.Msg('$84.00'), S.Role.DisplayValue)
+        new L.Flow(Gap := G.Points(2), Clip := false),
+        Texts.Text of State.Msg('This month', Texts.Appearance.Muted),
+        E.FormattedText of State.Msg(
+          '$84.00',
+          Graphics.Font.Display,
+          22.0F,
+          Colors.Foreground,
+          Tabular := true
+        )
       ),
       E.Column of State.Msg(
-        new L.Flow(Gap := G.Points(2)),
-        E.Styled of State.Msg(E.Text of State.Msg('Seats'), S.Role.Caption),
-        E.Styled of State.Msg(E.Text of State.Msg('7 of 10'), S.Role.DisplayValue)
+        new L.Flow(Gap := G.Points(2), Clip := false),
+        Texts.Text of State.Msg('Seats', Texts.Appearance.Muted),
+        E.FormattedText of State.Msg(
+          '7 of 10',
+          Graphics.Font.Display,
+          22.0F,
+          Colors.Foreground,
+          Tabular := true
+        )
       )
     ),
     E.Row of State.Msg(
-      new L.Flow(Gap := G.Points(8)),
+      new L.Flow(Gap := G.Points(8), Wrap := true, Clip := false),
       B.Button of State.Msg(
         'change-plan', 'Change plan', State.Msg.Preview,
         new B.Options(ControlSize := B.Size.Small)
@@ -53,7 +68,7 @@ begin
     )
   );
   return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(10)),
+    new L.Flow(Gap := G.Points(10), Clip := false),
     C.ExpandableCard of State.Msg(
       'billing', 'Billing', Model.BillingOpen, State.Msg.SetBilling, Billing,
       new C.Options(
@@ -71,45 +86,63 @@ end function;
 // - `Model`: Model-owned accordion and card expansion.
 // - `Colors`: Palette of the active theme.
 // ## Returns
-// Native disclosure, announcement and progress examples.
-public function View(Model: State.Model; Colors: Theme.Palette): E.Element of State.Msg;
+// Direct children of the original Disclosure page.
+public function View(Model: State.Model; Colors: Theme.Palette): array of E.Element of State.Msg;
 begin
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20), Clip := false),
-    Banner.View(Model),
-    Hover.View(),
-    Confirm.View(Model),
-    G.Heading of State.Msg(
-      Strings.Get('Heading.ExpandableText'),
-      Strings.Get('Heading.ExpandableTextHint')
-    ),
-    T.ExpandableText of State.Msg(
-      'about-cui',
-      'CUI is a component library for C. It draws everything itself, so an app looks the same on Windows, macOS and Linux, and it ' +
-      'ships the parts most apps need: inputs, pickers, menus, dialogs, tables, charts and a command palette. Every component ' +
-      'supports the keyboard, light and dark themes and reduced motion. The core is plain C99 with no dependencies, and it ' +
-      'renders through OpenGL or a built-in software rasterizer, so it also runs in virtual machines and over remote desktop.',
-      new T.Options(Lines := 2)
-    ),
-    G.Heading of State.Msg(
-      Strings.Get('Text.ExpandableCards'),
-      Strings.Get('Heading.ExpandableCardsHint')
-    ),
-    Cards(Model),
-    G.Heading of State.Msg(Strings.Get('Heading.Countdown'), Strings.Get('Heading.CountdownHint')),
-    Countdown.View(Model),
-    G.Heading of State.Msg(
-      Strings.Get('Heading.OnboardingChecklist'),
-      Strings.Get('Heading.OnboardingChecklistHint')
-    ),
-    Checklist.View(Model),
-    UndoToast.View(),
-    G.Heading of State.Msg(
-      Strings.Get('Heading.Veil'),
-      Strings.Get('Heading.VeilHint')
-    ),
-    Veil.View(Model, Colors)
+  const Parts: Lists.List of E.Element of State.Msg := new Lists.List of E.Element of State.Msg();
+  Parts.AddRange(Banner.View(Model));
+  Parts.AddRange(
+    [
+      G.Heading of State.Msg(
+        Strings.Get('Heading.HoverCard'),
+        Strings.Get('Heading.HoverCardHint')
+      ),
+      Hover.View(Colors),
+      G.Heading of State.Msg(
+        Strings.Get('Heading.ConfirmPopover'),
+        Strings.Get('Heading.ConfirmPopoverHint')
+      ),
+      Confirm.View(Model),
+      G.Heading of State.Msg(
+        Strings.Get('Heading.ExpandableText'),
+        Strings.Get('Heading.ExpandableTextHint')
+      ),
+      T.ExpandableText of State.Msg(
+        'about-cui',
+        'CUI is a component library for C. It draws everything itself, so an app looks the same on Windows, macOS and Linux, and it ' +
+        'ships the parts most apps need: inputs, pickers, menus, dialogs, tables, charts and a command palette. Every component ' +
+        'supports the keyboard, light and dark themes and reduced motion. The core is plain C99 with no dependencies, and it ' +
+        'renders through OpenGL or a built-in software rasterizer, so it also runs in virtual machines and over remote desktop.',
+        new T.Options(Lines := 2)
+      ),
+      G.Heading of State.Msg(
+        Strings.Get('Text.ExpandableCards'),
+        Strings.Get('Heading.ExpandableCardsHint')
+      ),
+      Cards(Model, Colors),
+      G.Heading of State.Msg(
+        Strings.Get('Heading.Countdown'),
+        Strings.Get('Heading.CountdownHint')
+      ),
+      Countdown.View(Model),
+      G.Heading of State.Msg(
+        Strings.Get('Heading.OnboardingChecklist'),
+        Strings.Get('Heading.OnboardingChecklistHint')
+      ),
+      Checklist.View(Model),
+      G.Heading of State.Msg(
+        Strings.Get('Heading.UndoToast'),
+        Strings.Get('Heading.UndoToastHint')
+      ),
+      UndoToast.View(),
+      G.Heading of State.Msg(
+        Strings.Get('Heading.Veil'),
+        Strings.Get('Heading.VeilHint')
+      ),
+      Veil.View(Model, Colors)
+    ]
   );
+  return Parts.ToArray();
 end function;
 
 end unit;

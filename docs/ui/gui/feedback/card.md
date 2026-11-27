@@ -33,7 +33,8 @@ end unit;
 | `MinimumWidth / MaximumWidth` | Both 0. Positive values set bounds in logical units. If both bounds are positive, the minimum must be at most the maximum. |
 | `Padding / Gap` | Both 0. CUI uses 24 logical units for zero padding and 12 for a zero gap. |
 | `PaddingX / PaddingY` | Both 0. Positive values override `Padding` for the horizontal or vertical axis. |
-| `Horizontal / Align / Wrap` | false / Default / false. Set `Horizontal` to true to place children in a row. Only a horizontal card accepts `Wrap`. |
+| `Direction` | Column. Choose Column, Row, Stack or Grid. The native card grid has one column. |
+| `Align / Wrap` | Default / false. Use `Align` to place children. Only a row card accepts `Wrap`. |
 | `Muted / Selected / Enabled` | false / false / true. Muted uses a borderless surface, and Selected uses an accent border. |
 | `OnActivate` | Optional callback that makes the card itself interactive. |
 | `Hoverable` | false. Enable it to use a card without an activation callback as a hover card trigger. |
@@ -43,6 +44,8 @@ end unit;
 Use `MinimumWidth` and `MaximumWidth` to constrain a card in a responsive
 row. If the row wraps, CUI uses these bounds to choose which children fit
 on a line. Set `Width` to `Fill` if the card can grow within its bounds.
+Use [sizing](../../layout/sizing.md) to give the card a native growth weight.
+Place a [grid](grid.md) inside a card when it needs more than one column.
 
 ## Interaction
 

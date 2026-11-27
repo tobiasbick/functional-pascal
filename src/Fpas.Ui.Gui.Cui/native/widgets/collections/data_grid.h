@@ -9,23 +9,24 @@
  * state[4] is sort column (-2 disables sorting, -1 unsorted), descending, cursor and anchor
  * (cursor/anchor are -1 or valid row indices). State is copied back by end.
  * options: 1 input, 2 stripes, 4 hide checkboxes, 8 request grid focus.
- * height_kind/height use the shared extent encoding; row_height is at least one point.
+ * Width and height use the shared extent encoding. Row height is at least one point.
  * range[3] receives first row, exclusive last row and frame-local root node;
  * headers[columns] receives frame-local header nodes, or -1.
  * Returns a frame-owned handle used only by the matching end. */
 CUI_API void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *titles,
     const float *widths, const int *flags, int columns, int rows, uint8_t *selected,
-    int *state, int height_kind, float height, float row_height, int options,
+    int *state, int height_kind, float height, float row_height, int width_kind, float width, int options,
     int *range, int *headers);
 /** Opens the next realized row in ascending display order; id is its stable model identity.
- * Returns its frame-local node. A changed identity cancels an existing draft at that position. */
-CUI_API int fpas_cui_data_grid_row(cui_ctx *ui, int row, const char *id);
+ * Returns its frame-local node. A changed identity cancels an existing draft at that position.
+ * When clicked is supplied, writes whether CUI registered a click on this row. */
+CUI_API int fpas_cui_data_grid_row(cui_ctx *ui, int row, const char *id, int *clicked);
 /** Advances the current row to a cell; text is literal text, or NULL for composed content. */
 CUI_API void fpas_cui_data_grid_cell(cui_ctx *ui, const char *text);
 /** Draws editable text in the current cell. value contains a terminated UTF-8 model value;
  * capacity includes the terminator and is 2..256 bytes. Returns nonzero only on commit,
- * copying the draft into value then. Model input is otherwise preserved; changing capacity
- * cancels a draft. The caller may discard a committed proposal to reject it. */
+ * copying the draft into value then. Model input is otherwise preserved. Changing capacity
+ * or hiding the column cancels a draft. The caller may discard a committed proposal. */
 CUI_API int fpas_cui_data_grid_edit(cui_ctx *ui, char *value, int capacity);
 /** Ends the matching grid, cancels any draft whose editable cell was omitted and copies outputs.
  * selected is NULL or rows writable bytes; state has four writable entries as above.

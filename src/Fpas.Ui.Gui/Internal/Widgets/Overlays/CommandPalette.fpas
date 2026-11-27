@@ -41,11 +41,19 @@ public procedure Draw of TMsg(
 );
 begin
   const Enabled: bool := Frame.Interactive and (Frame.ActiveModal = null or Frame.ActiveModal = Id);
-  const Toggle: bool := Shortcut and Enabled and not Frame.PaintingClosed
-    and Frame.Window.CommandPaletteShortcut();
+  const Toggle: bool := Shortcut and Frame.Interactive and not Frame.PaintingClosed
+    and (Enabled or (not Open and Frame.ActiveModal = F.TopModal of TMsg(
+    Base, Frame.Prepared, Frame.Previous
+  )))
+    and Frame.Window.CommandPaletteShortcut(Open);
   Visit(
     Base, Frame with
       AcceptInput := Frame.AcceptInput and not Open and not Toggle;
+      ActiveModal := if Toggle then
+        Id
+      else
+        Frame.ActiveModal
+      end if;
     end with, Horizontal, Align
   );
   if Frame.PaintingClosed then

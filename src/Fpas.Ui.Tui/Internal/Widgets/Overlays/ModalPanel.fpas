@@ -182,7 +182,10 @@ begin
 
   const Across: bool := Settings.Edge = null or Settings.Edge = Sheets.Side.Left or Settings.Edge =
     Sheets.Side.Right;
-  const Size: int := F.Cells(L.Measure.Logical(Settings.Size), Across);
+  const Units: int := cast Sys.Math.Min(
+    Sys.Math.Ceiling(cast Settings.Size as double), cast int.MaxValue as double
+  ) as int;
+  const Size: int := F.Cells(L.Measure.Logical(Units), Across);
   const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Colors.Background ?? 0);
   const Panel: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
   return (E.Element of TMsg).Desktop(

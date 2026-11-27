@@ -10,17 +10,17 @@ uses Fpas.Ui.Styles as S;
 public type Options = record
   // Whether to animate activity without displaying a percentage.
   public Indeterminate: bool := false;
-  // Fill color; Neutral uses CUI's control-on color.
+  // Fill color; Neutral uses CUI's control-on color or emphasis for dither.
   public Tone: S.Tone := S.Tone.Neutral;
-  // Track height in logical points; zero uses CUI's default.
+  // Track height in logical points; zero uses six points or eight for dither.
   public Height: float := 0.0F;
-  // Optional literal caption, above the GUI track and before the terminal track.
+  // Optional literal caption above the track.
   public Label: string := '';
   // Whether to show the rounded percentage for determinate progress.
   public ShowValue: bool := false;
   // Whether CUI draws the fill as drifting ordered dots.
   public Dither: bool := false;
-  // Native width. Content uses the default full-width track.
+  // Native width. Content uses CUI's default sizing.
   public Width: L.Extent := L.Extent.Content;
 end record;
 

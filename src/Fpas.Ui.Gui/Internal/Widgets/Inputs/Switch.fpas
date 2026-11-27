@@ -18,20 +18,23 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `OnChange`: Maps native activation to an application message.
 // - `Description`: Optional secondary caption.
 // - `Enabled`: Model-owned input permission.
+// - `HideLabel`: Whether to draw only the native switch.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
   Id: string;
   Label: string;
   On: bool;
   OnChange: function(bool): TMsg;
-  Description: string;
-  Enabled: bool
+  Description: string?;
+  Enabled: bool;
+  HideLabel: bool
 );
 begin
   const Allowed: bool := Enabled and Frame.AcceptInput;
   const Token: string := C.Token('switch', Id);
   if Frame.Window.Switch(
-    Token, Label, Description, On, Allowed, C.WantsFocus of TMsg(Frame, Id, Token, Allowed)
+    Token, Label, Description, On, Allowed, C.WantsFocus of TMsg(Frame, Id, Token, Allowed),
+    HideLabel
   )
   then
     Frame.Messages.Add(OnChange(not On));

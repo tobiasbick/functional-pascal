@@ -3,25 +3,29 @@
 
 static int fpas_menu_rows(cui_ctx *ui, cui_id popup, bool visible,
     const char *const *keys, const char *const *labels, const char *const *icons,
-    const char *const *shortcuts, const int *flags, int count, int *nodes, int *highlighted) {
+    const char *const *shortcuts, const fpas_cui_menu_row *rows, int count, int *nodes, int *highlighted) {
     for (int i = 1; i <= count; ++i) nodes[i] = -1;
     *highlighted = -1;
     if (!visible) return -1;
     int chosen = -1, ordinal = 0;
     const cui__menu_nav *nav = cui_state(ui, popup ^ 0x4E4156u, sizeof *nav);
     for (int i = 0; i < count; ++i) {
-        if ((flags[i] & 3) == 1) cui_menu_label(ui, labels[i]);
-        else if ((flags[i] & 3) == 2) cui_menu_separator(ui);
+        const fpas_cui_menu_row row = rows[i];
+        if ((row.flags & 3) == 1) cui_menu_label(ui, labels[i]);
+        else if ((row.flags & 3) == 2) cui_menu_separator(ui);
         else {
             const cui_menu_item_opts item = { .icon = icons[i][0] ? icons[i] : NULL,
                 .shortcut = shortcuts[i][0] ? shortcuts[i] : NULL,
-                .disabled = (flags[i] & 4) != 0, .danger = (flags[i] & 8) != 0,
-                .checked = (flags[i] & 16) != 0 };
+                .disabled = (row.flags & 4) != 0, .danger = (row.flags & 8) != 0,
+                .checked = (row.flags & 16) != 0, .font = row.font, .text_size = row.text_size };
             cui_push_id(ui, keys[i]);
             if (cui_menu_item_ex(ui, "x", &item)) chosen = i;
             /* Menu items do not set last_node; find their stable keyed node. */
             const int command = fpas_find(ui, cui_make_id(ui, "x"));
-            fpas_literal(ui, command, labels[i], CUI_C(ui, FOREGROUND));
+            /* The caption follows the optional icon, even when it uses the icon font. */
+            int caption = ui->nodes[command].first;
+            if (item.icon) caption = ui->nodes[caption].next;
+            fpas_text(ui, caption, labels[i]);
             nodes[i + 1] = command;
             cui_pop_id(ui);
             if (nav->highlight == ordinal++) *highlighted = i;
@@ -45,7 +49,7 @@ static void fpas_menu_snapshot(cui_ctx *ui, int enabled, int trigger, cui_id anc
 
 int fpas_cui_menu(cui_ctx *ui, const char *id, const char *label, const char *icon,
     const char *const *keys, const char *const *labels, const char *const *icons,
-    const char *const *shortcuts, const int *flags, int count, int variant, int placement,
+    const char *const *shortcuts, const fpas_cui_menu_row *rows, int count, int variant, int placement,
     float width, int icon_only, int enabled, int focus, int context_menu, int *nodes,
     int *open, int *highlighted, unsigned int *owner) {
     const char *caption = cui__frame_printf(ui, "x%s", id);
@@ -74,7 +78,7 @@ int fpas_cui_menu(cui_ctx *ui, const char *id, const char *label, const char *ic
         }
     }
     const int chosen = fpas_menu_rows(ui, pid, visible, keys, labels, icons, shortcuts,
-        flags, count, nodes, highlighted);
+        rows, count, nodes, highlighted);
     if (visible) {
         if (context_menu) cui_context_menu_end(ui); else cui_menu_end(ui);
     }

@@ -27,11 +27,12 @@ end function;
 // ## Parameters
 // - `Window`: Owning native window.
 // - `Theme`: Immutable shared palette and optional graphical metrics.
-public procedure Apply(Window: Cui.CuiWindow; Theme: Themes.Theme);
+// - `Animate`: Whether CUI animates a change in appearance or accent.
+public procedure Apply(Window: Cui.CuiWindow; Theme: Themes.Theme; Animate: bool := false);
 begin
   Window.SetTheme(
     Theme.Appearance = Themes.Mode.Dark, cast Theme.AccentFamily as int,
-    Themes.Rgba(Theme), Metrics.Native(Theme.Metrics)
+    Themes.Rgba(Theme), Metrics.Native(Theme.Metrics), Animate
   );
 end procedure;
 

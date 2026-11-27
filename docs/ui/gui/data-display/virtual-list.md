@@ -34,8 +34,8 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Count` | Nonnegative row count in the current model. |
-| `RowHeight` | Fixed height of at least one logical unit. The total row height must be less than `int.MaxValue`. |
-| `Height` | Viewport extent. CUI treats `Content` as `Fill`. |
+| `RowHeight` | Fixed height of at least one logical unit. Zero uses the native default of 36 logical units. The total row height must be less than `int.MaxValue`. |
+| `Height` | Viewport height. Use `Fill`, a fixed logical distance or a percentage of the parent. `Content` uses the same size as `Fill`. |
 | `BuildRow` | A pure function that builds a row from its zero-based index. |
 | `Offset` | Null or a finite, nonnegative scroll offset in logical units. The host restores the offset when the view appears. |
 | `OnScroll` | Null or a callback that maps a native scroll offset to a message. |
@@ -46,6 +46,10 @@ Scrolling changes which rows CUI requests. CUI can include rows just outside
 the viewport. Give interactive children unique, stable IDs across the view.
 The GUI snapshot reports the realized range as `first:last`, where `last` is
 the first index outside the range.
+
+Each realized index occupies its fixed row height. The host reserves empty
+space when a row produces no visible widget. If layout changes the viewport
+height, the host requests a frame to realize the updated range.
 
 The list retains its native offset while it stays in the view. Store offset
 messages in the model to restore the position when the list reappears. If
@@ -67,6 +71,7 @@ leaving the enclosing list and row available for the rest of the frame.
 - [Scroll view](../layout/scroll-view.md)
 - [Data display](README.md)
 - [Collection scope tests](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiCollectionTrackingTests.cs)
+- [Viewport growth](../../../future/cui-upstream-bugs.md#cui-027)
 
 ## Source files
 

@@ -9,8 +9,8 @@ uses Fpas.Ui.Layout as L;
 public type Item = record
   // Literal caption.
   public Label: string;
-  // Optional secondary caption.
-  public Description: string := '';
+  // Secondary caption. Null omits the description.
+  public Description: string? := null;
   // Whether the item accepts selection.
   public Enabled: bool := true;
 end record;

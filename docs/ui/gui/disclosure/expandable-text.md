@@ -31,14 +31,23 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Lines / Size` | 3 / 0. Zero uses CUI's body text size. |
-| `Color / FadeTo` | null / null. Set FadeTo if the text sits on a different surface. |
-| `Enabled` | true. |
+| `Id` | Nonempty stable control ID. |
+| `Text` | Literal wrapping text. |
+| `Lines` | 3. The number of lines in the collapsed view must be positive. |
+| `Size` | 0 uses CUI's body text size. Set a positive size in logical units. |
+| `Color` | `null` uses the theme foreground. |
+| `FadeTo` | `null` fades into the theme background. Set a color for a different surface. |
+| `Enabled` | `true`. Setting `false` disables activation and focus for the link. |
 | `OnToggle` | Optional message factory called when CUI toggles the text. |
 
 ## Interaction
 
-CUI owns expansion and shows Show more or Show less when the text exceeds the limit. Removing the widget clears its local expansion state. Use `ToggleId(Id)` to inspect or focus the link. CUI can lose focus after a toggle, so Tab or an explicit focus request can return to it.
+CUI owns expansion and shows Show more or Show less when the text exceeds
+the limit. Click, Enter or Space toggles the text. The link keeps focus when
+its caption changes. If the text fits, the link disappears and releases focus.
+
+Removing the widget clears its local expansion state. Use `ToggleId(Id)` to
+inspect or focus the link when present.
 
 ## See also
 

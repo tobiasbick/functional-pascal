@@ -53,8 +53,8 @@ public procedure Draw of TMsg(
   end procedure;
 begin
   const Count: int := Left.Length + Right.Length;
-  const Labels: Lists.List of string := new Lists.List of string(Count);
-  const Icons: Lists.List of string := new Lists.List of string(Count);
+  const Labels: Lists.List of string? := new Lists.List of string? (Count);
+  const Icons: Lists.List of string? := new Lists.List of string? (Count);
   const Tones: Lists.List of int := new Lists.List of int(Count);
   Append(Left);
   Append(Right);
@@ -93,7 +93,7 @@ begin
   for Index: int in Visible do
     Frame.Controls.Add(
       new App.Control(
-        ActionId(Index), Labels[Index], 'swipe-action', new Cui.CuiRectangle(), Enabled
+        ActionId(Index), Labels[Index] ?? '', 'swipe-action', new Cui.CuiRectangle(), Enabled
       )
     );
   end for;

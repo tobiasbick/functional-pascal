@@ -32,17 +32,29 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
+| `Id` | A stable chart ID. |
 | `Values` | Finite nonnegative shares with a finite sum. |
-| `Labels` | An empty array or one literal label per share. |
-| `Width / Height` | Content / 0. Zero uses the native height. |
-| `Legend / Format` | true / null. A null format uses native formatting. |
+| `Labels` | An empty array or one literal label per share. An empty array omits the legend. |
+| `Width` | `Content`. A native width can also fill, specify a fixed width, or use a percentage. |
+| `Height` | Preferred ring diameter in logical units. Zero uses CUI's default of 180. |
+| `Legend` | true. Set false to hide the legend while retaining center captions. |
+| `Format` | null uses CUI's automatic format for the center value. See [value format](README.md#value-format). |
 
 ## Interaction
 
-CUI sizes the chart to the available space and draws wedges proportional to
-the shares. Hover a wedge to show its value in the center. At rest, the center
-shows the total, or the largest share when the format includes a percent sign.
-For a percent suffix, pass values already expressed in percent.
+CUI draws wedges proportional to the shares. Hover a wedge to show its value
+and caption in the center. At rest, the center shows the total. If a format
+contains a literal percent sign, the center shows the largest share at rest.
+Use values already expressed in percent for that format.
+
+The legend computes each percentage from the submitted shares and their
+total. This calculation is independent of `Format`. CUI places the legend
+below the ring when the chart is too narrow to fit both side by side.
+
+For a stacked legend, CUI sizes the ring as if at least 120 logical units
+were available, up to the preferred diameter. Without a legend, CUI applies
+an 80-unit minimum in the narrow layout. A fixed chart width below these
+limits can leave the ring wider than the chart's bounds.
 
 ## See also
 

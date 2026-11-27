@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Validation.Inputs.DateRangeRules;
 
 uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as Layout;
 uses Fpas.Ui.Widgets.Pickers.DateRangePickers as P;
 uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 
@@ -29,11 +30,9 @@ end procedure;
 // - `At`: Diagnostic path.
 public procedure Picker(Settings: P.Options; At: string);
 begin
-  Rules.CheckText(Settings.Label, At + '/label');
-  Rules.CheckText(Settings.Placeholder, At + '/placeholder');
-  if not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0F then
-    Rules.Reject(At, 'The range picker needs a finite, nonnegative field width.');
-  end if;
+  Rules.CheckText(Settings.Label ?? '', At + '/label');
+  Rules.CheckText(Settings.Placeholder ?? '', At + '/placeholder');
+  Layout.CheckExtent(Settings.Width, Rules.Profile.Graphical, At + '/width');
 end procedure;
 
 end unit;

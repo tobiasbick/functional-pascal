@@ -16,7 +16,7 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         ArgumentNullException.ThrowIfNull(order);
-        if (order.Length is < 1 or > 256) throw new ArgumentOutOfRangeException(nameof(order));
+        if (order.Length > 256) throw new ArgumentOutOfRangeException(nameof(order));
         Span<bool> seen = stackalloc bool[order.Length];
         seen.Clear();
         foreach (int index in order)
@@ -35,7 +35,7 @@ public sealed partial class CuiWindow
 
     /// <summary>Opens a row in the current proposed display order.</summary>
     /// <param name="position">Zero-based position in the proposed order.</param>
-    /// <param name="enabled">Whether the row's handle accepts input.</param>
+    /// <param name="enabled">Whether pressing the row can start a drag.</param>
     public void BeginReorderItem(int position, bool enabled)
     {
         var list = (ReorderList)RequireLayout(Layout.Reorder).Data!;

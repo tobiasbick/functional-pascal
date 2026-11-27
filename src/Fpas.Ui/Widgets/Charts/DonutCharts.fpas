@@ -10,11 +10,11 @@ uses Fpas.Ui.Widgets.Charts.Charts as C;
 public type Options = record
   // Content width lets CUI shrink the donut or place its legend below it.
   public Width: L.Extent := L.Extent.Content;
-  // Maximum diameter; zero selects the native default of 180.
+  // Preferred ring diameter in logical units. Zero uses the native default of 180.
   public Height: float := 0.0F;
-  // Null selects automatic native numeric formatting.
+  // Formats the center value. Null selects native automatic formatting.
   public Format: C.ValueFormat? := null;
-  // Show the native share legend.
+  // Show the native share legend when labels are supplied.
   public Legend: bool := true;
 end record;
 

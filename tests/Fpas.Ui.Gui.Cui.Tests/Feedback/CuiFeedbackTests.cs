@@ -50,7 +50,7 @@ public sealed class CuiFeedbackTests
             window.BeginColumn(12, 10);
             window.Progress("before", .68f, label: "Uploading ## literally", showValue: true);
             window.TrackLastControl("before");
-            int result = remove ? 0 : window.Alert("alert", title, "Native supporting text", "", 3,
+            int result = remove ? 0 : window.Alert("alert", title, "Native supporting text", null, 3,
                 true, enabled, focus, "dismiss");
             if (!remove)
             {
@@ -66,6 +66,45 @@ public sealed class CuiFeedbackTests
             Assert.Equal(22, window.GetControlRectangle("spinner").Width);
             Assert.True(window.GetControlRectangle("before").Height < 80);
             return result;
+        }
+    }
+
+    /// <summary>Preserves explicit blank content and an icon-only action through marshalling.</summary>
+    [GuiFact]
+    public void AlertsAndEmptyStatesPreserveBlankOptions()
+    {
+        using var window = new CuiWindow("Optional feedback content", 600, 540, CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        Draw(null, null, null);
+        var alert = window.GetControlRectangle("alert");
+        var empty = window.GetControlRectangle("empty");
+        Draw("", null, null);
+        var blankIcon = window.GetControlRectangle("empty");
+        Assert.True(blankIcon.Height > empty.Height);
+        Draw("", "", null);
+        Assert.True(window.GetControlRectangle("alert").Height > alert.Height);
+        Assert.True(window.GetControlRectangle("empty").Height > blankIcon.Height);
+        Draw("", "", "");
+        Assert.True(window.GetControlRectangle("add").Width > 0);
+        Assert.True(window.ControlFocused("add"));
+        Assert.True(Draw("", "", "", enter: true));
+
+        bool Draw(string? icon, string? description, string? action, bool enter = false)
+        {
+            Assert.True(window.NextFrame());
+            if (enter)
+            {
+                window.SetKey(2, true);
+                window.SetKey(2, false);
+            }
+            window.BeginColumn();
+            window.Alert("alert", "Heading", description, icon, 0, false, true, false, "dismiss");
+            bool activated = window.EmptyState("empty", "Empty state", icon, description, action,
+                enabled: true, focus: action is not null && !enter, trackAction: "add");
+            window.TrackLastControl("empty");
+            window.EndColumn();
+            window.Present();
+            return activated;
         }
     }
 
@@ -113,6 +152,9 @@ public sealed class CuiFeedbackTests
         Assert.Throws<ArgumentOutOfRangeException>(() => window.Progress("bad", 0, tone: 9));
         Assert.Throws<ArgumentOutOfRangeException>(() => window.Progress("bad", 0, height: float.NaN));
         Assert.Throws<ArgumentOutOfRangeException>(() => window.Spinner("bad", float.PositiveInfinity));
+        Assert.Throws<ArgumentOutOfRangeException>(() => window.Spinner("bad", themeTrack: 35));
+        Assert.Throws<ArgumentException>(() => window.Spinner("bad", color: 0xff112233, themeColor: 1));
+        Assert.Throws<ArgumentException>(() => window.StatusSpinner("bad", 1, 20, 0xff112233, false, themeColor: 1));
         Assert.Throws<ArgumentException>(() => window.Progress("bad", 0, label: "zero\0"));
         Assert.Throws<ArgumentException>(() => window.Alert("bad", " ", "", "", 0, false, true, false, "close"));
         window.Progress("valid", .5f);

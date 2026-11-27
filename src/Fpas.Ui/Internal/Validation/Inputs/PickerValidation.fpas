@@ -4,11 +4,13 @@ unit Fpas.Ui.Internal.Validation.Inputs.PickerValidation;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LayoutRules;
 uses Fpas.Ui.Internal.Validation.Inputs.DateRangeRules as DateRangeRules;
 uses Fpas.Ui.Internal.Validation.Inputs.NumberFieldRules as NumberRules;
 uses Fpas.Ui.Internal.Validation.Inputs.PickerRules as PickerRules;
 uses Fpas.Ui.Internal.Validation.Inputs.SelectRules as SelectRules;
 uses Fpas.Ui.Internal.Validation.Inputs.SmartInputRules as SmartRules;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.InlineEdits as InlineEdits;
 uses Fpas.Ui.Widgets.Inputs.MoneyFields as MoneyFields;
 uses Fpas.Ui.Widgets.Inputs.MultiSelects as Multi;
@@ -89,8 +91,8 @@ begin
       const At: string := Identify(Id, Location + '/datePicker');
       R.RequireProfile(Current, R.Profile.Graphical, At);
       R.CheckText(Settings.Label, At + '/label');
-      R.CheckText(Settings.Placeholder, At + '/placeholder');
-      PickerRules.Size(Settings.Width, At + '/width');
+      R.CheckText(Settings.Placeholder ?? '', At + '/placeholder');
+      LayoutRules.CheckExtent(Settings.Width, Current, At + '/width');
       discard Identify(Calendars.MonthId(Id, false), At);
       discard Identify(Calendars.MonthId(Id, true), At);
       return true;
@@ -175,7 +177,10 @@ begin
       R.RequireProfile(Current, R.Profile.Graphical, Path);
       const At: string := Identify(Id, Path);
       PickerRules.Time(Value, At);
-      PickerRules.Size(Size, At + '/size');
+      if not Sys.Single.IsFinite(Size) then
+        R.Reject(At + '/size', 'The time dial diameter must be finite.');
+      end if;
+
       discard Identify(TimeDials.SelectorId(Id, false), At);
       discard Identify(TimeDials.SelectorId(Id, true), At);
       discard Identify(TimeDials.FaceId(Id), At);
@@ -187,6 +192,13 @@ begin
       const Path: string := Location + '/multiSelect';
       const At: string := Identify(Id, Path);
       SelectRules.MultiSelect(Items, Selected, Settings, At);
+      case Settings.Width of
+        when is L.Extent as Width:
+          R.RequireProfile(Current, R.Profile.Graphical, At + '/width');
+          LayoutRules.CheckExtent(Width, Current, At + '/width');
+        else
+      end case;
+
       if Current <> R.Profile.Graphical then
         discard Identify(Id + '/bulk', At + '/bulk');
       end if;
@@ -206,6 +218,13 @@ begin
       const Path: string := Location + '/select';
       const At: string := Identify(Id, Path);
       SelectRules.Check(Items, Selected, Settings, At);
+      case Settings.Width of
+        when is L.Extent as Width:
+          R.RequireProfile(Current, R.Profile.Graphical, At + '/width');
+          LayoutRules.CheckExtent(Width, Current, At + '/width');
+        else
+      end case;
+
       for Index: int := 0 to Items.Length - 1 do
         discard Identify(Selects.OptionId(Id, Index), At + '/option');
       end for;
@@ -272,6 +291,13 @@ begin
       end if;
       const At: string := Identify(Id, Path);
       NumberRules.Check(Value, Minimum, Maximum, Settings, At);
+      case Settings.Width of
+        when is L.Extent as Width:
+          R.RequireProfile(Current, R.Profile.Graphical, At + '/width');
+          LayoutRules.CheckExtent(Width, Current, At + '/width');
+        else
+      end case;
+
       discard Identify(NumberFields.DecreaseId(Id), At + '/decrease');
       discard Identify(NumberFields.IncreaseId(Id), At + '/increase');
       return true;

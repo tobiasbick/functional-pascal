@@ -1,6 +1,7 @@
 // [Documentation](../../../../../docs/ui/gui/pickers/time-dial.md)
 #include "../../fpas_cui.h"
 
+/** Draws the native time dial and tracks its three interactive parts. */
 int fpas_cui_time_dial(cui_ctx *ui, const char *id, int value, float size,
     int enabled, int focus, int *nodes) {
     const cui_id key = cui_make_id(ui, id);
@@ -15,6 +16,9 @@ int fpas_cui_time_dial(cui_ctx *ui, const char *id, int value, float size,
     }
 
     int hour = value / 60, minute = value % 60;
+    /* CUI-041: keep the two hour rings separated at small explicit sizes.
+       See docs/future/cui-upstream-bugs.md#cui-041. */
+    if (size > 0 && size < 160) size = 160;
     cui_push_disabled(ui, !enabled);
     cui_time_dial(ui, id, &hour, &minute, size);
     cui_pop_disabled(ui);

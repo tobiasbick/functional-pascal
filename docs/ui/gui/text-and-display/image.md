@@ -36,8 +36,9 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Width / Height` | 64 / 64 logical points. |
-| `Radius / Tint` | 0 / null. Tint multiplies the source colors. |
+| `Width`, `Height` | 64 logical units each. `Content` also uses 64. |
+| `Radius` | 0 logical units. |
+| `Tint` | `Charts.Color.Automatic` preserves the source colors. `Charts.Color.Theme(Token)` or `Charts.Color.Rgba(Value)` multiplies them by the selected color. The renderer resolves theme tokens for each frame. RGBA with zero alpha uses the automatic tint. |
 
 ## Usage
 
@@ -55,6 +56,13 @@ The result contains a complete immutable CPU snapshot. A widget displaying
 the preceding revision updates just that rectangle on its existing texture.
 A new widget, or one that skipped a revision, uploads the complete snapshot.
 The same source works in images, image viewers and custom canvas painting.
+
+The GUI host owns the image texture. It creates the texture with
+`cui_image_create`. It derives the native ID with `cui_make_id` from the
+widget's stable ID in the current CUI scope. The image comparison uses a
+separate ID for each image. The host keeps each texture in `cui_state`
+and registers it for cleanup, like `cui_state_on_free`. Cleanup calls
+`cui_image_destroy` when the texture is replaced or retired.
 
 ## See also
 
@@ -82,3 +90,4 @@ The same source works in images, image viewers and custom canvas painting.
   - [media_image.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/media_image.c)
   - [media_image.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/media_image.h)
 - [Software and OpenGL image update tests](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Media/CuiImageUpdateTests.cs)
+- [Native color parity test](../../../../src/Fpas.Ui.Gui.Cui/native/tests/display.c)

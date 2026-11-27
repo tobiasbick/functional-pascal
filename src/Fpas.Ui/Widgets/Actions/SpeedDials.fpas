@@ -7,19 +7,19 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // A native speed dial action.
 public type Item = record
-  // Action caption.
-  public Label: string;
-  // CUI icon glyph.
-  public Icon: string;
+  // Caption. Null omits its label bubble.
+  public Label: string?;
+  // CUI icon glyph. Null omits the glyph.
+  public Icon: string?;
 end record;
 
 // Presentation and input options for a speed dial.
 public type Options = record
-  // Optional trigger glyph. CUI defaults to a plus.
-  public Icon: string := '';
-  // Optional tooltip and accessible trigger label.
-  public Tooltip: string := '';
-  // Native placement. BottomStart selects CUI's default.
+  // Trigger glyph. Null uses the native plus and an empty string leaves it blank.
+  public Icon: string? := null;
+  // Optional tooltip and inspection label.
+  public Tooltip: string? := null;
+  // Native placement. BottomStart selects CUI's TopEnd default.
   public Position: M.Placement := M.Placement.BottomStart;
   // Whether the dial accepts input.
   public Enabled: bool := true;

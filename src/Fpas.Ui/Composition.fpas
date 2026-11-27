@@ -69,6 +69,7 @@ uses Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks;
 uses Fpas.Ui.Widgets.Developer.JsonViews as JsonViews;
 uses Fpas.Ui.Widgets.Developer.Terminal as T;
 uses Fpas.Ui.Widgets.Display.DotDisplays as DotDisplays;
+uses Fpas.Ui.Widgets.Display.Markdowns as Markdowns;
 uses Fpas.Ui.Widgets.Display.Readouts as Readouts;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
@@ -232,6 +233,19 @@ public function Map of (TChild, TParent)(
     const Result: Lists.List of E.Element of TParent := new Lists.List of E.Element of TParent();
     for Child: E.Element of TChild in Values do
       Result.Add(Map of (TChild, TParent)(Child, Messages));
+    end for;
+
+    return Result.ToArray();
+  end function;
+  function ReorderRows(
+    Items: array of array of E.Element of TChild
+  ): array of array of E.Element of TParent;
+  begin
+    const Result: Lists.List of array of E.Element of TParent := new Lists.List of array of E.Element of TParent(
+      Items.Length
+    );
+    for Row: array of E.Element of TChild in Items do
+      Result.Add(Children(Row));
     end for;
 
     return Result.ToArray();
@@ -459,14 +473,14 @@ begin
     when E.Element.Popover(
       const FId: string,
       const FTrigger: E.Element of TChild,
-      const FContent: E.Element of TChild,
+      const FChildren: array of E.Element of TChild,
       const FOpen: bool,
       const FOnDismiss: TChild,
       const FSettings: Popovers.Options
     ): (E.Element of TParent).Popover(
       FId,
       Map of (TChild, TParent)(FTrigger, Messages),
-      Map of (TChild, TParent)(FContent, Messages),
+      Children(FChildren),
       FOpen,
       Messages(FOnDismiss),
       FSettings
@@ -545,7 +559,7 @@ begin
       const Id: string, const Columns: array of DataGrids.Column, const Count: int,
       const Build: function(int): DataGrids.Row of TChild, const Current: DataGrids.Value,
       const Change: function(DataGrids.Value): TChild, const Settings: DataGrids.Options,
-      const DoubleClick: Sys.Func of (int, TChild)?
+      const DoubleClick: Sys.Func of (int, TChild)?, const RowClick: Sys.Func of (int, TChild)?
     ): (E.Element of TParent).DataGrid(
       Id,
       Columns,
@@ -554,7 +568,8 @@ begin
       Current,
       function(Next: DataGrids.Value): TParent => Messages(Change(Next)),
       Settings,
-      M.Callback of (int, TChild, TParent)(DoubleClick, Messages)
+      M.Callback of (int, TChild, TParent)(DoubleClick, Messages),
+      M.Callback of (int, TChild, TParent)(RowClick, Messages)
     );
     when E.Element.TreeCell(
       const Id: string, const Label: string, const Depth: int, const Open: bool?,
@@ -578,11 +593,14 @@ begin
       M.MenuSource of (int, TChild, TParent)(Menu, Messages)
     );
     when E.Element.ReorderableList(
-      const Id: string, const Items: array of E.Element of TChild, const Order: array of int,
-      const Change: function(array of int): TChild, const Enabled: bool
+      const Id: string,
+      const Items: array of array of E.Element of TChild,
+      const Order: array of int,
+      const Change: function(array of int): TChild,
+      const Enabled: bool
     ): (E.Element of TParent).ReorderableList(
       Id,
-      Children(Items),
+      ReorderRows(Items),
       Order,
       function(Value: array of int): TParent => Messages(Change(Value)),
       Enabled
@@ -648,12 +666,17 @@ begin
     );
     when E.Element.FormattedText(
       const Text: string,
-      const Font: Motion.Font,
+      const Font: MediaColor.Font,
       const FontSize: float,
       const Tint: MediaColor.Color,
       const Settings: Texts.Options,
-      const NoWrap: bool
-    ): (E.Element of TParent).FormattedText(Text, Font, FontSize, Tint, Settings, NoWrap);
+      const NoWrap: bool,
+      const Width: L.Extent,
+      const LineHeight: float,
+      const Tabular: bool
+    ): (E.Element of TParent).FormattedText(
+      Text, Font, FontSize, Tint, Settings, NoWrap, Width, LineHeight, Tabular
+    );
     when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
       _,
       _,
@@ -1055,15 +1078,18 @@ begin
     when E.Element.ChatMessage(
       const Id: string,
       const Text: string,
-      const Settings: ChatMessages.Options
-    ): (E.Element of TParent).ChatMessage(Id, Text, Settings);
+      const Settings: ChatMessages.Options,
+      const OnMarkdown: Sys.Func of (Markdowns.Event, TChild)?
+    ): (E.Element of TParent).ChatMessage(
+      Id, Text, Settings, M.Callback of (Markdowns.Event, TChild, TParent)(OnMarkdown, Messages)
+    );
     when E.Element.ChatDivider(
       const Id: string,
       const Label: string
     ): (E.Element of TParent).ChatDivider(Id, Label);
     when E.Element.TypingIndicator(
       const Id: string,
-      const Name: string
+      const Name: string?
     ): (E.Element of TParent).TypingIndicator(Id, Name);
     when E.Element.Comment(
       const Id: string,
@@ -1710,6 +1736,7 @@ begin
       _,
       _
     ), E.Element.SwitchAction(
+      _,
       _,
       _,
       _,

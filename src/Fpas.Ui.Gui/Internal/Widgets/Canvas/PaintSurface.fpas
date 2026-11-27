@@ -8,6 +8,7 @@ uses Fpas.Ui.Gui.Internal.Core.Values as Colors;
 uses Fpas.Ui.Gui.Internal.Data.MediaData as Media;
 uses Fpas.Ui.Widgets.Canvas.Painting as D;
 uses Fpas.Ui.Widgets.Media.MediaImages as Images;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 function Points(Values: array of D.Point): array of Native.CuiPoint;
 begin
@@ -70,6 +71,12 @@ public type Adapter = record implements D.Surface
   public function DeltaTime(): float;
   begin
     return self.Native.DeltaTime;
+  end function;
+
+  // Resolves Token from the current native palette.
+  public function Color(Token: Themes.ColorToken): G.Color;
+  begin
+    return Colors.Unpack(self.Native.Color(cast Token as int));
   end function;
 
   // Forwards X/Y/Width/Height/Radius and Color to CUI's filled rectangle.

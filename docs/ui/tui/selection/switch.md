@@ -29,6 +29,9 @@ end unit;
 
 Tab to the switch and press Space or Enter, or click anywhere on its row, including the optional description. The marker changes position and the caption reads **On** or **Off**. The callback proposes the opposite of the displayed value. The model supplies the value for the next frame. Disabled switches skip focus and ignore input.
 
+Set `HideLabel` to show only the four-cell switch marker. The label remains
+the accessible name.
+
 The gallery shares Wi-Fi with **Edit profile → Public profile** and **Notifications → Mentions**. Bluetooth and **Notifications → Weekly digest** also share a value. Comments uses the Email notifications checkbox value. Airplane mode has its own value.
 
 ## See also

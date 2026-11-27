@@ -19,7 +19,8 @@ uses Fpas.Ui.Widgets.Inputs.Chips as C;
 // The widget for the application view.
 public function View(Selected: bool): E.Element of bool;
 begin
-  return C.Chip of bool('category-design', 'Design', Selected, function(Value: bool): bool => Value);
+  return C.Chip of bool('category-design', 'Design', Selected,
+    function(Value: bool?): bool => Value ?? false);
 end function;
 
 end unit;
@@ -29,13 +30,19 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Selected` | Pass the current Boolean from the model. |
-| `Icon` | Empty. An optional CUI icon appears while the chip is unselected. |
+| `Selected` | Pass the current Boolean from the model or null for a stateless action. |
+| `Icon` | Null omits the icon. An empty string keeps its space while the chip is unselected. |
 | `Enabled` | true. |
 
 ## Interaction
 
-Click or press Enter or Space to propose toggling the chip. CUI draws a check mark when selected. Keep a separate value for each independent chip.
+Click the chip or press Enter or Space while it has focus. A selectable chip
+proposes the opposite Boolean. CUI draws a check mark for the selected state.
+A stateless chip passes null to the message factory and keeps its unselected
+appearance.
+
+Keep a separate value for each independent selection. The stable ID
+preserves focus when the literal caption changes.
 
 ## See also
 
@@ -55,3 +62,4 @@ Click or press Enter or Space to propose toggling the chip. CUI draws a check ma
 - `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
   - [chip.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/chip.c)
   - [chip.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/chip.h)
+- [CuiChipRatingTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiChipRatingTests.cs)

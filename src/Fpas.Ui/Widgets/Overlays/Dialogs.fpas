@@ -8,10 +8,10 @@ uses Fpas.Ui.Elements as E;
 public type Options = record
   // Literal heading in the dialog header.
   public Title: string;
-  // Optional supporting text below the heading.
-  public Description: string := '';
-  // Preferred width in logical points. Each host fits it to the viewport.
-  public Width: int := 440;
+  // Supporting text below the heading. Null omits it. Empty text reserves a blank GUI line.
+  public Description: string? := null;
+  // Preferred width in logical units. Zero uses the native default of 440.
+  public Width: float := 440.0F;
   // Whether Escape and presses on the scrim leave the dialog open.
   public Persistent: bool := false;
   // Whether to display the header close button.
@@ -46,7 +46,7 @@ public function Dialog of TMsg(
   OnDismiss: TMsg
 ): E.Element of TMsg;
 requires Id <> '';
-requires Settings.Width > 0;
+requires Settings.Width >= 0.0F;
 begin
   return (E.Element of TMsg).Dialog(Id, Base, Content, Open, Settings, OnDismiss);
 end function;

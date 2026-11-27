@@ -8,6 +8,7 @@ uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.ActionFooters as F;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Inputs.TextFields as TextFields;
 uses Fpas.Ui.Widgets.Overlays.Dialogs as D;
 
@@ -21,17 +22,16 @@ uses System as Sys;
 // Shows the original dialog and sheet triggers on Overlays.
 //
 // ## Returns
-// The native gallery's accepted actions in their original card.
-public function Section(): E.Element of State.Msg;
+// The section heading and native card with the original actions.
+public function Section(): array of E.Element of State.Msg;
 begin
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
+  return [
     G.Heading of State.Msg(
       Strings.Get('Text.DialogsAndSheets'),
       Strings.Get('Text.OverlayHint')
     ),
-    G.Card of State.Msg(
-      12, [
+    Cards.Card of State.Msg(
+      'overlays-dialogs-card', [
         E.Row of State.Msg(
           new L.Flow(Gap := G.Points(8), Wrap := true),
           B.Button of State.Msg(
@@ -61,7 +61,7 @@ begin
         )
       ]
     )
-  );
+  ];
 end function;
 
 // Presents the original Edit profile dialog over the gallery.

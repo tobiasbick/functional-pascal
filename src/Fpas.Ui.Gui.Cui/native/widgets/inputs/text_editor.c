@@ -72,6 +72,7 @@ static int fpas_draw_text_editor(cui_ctx *ui, const char *id, char *value, size_
         options.placeholder = cui__frame_strdup(ui, options.placeholder, (int)strlen(options.placeholder));
 
     options.disabled = !allowed;
+    options.autofocus = options.autofocus && allowed;
     const int flags = draw(ui, id, value, capacity, &options);
 
     nodes[0] = fpas_find(ui, key);

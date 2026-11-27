@@ -12,6 +12,7 @@ uses Fpas.Ui.Widgets.Feedback.SkeletonGroups as Group;
 uses Fpas.Ui.Widgets.Feedback.Skeletons as Skeleton;
 uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
 uses Fpas.Ui.Widgets.Feedback.StatusSpinners as Status;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses GuiGallery.Pages.Feedback.State as M;
 uses GuiGallery.Shared.Sections as G;
@@ -26,21 +27,24 @@ public function Placeholders of TMsg(): E.Element of TMsg;
 begin
   return Group.SkeletonGroup of TMsg(
     'loading-dither', [
-      E.Row of TMsg(
-        new L.Flow(Gap := G.Points(12), Align := L.Alignment.Center),
-        Skeleton.Skeleton of TMsg(
-          'loading-dither-avatar',
-          L.Extent.Fixed(L.Measure.Logical(32)),
-          32.0F
-        ),
-        E.Size of TMsg(
-          E.Column of TMsg(
-            new L.Flow(Gap := G.Points(8)),
-            Skeleton.Skeleton of TMsg('loading-dither-title', L.Extent.Percent(60.0F), 8.0F),
-            Skeleton.Skeleton of TMsg('loading-dither-subtitle', L.Extent.Percent(40.0F), 8.0F)
+      E.Size of TMsg(
+        E.Row of TMsg(
+          new L.Flow(Gap := G.Points(12), Align := L.Alignment.Center, Clip := false),
+          Skeleton.Skeleton of TMsg(
+            'loading-dither-avatar',
+            L.Extent.Fixed(L.Measure.Logical(32)),
+            32.0F
           ),
-          new L.Flex(Basis := L.Extent.Fill)
-        )
+          E.Size of TMsg(
+            E.Column of TMsg(
+              new L.Flow(Gap := G.Points(8), Clip := false),
+              Skeleton.Skeleton of TMsg('loading-dither-title', L.Extent.Percent(60.0F), 8.0F),
+              Skeleton.Skeleton of TMsg('loading-dither-subtitle', L.Extent.Percent(40.0F), 8.0F)
+            ),
+            new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
+          )
+        ),
+        new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
       ),
       Skeleton.Skeleton of TMsg('loading-dither-line', Height := 8.0F)
     ], new Group.Options(Gap := 10.0F, Dither := true)
@@ -68,9 +72,17 @@ begin
     E.Row of TMsg(
       new L.Flow(
         Gap := G.Points(8), Align := L.Alignment.Center,
-        PaddingStart := InsetX, PaddingEnd := InsetX, PaddingTop := InsetY, PaddingBottom := InsetY
+        PaddingX := InsetX, PaddingY := InsetY, Clip := false
       ),
-      Spin.Spinner of TMsg(Id, 14.0F, new Spin.Options(Animation := Animation, Inverse := Inverse)),
+      Spin.Spinner of TMsg(
+        Id, 14.0F, new Spin.Options(
+          Animation := Animation, ThemeColor := if Inverse then
+            Themes.ColorToken.Background
+          else
+            null
+          end if
+        )
+      ),
       E.Styled of TMsg(
         E.Text of TMsg(Caption), if Inverse then
           S.Role.InverseLabel
@@ -123,17 +135,17 @@ begin
     'dither-spinners-card', [
       E.Styled of TMsg(E.Text of TMsg('Dither spinners'), S.Role.Heading),
       E.Row of TMsg(
-        new L.Flow(Gap := G.Points(20), Wrap := true, Align := L.Alignment.Center),
+        new L.Flow(Gap := G.Points(20), Wrap := true, Align := L.Alignment.Center, Clip := false),
         Demos.ToArray()
       ),
       E.Row of TMsg(
-        new L.Flow(Gap := G.Points(10), Wrap := true, Align := L.Alignment.Center),
+        new L.Flow(Gap := G.Points(10), Wrap := true, Align := L.Alignment.Center, Clip := false),
         Inline of TMsg('dither-saving', 'Saving…', Spin.Style.Comet),
         Inline of TMsg('dither-syncing', 'Syncing 24 files', Spin.Style.Orbit),
         Inline of TMsg('dither-connecting', 'Connecting', Spin.Style.Ripple)
       ),
       E.Row of TMsg(
-        new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center),
+        new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center, Clip := false),
         B.Button of TMsg(
           'feedback-upload', 'Upload', Upload,
           new B.Options(ControlSize := B.Size.Small, Enabled := Model.Status <> Work.Status.Busy)

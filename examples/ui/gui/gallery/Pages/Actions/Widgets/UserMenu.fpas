@@ -30,8 +30,9 @@ end function;
 // A user menu in the original 260-point box.
 public function View(): E.Element of State.Msg;
 begin
-  return E.Row of State.Msg(
-    E.Size of State.Msg(
+  return E.Size of State.Msg(
+    E.Column of State.Msg(
+      new L.Flow(Clip := false),
       U.UserMenu of State.Msg(
         'action-user', 'Maya Okafor',
         [
@@ -41,10 +42,14 @@ begin
           (M.Entry of State.Msg).Separator,
           Command('log-out', 'Log out', $E10E)
         ],
-        new U.Options(Detail := 'maya@example.com', Status := 'online')
-      ),
-      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(260)))
-    )
+        new U.Options(
+          Detail := 'maya@example.com',
+          Status := 'online',
+          Position := M.Placement.BottomStart
+        )
+      )
+    ),
+    new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(260))))
   );
 end function;
 

@@ -6,6 +6,8 @@ uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Gui.Toasts as Toasts;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Composition as Composition;
 
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as GalleryUpdate;
@@ -82,7 +84,11 @@ begin
   );
   Step(Session);
   discard Session.Post(
-    State.Msg.Shared(SliceShared.Msg.Notify('Idle notice', new Toasts.Options(Duration := 1.2F)))
+    State.Msg.Shared(
+      SliceShared.Msg.Notify(
+        'Idle notice', new Toasts.Options(Appearance := Toasts.Tone.Accent, Duration := 1.2F)
+      )
+    )
   );
   Step(Session);
   const Initial: Gui.Control := Card(Session, 'Idle notice');
@@ -116,6 +122,31 @@ begin
 end procedure;
 
 procedure VerifyExamples(Renderer: Cui.CuiRenderer; Capture: string);
+  function Update(
+    Model: State.Model;
+    Message: State.Msg
+  ): Mvu.Transition of (State.Model, State.Msg);
+  begin
+    case Message of
+      when State.Msg.Preview:
+        const Note: Mvu.Command of string := Toasts.Show of string(
+          'Timed notification', new Toasts.Options(ActionLabel := 'Undo', ShowTimer := true),
+          function(): string => 'Timed action received'
+        );
+        return new Mvu.Transition of (State.Model, State.Msg)(
+          Model, [
+            Composition.MapCommand of (string, State.Msg)(
+              Note,
+              function(Title: string): State.Msg => State.Msg.Shared(
+                SliceShared.Msg.Notify(Title, new Toasts.Options())
+              )
+            )
+          ]
+        );
+      else
+        return GalleryUpdate.Update(Model, Message);
+    end case;
+  end function;
   procedure Inject();
   begin
     Window.MovePointer(X, Y);
@@ -149,11 +180,11 @@ begin
   var X: float := -1.0F;
   var Y: float := -1.0F;
   var Button: int := -1;
-  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Toasts', 1000, 760, Renderer, true);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Toasts', 1000, 1000, Renderer, true);
   Window.SetReducedMotion(true);
   using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Overlays),
-    GalleryUpdate.Update,
+    Update,
     View.Build,
     Window,
     256,
@@ -182,7 +213,7 @@ begin
   const Archived: Gui.Control := Card(Session, 'Message archived');
   Check(
     Find(Session, Failed.Id) <> null and Find(Session, Archived.Id + '/action') <> null,
-    'The older toast must remain in the stack behind the timed Undo toast.'
+    'The older toast must remain in the stack behind the archive toast.'
   );
   Check(Find(Session, Failed.Id + '/dismiss') = null, 'The collapsed stack hides older buttons.');
   Session.CapturePng(Capture + '.toasts.png');
@@ -195,11 +226,19 @@ begin
 
   Click(Session, Archived.Id + '/action');
   Check(
-    Find(Session, Archived.Id) = null and Count(Session, 'Message restored') = 1,
-    'Undo must dismiss the archive toast and deliver its typed application message.'
+    Find(Session, Archived.Id) = null and Count(Session, 'Message restored') = 0,
+    'The archive example must dismiss without a follow-up notification.'
+  );
+  discard Session.Post(State.Msg.Preview);
+  Step(Session);
+  const Timed: Gui.Control := Card(Session, 'Timed notification');
+  Click(Session, Timed.Id + '/action');
+  Check(
+    Find(Session, Timed.Id) = null and Count(Session, 'Timed action received') = 1,
+    'A timed action must dismiss the toast and deliver its mapped message.'
   );
   Step(Session);
-  Check(Count(Session, 'Message restored') = 1, 'Undo must be delivered exactly once.');
+  Check(Count(Session, 'Timed action received') = 1, 'Deliver the action message once.');
   Click(Session, 'toast-update');
   const Available: Gui.Control := Card(Session, 'Update available');
   Point(Available.Bounds);

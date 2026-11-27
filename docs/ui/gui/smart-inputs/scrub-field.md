@@ -11,6 +11,7 @@ unit in the same control. Available in **GUI**.
 unit Docs.Ui.SmartInputs.ScrubField;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 uses Fpas.Ui.Widgets.Inputs.ScrubFields as W;
 
 // Edits the corner radius.
@@ -23,7 +24,7 @@ requires Radius >= 0.0F and Radius <= 48.0F;
 begin
   return W.ScrubField of float('radius', 'Radius', Radius, 0.0F, 48.0F,
     function(Proposed: float): float => Proposed,
-    new W.Options(Step := 0.5F, DecimalPlaces := 1, Suffix := 'px'));
+    new W.Options(Step := 0.5F, Format := new C.ValueFormat(DecimalPlaces := 1), Suffix := 'px'));
 end function;
 
 end unit;
@@ -34,18 +35,22 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Value / Minimum / Maximum` | Finite values with Minimum strictly less than Maximum. Value must be within the inclusive range. |
-| `Step` | 0 selects one percent of the range. |
-| `DecimalPlaces` | 0. Use 0 to 6 fractional digits for display. |
-| `Suffix / Icon` | Empty. An icon replaces the caption. |
-| `Width / Enabled` | Content / true. |
+| `Step` | Zero selects one percent of the range. The fine step must support finite native rounding within the bounds. |
+| [`Format`](../charts/README.md#value-format) | Null shows zero fractional digits. The format sets the resting value and the initial draft. |
+| `Suffix` | Null omits the suffix. An empty string keeps its position and native spacing. |
+| `Icon` | Null shows the caption. A glyph replaces the caption. An empty string hides it. |
+| `Width` | Content. CUI prefers 160 logical units at rest and uses 160 units when editing. |
+| `Enabled` | True. False disables editing and value changes. |
 
 ## Interaction
 
-Drag sideways or use the arrow keys to adjust the value. Shift makes
-dragging ten times finer and arrow steps ten times larger. Click to type
-a value. CUI clamps a valid typed value to the bounds and retains the
-model value on invalid input. Display precision leaves the underlying
-number at its original precision.
+Drag sideways or use the arrow keys to adjust the value. Shift makes dragging
+ten times finer and arrow steps ten times larger. Click without moving or press
+Enter on the focused field to edit the number.
+
+Press Enter or leave the field to commit a complete finite number. CUI clamps
+the result to the bounds. Invalid text or Escape keeps the model value. Set a
+unit with `Suffix` to keep the unit outside the numeric draft.
 
 ## See also
 

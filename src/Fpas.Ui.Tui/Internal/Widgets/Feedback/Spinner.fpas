@@ -9,6 +9,7 @@ uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
 uses Fpas.Ui.Tui.Internal.View.Tree as E;
 uses Fpas.Ui.Widgets.Developer.Terminal as T;
 uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System.Collections.Generic as C;
 
@@ -41,14 +42,12 @@ begin
     when Spin.Style.Plasma: '░▒▓▒';
     else '◴◷◶◵';
   end case;
-  const Ink: G.Color := Th.ChartColor(
-    Theme, Options.Color, if Options.Inverse then
-      Theme.Colors.Background
-    else
-      Theme.Colors.Accent
-    end if
-  );
-  return (E.Element of TMsg).Spinner(Frames, Ink, Options.Inverse);
+  const Ink: G.Color := Options.Color ?? (if Options.ThemeColor = null then
+    Theme.Colors.Accent
+  else
+    Themes.PaletteColor(Theme.Colors, Options.ThemeColor.Value)
+  end if);
+  return (E.Element of TMsg).Spinner(Frames, Ink);
 end function;
 
 // Paints one spinner frame in the allocated footprint.
@@ -59,7 +58,6 @@ end function;
 // - `Frames`: Sequence of terminal glyphs.
 // - `Phase`: Current host animation step.
 // - `Ink`: Color of the active glyph.
-// - `Inverse`: Use an inverse surface.
 // - `Style`: Inherited text colors.
 // - `Theme`: Active terminal palette.
 // ## Returns
@@ -71,7 +69,6 @@ public function Paint(
   Frames: string;
   Phase: long;
   Ink: G.Color;
-  Inverse: bool;
   Style: T.Style;
   Theme: Th.Theme
 ): bool;
@@ -80,12 +77,7 @@ begin
     return false;
   end if;
 
-  const Background: int := Style.Background ?? Theme.Text.Background ?? 0;
-  const Back: int := if Inverse then
-    Th.Rgb(Theme.Colors.Foreground, Background)
-  else
-    Background
-  end if;
+  const Back: int := Style.Background ?? Theme.Text.Background ?? 0;
   Operations.Add(
     new D.Operation(
       Frames.Substring(cast (Phase mod Frames.Length) as int, 1),

@@ -23,7 +23,7 @@ public procedure Draw of TMsg(
 );
 begin
   const Token: string := C.Token('code-block', Id);
-  const CopyId: string := Id + '/copy';
+  const CopyId: string := W.CopyId(Id);
   const CopyToken: string := C.Token('code-copy', CopyId);
   const Part: string? := if Frame.PaintingClosed then
     null
@@ -45,8 +45,7 @@ begin
       0
     end if) +
     (if C.WantsFocus of TMsg(
-      Frame, CopyId, CopyToken, Frame.AcceptInput and not Settings.NoHeader
-        and (Settings.Title <> '' or Settings.Language <> '')
+      Frame, CopyId, CopyToken, Frame.AcceptInput and W.HasHeader(Settings)
     )
     then
       8
@@ -59,7 +58,13 @@ begin
   );
   C.Track of TMsg(
     Frame,
-    new App.Control(Id, Settings.Title, 'code-block', new Cui.CuiRectangle(), false)
+    new App.Control(
+      Id,
+      Settings.Title ?? Settings.Language ?? '',
+      'code-block',
+      new Cui.CuiRectangle(),
+      false
+    )
   );
   if Copy and not Frame.PaintingClosed then
     Frame.Controls.Add(

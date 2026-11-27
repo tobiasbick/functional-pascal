@@ -49,6 +49,17 @@ The host owns the scroll position when the view omits `Position` and
 both. GUI scroll proposals use fractional logical units.
 See the [scroll position contract](../../layout/scroll-position.md).
 
+## Request a scroll offset
+
+Return `Fpas.Ui.Gui.Scrolls.To of TMsg(Id, Offset)` from the update function.
+Supply the stable ID of a host-owned scroll view and a nonnegative vertical
+offset in logical units. CUI clamps the target and uses the theme's scroll
+motion. Use zero to move to the start.
+
+The command applies during the next presentation. If the view is absent or
+the model owns its position, the host discards the command. If the update
+sends several commands for the same ID, the host applies the last one.
+
 ## Reveal a child
 
 Use `Layout.ScrollPosition.Reveal('selected-row')` to bring a named child
@@ -85,5 +96,6 @@ in the same CUI scope.
 
 - [Elements.fpas](../../../../src/Fpas.Ui/Elements.fpas)
 - [Layout.fpas](../../../../src/Fpas.Ui/Layout.fpas)
+- [Scrolls.fpas](../../../../src/Fpas.Ui.Gui/Scrolls.fpas)
 - [Scroll view presentation](../../../../src/Fpas.Ui.Gui/Internal/Presentation/Presentation.fpas)
 - [Scroll options contract tests](../../../../tests/Fixtures/gui-host/ScrollOptionsContract.fpas)

@@ -33,12 +33,15 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Children` | Placeholder elements in layout order. The gallery nests rows inside the group. |
-| `Width / Gap` | Fill / 0, which uses the native gap. |
+| `Width` | Fill. Accepts a fixed logical width or a percentage from 0 through 100. |
+| `Gap` | 0 uses the native default of 8 logical units. Supply a finite nonnegative gap. |
 | `Dither` | false. Enable it for the shared ordered-dot sweep. |
 
 ## Interaction
 
-Place the group where the eventual content will appear. CUI shares an animation across the skeletons inside it. Replace the whole group when the data arrives.
+The skeletons in a group share one shine that sweeps across the group. A nested group owns the shine for its own skeletons. Apply `Elements.Size` with a positive `Grow` to weight the width in a row.
+
+With `Dither`, CUI paints ordered dots and updates the sweep 20 times per second. Reduced motion holds the dots still. Replace the group with the loaded content when the model is ready.
 
 ## See also
 
@@ -50,6 +53,7 @@ Place the group where the eventual content will appear. CUI shares an animation 
 
 ## Source files
 
+- [Skeleton geometry tests](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Layout/CuiSkeletonTests.cs)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
   - [SkeletonGroup.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/SkeletonGroup.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`

@@ -34,6 +34,9 @@ end unit;
 | `Minimum / Maximum` | Finite bounds, with Maximum greater than Minimum. |
 | `Enabled` | true. |
 
+CUI uses the available width and displays both endpoints as whole numbers.
+Use `Elements.Size` to set the width through layout.
+
 ## Interaction
 
 Press the track to move the nearest endpoint and drag to adjust it. CUI keeps the endpoints ordered. With the track focused, Space switches the active endpoint. Arrow keys, Shift and Home or End adjust it. The callback receives both endpoints in one message.

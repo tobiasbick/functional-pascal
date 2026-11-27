@@ -41,17 +41,22 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Id` | A nonempty, unique ID that matches the anchor ID in the outline entry. |
+| `Id` | A nonempty, case-sensitive ID that is unique in the view. Use the same ID in the outline entry. |
 
 ## Usage
 
-Insert the marker immediately before the target content in an uncontrolled
-scroll view. Give the scroll view a finite height so the outline can move
-through its content.
+Insert the marker before its target content in a `ScrollView`. If the marker
+is inside nested scroll views, the nearest scroll view owns the marker.
+Keep independently scrolling layout containers outside the path from the
+scroll view to its marker.
 
-The anchor has zero height. A column still applies its normal gap before and
-after the anchor. If the heading must touch the anchor, place the anchor and
-heading in a column with no gap.
+An outline targets an uncontrolled scroll view. Give the scroll view a finite
+height so the outline can move through its content. A controlled scroll view
+can use the marker ID in `ScrollPosition.Reveal`.
+
+The anchor fills the available width and has zero height. The parent layout
+still applies its gap before and after the anchor. To keep the anchor next to
+its heading, put both in a column with no gap.
 
 ## See also
 

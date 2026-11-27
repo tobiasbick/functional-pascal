@@ -10,6 +10,60 @@ namespace Fpas.Ui.Gui.Cui.Tests.Windowing;
 /// <summary>Exercises the actual native window, input ABI, rendering and UI-thread lifetime.</summary>
 public sealed class CuiWindowTests
 {
+    /// <summary>Checks stable toggle focus and previous-frame row geometry when the caption is hidden.</summary>
+    /// <param name="checkbox">Whether to use a checkbox instead of a switch.</param>
+    [GuiTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ToggleWithoutCaptionKeepsNativeRowIdentity(bool checkbox)
+    {
+        using var window = new CuiWindow("Toggle row", renderer: CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        var first = Draw(hideLabel: false, focus: true);
+        Assert.False(first.Changed);
+        Assert.Equal(default(CuiRectangle), first.Previous);
+        Assert.True(window.ControlFocused("toggle"));
+        var labeled = window.GetControlRectangle("toggle");
+
+        var blankDescription = Draw(hideLabel: false, description: "");
+        Assert.Equal(labeled, blankDescription.Previous);
+        var described = window.GetControlRectangle("toggle");
+        Assert.True(described.Height > labeled.Height);
+
+        var hidden = Draw(hideLabel: true, key: 6);
+        Assert.True(hidden.Changed);
+        Assert.Equal(described, hidden.Previous);
+        Assert.True(window.ControlFocused("toggle"));
+        var track = window.GetControlRectangle("toggle");
+        Assert.Equal(checkbox ? 18f : 36f, track.Width);
+        Assert.True(labeled.Width > track.Width);
+
+        var disabled = Draw(hideLabel: false, key: 2, enabled: false);
+        Assert.False(disabled.Changed);
+        Assert.Equal(track, disabled.Previous);
+        Assert.False(window.ControlFocused("toggle"));
+
+        (bool Changed, CuiRectangle Previous) Draw(bool hideLabel, int key = 0,
+            bool enabled = true, bool focus = false, string? description = null)
+        {
+            Assert.True(window.NextFrame());
+            if (key != 0)
+            {
+                window.SetKey(key, true);
+                window.SetKey(key, false);
+            }
+            window.BeginColumn();
+            bool changed = checkbox
+                ? window.Checkbox("toggle", "Notifications", description, true, enabled, focus, indeterminate: true, hideLabel)
+                : window.Switch("toggle", "Notifications", description, true, enabled, focus, hideLabel);
+            var previous = window.LastRectangle;
+            window.TrackLastControl("toggle");
+            window.EndColumn();
+            window.Present();
+            return (changed, previous);
+        }
+    }
+
     /// <summary>Keeps focus when an icon changes and suppresses activation while busy or disabled.</summary>
     [GuiFact]
     public void IconButtonKeepsItsIdentityAndHonorsInputState()

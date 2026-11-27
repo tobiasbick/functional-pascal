@@ -102,7 +102,7 @@ begin
         when M.Entry.Action(const Item: M.Item of TChild): (M.Entry of TParent).Action(
           new M.Item of TParent(
             Item.Key, Item.Label, Messages(Item.Message), Item.Icon,
-            Item.Shortcut, Item.Enabled, Item.Danger, Item.Checked
+            Item.Shortcut, Item.Enabled, Item.Danger, Item.Checked, Item.Font, Item.TextSize
           )
         );
         when M.Entry.Label(const Caption: string): (M.Entry of TParent).Label(Caption);

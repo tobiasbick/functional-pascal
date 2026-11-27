@@ -4,17 +4,18 @@ unit Fpas.Ui.Widgets.Inputs.ScrubFields;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 
 // Native draggable number-field presentation.
 public type Options = record
   // Increment; zero selects one percent of the range.
   public Step: float := 0.0F;
-  // Number of fractional digits, zero through six.
-  public DecimalPlaces: int := 0;
-  // Literal suffix after the number.
-  public Suffix: string := '';
-  // Native glyph replacing the caption.
-  public Icon: string := '';
+  // Native number format for the resting value and initial draft. Null uses zero fractional digits.
+  public Format: C.ValueFormat? := null;
+  // Literal suffix. Null omits it. An empty string keeps the native suffix position.
+  public Suffix: string? := null;
+  // Native glyph replacing the caption. Null shows the caption. An empty string hides it.
+  public Icon: string? := null;
   // Native content, fill, fixed or percentage width.
   public Width: L.Extent := L.Extent.Content;
   // Whether pointer and keyboard input are accepted.
@@ -31,7 +32,7 @@ end record;
 // - `Minimum`: Finite inclusive lower bound.
 // - `Maximum`: Finite inclusive upper bound greater than Minimum.
 // - `OnChange`: Maps a native value proposal to a message.
-// - `Settings`: Optional native increment, precision, width and display settings.
+// - `Settings`: Optional native increment, number format, width and display settings.
 // ## Returns
 // A graphical model-controlled scrub field.
 public function ScrubField of TMsg(

@@ -8,6 +8,7 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as App;
 uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 uses Fpas.Ui.Widgets.Navigation.Breadcrumbs as Breadcrumbs;
 uses Fpas.Ui.Widgets.Navigation.Paginations as Paginations;
 uses Fpas.Ui.Widgets.Navigation.Steppers as Steppers;
@@ -44,6 +45,17 @@ begin
   const Change: function(int): int := function(Value: int): int => Value;
   for Profile: V.Target in [V.Target.Graphical, V.Target.Terminal, V.Target.Portable] do
     discard V.Prepare of int(Tabs.Tabs of int('tabs', Choices, 0, Change), Profile);
+    discard V.Prepare of int(
+      Tabs.Tabs of int(
+        'icons', [new Tabs.Item('Account', Sys.Char.ConvertFromUtf32($E19F), IconOnly := true)],
+        0, Change
+      ),
+      Profile
+    );
+    Reject(
+      Tabs.Tabs of int('icons', [new Tabs.Item('Account', IconOnly := true)], 0, Change),
+      Profile, 'requires an icon'
+    );
     Reject(Tabs.Tabs of int('tabs', Choices, 1, Change), Profile, 'selected index');
     Reject(
       E.Column of int(
@@ -65,6 +77,9 @@ begin
   discard V.Prepare of int(Stepper, V.Target.Graphical);
   Reject(Stepper, V.Target.Portable, 'Graphical profile');
   Reject(Stepper, V.Target.Terminal, 'Graphical profile');
+  discard V.Prepare of int(
+    Steppers.Stepper of int('unlabeled-stepper', ['', 'Labeled', '  '], 0), V.Target.Graphical
+  );
 
   Reject(
     Paginations.Pagination of int('invalid', 12, 12, function(Value: int): int => Value),
@@ -202,6 +217,27 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Control('workflow-steps').Value = '1' and Control('workflow-steps').Text = 'Workspace',
       'The workflow starts at Workspace.'
     );
+    const TabStrip: Cui.CuiRectangle := Control('tabs').Bounds;
+    const Trail: Cui.CuiRectangle := Control('breadcrumbs').Bounds;
+    const Pager: Cui.CuiRectangle := Control('pages').Bounds;
+    const Steps: Cui.CuiRectangle := Control('workflow-steps').Bounds;
+    const Back: Cui.CuiRectangle := Control('step-back').Bounds;
+    const Next: Cui.CuiRectangle := Control('step-next').Bounds;
+    Check(
+      TabStrip.X = Control('navigation-tabs-card').Bounds.X + 24.0F
+      and Trail.X = Control('navigation-pages-card').Bounds.X + 24.0F
+      and Steps.X = Control('navigation-stepper-card').Bounds.X + 24.0F,
+      'Each section must use the native card inset.'
+    );
+    Check(
+      Sys.MathF.Abs(Pager.Y - Trail.Y - Trail.Height - 18.0F) < 0.01F
+      and Sys.MathF.Abs(Back.Y - Steps.Y - Steps.Height - 18.0F) < 0.01F,
+      'The pagination and stepper cards must use the native 18-point gap.'
+    );
+    Check(
+      Back.Y = Next.Y and Next.X = Back.X + Back.Width + 8.0F,
+      'Back and Next must share a row with an eight-point gap.'
+    );
     Session.CapturePng(Capture + '.navigation.png');
 
     FocusControl('tabs');
@@ -225,6 +261,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Key(2);
     Check(Notification('Projects') <> null, 'Enter must show the focused ancestor as a toast.');
     Dismiss('Projects');
+    Check(Control('breadcrumbs', '2').Text = 'CUI', 'The trail must show the original CUI path.');
+    FocusControl('breadcrumbs/2');
+    Key(cast Keys.Key.Space as int);
+    Check(Notification('CUI') <> null, 'Space must show the focused ancestor as a toast.');
+    Dismiss('CUI');
 
     Click('pages', '-2');
     Check(Control('pages').Value = '1', 'Next must advance by one page.');
@@ -295,6 +336,17 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       'The native stepper must remain inside the compact window.'
     );
     Session.CapturePng(Capture + '.navigation-compact.png');
+
+    Window.Resize(1000, 900);
+    for Attempt: int := 1 to 4 do
+      Step();
+    end for;
+
+    Check(
+      Control('pages', '4').Enabled and Control('pages', '5').Value = 'true'
+      and Control('pages', '6').Enabled,
+      'Widening pagination must restore nearby buttons and keep the current page.'
+    );
   end procedure;
 begin
   Validate();

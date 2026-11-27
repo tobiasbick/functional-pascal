@@ -4,7 +4,7 @@ Use a sparkline for a compact trend, for example beside a metric.
 
 See also the [terminal sparkline](../../tui/charts/sparkline.md).
 
-![Sparkline in the FPAS gallery](images/sparkline.png)
+![Sparkline sample](images/sparkline.png)
 
 ## Example
 
@@ -33,7 +33,7 @@ end unit;
 | --- | --- |
 | `Values` | Finite samples in display order. |
 | `Width / Height` | Content / 0. Zero uses CUI's default height. |
-| `Color` | Automatic. Use a theme palette index or explicit RGBA color to customize the stroke. |
+| `Color` | Automatic. Use a theme color token or explicit RGBA color to customize the stroke. |
 
 ## Interaction
 
@@ -43,7 +43,7 @@ CUI draws the line and its endpoint without axes or a legend. The sparkline is p
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_sparkline)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Sparklines.fpas)
-- [Gallery example](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
+- [Documentation capture](../../../../apps/gui-doc-captures/src/Pages/Charts.fpas)
 - [Line chart](line-chart.md)
 - [Charts](README.md)
 

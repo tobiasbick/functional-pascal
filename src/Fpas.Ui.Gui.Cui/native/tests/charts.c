@@ -27,7 +27,7 @@ static int draw(sample *s, bool adapter, int kind, int width, bool gray) {
     fpas_chart_series bridge[] = {{"Revenue",a,6,4,0},{"Costs",b,4,0,0}};
     cui_chart_annotation annotations[] = {{.kind=CUI_ANNOTATION_Y,.y=20,.label="Target",.detail="Threshold",.accent=true},
         {.kind=CUI_ANNOTATION_POINT,.x=2,.y=21,.label="Point"}};
-    fpas_chart_annotation ba[] = {{1,0,20,"Target","Threshold",1},{2,2,21,"Point","",0}};
+    fpas_chart_annotation ba[] = {{1,0,20,"Target","Threshold",1},{2,2,21,"Point",NULL,0}};
     cui_chart_opts o = {.labels=labels,.label_count=6,.height=220,.format="$%.0fk"};
     fpas_chart_options bo = {.width_kind=1,.labels=labels,.label_count=6,.height=220,.format="$%.0fk"};
     int shown = -1, node; unsigned int key;
@@ -45,12 +45,30 @@ static int draw(sample *s, bool adapter, int kind, int width, bool gray) {
             break;
         case 4: case 5:
             o.stacked=kind==5; bo.flags=kind==5?8:0;
+            o.x_min = bo.x_minimum = 100;
+            o.x_max = bo.x_maximum = 200;
+            annotations[1].x = ba[1].x = 140;
+            annotations[1].color = CUI_COLOR_SUCCESS;
+            ba[1].palette = -CUI_TOKEN_SUCCESS - 1;
+            series[1].color = CUI_COLOR_WARNING;
+            bridge[1].palette = -CUI_TOKEN_WARNING - 1;
+            o.annotations = annotations; o.annotation_count = 2;
+            bo.annotations = ba; bo.annotation_count = 2;
             if (adapter) fpas_cui_bar_chart(s->ui,"bar",bridge,2,&bo);
             else cui_bar_chart_ex(s->ui,"bar",series,2,&o);
             break;
-        case 6:
+        case 6: case 10:
             o=(cui_chart_opts){.height=180,.format="%.0f%%"};
             bo=(fpas_chart_options){.height=180,.format="%.0f%%",.labels=names,.label_count=4};
+            if (kind == 10) {
+                o.width = CUI_PX(210);
+                o.no_legend = true;
+                o.format = "%+6.2e";
+                bo.width_kind = 2;
+                bo.width = 210;
+                bo.flags = 4;
+                bo.format = o.format;
+            }
             if (adapter) fpas_cui_donut_chart(s->ui,"donut",shares,4,&bo);
             else cui_donut_chart_ex(s->ui,"donut",shares,names,4,&o);
             break;
@@ -79,6 +97,41 @@ static int draw(sample *s, bool adapter, int kind, int width, bool gray) {
     cui_sw_render(s->sw,cui_get_draw_data(s->ui),s->pixels,width,400,width*4,CUI_SW_RGBA);
     return shown;
 }
+static void line_single_sample_hover(void) {
+    enum { WIDTH = 450, Y = 65 };
+    sample s = create(WIDTH, false);
+    const float values[] = { 20 };
+    const char *labels[] = { "One" };
+    const fpas_chart_series series = { "Sample", values, 1, 0, 0 };
+    const fpas_chart_options options = {
+        .minimum = 0, .maximum = 100, .labels = labels, .label_count = 1, .height = 130
+    };
+    unsigned char rest[WIDTH * 4];
+    for (int hover = 0; hover < 2; ++hover) {
+        int node = -1;
+        if (hover) cui_input_mouse_move(s.ui, 170, 100);
+        cui_begin_frame(s.ui, .016f);
+        cui_column(s.ui, .pad = 48) {
+            node = fpas_cui_line_chart(s.ui, "single", &series, 1, &options);
+        }
+        cui_end_frame(s.ui);
+        CHECK((fpas_cui_hovered(s.ui, node) != 0) == (hover != 0));
+        cui_sw_render(s.sw, cui_get_draw_data(s.ui), s.pixels, WIDTH, 400, WIDTH * 4, CUI_SW_RGBA);
+        const unsigned char *row = s.pixels + Y * WIDTH * 4;
+        if (!hover) memcpy(rest, row, sizeof rest);
+        else {
+            int changed = 0;
+            for (int x = 0; x < WIDTH; ++x) {
+                if (memcmp(rest + 4 * x, row + 4 * x, 4) == 0) continue;
+                changed++;
+                CHECK(x >= 48 && x < 120);
+            }
+            CHECK(changed > 0 && changed <= 2);
+        }
+    }
+    destroy(s);
+}
+
 /* CUI-019: a collapsed large range produces NaN geometry. Do not rasterize it. */
 static void range_regression(void) {
     sample s = create(600, false);
@@ -116,9 +169,10 @@ static void pattern_meter_retirement(void) {
 }
 
 int main(void) {
+    line_single_sample_hover();
     range_regression();
     pattern_meter_retirement();
-    for(int dark=0;dark<2;dark++) for(int compact=0;compact<2;compact++) for(int kind=0;kind<10;kind++) {
+    for(int dark=0;dark<2;dark++) for(int compact=0;compact<2;compact++) for(int kind=0;kind<11;kind++) {
         int width=compact?300:700; sample reference=create(width,dark), actual=create(width,dark);
         for(int frame=0;frame<8;frame++) {
             if(frame==3) {

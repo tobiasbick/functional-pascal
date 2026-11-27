@@ -34,8 +34,8 @@ begin
     'smart-emoji', Model.Emoji, State.Msg.ChangeEmoji, new Emoji.Options(Height := 260.0F)
   );
   const Popup: E.Element of State.Msg := P.Popover of State.Msg(
-    'smart-emoji-popup', Button, Picker, Model.EmojiOpen, State.Msg.SetEmojiOpen(false),
-    new P.Options(Position := M.Placement.BottomEnd, Width := 340)
+    'smart-emoji-popup', Button, [Picker], Model.EmojiOpen, State.Msg.SetEmojiOpen(false),
+    new P.Options(Position := M.Placement.BottomEnd, Width := 340.0F)
   );
   return [
     G.Heading of State.Msg(

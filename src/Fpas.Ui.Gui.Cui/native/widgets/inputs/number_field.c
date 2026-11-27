@@ -2,7 +2,8 @@
 #include "../../fpas_cui.h"
 
 void fpas_cui_number_field(cui_ctx *ui, const char *id, double *value, double min, double max,
-    const char *label, const char *suffix, double step, int decimals, int enabled, int focus, int *nodes) {
+    const char *label, const char *suffix, double step, int decimals, int enabled, int focus,
+    int width_kind, float width, int *nodes) {
     const cui_id key = cui_make_id(ui, id);
     const cui_id number_key = key ^ 0x4E554Du;
     const cui_id precision_key = key ^ 0x4E5546u;
@@ -21,7 +22,7 @@ void fpas_cui_number_field(cui_ctx *ui, const char *id, double *value, double mi
     *precision = decimals;
     if (allowed && focus) ui->focus_next_request = key;
     const cui_number_opts options = { .label = label, .suffix = suffix, .step = step,
-        .decimals = decimals, .disabled = !allowed, .width = CUI_FILL };
+        .decimals = decimals, .disabled = !allowed, .width = fpas_extent(width_kind, width) };
     cui_push_disabled(ui, !enabled);
     cui_number_ex(ui, id, value, min, max, &options);
     cui_pop_disabled(ui);

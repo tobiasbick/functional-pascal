@@ -399,7 +399,7 @@ exclusive choices.
 ## Reactions
 
 `Fpas.Ui.Widgets.Conversation.Reactions.Reactions` takes an ID, an ordered list of model-owned
-reactions, and an `OnChange` mapper. Each item has an accessible name, a CUI
+reactions, and an `OnChange` mapper. Each item has an accessible name, an optional CUI
 glyph, a count and an activation flag. The mapper receives the changed position
 and CUI's proposed item. Retain the proposal in the model to apply it. CUI
 animates the displayed count and selection. Use `ItemId(Id, Index)` to focus an
@@ -407,8 +407,9 @@ item. Reactions require the graphical profile.
 
 ## Speed dial
 
-`Fpas.Ui.Widgets.Actions.SpeedDials.SpeedDial` takes one through sixteen caption and glyph
-pairs. CUI lays out and animates the floating actions. Choosing an action
+`Fpas.Ui.Widgets.Actions.SpeedDials.SpeedDial` takes one through sixteen actions
+with [optional captions and glyphs](gui/actions/speed-dial.md#options-and-defaults).
+CUI lays out and animates the floating actions. Choosing an action
 passes its zero-based index to the supplied mapper. Use `ItemId` to inspect
 or focus a visible action. Escape closes the dial and restores focus from a
 focused action to the trigger. Speed dials require the graphical profile.
@@ -416,7 +417,7 @@ focused action to the trigger. Speed dials require the graphical profile.
 ## Swipe actions
 
 `Fpas.Ui.Widgets.Actions.SwipeActions.SwipeItem` wraps a foreground view in CUI's horizontal
-swipe row. Each side has ordered actions with a caption, optional glyph and
+swipe row. Each side has ordered actions with an optional caption, optional glyph and
 semantic tone. The callback receives the side and zero-based action index.
 Drag with the mouse or scroll horizontally over the row to reveal the actions.
 The row can also show a leading glyph and trailing annotation. Swipe rows
@@ -442,7 +443,7 @@ ID, a literal label, a model-owned Boolean and an `OnChange` mapper. The
 whole row accepts pointer input. Tab focuses enabled rows, and Space or
 Enter proposes the opposite value. Both controls accept secondary
 `Description` text. A checked checkbox can use `Indeterminate` to show a
-dash.
+dash. Set `HideLabel` to show only the control and retain the accessible name.
 
 `Fpas.Ui.Widgets.Inputs.RadioButtons.RadioButton` proposes selecting an unselected row
 through its `OnSelect` mapper. `Fpas.Ui.Widgets.Inputs.RadioGroups.RadioGroup` arranges
@@ -469,7 +470,9 @@ Arrow keys move focus and selection together. Focus a particular card with
 input or the keyboard. A positive `Step` snaps changes to an increment.
 A zero step allows continuous dragging. Arrows adjust the value, Shift
 accelerates the adjustment, and Home and End move toward the bounds.
-`ShowValue`, `DecimalPlaces` and `Percent` control the value caption.
+`ShowValue` and `Format` control the value caption. Set `Width` to select its
+native extent. See the [slider settings](gui/selection/slider.md#options-and-defaults)
+for the format and width rules.
 
 `Fpas.Ui.Widgets.Inputs.RangeSliders.RangeSlider` takes a model-owned `Interval` with two
 ordered endpoints. The native range track moves the nearest endpoint on
@@ -482,12 +485,13 @@ Radio cards and both sliders require the graphical profile.
 
 `Fpas.Ui.Widgets.Inputs.RulerSliders.RulerSlider` displays a movable tape under a fixed
 marker. The model supplies a bounded value. Options configure the tick
-step, spacing, major tick interval, width, decimal places and unit. Native
+step, spacing, major tick interval, width, number format and unit. Native
 input includes dragging, the wheel, and arrow keys. Shift+arrow moves one
 major tick interval.
 
 `Fpas.Ui.Widgets.Inputs.HistogramSliders.HistogramSlider` overlays two range handles on
-nonempty, finite nonnegative bin heights. It uses the same model-owned
+finite nonnegative bin heights. An empty array leaves the range handles
+available. It uses the same model-owned
 `Fpas.Ui.Widgets.Inputs.RangeSliders.Interval` as a range slider. Space switches the active
 handle for keyboard adjustment. Options configure bar height and the
 endpoint captions. Both sliders require the graphical profile.
@@ -511,7 +515,7 @@ the graphical profile.
 ## Capture controls
 
 `Fpas.Ui.Widgets.Files.Dropzones.Dropzone` receives a detached array of accepted paths from CUI. Its options
-set the title, description, extension filter, icon and compact or tall
+set the title, description, extension filter, icon, width and compact or tall
 appearance. `Fpas.Ui.Widgets.Files.AvatarUploads.AvatarUpload` displays initials or a decoded image from the model's
 path. Store the path proposed by a successful drop to accept the new image.
 
@@ -549,14 +553,15 @@ All three controls require the graphical profile.
 
 ## Chip and rating
 
-`Fpas.Ui.Widgets.Inputs.Chips.Chip` takes a stable ID, literal caption, model-owned Boolean
-and an `OnChange` mapper. Click, Enter or Space proposes toggling the chip.
+`Fpas.Ui.Widgets.Inputs.Chips.Chip` takes a stable ID, literal caption, nullable
+model selection, and an `OnChange` mapper. Click, Enter, or Space activates the chip.
+Pass null for a stateless action.
 The optional icon appears when unselected, and CUI draws its check mark when
 selected. Use a wrapping row for groups of independent chips.
 
 `Fpas.Ui.Widgets.Inputs.Ratings.Rating` takes a stable ID, a name for inspection, a
 model-owned whole-star value and an `OnChange` mapper. It defaults to five
-stars and accepts a maximum from one through sixteen. Clicking a star
+stars and uses CUI's [star count limits](gui/selection/rating.md#options-and-defaults). Clicking a star
 proposes its number, and clicking the selected star proposes zero. CUI
 operates the rating by pointer. Both widgets require the graphical profile.
 
@@ -586,19 +591,19 @@ enabled page buttons, and Enter or Space activates them.
 ## Stepper
 
 `Fpas.Ui.Widgets.Navigation.Steppers.Stepper` takes a stable ID, a nonempty sequence of literal
-captions and a model-owned zero-based step index. CUI marks the preceding steps
-complete. Pass the number of steps to mark the whole sequence complete. When
-space is tight, CUI keeps the current caption and shows the other step markers.
-The stepper is a read-only graphical display. Use separate controls to change
-the model's progress.
+captions and a model-owned zero-based step index. Use an empty caption for an unlabeled step.
+CUI marks preceding steps complete. Pass the number of steps to mark the whole sequence complete.
+When space is tight, CUI shows the step markers and the current caption. The
+[stepper](gui/navigation/stepper.md) is a read-only graphical display. Use separate
+controls to change the model's progress.
 
 ## Icon button
 
 `Fpas.Ui.Widgets.Actions.IconButtons.IconButton` takes a stable ID, a CUI font glyph, a
 tooltip that names the action, and the activation message. The ghost style
-is the default. Options set the style, size, selected state, input permission,
-busy state and shortcut hint. Bind the shortcut separately if it should run
-the action.
+is the default. Options set the style, control size, width, foreground color,
+selected state, input permission, busy state, and shortcut hint.
+Bind the shortcut separately to run the action from the keyboard.
 
 Tab focuses an enabled icon button. Click, Enter or Space proposes its message.
 A busy button keeps focus and suppresses activation. Changing the glyph or
@@ -627,8 +632,9 @@ Space or Enter hold completes.
 
 `Fpas.Ui.Widgets.Actions.ConfirmButtons.ConfirmButton` takes a stable ID, a literal resting caption
 and the message proposed after confirmation. Options select the confirmation
-caption, positive timeout in milliseconds, resting variant, size, enabled state,
-and icons. Defaults are `Click to confirm`, 3,000 ms, secondary and
+caption, timeout in milliseconds, resting variant, size, enabled state and
+an optional glyph. Zero uses CUI's three-second timeout. The other defaults
+are `Click to confirm`, secondary and
 medium. The armed appearance is destructive.
 
 The first click, Enter or Space arms the button; a second activation within the
@@ -674,8 +680,9 @@ does not replace the palette itself, including when the model rejects a proposal
 `ThemeSwitchers.Resolve(Selected, SystemAppearance)` returns the concrete
 `Themes.Mode` for selecting a light/dark theme while preserving the application's
 accent and palette customization. Supply `SystemAppearance` from the application's
-appearance provider. As in CUI, the System segment itself does not detect OS settings. Provider changes update the resolved theme while System stays
-selected. The GUI gallery includes an explicitly simulated provider control.
+appearance provider. Provider changes update the resolved theme while System
+stays selected. The GUI gallery supplies a simulated System appearance from
+its model.
 
 GUI snapshots include a non-interactive `theme-switcher` group with a
 `light`/`dark`/`system` value and keyed `theme-choice` segments.
@@ -779,15 +786,16 @@ terminal returns it to the header.
 - `ListItems.ListItem` presents a native row with an optional subtitle, trailing
   text, initials avatar or icon, and activation message. Selection belongs to the
   model.
-- `Trees.Branch` proposes expansion changes and `Trees.Leaf` reports activation.
+- `Trees.Branch` proposes expansion changes. `Trees.Leaf` and GUI branches can report activation.
   Supply stable IDs and hold expansion and selection in the model. CUI owns the
   indentation, disclosure chevron and default file and folder icons.
 - `Tables.Table` accepts column descriptors and model-ordered rows. Each cell
   uses native plain text or draws a row of graphical elements. A sortable header
   proposes a `Sort`, and a selectable row reports its stable ID. Sort the model
   data in the update. Use `Tables.HeaderId` to focus or inspect a heading.
-- `ReorderableLists.ReorderableList` displays a permutation of one to 256
-  canonical items. CUI draws the handles and animates a drag. The update receives
+- `ReorderableLists.ReorderableList` displays up to 256 rows in model-owned order.
+  Supply the [direct children of each row](gui/data-display/reorderable-list.md).
+  CUI draws the handles and animates a drag. The update receives
   the proposed permutation and decides whether to adopt it.
 - `VirtualLists.VirtualList` realizes CUI's visible range and overscan through a
   pure row factory. Give each row a fixed height of at least one logical point
@@ -1062,9 +1070,8 @@ surface differs from the theme background.
 The noninteractive `expandable-text` snapshot reports native expansion in
 `Value`. When the text exceeds the line limit, `ExpandableTexts.ToggleId(Id)`
 identifies its `expandable-text-toggle` link for inspection and focus requests.
-The link disappears when the text fits. It keeps keyboard focus when toggled.
-All three disclosure widgets
-require the graphical profile. Terminal and portable preflight reject them.
+The link releases focus when the text fits. It keeps keyboard focus when toggled.
+Expandable text requires the graphical profile.
 
 ## Banner, countdown and checklist
 
@@ -1087,7 +1094,8 @@ All three widgets require the graphical profile.
 
 `Fpas.Ui.Widgets.Feedback.Alerts.Alert of TMsg(Id, Title, Settings, OnDismiss)` draws CUI's inline
 alert. Options provide `Description`, `Styles.Tone`, an optional icon glyph,
-`Dismissible` and `Enabled`. Empty icons use CUI's tone-specific default. Titles
+`Dismissible` and `Enabled`. A null icon uses CUI's tone-specific glyph. An empty
+icon string draws no glyph. Titles
 and descriptions are literal, including `##`. CUI owns dismissal: the alert
 stays hidden while its stable ID remains in the view, even if its title changes.
 Removing it for a presented frame releases that state. `OnDismiss` optionally
@@ -1175,12 +1183,13 @@ releases its native interpolation state. Meter requires the graphical profile.
 
 ## Popover and confirmation popover
 
-`Fpas.Ui.Widgets.Overlays.Popovers.Popover of TMsg(Id, Trigger, Content, Open, OnDismiss, Settings)`
+`Fpas.Ui.Widgets.Overlays.Popovers.Popover of TMsg(Id, Trigger, Children, Open, OnDismiss, Settings)`
 attaches a nonmodal native panel to a button. The trigger keeps its layout
 and activation message. Use that message to toggle `Open` in the model. Escape
-and a press outside propose `OnDismiss`. Actions in `Content` can close the
+and a press outside propose `OnDismiss`. Actions in `Children` can close the
 panel through their own updates. CUI fits the panel to the viewport around
-the requested placement. Width, padding and gap use logical points.
+the requested placement. Width, padding and gap accept `float` values in
+logical units. See the [popover options](gui/overlays/popover.md#options-and-defaults).
 
 `Fpas.Ui.Widgets.Overlays.ConfirmPopovers.ConfirmPopover of TMsg` asks a question at the trigger
 and draws CUI's affirmative and cancel buttons. The model opens the question
@@ -1233,19 +1242,20 @@ These widgets require the graphical profile and call CUI directly:
 - `Fpas.Ui.Widgets.Inputs.InlineEdits.InlineEdit(Id, Value, OnChange, Settings)` edits a
   confirmed string in place. CUI keeps the draft until Enter or focus loss
   commits; Escape restores the value. `OnChange` receives only committed
-  proposals. Options select Medium, Display or Mono, logical font size,
+  proposals. Options select Medium, Display, Mono or Icons, logical font size,
   placeholder, width and a UTF-8 capacity from one through 511 bytes.
 - `Fpas.Ui.Widgets.Inputs.ScrubFields.ScrubField(Id, Label, Value, Minimum, Maximum,
   OnChange, Settings)` combines horizontal dragging, arrow keys and numeric
   typing. A zero step selects one percent of the range. Shift makes dragging
   ten times finer and arrow keys ten times larger, as in CUI. Valid typed
   values clamp to the bounds; invalid and non-finite commits retain the model
-  value. Options expose zero through six decimal places, a suffix, a glyph
-  replacing the caption, and native width. Precision controls display rather
-  than quantizing typed values.
+  value. [Scrub options](gui/smart-inputs/scrub-field.md) set the native number
+  format, suffix, caption glyph and width. CUI uses the format for the resting
+  value and the initial draft.
 - `Fpas.Ui.Widgets.Inputs.MoneyFields.MoneyField(Id, Value, OnChange, Settings)` uses an
   exact CLR `decimal` and a native CUI text field. At rest amounts use invariant
-  comma grouping; editing retains the typed draft. Complete exact values produce
+  comma grouping. Focus opens an ungrouped draft and editing retains the typed
+  text. Complete exact values produce
   proposals; invalid, incomplete, overflowing or overly precise drafts retain
   the model. Options select label, currency symbol/code, hint, width and zero
   through twenty-eight fractional digits. No amount passes through `double`
@@ -1253,8 +1263,9 @@ These widgets require the graphical profile and call CUI directly:
 - `Fpas.Ui.Widgets.Inputs.ShortcutRecorders.ShortcutRecorder(Id, Value, OnChange, Settings)`
   takes a `Combination` of typed `Key` and `Modifier` values. Combine modifiers
   with `or`; `PrimaryModifier()` chooses Command on macOS and Control elsewhere.
-  Native recording starts with a click or focused Enter/Space. Escape cancels,
-  unmodified Backspace/Delete clears, and unmodified Tab leaves recording.
+  Native recording starts with a click or focused Enter/Space.
+  Unmodified Escape cancels, unmodified Backspace/Delete clears, and
+  unmodified Tab leaves recording. A null placeholder uses the native caption.
   `ClearId(Id)` identifies the native clear button. `Label of TMsg(Value)` draws
   CUI keycaps using the same platform-specific shortcut formatter.
 
@@ -1272,8 +1283,8 @@ for the grouped money display.
 `Fpas.Ui.Widgets.Inputs.TextFields.TextField of TMsg(Id, Value, OnChange, Settings, OnSubmit)`
 edits a model-owned single-line value. In the GUI, set the caption, placeholder, leading icon,
 hint, error, prefix and suffix through `Options`. An error replaces the hint.
-The editable value excludes the prefix and suffix. Use shared layout options
-to size the field.
+The editable value excludes the prefix and suffix. See the [GUI text field options](gui/inputs/text-field.md#options-and-defaults)
+for native width and first-frame focus.
 
 CUI handles caret motion, selection, clipboard input and undo. The host
 delivers an edit before the optional Enter submission, which receives the
@@ -1300,6 +1311,8 @@ uses CUI's search icon, placeholder and clear button. The query is a model-owned
 single line. The native clear button empties it and returns focus to the field.
 Enter can submit the current query. Options allow a custom icon, placeholder,
 validation text, prefix and suffix. The query excludes the displayed affixes.
+See the [GUI search options](gui/inputs/search-field.md#options-and-defaults)
+for width, first-frame focus and password mode.
 The [terminal search field](tui/inputs/search-field.md) uses one row for its
 editor and adornments and supports the same query and clear action.
 
@@ -1310,12 +1323,13 @@ wraps model text with LF line endings. Enter inserts LF and Up and Down move
 between visual lines. The wheel scrolls the text area and hands off to its
 enclosing viewport at an edge.
 
-`Height` is in logical points and defaults to 96. Zero uses the host default
+`Height` is in logical units and defaults to 96. Zero uses the host default
 and a negative value fills available space. A submit callback can receive the
 accepted text on Ctrl+Enter. Prefix and suffix stay outside the editable
 value on the GUI. The [terminal text area](tui/inputs/text-area.md) supports
 keyboard selection, the shared byte limit, label, placeholder, hint, error
-and read-only mode.
+and read-only mode. See the [GUI text area options](gui/inputs/text-area.md#options-and-defaults)
+for native width and first-frame focus.
 
 ## Tag input
 
@@ -1360,9 +1374,9 @@ hue, saturation/value and eight presets. It reads and proposes a
 
 `Fpas.Ui.Widgets.Pickers.EmojiPickers.EmojiPicker` displays CUI's native search, group
 tabs, skin tones, recent emoji and preview. It can be placed inline or
-inside a `Popovers.Popover`. Its model-owned state holds the selected skin
-tone and the space-separated recent list. A change carries the updated
-state and, on selection, the complete emoji string. Both pickers require
+inside a `Popovers.Popover`. The model can hold the selected skin tone and the
+space-separated recent list or leave each value to CUI. A change carries the
+updated model-owned values and, on selection, the complete emoji string. Both pickers require
 the graphical profile.
 
 ## Calendar and date picker
@@ -1399,8 +1413,9 @@ the graphical profile.
 
 `Fpas.Ui.Widgets.Pickers.TimePickers.TimePicker` opens CUI's scrolling hour and minute
 columns. It defaults to 24-hour display and five-minute choices. Enable
-`TwelveHour` for an AM/PM column and set `MinuteStep` to change the
-choices. `Fpas.Ui.Widgets.Pickers.TimeDials.TimeDial` uses an analog face with hour and
+`TwelveHour` for an AM/PM column and set `MinuteStep` to change the choices.
+`Label` supplies an optional caption. `Width` accepts `Layout.Extent`.
+`Fpas.Ui.Widgets.Pickers.TimeDials.TimeDial` uses an analog face with hour and
 minute selectors. Both accept a model-owned `System.TimeOnly` at minute
 precision and report the proposed time through the callback.
 
@@ -1468,24 +1483,12 @@ CUI owns their geometry, legends, hover readouts, animation and rendering.
 The [Charts gallery](../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
 contains the original eight examples.
 
-Line and bar charts share `Charts.Series` and `Charts.Options`: sample labels,
-stacking, grid/legend visibility, optional fixed bounds and annotations.
-Line charts also accept area, smoothing and dither. Use `Color.Automatic`,
-`Color.Palette(1..6)` or `Color.Rgba`; palette colors follow the active theme.
-A null `Format` keeps native automatic formatting. `Charts.ValueFormat`
-specifies zero through six decimal places and literal prefix/suffix strings.
-For example `new Charts.ValueFormat(Prefix := '$', Suffix := 'k')` produces
-currency values in thousands. Percent signs in either literal remain literal.
-Annotation X coordinates are zero-based sample indices; empty labels/details
-omit their corresponding text line.
-
-Samples and annotations must be finite. Fixed bounds must increase; value
-ranges must permit CUI's single-precision axis ticks to advance.
-For very large constant samples, supply an explicit wider range; CUI's automatic
-one-unit expansion cannot represent their bounds. The bridge rejects this
-case before native painting. Donut shares and pattern parts must be nonnegative
-with a finite sum. Donut labels are empty or match the share count.
-Gauges accept fractions from zero through one.
+Line and bar charts share series, labels, stacking, grid and legend visibility,
+axis limits and annotations. Line charts also accept area, smoothing and dither.
+See the [chart options](gui/charts/README.md) for color, value format and range
+rules. Donut shares and pattern parts must be nonnegative with a finite sum.
+Donut labels are empty or match the share count. Gauges clamp finite readings
+to the range from zero through one.
 
 Pattern meters accept up to 32 named parts, a capacity, units, optional custom
 colors/densities and grayscale mode. CUI retains hover and keyboard selection:

@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Validation.Inputs.ToggleGroupRules;
 
 uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Internal.Validation.Structure.TooltipRules as TooltipRules;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Actions.ToggleGroups as Toggles;
 
@@ -45,8 +46,13 @@ begin
   end if;
 
   for Item: Toggles.Item in Items do
-    Rules.CheckText(Item.Label, Location + '/label');
     Rules.CheckText(Item.Icon, Location + '/icon');
+    if Settings.IconOnly and Item.Icon <> '' then
+      TooltipRules.CheckCaption(Item.Label, '', Location + '/label');
+    else
+      Rules.CheckText(Item.Label, Location + '/label');
+    end if;
+
     if Item.Label = '' or Item.Label.Contains(#10) or Item.Label.Contains(#13) then
       Rules.Reject(Location, 'A toggle needs a single-line accessible label.');
     end if;

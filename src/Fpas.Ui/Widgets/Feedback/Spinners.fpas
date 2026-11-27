@@ -3,7 +3,8 @@
 unit Fpas.Ui.Widgets.Feedback.Spinners;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 // Activity styles used by the graphical and terminal hosts.
 public type Style = enum: byte
@@ -43,12 +44,14 @@ end enum;
 public type Options = record
   // Animation geometry.
   public Animation: Style := Style.Arc;
-  // Ink color.
-  public Color: Charts.Color := Charts.Color.Automatic;
-  // Track color.
-  public Track: Charts.Color := Charts.Color.Automatic;
-  // Use the current theme background as ink on an inverse surface.
-  public Inverse: bool := false;
+  // Explicit ink color. Omit it and ThemeColor for the native default.
+  public Color: G.Color? := null;
+  // Active theme ink color. Choose this or Color.
+  public ThemeColor: Themes.ColorToken? := null;
+  // Explicit track color for dotted GUI styles.
+  public Track: G.Color? := null;
+  // Active theme track color for dotted GUI styles. Choose this or Track.
+  public ThemeTrack: Themes.ColorToken? := null;
 end record;
 
 // Builds an activity spinner for the graphical or terminal host.
@@ -56,7 +59,7 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable spinner identity.
-// - `Size`: Diameter in logical points; zero uses CUI's default.
+// - `Size`: Height in logical units. Zero uses CUI's default.
 // - `Settings`: Optional activity style and colors.
 // ## Returns
 // A spinner drawn and animated by its host.

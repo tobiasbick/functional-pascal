@@ -9,7 +9,7 @@ uses Fpas.Ui.Elements as E;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable list identity.
-// - `Items`: One to 256 children in canonical index order.
+// - `Items`: Up to 256 rows in canonical index order. Each row contains its direct child elements.
 // - `Order`: A permutation of the item indices.
 // - `OnChange`: Maps a proposed permutation to a message.
 // - `Enabled`: Whether native dragging is allowed.
@@ -17,7 +17,7 @@ uses Fpas.Ui.Elements as E;
 // The graphical element.
 public function ReorderableList of TMsg(
   Id: string;
-  Items: array of E.Element of TMsg;
+  Items: array of array of E.Element of TMsg;
   Order: array of int;
   OnChange: function(array of int): TMsg;
   Enabled: bool := true

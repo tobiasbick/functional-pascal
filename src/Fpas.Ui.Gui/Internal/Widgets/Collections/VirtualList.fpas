@@ -21,7 +21,7 @@ uses System as Sys;
 // - `Frame`: Current presentation context.
 // - `Id`: Stable viewport identity.
 // - `Count`: Total number of rows.
-// - `RowHeight`: Fixed logical height of each row.
+// - `RowHeight`: Fixed logical height of each row, or zero for the native default.
 // - `Height`: Viewport extent.
 // - `Build`: Pure factory for each realized row.
 // - `Offset`: Saved offset to restore when the list reappears.
@@ -51,6 +51,11 @@ begin
   const Range: CuiCollections.CuiVirtualRange := Frame.Window.BeginVirtualList(
     Token, Count, RowHeight, Extent.Kind, Extent.Value, Frame.AcceptInput, Restore
   );
+  const EffectiveRowHeight: float := if RowHeight = 0.0F then
+    36.0F
+  else
+    RowHeight
+  end if;
   for Index: int := Range.First to Range.Last - 1 do
     const Row: E.Element of TMsg := Build(Index);
     const Prepared: V.Prepared of TMsg := Realized.Prepare of TMsg(Row);
@@ -60,7 +65,12 @@ begin
         Prepared := Prepared;
       end with, false, L.Alignment.Default
     );
-    Frame.Window.SizeLast(false, 2, RowHeight, 0.0F, -1.0F, 0.0F, 0);
+    if Frame.Window.HasLastWidget then
+      Frame.Window.SizeLast(false, 2, EffectiveRowHeight, 0.0F, -1.0F, 0.0F, 0);
+    else
+      Frame.Window.Gap(EffectiveRowHeight);
+    end if;
+
     Frame.Window.EndVirtualRow();
   end for;
 

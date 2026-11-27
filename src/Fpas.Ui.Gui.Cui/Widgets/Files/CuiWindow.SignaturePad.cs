@@ -1,5 +1,6 @@
 // [Documentation](../../../../docs/ui/gui/capture/signature-pad.md)
 using Fpas.Ui.Gui.Cui.Widgets.Files;
+using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;
 
@@ -12,9 +13,11 @@ public sealed partial class CuiWindow
 
     /// <summary>Draws CUI's signature pad and copies its strokes on changes.</summary>
     /// <param name="id">Stable pad identity.</param>
-    /// <param name="placeholder">Literal instruction, or empty for the native default.</param>
-    /// <param name="height">Logical height, or zero for the default.</param>
-    /// <param name="rgba">Packed RGBA ink color, or zero for the default.</param>
+    /// <param name="placeholder">Literal instruction, or null for the native default.</param>
+    /// <param name="widthKind">Native width extent kind.</param>
+    /// <param name="width">Fixed logical width or percentage.</param>
+    /// <param name="height">Logical height. Nonpositive uses the default.</param>
+    /// <param name="ink">Automatic, theme color, or explicit ink.</param>
     /// <param name="enabled">Whether to accept drawing or clearing.</param>
     /// <param name="focusClear">Whether to request focus on the Clear button.</param>
     /// <param name="track">Whether to track the pad bounds.</param>
@@ -22,14 +25,18 @@ public sealed partial class CuiWindow
     /// <param name="clearId">Optional tracking identity for the Clear button.</param>
     /// <param name="clearVisible">Whether the native Clear button is present.</param>
     /// <returns>A detached snapshot on drawing or clearing, or null otherwise.</returns>
-    public CuiSignature? SignaturePad(string id, string placeholder, float height, uint rgba, bool enabled,
-        bool focusClear, bool track, bool readChanges, string? clearId, out bool clearVisible)
+    public CuiSignature? SignaturePad(string id, string? placeholder, int widthKind, float width, float height,
+        CuiChartColor ink, bool enabled, bool focusClear, bool track, bool readChanges, string? clearId,
+        out bool clearVisible)
     {
         CheckFrame();
-        Utf8.Validate(placeholder, nameof(placeholder));
-        if (!float.IsFinite(height) || height < 0) throw new ArgumentOutOfRangeException(nameof(height));
+        if (placeholder is not null) Utf8.Validate(placeholder, nameof(placeholder));
+        CheckExtent(widthKind, width, nameof(width));
+        if (!float.IsFinite(height)) throw new ArgumentOutOfRangeException(nameof(height));
+        if (!ink.IsValid) throw new ArgumentOutOfRangeException(nameof(ink));
         string stable = Stable(id);
-        int changed = NativeMethods.SignaturePad(context, stable, Optional(placeholder), height, rgba,
+        int changed = NativeMethods.SignaturePad(context, stable, placeholder, widthKind, width, height,
+            ink.Palette, ink.Rgba,
             enabled ? 1 : 0, focusClear ? 1 : 0, out int node, out int clear);
         clearVisible = clear >= 0;
         if (track) TrackControl(id, node);

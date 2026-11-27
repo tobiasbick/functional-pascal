@@ -49,15 +49,24 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `WithSystem / Enabled` | false / true |
-| `Selected` | The model supplies the current selection. System requires WithSystem. |
+| `Id` | Nonempty stable group ID. |
+| `Selected` | Light or Dark. System requires `WithSystem`. The model supplies the current selection. |
+| `OnChange` | Maps a proposed choice to a message. |
+| `WithSystem` | False. True adds the System choice with a monitor icon. |
+| `Enabled` | True. False disables focus and input for all segments. |
 
 ## Interaction
 
-Tab moves focus without selecting. Arrows propose the adjacent choice.
-Click, Enter or Space proposes a different selection. Apply the resolved
-appearance through ThemeFor. For System, pass the application's concrete OS
-appearance to Resolve.
+Tab moves focus without selecting. Left and Right focus and propose the
+adjacent choice. Click, Enter or Space proposes a different selection.
+Use `ItemId` to address a segment in a focus request.
+
+Apply the accepted choice through `ThemeFor`. For System, pass the concrete
+appearance from the application provider to `Resolve`.
+
+The FPAS gallery shares its model-owned selection with the sidebar and toggle.
+The CUI gallery stores the switcher's selection independently. Changing the
+palette with the CUI toggle leaves the CUI switcher's selected segment in place.
 
 ## See also
 

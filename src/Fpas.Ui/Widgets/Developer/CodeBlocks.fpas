@@ -6,10 +6,10 @@ uses Fpas.Ui.Elements as E;
 
 // Native code display options.
 public type Options = record
-  // Syntax language, such as c, python or sql. Empty uses plain text.
-  public Language: string := '';
-  // Optional title in the header.
-  public Title: string := '';
+  // Case-sensitive syntax language, such as c, python or sql. Null omits the language.
+  public Language: string? := null;
+  // Literal title in the header. Null omits the title.
+  public Title: string? := null;
   // Whether to show line numbers.
   public LineNumbers: bool := false;
   // First highlighted line, or zero.
@@ -23,6 +23,26 @@ public type Options = record
   // Hide the title bar and copy button.
   public NoHeader: bool := false;
 end record;
+
+// Addresses the native copy button for inspection and focus.
+// ## Parameters
+// - `Id`: Stable code block identity.
+// ## Returns
+// The identity of the copy button when the header is visible.
+public function CopyId(Id: string): string;
+begin
+  return Id + '/copy';
+end function;
+
+// Reports whether the options display the native header and copy button.
+// ## Parameters
+// - `Settings`: Native code display options.
+// ## Returns
+// True when the native header is visible.
+public function HasHeader(Settings: Options): bool;
+begin
+  return not Settings.NoHeader and (Settings.Title <> null or Settings.Language <> null);
+end function;
 
 // Draws the native CUI code block.
 // ## Type parameters

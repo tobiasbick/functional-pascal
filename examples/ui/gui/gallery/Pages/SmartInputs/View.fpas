@@ -33,24 +33,26 @@ begin
         Strings.Get('Heading.PrefixAndSuffixHint')
       ),
       E.Row of State.Msg(
-        new L.Flow(Gap := G.Points(12), Wrap := true),
-        E.Size of State.Msg(
-          F.TextField of State.Msg(
-            'input-url',
-            Model.Url,
-            State.Msg.SetUrl,
-            new F.Options(Prefix := 'https://', MaxUtf8Bytes := 95)
-          ),
-          new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(260)))
+        new L.Flow(Gap := G.Points(12), Wrap := true, Clip := false),
+        F.TextField of State.Msg(
+          'input-url',
+          Model.Url,
+          State.Msg.SetUrl,
+          new F.Options(
+            Prefix := 'https://',
+            MaxUtf8Bytes := 95,
+            Width := L.Extent.Fixed(L.Measure.Logical(260))
+          )
         ),
-        E.Size of State.Msg(
-          F.TextField of State.Msg(
-            'input-weight',
-            Model.Weight,
-            State.Msg.SetWeight,
-            new F.Options(Suffix := 'kg', MaxUtf8Bytes := 15)
-          ),
-          new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(120)))
+        F.TextField of State.Msg(
+          'input-weight',
+          Model.Weight,
+          State.Msg.SetWeight,
+          new F.Options(
+            Suffix := 'kg',
+            MaxUtf8Bytes := 15,
+            Width := L.Extent.Fixed(L.Measure.Logical(120))
+          )
         )
       ),
       G.Heading of State.Msg(
@@ -58,7 +60,7 @@ begin
         Strings.Get('Heading.ShortcutRecorderHint')
       ),
       E.Row of State.Msg(
-        new L.Flow(Gap := G.Points(12), Wrap := true),
+        new L.Flow(Gap := G.Points(12), Wrap := true, Clip := false),
         Keys.ShortcutRecorder of State.Msg(
           'palette-key',
           Model.PaletteKey,

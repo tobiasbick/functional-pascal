@@ -166,7 +166,7 @@
   <data name="Heading.ModelPicker" xml:space="preserve"><value>Modellauswahl</value></data>
   <data name="Heading.ModelPickerHint" xml:space="preserve"><value>Wähle ein Modell im selben Menü wie im Eingabefeld.</value></data>
   <data name="Heading.Money" xml:space="preserve"><value>Geldbeträge</value></data>
-  <data name="Heading.MoneyHint" xml:space="preserve"><value>Exakte Dezimalbeträge mit nativer Texteingabe.</value></data>
+  <data name="Heading.MoneyHint" xml:space="preserve"><value>Mit Tausendertrennzeichen in der Anzeige, ohne Gruppierung bei der Eingabe.</value></data>
   <data name="Heading.MonthCalendar" xml:space="preserve"><value>Monatskalender</value></data>
   <data name="Heading.MonthCalendarHint" xml:space="preserve"><value>Balken für freie Tage und Reisen, Termine in zeitlicher Reihenfolge und ein Hinweis auf weitere Einträge.</value></data>
   <data name="Heading.MorphingButtons" xml:space="preserve"><value>Schaltflächen mit Formwechsel</value></data>
@@ -234,7 +234,6 @@
   <data name="Heading.SignatureHint" xml:space="preserve"><value>Zeichne mit Maus oder Stift. Schnellere Striche werden wie bei Tinte dünner.</value></data>
   <data name="Heading.Sliders" xml:space="preserve"><value>Schieberegler</value></data>
   <data name="Heading.SlidersHint" xml:space="preserve"><value>Ziehe über ein Ende hinaus. Die Schiene dehnt sich wie Gummi.</value></data>
-  <data name="Heading.Sparkline" xml:space="preserve"><value>Minidiagramm</value></data>
   <data name="Heading.SpeedDial" xml:space="preserve"><value>Schnellaktionen</value></data>
   <data name="Heading.SpeedDialHint" xml:space="preserve"><value>Eine schwebende Schaltfläche, die zugehörige Aktionen auffächert.</value></data>
   <data name="Heading.SplitBar" xml:space="preserve"><value>Unterteilter Balken</value></data>

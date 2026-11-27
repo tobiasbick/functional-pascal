@@ -42,7 +42,7 @@ static void documents(cui_ctx *ui) {
 
 static void operations(cui_ctx *ui) {
     const char *keys[] = { "wrap" }, *labels[] = { "Word wrap" }, *empty[] = { "" };
-    const int flags[] = { 16 };
+    const fpas_cui_menu_row rows[] = { {16, 0, 0} };
     int shown = 0, chosen = -1, item = -1, nodes[2], open, highlight;
     for (int frame = 0; frame < 10; ++frame) {
         if (frame == 2) key(ui, CUI_KEY_F10, 0);
@@ -52,7 +52,7 @@ static void operations(cui_ctx *ui) {
         cui_begin_frame(ui, .016f);
         fpas_cui_menu_bar_begin(ui, "bar", 1, 1);
         int result = fpas_cui_menu_bar_menu(ui, "View", 0, 0, 1, keys, labels, empty,
-            empty, flags, 1, nodes, &open, &highlight);
+            empty, rows, 1, nodes, &open, &highlight);
         if (open) ++shown;
         if (result >= 0) chosen = result;
         fpas_cui_menu_bar_end(ui);
@@ -206,11 +206,11 @@ static void annotation(cui_ctx *ui, bool bridge, bool marked) {
 
 static void chrome_pixels(cui_ctx *ui, bool bridge) {
     const char *keys[] = { "wrap" }, *labels[] = { "Word wrap" }, *empty[] = { "" };
-    const int flags[] = { 16 };
+    const fpas_cui_menu_row rows[] = { {16, 0, 0} };
     int selected = 1, close, from, to, nodes[4], open, highlighted, item;
     if (bridge) {
         fpas_cui_menu_bar_begin(ui, "bar", 1, 1);
-        fpas_cui_menu_bar_menu(ui, "View###view", 0, 0, 1, keys, labels, empty, empty, flags, 1, nodes, &open, &highlighted);
+        fpas_cui_menu_bar_menu(ui, "View###view", 0, 0, 1, keys, labels, empty, empty, rows, 1, nodes, &open, &highlighted);
         fpas_cui_menu_bar_end(ui);
         tabs(ui, true, false, &selected, &close, &from, &to, nodes);
         fpas_cui_status_bar_begin(ui, "status", 1);

@@ -30,7 +30,8 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Id / Name` | Supply a stable ID and the participant name. |
+| `Id` | Supply a stable ID. |
+| `Name` | Null. Uses an anonymous avatar and omits the caption. A name supplies initials and the typing caption. |
 
 ## Interaction
 

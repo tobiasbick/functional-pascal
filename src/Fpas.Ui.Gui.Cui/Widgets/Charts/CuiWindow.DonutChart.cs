@@ -12,9 +12,9 @@ public sealed partial class CuiWindow
     /// <param name="labels">One caption per share, or an empty array for no legend.</param>
     /// <param name="widthKind">Native bridge width kind.</param>
     /// <param name="width">Logical width or percentage.</param>
-    /// <param name="height">Maximum diameter; zero uses the native default.</param>
-    /// <param name="format">Optional safe tooltip number formatting.</param>
-    /// <param name="legend">Show the native share legend.</param>
+    /// <param name="height">Preferred ring diameter in logical units. Zero uses the native default.</param>
+    /// <param name="format">Optional formatting for the center value.</param>
+    /// <param name="legend">Show the native share legend when labels are supplied.</param>
     /// <param name="track">Retain the public inspection identity.</param>
     public unsafe void DonutChart(string id, float[] values, string[] labels, int widthKind = 0, float width = 0,
         float height = 0, CuiChartFormat? format = null, bool legend = true, bool track = true)

@@ -43,10 +43,10 @@ int fpas_cui_table_row(cui_ctx *ui, const char *id, int selected, int enabled, i
     /* CUI processes rows by position. Keep focus and pointer capture keyed to the model row. */
     const int first_focus = ui->focus_count;
     if (ui->focus_next_request == key) ui->focus_next_request = position;
-    if (ui->focus == key) ui->focus = position;
+    if (ui->focus == key) ui->focus = table->selectable ? position : 0;
     if (ui->hot == key) ui->hot = position;
     if (ui->active == key) ui->active = position;
-    cui_push_disabled(ui, !enabled || !table->selectable);
+    cui_push_disabled(ui, !enabled);
     const bool clicked = cui_table_row(ui, selected != 0);
     cui_pop_disabled(ui);
     *node = cui__current(ui);

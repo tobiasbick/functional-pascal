@@ -12,7 +12,7 @@ public type Options = record
   public Width: L.Extent := L.Extent.Content;
   // Logical height, or zero for the native default.
   public Height: float := 0.0F;
-  // Image width divided by height. Zero uses the first image's aspect.
+  // Shared image width divided by height. Zero fills the panel with each whole image.
   public Aspect: float := 0.0F;
   // Caption above the before image.
   public BeforeLabel: string := 'Before';

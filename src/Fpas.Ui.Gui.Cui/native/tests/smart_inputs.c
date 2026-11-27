@@ -55,9 +55,9 @@ static void draw(sample *s, bool adapter, int kind, bool fixed, int width) {
                 .width = fixed ? CUI_PX(200) : CUI_FIT);
             break;
         case 2:
-            if (adapter) fpas_cui_money_field(s->ui, "amount", s->money, sizeof s->money, "Amount", "$", "USD", "Helper", NULL,
+            if (adapter) fpas_cui_money_field(s->ui, "amount", s->money, sizeof s->money, "Amount", "$", "USD", "Helper", NULL, "0.00",
                 fixed ? 2 : 0, 200, 1, 0, &s->node);
-            else cui_input(s->ui, "amount", s->money, sizeof s->money, .label = "Amount", .prefix = "$", .suffix = "USD", .hint = "Helper", .placeholder = "0",
+            else cui_input(s->ui, "amount", s->money, sizeof s->money, .label = "Amount", .prefix = "$", .suffix = "USD", .hint = "Helper", .placeholder = "0.00",
                 .width = fixed ? CUI_PX(200) : CUI_FIT);
             break;
         case 3: {
@@ -119,6 +119,51 @@ static void pixels(void) {
         }
 }
 
+static bool inline_frame(sample *s, bool enabled, bool focus) {
+    int editing;
+    unsigned int key;
+    snprintf(s->text, sizeof s->text, "%s", "Original");
+    /* Advance past native undo coalescing between consecutive text changes. */
+    cui_begin_frame(s->ui, .55f);
+    const int flags = fpas_cui_inline_edit(s->ui, "undo", s->text, sizeof s->text, NULL,
+        CUI_FONT_MEDIUM, 0, 0, 0, enabled, focus, &editing, &s->node, &key);
+    cui_end_frame(s->ui);
+    CHECK((flags & CUI_CHANGED) == 0);
+    return editing != 0;
+}
+
+static void inline_cancel_undo(void) {
+    for (int disable = 0; disable <= 1; ++disable) {
+        sample s = create(false, 640);
+        CHECK(!inline_frame(&s, true, true));
+        key(&s, CUI_KEY_ENTER, 0);
+        CHECK(inline_frame(&s, true, false));
+        cui_input_text(s.ui, "Discard");
+        CHECK(inline_frame(&s, true, false));
+        cui_input_text(s.ui, " more");
+        CHECK(inline_frame(&s, true, false));
+        CHECK(strcmp(s.text, "Discard more") == 0);
+        key(&s, CUI_KEY_Z, CUI_MOD_PRIMARY);
+        CHECK(inline_frame(&s, true, false));
+        CHECK(strcmp(s.text, "Discard") == 0);
+
+        cui_input_key(s.ui, CUI_KEY_NONE, false, 0);
+        cui_input_text(s.ui, " later");
+        CHECK(inline_frame(&s, true, false));
+        CHECK(strcmp(s.text, "Discard later") == 0);
+        if (!disable) key(&s, CUI_KEY_ESCAPE, 0);
+        CHECK(!inline_frame(&s, !disable, false));
+        CHECK(strcmp(s.text, "Original") == 0);
+        CHECK(!inline_frame(&s, true, true));
+        key(&s, CUI_KEY_ENTER, 0);
+        CHECK(inline_frame(&s, true, false));
+        key(&s, CUI_KEY_Z, CUI_MOD_PRIMARY);
+        CHECK(inline_frame(&s, true, false));
+        CHECK(strcmp(s.text, "Original") == 0);
+        destroy(&s);
+    }
+}
+
 static void numeric_regressions(void) {
     for (int pass = 0; pass < 2; ++pass) {
         for (int invalid = 0; invalid < 2; ++invalid) {
@@ -144,7 +189,7 @@ static void numeric_regressions(void) {
 }
 
 int main(void) {
-    pixels(); numeric_regressions();
+    pixels(); inline_cancel_undo(); numeric_regressions();
     printf("Smart inputs: %d strict pixel comparisons; %d failures.\n", comparisons, failures);
     return failures ? 1 : 0;
 }

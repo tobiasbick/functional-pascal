@@ -7,6 +7,40 @@ namespace Fpas.Ui.Gui.Cui.Tests.Media;
 /// <summary>Exercises avatar images and initials in CUI widgets.</summary>
 public sealed class CuiAvatarTests
 {
+    /// <summary>Avatar groups use CUI's fallback dimensions and place the overflow marker after the visible limit.</summary>
+    [GuiFact]
+    public void AvatarGroupsHonorVisibleLimitAndDiameter()
+    {
+        using var window = new CuiWindow("Avatar groups", 500, 320, CuiRenderer.Software, continuous: true);
+        string[] names = ["Ada", "Ben", "Cleo", "Dan", "Eve", "Finn"];
+        var examples = new (string Id, int Limit, float Size, float Diameter, int Slots)[]
+        {
+            ("zero", 0, 0, 32, 5),
+            ("negative", -1, -1, 32, 5),
+            ("custom", 2, 40, 40, 3),
+            ("all", 8, 24, 24, 6),
+        };
+        Assert.True(window.NextFrame());
+        Assert.Throws<ArgumentException>(() => window.AvatarGroup([], 0, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => window.AvatarGroup(names, 0, float.NaN));
+        window.BeginColumn(12);
+        foreach (var example in examples)
+        {
+            window.AvatarGroup(names, example.Limit, example.Size);
+            window.TrackLastControl(example.Id);
+        }
+        window.EndColumn();
+        window.Present();
+
+        foreach (var example in examples)
+        {
+            var bounds = window.GetControlRectangle(example.Id);
+            float width = example.Slots * example.Diameter - (example.Slots - 1) * example.Diameter * 0.16f;
+            Assert.Equal(width, bounds.Width, precision: 2);
+            Assert.Equal(example.Diameter, bounds.Height);
+        }
+    }
+
     /// <summary>A model-owned path replaces the native initials and clearing it restores them.</summary>
     [GuiFact]
     public void AvatarReplacesAndClearsAnImage()

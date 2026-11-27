@@ -5,6 +5,8 @@ unit Fpas.Ui.Gui.Internal.Widgets.Inputs.TextField;
 uses Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Input.Editor as Editor;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.TextFields as F;
 
 uses System as Sys;
@@ -33,10 +35,12 @@ begin
   const Token: string := C.Token('text-field', Id);
   const Clear: string := F.ClearId(Id);
   const Reveal: string := F.RevealId(Id);
+  const Width: S.NativeExtent := S.Extent(Settings.Width ?? L.Extent.Content);
   const Native: CuiInputs.CuiTextFieldOptions := new CuiInputs.CuiTextFieldOptions(
     Settings.Label, Settings.Placeholder, Settings.Icon, Settings.Hint, Settings.Error,
     Settings.Prefix, Settings.Suffix, cast Settings.ControlSize as int, Settings.Password,
-    Settings.Clearable, Settings.ReadOnly, Settings.MaxUtf8Bytes
+    Settings.Clearable, Settings.ReadOnly, Settings.MaxUtf8Bytes, Width.Kind, Width.Value,
+    Settings.Autofocus
   );
   const Result: CuiInputs.CuiTextFieldResult := Frame.Window.TextField(
     Token, Value, Native, Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled),

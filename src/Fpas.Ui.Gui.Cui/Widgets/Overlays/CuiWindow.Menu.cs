@@ -44,18 +44,19 @@ public sealed partial class CuiWindow
         if (variant is < 0 or 3 or > 7) throw new ArgumentOutOfRangeException(nameof(variant));
         if (placement is < 0 or > 9) throw new ArgumentOutOfRangeException(nameof(placement));
         CheckFeedbackNumber(width, nameof(width));
-        var (keys, labels, icons, shortcuts, flags) = PackMenuEntries(entries, trackingIds);
+        var (keys, labels, icons, shortcuts, rowOptions) = PackMenuEntries(entries, trackingIds);
         int[] nodes = new int[entries.Length + 1];
         int choice, open, highlighted;
         uint owner = 0;
         string key = Stable(id);
-        fixed (int* bits = flags, parts = nodes)
+        fixed (NativeMenuRow* rows = rowOptions)
+        fixed (int* parts = nodes)
         {
             choice = user is null ? NativeMethods.Menu(context, key, label, Optional(icon),
-                keys, labels, icons, shortcuts, bits, entries.Length, variant, placement, width,
+                keys, labels, icons, shortcuts, rows, entries.Length, variant, placement, width,
                 iconOnly ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0, contextMenu ? 1 : 0, parts, out open, out highlighted, out owner)
-                : NativeMethods.UserMenu(context, key, label, Optional(user.Detail),
-                    Optional(user.Status), user.AvatarPath, keys, labels, icons, shortcuts, bits,
+                : NativeMethods.UserMenu(context, key, label, user.Detail,
+                    user.Status, user.AvatarPath, keys, labels, icons, shortcuts, rows,
                     entries.Length, placement, width, user.Compact ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0,
                     parts, out open, out highlighted);
         }
@@ -70,7 +71,7 @@ public sealed partial class CuiWindow
         return new CuiMenuResult(choice, open != 0, highlighted);
     }
 
-    private static (string[] Keys, string[] Labels, string[] Icons, string[] Shortcuts, int[] Flags)
+    private static (string[] Keys, string[] Labels, string[] Icons, string[] Shortcuts, NativeMenuRow[] Rows)
         PackMenuEntries(CuiMenuEntry[] entries, string[]? trackingIds)
     {
         ArgumentNullException.ThrowIfNull(entries);
@@ -78,7 +79,7 @@ public sealed partial class CuiWindow
             throw new ArgumentException("Supply the trigger and one identity per menu entry.", nameof(trackingIds));
         string[] keys = new string[entries.Length], labels = new string[entries.Length],
             icons = new string[entries.Length], shortcuts = new string[entries.Length];
-        int[] flags = new int[entries.Length];
+        var rows = new NativeMenuRow[entries.Length];
         var unique = new HashSet<string>(StringComparer.Ordinal);
         for (int i = 0; i < entries.Length; i++)
         {
@@ -91,8 +92,11 @@ public sealed partial class CuiWindow
             labels[i] = entry.Label; icons[i] = entry.Icon; shortcuts[i] = entry.Shortcut;
             Utf8.Validate(labels[i], nameof(entries)); Utf8.Validate(icons[i], nameof(entries));
             Utf8.Validate(shortcuts[i], nameof(entries));
-            flags[i] = (int)entry.Kind | (entry.Enabled ? 0 : 4) | (entry.Danger ? 8 : 0) | (entry.Checked ? 16 : 0);
+            CheckFeedbackNumber(entry.TextSize, nameof(entry.TextSize));
+            if (entry.Font is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(entry.Font));
+            int flags = (int)entry.Kind | (entry.Enabled ? 0 : 4) | (entry.Danger ? 8 : 0) | (entry.Checked ? 16 : 0);
+            rows[i] = new(flags, entry.Font, entry.TextSize);
         }
-        return (keys, labels, icons, shortcuts, flags);
+        return (keys, labels, icons, shortcuts, rows);
     }
 }

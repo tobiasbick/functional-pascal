@@ -18,6 +18,14 @@ public type Tone = enum: byte
   Warning;
   // An error or destructive action.
   Danger;
+  // The native toast uses neutral presentation for this tone.
+  Violet;
+  // The native toast uses neutral presentation for this tone.
+  Teal;
+  // The native toast uses neutral presentation for this tone.
+  Rose;
+  // The native toast uses neutral presentation for this tone.
+  Accent;
 end enum;
 
 // Presentation and lifetime of one native toast.
@@ -74,7 +82,7 @@ end record;
 // ## Parameters
 // - `Title`: Nonblank literal title, up to 127 UTF-8 bytes.
 // - `Settings`: Optional description, tone, lifetime and action caption.
-// - `OnAction`: Optional message factory, supplied together with an action caption.
+// - `OnAction`: Optional message factory. A factory requires an action caption.
 // ## Returns
 // A graphical host command that shows one notification.
 public function Show of TMsg(
@@ -85,8 +93,8 @@ public function Show of TMsg(
 requires Title <> '';
 begin
   const Resolved: Options := Settings ?? new Options();
-  if (Resolved.ActionLabel = '') <> (OnAction = null) then
-    raise new Sys.ArgumentException('Supply both an action caption and an action message factory.');
+  if OnAction <> null and Resolved.ActionLabel = '' then
+    raise new Sys.ArgumentException('An action message factory requires an action caption.');
   end if;
 
   return (Mvu.Command of TMsg).Host(

@@ -95,7 +95,7 @@ begin
   );
 end function;
 
-// Draws a [tree cell](../../../../docs/ui/gui/data-grid/tree-cell.md) inside a table cell.
+// Draws a [tree cell](../../../../docs/ui/gui/data-grid/tree-cell.md) inside a table or data grid cell.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -103,7 +103,7 @@ end function;
 // - `Label`: Literal caption.
 // - `Depth`: Indentation level.
 // - `Open`: Current expansion, or null for a leaf.
-// - `OnChange`: Optional expansion mapper for a branch.
+// - `OnChange`: Expansion mapper for a clickable branch. Null keeps the branch read-only.
 // - `Icon`: Optional CUI glyph.
 // ## Returns
 // The graphical tree cell.

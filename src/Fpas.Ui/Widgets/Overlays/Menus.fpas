@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Overlays.Menus;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Styles as S;
 
 // Popup placement relative to its trigger. Hosts fit it to the viewport.
@@ -49,6 +50,10 @@ public type Item of TMsg = record
   public Danger: bool := false;
   // Show a model-owned check mark without changing activation semantics.
   public Checked: bool := false;
+  // Font role for the command caption in the GUI.
+  public Font: G.Font := G.Font.Body;
+  // Caption size in logical units in the GUI. Zero uses the theme body size.
+  public TextSize: float := 0.0F;
 end record;
 
 // Ordered native menu content; only commands are interactive.

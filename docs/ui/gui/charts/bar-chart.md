@@ -35,15 +35,30 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Series / Labels` | Supply finite values in category order. Labels optionally name the categories. |
-| `Stacked` | false. CUI groups series side by side. Enable to combine them in a single stack per category. |
-| `Width / Height` | Fill / 0. Zero uses the native height. |
-| `Grid / Legend` | true / true. |
-| `Range / Format / Annotations` | null / null / empty. Supply a fixed increasing range, number format or annotation list as needed. |
+| `Series` | Supply names and finite values in category order. Series can have different lengths. |
+| `Labels` | Empty. Supply category captions in order. CUI uses the array length as the label count. |
+| `Stacked` | False. True combines the series in one stack per category. |
+| `Width` | Fill. |
+| `Height` | Zero, which selects the native plot height of 220 logical units. |
+| `Grid` | True. False hides the plot's grid lines. |
+| `Legend` | True. CUI shows the legend for two or more series. |
+| `Range` | Null. Set increasing value bounds to choose a scale. |
+| `Format` | Null. CUI formats axis and hover values automatically. |
+| `Annotations` | Empty. Add vertical lines, horizontal thresholds or points. |
+| `XMinimum` / `XMaximum` | Zero / zero. Equal bounds use zero-based category indices. Increasing bounds place annotations in your X units. |
 
 ## Interaction
 
-Hover to inspect a category and see its native readout. CUI lays out the bars and legend from the supplied data. Use series names as legend labels.
+Hover to inspect a category. CUI highlights its column and shows each series
+value in a compact readout. If the readout cannot fit, CUI shows a tooltip.
+The chart sends no selection message.
+
+Category labels can cover only part of the data. CUI leaves the other axis
+positions unlabeled and uses their one-based indices in the hover readout.
+Use [chart colors and annotations](README.md#annotations) to style series and marks.
+
+If you set `Range`, choose bounds that enclose each bar, including intermediate
+values in a stack. CUI can draw beyond the plot when a bar exceeds the bounds.
 
 ## See also
 

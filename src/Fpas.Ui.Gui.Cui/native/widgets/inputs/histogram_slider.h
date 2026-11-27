@@ -6,14 +6,14 @@
  * @param ui Current drawing context.
  * @param id Stable identity.
  * @param label Literal caption.
- * @param bins Finite nonnegative bin heights.
+ * @param bins Finite nonnegative bin heights, or null for zero bins.
  * @param bin_count Number of bins.
  * @param lower Lower endpoint, updated on a proposal.
  * @param upper Upper endpoint, updated on a proposal.
  * @param minimum Inclusive lower bound.
  * @param maximum Inclusive upper bound.
  * @param height Logical chart height, or zero for CUI's default.
- * @param format Validated C numeric format.
+ * @param format Validated C numeric format, or null for the native default.
  * @param enabled Whether the track accepts input.
  * @param focus Whether to request track focus.
  * @param track Receives the native range track node.

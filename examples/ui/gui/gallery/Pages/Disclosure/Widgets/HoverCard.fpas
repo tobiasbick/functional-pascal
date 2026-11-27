@@ -3,35 +3,36 @@
 unit GuiGallery.Pages.Disclosure.Widgets.HoverCard;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Display.Icons as Icons;
 uses Fpas.Ui.Widgets.Display.Links as Link;
 uses Fpas.Ui.Widgets.Media.Avatars as A;
 uses Fpas.Ui.Widgets.Overlays.HoverCards as H;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
-uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Disclosure.State as State;
 uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 
-function Details(): E.Element of State.Msg;
+function Details(Colors: Themes.Palette): E.Element of State.Msg;
 begin
   const Copy: E.Element of State.Msg := E.Column of State.Msg(
     new L.Flow(Gap := G.Points(4), Clip := false),
-    E.Styled of State.Msg(E.Text of State.Msg('Jonas Berg'), S.Role.Strong),
-    E.Styled of State.Msg(
-      E.Text of State.Msg('Engineer on the rendering team. Joined March 2024.'),
-      S.Role.Secondary
+    E.FormattedText of State.Msg('Jonas Berg', Graphics.Font.Medium, 0.0F, Colors.Foreground),
+    E.FormattedText of State.Msg(
+      'Engineer on the rendering team. Joined March 2024.', Graphics.Font.Body, 13.0F,
+      Colors.TextSecondary
     ),
-    E.Column of State.Msg(
-      G.Space of State.Msg(4),
-      E.Row of State.Msg(
-        new L.Flow(Gap := G.Points(6), Wrap := true),
-        E.Styled of State.Msg(
-          E.Text of State.Msg(Sys.Char.ConvertFromUtf32($E063)),
-          S.Role.MutedGlyph
-        ),
-        E.Styled of State.Msg(E.Text of State.Msg('Usually replies within an hour'), S.Role.Caption)
+    E.Row of State.Msg(
+      new L.Flow(Gap := G.Points(6), PaddingTop := G.Points(4), Wrap := true, Clip := false),
+      Icons.Icon of State.Msg(
+        Sys.Char.ConvertFromUtf32($E063),
+        12.0F,
+        ThemeColor := Themes.ColorToken.TextMuted
+      ),
+      E.FormattedText of State.Msg(
+        'Usually replies within an hour', Graphics.Font.Body, 12.0F, Colors.TextMuted
       )
     )
   );
@@ -42,26 +43,26 @@ begin
       'Jonas Berg',
       new A.Options(Size := 44.0F, Status := 'online')
     ),
-    E.Size of State.Msg(Copy, new L.Flex(Basis := L.Extent.Fill))
+    E.Size of State.Msg(Copy, new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill)))
   );
 end function;
 
 // Shows the original assignment link and the native profile card.
+// ## Parameters
+// - `Colors`: Palette of the active theme.
 // ## Returns
-// The Hover card section with CUI-owned pointer timing.
-public function View(): E.Element of State.Msg;
+// The native inline anchor and its wrapped sentence.
+public function View(Colors: Themes.Palette): E.Element of State.Msg;
 begin
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20), Clip := false),
-    G.Heading of State.Msg(Strings.Get('Heading.HoverCard'), Strings.Get('Heading.HoverCardHint')),
-    E.Row of State.Msg(
-      new L.Flow(Gap := G.Points(6), Wrap := true),
-      E.Text of State.Msg('Assigned to'),
-      H.HoverCard of State.Msg(
-        'jonas-card', Link.Link of State.Msg('jonas-link', '@jonas', State.Msg.Preview), Details()
-      ),
-      E.Text of State.Msg('and due Friday.')
-    )
+  return E.Row of State.Msg(
+    new L.Flow(Gap := G.Points(6), Wrap := true, Clip := false),
+    E.Text of State.Msg('Assigned to'),
+    H.HoverCard of State.Msg(
+      'jonas-card',
+      Link.Link of State.Msg('jonas-link', '@jonas', State.Msg.Preview),
+      Details(Colors)
+    ),
+    E.Text of State.Msg('and due Friday.')
   );
 end function;
 

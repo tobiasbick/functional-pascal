@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Ai.View;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Ai.AgentPlans as Plan;
 uses Fpas.Ui.Widgets.Ai.AgentStatuses as Status;
@@ -83,13 +84,13 @@ begin
         'ai-reasoning', [
           E.FormattedText of S.Msg(
             'The question is about perceived speed. Two parts: how little work a frame does, and how quickly input shows up on screen.',
-            Motion.Font.Body,
+            Graphics.Font.Body,
             13.5F,
             Colors.TextSecondary
           ),
           E.FormattedText of S.Msg(
             'Look for sources on retained versus immediate mode, text rendering cost and motion.',
-            Motion.Font.Body,
+            Graphics.Font.Body,
             13.5F,
             Colors.TextSecondary
           )
@@ -147,7 +148,7 @@ begin
   Views.Add(
     E.Row of S.Msg(
       new L.Flow(Gap := G.Points(6), Align := L.Alignment.Center, Clip := false),
-      E.FormattedText of S.Msg('Sources', Motion.Font.Body, 12.0F, Colors.TextMuted),
+      E.FormattedText of S.Msg('Sources', Graphics.Font.Body, 12.0F, Colors.TextMuted),
       Citations.Citation of S.Msg('ai-cite-1', 1, Documents[0], null),
       Citations.Citation of S.Msg('ai-cite-2', 2, Documents[1], null),
       Citations.Citation of S.Msg('ai-cite-3', 3, Documents[2], null)

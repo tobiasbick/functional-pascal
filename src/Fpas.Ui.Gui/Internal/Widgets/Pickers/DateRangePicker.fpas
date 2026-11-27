@@ -4,6 +4,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangePicker;
 
 uses Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing;
 uses Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangeParts as Parts;
 uses Fpas.Ui.Widgets.Pickers.DateRangePickers as P;
 uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
@@ -30,6 +31,7 @@ begin
   const Accept: bool := Settings.Enabled and Frame.AcceptInput;
   const Role: string := 'date-range-picker';
   const Token: string := C.Token(Role, Id);
+  const Width: Sizing.NativeExtent := Sizing.Extent(Settings.Width);
   const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
@@ -37,17 +39,19 @@ begin
   end if;
   const Result: CuiPickers.CuiDateRangeResult := Frame.Window.RangePicker(
     Token, Parts.StartDay(Value), Parts.EndDay(Value), Settings.Label, Settings.Placeholder,
-    Settings.Width, Settings.Presets, Accept, C.WantsFocus of TMsg(Frame, Id, Token, Accept), Track
+    Width.Kind, Width.Value, Settings.Presets, Accept,
+    C.WantsFocus of TMsg(Frame, Id, Token, Accept), Track
   );
-  if Settings.Label <> '' and not Frame.PaintingClosed then
-    Frame.Labels.Add(Settings.Label);
+  const Label: string := Settings.Label ?? '';
+  if Label <> '' and not Frame.PaintingClosed then
+    Frame.Labels.Add(Label);
   end if;
 
   Parts.Publish of TMsg(
-    Frame, Id, if Settings.Label = '' then
+    Frame, Id, if Label = '' then
       'Date range'
     else
-      Settings.Label
+      Label
     end if,
     Role, Value, Accept, Result, OnChange
   );

@@ -8,8 +8,8 @@ uses Fpas.Ui.Elements as E;
 public type Item = record
   // Entry label.
   public Label: string;
-  // Optional secondary value.
-  public Value: string := '';
+  // Secondary value. Null omits its position.
+  public Value: string? := null;
   // Percent change, or zero to omit the trend.
   public Delta: float := 0.0F;
   // Use the success color for a fall.

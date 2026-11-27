@@ -13,7 +13,7 @@ uses System as Sys;
 // ## Parameters
 // - `Id`: Stable list identity.
 // - `Count`: Total row count.
-// - `RowHeight`: Fixed height of at least one logical unit.
+// - `RowHeight`: Fixed height of at least one logical unit, or zero for the native default of 36.
 // - `Height`: Viewport extent. CUI treats Content as Fill.
 // - `BuildRow`: Pure view factory called for each visible or overscan index.
 //   Interactive children must use IDs unique across the view.

@@ -33,12 +33,21 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Entries` | Keyed commands, section captions and separators. Commands can carry an icon, shortcut hint and checked or danger state. |
+| `Id` | A stable menu ID. |
+| `Target` | The element that owns the right-click area. |
+| `Entries` | Ordered commands, section captions and separators. See [command options](../actions/dropdown-menu.md#options-and-defaults). |
 | `Enabled` | true. The target retains its own input settings. |
 
 ## Interaction
 
-Right-click the target to open the menu at the pointer. Use Up or Down and Enter to choose a command. Escape or an outside click dismisses it. CUI owns the open state. Interactive descendants keep their own hit areas, so attach the menu to the intended control.
+Right-click the target to open the menu at the pointer. Press Up or Down to
+move the highlight. Press Enter on an enabled command to choose it and close
+the menu. Press Escape or click outside to dismiss the menu. CUI owns the open
+state.
+
+Interactive descendants keep their own hit areas. Attach the menu to the
+element that receives the intended right click. CUI uses the command's shortcut
+text as a hint. Bind the shortcut separately if it also runs a command.
 
 ## See also
 

@@ -20,12 +20,12 @@ end enum;
 public type Options = record
   // Literal heading in the pinned sheet header.
   public Title: string;
-  // Optional supporting text below the heading.
-  public Description: string := '';
+  // Supporting text below the heading. Null omits the line.
+  public Description: string? := null;
   // Edge against which the sheet opens.
   public Edge: Side := Side.Right;
-  // Width for a side sheet or height for a top or bottom sheet in logical units.
-  public Size: int := 400;
+  // Width or height in logical units. Zero uses the native default of 400.
+  public Size: float := 400.0F;
   // Preferred enabled control. The close button is the fallback.
   public InitialFocus: string? := null;
 end record;
@@ -52,7 +52,7 @@ public function Sheet of TMsg(
   OnDismiss: TMsg
 ): E.Element of TMsg;
 requires Id <> '';
-requires Settings.Size > 0;
+requires Settings.Size >= 0.0F;
 begin
   return (E.Element of TMsg).Sheet(Id, Base, Content, Open, Settings, OnDismiss);
 end function;

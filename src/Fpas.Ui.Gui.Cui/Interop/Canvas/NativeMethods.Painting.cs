@@ -17,6 +17,9 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "cui_delta_time")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial float CanvasDeltaTime(nint ui);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_canvas_color")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial uint CanvasColor(nint ui, int token);
     [LibraryImport(Library, EntryPoint = "fpas_cui_canvas_primitive", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial void CanvasPrimitive(nint ui, int kind, float x, float y, float* values, uint color, uint second, string? text);

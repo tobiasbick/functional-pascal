@@ -14,8 +14,12 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Inputs;
 /// <param name="Clearable">Show a clear button while editable and nonempty.</param>
 /// <param name="ReadOnly">Allow focus and selection while preventing edits.</param>
 /// <param name="MaxUtf8Bytes">Maximum value size excluding the terminator.</param>
+/// <param name="WidthKind">Default, fill, fixed or percentage in that order.</param>
+/// <param name="Width">Fixed logical width or percentage, when selected.</param>
+/// <param name="Autofocus">Request focus on the first presentation of an enabled editor.</param>
 public sealed record CuiTextFieldOptions(string Label, string Placeholder, string Icon, string Hint, string Error,
-    string Prefix, string Suffix, int Size, bool Password, bool Clearable, bool ReadOnly, int MaxUtf8Bytes);
+    string Prefix, string Suffix, int Size, bool Password, bool Clearable, bool ReadOnly, int MaxUtf8Bytes,
+    int WidthKind = 0, float Width = 0, bool Autofocus = false);
 
 /// <summary>One frame's edit and native field affordances.</summary>
 /// <param name="Value">Proposed value after native input.</param>

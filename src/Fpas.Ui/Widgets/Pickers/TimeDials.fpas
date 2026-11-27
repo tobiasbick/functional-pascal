@@ -38,7 +38,7 @@ end function;
 // - `Id`: Stable dial identity.
 // - `Value`: Model-owned time at minute precision.
 // - `OnChange`: Maps a proposed time to a message.
-// - `Size`: Face diameter in logical points. Zero selects CUI's default.
+// - `Size`: Finite face diameter. Nonpositive uses 248 logical units. Positive sizes use at least 160.
 // - `Enabled`: Whether the dial accepts input.
 // ## Returns
 // The graphical time dial.

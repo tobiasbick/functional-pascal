@@ -3,25 +3,28 @@
 unit Fpas.Ui.Widgets.Files.Dropzones;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 uses System as Sys;
 
 // Display and input settings for a native file dropzone.
 public type Options = record
-  // Literal title, or empty for the native default.
-  public Title: string := '';
-  // Literal supporting text, or empty for the native default.
-  public Description: string := '';
+  // Literal title. Null uses the native default and empty hides the title.
+  public Title: string? := null;
+  // Literal supporting text. Null uses the native default and empty hides it.
+  public Description: string? := null;
   // Semicolon-separated extensions without dots. Empty accepts any type.
   public Accept: string := '';
-  // Optional CUI icon glyph.
-  public Icon: string := '';
+  // CUI icon glyph. Null uses the native default and empty hides the glyph.
+  public Icon: string? := null;
   // Draw a compact row instead of the tall target.
   public Compact: bool := false;
   // Tall target height in logical points. Zero selects the native default.
   public Height: float := 0.0F;
   // Whether the dropzone accepts input.
   public Enabled: bool := true;
+  // Native width. Content and Fill both use the available width.
+  public Width: L.Extent := L.Extent.Fill;
 end record;
 
 // Builds CUI's native target for files dropped by the operating system.

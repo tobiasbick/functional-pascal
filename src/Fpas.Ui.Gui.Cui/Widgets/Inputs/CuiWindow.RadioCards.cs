@@ -28,17 +28,17 @@ public sealed partial class CuiWindow
         if (trackingIds is not null && trackingIds.Length != count + 1)
             throw new ArgumentException("Supply the grid and card tracking IDs.", nameof(trackingIds));
         var titles = new string[count];
-        var descriptions = new string[count];
-        var icons = new string[count];
-        var badges = new string[count];
+        var descriptions = new string?[count];
+        var icons = new string?[count];
+        var badges = new string?[count];
         for (int index = 0; index < count; index++)
         {
             CuiRadioCard card = cards[index];
             Utf8.Validate(card.Title, nameof(cards));
             if (string.IsNullOrWhiteSpace(card.Title)) throw new ArgumentException("Each card needs a title.", nameof(cards));
-            Utf8.Validate(card.Description, nameof(cards));
-            Utf8.Validate(card.Icon, nameof(cards));
-            Utf8.Validate(card.Badge, nameof(cards));
+            if (card.Description is { } description) Utf8.Validate(description, nameof(cards));
+            if (card.Icon is { } icon) Utf8.Validate(icon, nameof(cards));
+            if (card.Badge is { } badge) Utf8.Validate(badge, nameof(cards));
             titles[index] = card.Title;
             descriptions[index] = card.Description;
             icons[index] = card.Icon;

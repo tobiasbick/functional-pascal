@@ -19,13 +19,14 @@ public sealed partial class CuiWindow
         string stable = Stable(id);
         Utf8.Validate(value, nameof(value));
         Utf8.Validate(options.Label, nameof(options.Label));
-        Utf8.Validate(options.Placeholder, nameof(options.Placeholder));
+        if (options.Placeholder is not null) Utf8.Validate(options.Placeholder, nameof(options.Placeholder));
         Utf8.Validate(options.Icon, nameof(options.Icon));
         Utf8.Validate(options.Hint, nameof(options.Hint));
         Utf8.Validate(options.Error, nameof(options.Error));
         Utf8.Validate(options.Prefix, nameof(options.Prefix));
         Utf8.Validate(options.Suffix, nameof(options.Suffix));
         if (options.Size is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(options.Size));
+        CheckExtent(options.WidthKind, options.Width, nameof(options.Width));
         if (!float.IsFinite(height)) throw new ArgumentOutOfRangeException(nameof(height));
         if (options.MaxUtf8Bytes <= 0 || options.MaxUtf8Bytes >= Array.MaxLength
             || (password && options.MaxUtf8Bytes > 341))
@@ -72,19 +73,24 @@ public sealed partial class CuiWindow
         CuiEditorOptions options, float height, int password, int clearable, int enabled, int focus,
         int* nodes, out int revealed)
     {
-        string? label = Optional(options.Label), placeholder = Optional(options.Placeholder);
+        string? label = Optional(options.Label);
+        string? placeholder = kind == EditorKind.SearchField ? options.Placeholder : Optional(options.Placeholder ?? "");
         string? icon = Optional(options.Icon), hint = Optional(options.Hint), error = Optional(options.Error);
         string? prefix = Optional(options.Prefix), suffix = Optional(options.Suffix);
         int readOnly = options.ReadOnly ? 1 : 0;
+        int autofocus = options.Autofocus ? 1 : 0;
         revealed = 0;
         return kind switch
         {
             EditorKind.SearchField => NativeMethods.SearchField(context, id, value, capacity, label, placeholder,
-                icon, hint, error, prefix, suffix, options.Size, readOnly, enabled, focus, nodes),
+                icon, hint, error, prefix, suffix, options.Size, password, readOnly, enabled, focus,
+                options.WidthKind, options.Width, autofocus, nodes, out revealed),
             EditorKind.TextArea => NativeMethods.TextArea(context, id, value, capacity, label, placeholder,
-                icon, hint, error, prefix, suffix, options.Size, height, clearable, readOnly, enabled, focus, nodes),
+                icon, hint, error, prefix, suffix, options.Size, height, clearable, readOnly, enabled, focus,
+                options.WidthKind, options.Width, autofocus, nodes),
             _ => NativeMethods.TextField(context, id, value, capacity, label, placeholder,
-                icon, hint, error, prefix, suffix, options.Size, password, clearable, readOnly, enabled, focus, nodes, out revealed)
+                icon, hint, error, prefix, suffix, options.Size, password, clearable, readOnly, enabled, focus,
+                options.WidthKind, options.Width, autofocus, nodes, out revealed)
         };
     }
 }

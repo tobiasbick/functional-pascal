@@ -64,9 +64,13 @@ the active pane.
 
 ## Interaction
 
-The click message carries the pointer position and canvas size in local
-logical points. In the gallery, each swatch maps its click to a selection
-index. The update stores that index and the next view draws its ring.
+The click message carries local coordinates and the preceding canvas size in
+logical units. Use the control bounds from the frame snapshot for window
+coordinates. The paint callback receives the final size from the current layout.
+Capture callback data in the view's paint closure.
+
+In the gallery, each swatch maps its click to an accent. The update stores the
+accent and the next view draws its ring.
 
 Use [custom canvas painting](../canvas-and-bars/painting.md) for text,
 images and other drawing primitives, or to observe pointer and wheel input.

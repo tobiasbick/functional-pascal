@@ -18,15 +18,16 @@ public sealed partial class CuiWindow
         CheckFrame();
         CheckFeedbackNumber(speed, nameof(speed));
         CheckFeedbackNumber(height, nameof(height));
+        ArgumentNullException.ThrowIfNull(items);
         using var memory = new ChartMemory();
         var data = new NativeTickerItem[items.Length];
         for (int i = 0; i < data.Length; i++)
         {
             var item = items[i];
             Utf8.Validate(item.Label, nameof(items));
-            Utf8.Validate(item.Value, nameof(items));
+            if (item.Value is not null) Utf8.Validate(item.Value, nameof(items));
             if (!float.IsFinite(item.Delta)) throw new ArgumentOutOfRangeException(nameof(items));
-            data[i] = new() { Label = memory.Text(item.Label), Value = memory.Text(Optional(item.Value)),
+            data[i] = new() { Label = memory.Text(item.Label), Value = memory.Text(item.Value),
                 Delta = item.Delta, LowerIsBetter = item.LowerIsBetter ? 1 : 0 };
         }
         fixed (NativeTickerItem* native = data)

@@ -29,14 +29,16 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Size` | 0 uses the native default diameter of 20 logical points. Supply a finite nonnegative size. |
-| `Animation` | Arc. The gallery also shows Comet, DotMatrix, Orbit and other styles. |
-| `Color / Track` | Automatic / Automatic. |
-| `Inverse` | false. Enable it for the inverse palette used on dark surfaces. |
+| `Size` | A finite nonnegative height. Zero uses the native 20-unit default. |
+| `Animation` | `Arc`. The other styles draw dots. |
+| `Color` / `ThemeColor` | Choose an RGBA ink color or an active theme token. The arc defaults to secondary text color. Dotted styles default to foreground. |
+| `Track` / `ThemeTrack` | Choose an RGBA track color or an active theme token for dotted styles. The default uses the ink color at 12% opacity. |
 
 ## Interaction
 
-The spinner draws a native activity animation and has no input. Choose when to include or remove it in the view from the application model.
+CUI calculates width from the style's aspect ratio. CUI draws a still frame
+when the window uses reduced motion. A visible dotted spinner requests a new
+frame when its dots change. Include the spinner in the view while work runs.
 
 ## See also
 

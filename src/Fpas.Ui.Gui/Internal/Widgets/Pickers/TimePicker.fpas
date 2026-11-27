@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Pickers.TimePickers as P;
 
 uses System as Sys;
@@ -67,13 +68,14 @@ begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
   const Role: string := 'time-picker';
   const Token: string := C.Token(Role, Id);
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Choice: int): string => C.Token('time-choice', ChoiceId(Id, Choice))
   end if;
   const Result: CuiPickers.CuiTimePickerResult := Frame.Window.TimePicker(
-    Token, Value, Settings.Label, Settings.Width, Settings.TwelveHour, Settings.MinuteStep,
+    Token, Value, Settings.Label, Width.Kind, Width.Value, Settings.TwelveHour, Settings.MinuteStep,
     Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled), Track
   );
   if Result.Value.Ticks <> Value.Ticks then
@@ -84,13 +86,14 @@ begin
     return;
   end if;
 
-  if Settings.Label <> '' then
-    Frame.Labels.Add(Settings.Label);
+  const Label: string := Settings.Label ?? '';
+  if Label <> '' then
+    Frame.Labels.Add(Label);
   end if;
-  const Text: string := if Settings.Label = '' then
+  const Text: string := if Label = '' then
     'Time'
   else
-    Settings.Label
+    Label
   end if;
   const Format: string := if Settings.TwelveHour then
     'h:mm tt'

@@ -3,6 +3,8 @@
 unit Fpas.Ui.Internal.Validation.Inputs.SelectRules;
 
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.MultiSelects as M;
 uses Fpas.Ui.Widgets.Inputs.Selects as S;
 
@@ -29,7 +31,8 @@ end procedure;
 public procedure Check(Items: array of S.Item; Selected: int; Settings: S.Options; At: string);
 begin
   R.CheckText(Settings.Label, At + '/label');
-  R.CheckText(Settings.Placeholder, At + '/placeholder');
+  R.CheckText(Settings.Placeholder ?? '', At + '/placeholder');
+
   if Items.Length = 0 or Selected < -1 or Selected >= Items.Length then
     R.Reject(At, 'A select needs choices and a valid index or minus one.');
   end if;
@@ -50,8 +53,9 @@ public procedure MultiSelect(
   At: string
 );
 begin
-  R.CheckText(Settings.Label, At + '/label');
-  R.CheckText(Settings.Placeholder, At + '/placeholder');
+  R.CheckText(Settings.Label ?? '', At + '/label');
+  R.CheckText(Settings.Placeholder ?? '', At + '/placeholder');
+  LR.CheckExtent(Settings.Width ?? L.Extent.Content, R.Profile.Graphical, At + '/width');
   if Items.Length = 0 or Selected.Length <> Items.Length or Settings.MaxChips < 0 then
     R.Reject(At, 'A multi-select needs choices, matching flags and a nonnegative chip limit.');
   end if;

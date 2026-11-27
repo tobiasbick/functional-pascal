@@ -17,7 +17,7 @@ public sealed partial class CuiWindow
     /// <param name="paddingX">Horizontal inset override.</param>
     /// <param name="paddingY">Vertical inset override.</param>
     /// <param name="gap">Child spacing, or zero for CUI's default.</param>
-    /// <param name="row">Whether children run horizontally.</param>
+    /// <param name="direction">Native column, row, stack or one-column grid.</param>
     /// <param name="align">Native cross-axis alignment.</param>
     /// <param name="wrap">Whether a row wraps.</param>
     /// <param name="muted">Whether to use the borderless muted surface.</param>
@@ -28,7 +28,7 @@ public sealed partial class CuiWindow
     /// <returns>Whether the native card was activated.</returns>
     public bool BeginCard(string id, int widthKind, float width, int heightKind, float height,
         float minimum, float maximum, float padding, float paddingX, float paddingY, float gap,
-        bool row, int align, bool wrap, bool muted, bool selected, bool hoverable, bool enabled, bool focus)
+        int direction, int align, bool wrap, bool muted, bool selected, bool hoverable, bool enabled, bool focus)
     {
         CheckLayoutOptions(padding, gap);
         CheckExtent(widthKind, width, nameof(width));
@@ -39,9 +39,10 @@ public sealed partial class CuiWindow
         if (!float.IsFinite(paddingX) || paddingX < 0) throw new ArgumentOutOfRangeException(nameof(paddingX));
         if (!float.IsFinite(paddingY) || paddingY < 0) throw new ArgumentOutOfRangeException(nameof(paddingY));
         if (align is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(align));
-        if (wrap && !row) throw new ArgumentException("Wrapping requires a horizontal card.", nameof(wrap));
+        if (direction is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(direction));
+        if (wrap && direction != 1) throw new ArgumentException("Wrapping requires a row card.", nameof(wrap));
         int clicked = NativeMethods.CardBegin(context, Stable(id), widthKind, width, heightKind, height,
-            minimum, maximum, padding, paddingX, paddingY, gap, row ? 1 : 0, align, wrap ? 1 : 0,
+            minimum, maximum, padding, paddingX, paddingY, gap, direction, align, wrap ? 1 : 0,
             muted ? 1 : 0, selected ? 1 : 0, hoverable ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0, out int node);
         layouts.Add(new(Layout.Card, Node: node));
         return clicked != 0;

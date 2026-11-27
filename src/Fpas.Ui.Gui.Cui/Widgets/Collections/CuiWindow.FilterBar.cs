@@ -13,7 +13,7 @@ public sealed partial class CuiWindow
     /// <param name="search">Current text or null to omit the field.</param>
     /// <param name="capacity">UTF-8 search capacity, including the terminator.</param>
     /// <param name="enabled">Whether input is accepted.</param>
-    /// <param name="focus">Whether to focus the search or add button.</param>
+    /// <param name="focus">Whether to focus the search, add button or first active chip.</param>
     /// <param name="partId">Optional inspection key mapper. Parts are search, add, clear, then chips.</param>
     /// <returns>The native change, search and available parts.</returns>
     public unsafe CuiFilterResult FilterBar(string id, CuiFilterField[] fields, uint[] selected, string? search,
@@ -21,17 +21,20 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         CheckPopupDepth();
+        ArgumentNullException.ThrowIfNull(fields);
+        ArgumentNullException.ThrowIfNull(selected);
         if (fields.Length > 32 || fields.Length != selected.Length)
             throw new ArgumentException("Expected up to 32 fields and one mask per field.", nameof(fields));
         var names = new string[fields.Length];
-        var icons = new string[fields.Length];
+        var icons = new string?[fields.Length];
         var counts = new int[fields.Length];
         var options = new List<string>();
         for (int k = 0; k < fields.Length; k++)
         {
             var field = fields[k];
             Utf8.Validate(field.Name, nameof(fields));
-            Utf8.Validate(field.Icon, nameof(fields));
+            if (field.Icon is not null) Utf8.Validate(field.Icon, nameof(fields));
+            ArgumentNullException.ThrowIfNull(field.Values);
             int count = field.Values.Length;
             if (count > 32 || count < 32 && selected[k] >> count != 0)
                 throw new ArgumentException("An option mask must name available values.", nameof(selected));

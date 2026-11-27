@@ -38,15 +38,21 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Item.Active` | false |
-| `Enabled` | true |
-| `Item fields` | Label, CUI glyph and nonnegative count |
+| `Id` | Stable group ID. |
+| `Items` | Reactions in display order. An empty group has no pills. |
+| `Item.Label` | Single-line name for inspection. |
+| `Item.Icon` | CUI glyph. Pass null for a count-only pill. |
+| `Item.Count` | Nonnegative count. An inactive item needs room for one increment. |
+| `Item.Active` | false. Set to true if the user has reacted. |
+| `Enabled` | true. A disabled group keeps its appearance without accepting activation. |
 
 ## Interaction
 
-Click, Enter or Space toggles a reaction. The mapper gets the zero-based
-index and the proposed item. Save that item in the model to apply its count
-and active flag. Use ItemId to request focus for a particular reaction.
+Click a reaction or press Enter or Space when it has focus. Activation adds
+one to the count and deactivation subtracts one. The count stays at or above
+zero. The mapper gets the zero-based index and proposed item. Store that item
+in the model to apply its count and active flag. CUI animates count changes.
+Use `ItemId` to request focus for a particular reaction.
 
 ## See also
 

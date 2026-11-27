@@ -6,6 +6,26 @@ namespace Fpas.Ui.Gui.Cui.Tests.Actions;
 /// <summary>Checks portable button options crossing the native CUI boundary.</summary>
 public sealed class CuiButtonTests
 {
+    /// <summary>Checks the size of a complete native tooltip before passing it to CUI.</summary>
+    [GuiFact]
+    public void TooltipsMustFitTheNativeUtf8Buffer()
+    {
+        using var window = new CuiWindow("Button tooltips", 480, 320, CuiRenderer.Software);
+        Assert.True(window.NextFrame());
+        string caption = new('\u00e9', 124);
+        Assert.Throws<ArgumentException>(() => DrawButton("BB"));
+        Assert.Throws<ArgumentException>(() => DrawIcon("BB"));
+        DrawButton("B");
+        DrawIcon("B");
+        window.Present();
+
+        void DrawButton(string shortcut) => window.Button("button", "Save", 0, 0, true, false,
+            false, false, "", "", caption, shortcut, false, -1, 0);
+
+        void DrawIcon(string shortcut) => window.IconButton("icon", "\uE05D", caption, shortcut,
+            0, 0, true, false, false, false);
+    }
+
     /// <summary>Joins adjacent buttons and restores standalone button styling after the group.</summary>
     [GuiFact]
     public void ButtonGroupRestoresItsNodeAndNativeScope()

@@ -227,7 +227,7 @@ See the illustrated [Actions](ui/gui/actions/README.md) and
   account trigger and popup with shared menu commands and focus handling.
   The original example uses initials. Optional avatar images reuse the native
   image cache and texture lifetime, including replacement and removal.
-- [x] <a id="cui_swipe_item_begin"></a>[Swipe actions](ui/gui/actions/swipe-actions.md) (`cui_swipe_item_begin`): [API][fpas-swipe-actions]. Actions
+- [x] <a id="cui_swipe_item_begin"></a>[Swipe actions](ui/gui/actions/swipe-actions.md) (`cui_swipe_item_begin`, `cui_swipe_item_end`): [API][fpas-swipe-actions]. Actions
   shows the three original task rows and the resulting toasts. The tests
   exercise mouse dragging and the Windows horizontal wheel path used by
   touchpads inside a vertical scroll view.
@@ -553,7 +553,7 @@ for gallery screenshots, FPAS examples and widget options.
   pinned reference in both renderers. CUI leaves keyboard input available
   while the palette exits.
   The graphical profile is required.
-- [x] <a id="cui_accordion"></a>[Accordion](ui/gui/data-display/accordion.md) (`cui_accordion`): [API][fpas-accordion]. Data display shows the original
+- [x] <a id="cui_accordion"></a>[Accordion](ui/gui/data-display/accordion.md) (`cui_accordion_begin`, `cui_accordion_end`): [API][fpas-accordion]. Data display shows the original
   three questions. Native headers propose model-owned expansion; pointer,
   Enter/Space, disabled input, closing bodies and nested dialogs are covered.
 - [x] <a id="cui_hover_card"></a>[Hover card](ui/gui/disclosure/hover-card.md) (`cui_hover_card`). [API][fpas-hover-card]. Disclosure verifies
@@ -598,7 +598,7 @@ See [Feedback](ui/gui/feedback/README.md) for gallery screenshots, FPAS examples
 and widget options.
 
 - [x] <a id="cui_toast"></a>[Toast, including timed undo toast](ui/gui/overlays/toast.md) (`cui_toast`, `cui_toast_action_clicked`):
-  [API][fpas-toast]. Overlays shows the four native examples and a timed Undo.
+  [API][fpas-toast]. Overlays shows the four native examples.
   Disclosure shows the original Archive 3 conversations trigger and draining
   Undo timer. The gallery exercises the action and captures both states.
   Navigation uses toasts for breadcrumb activation and Finish. The gallery
@@ -680,14 +680,14 @@ table, tree, list items, reorderable list, accordion and virtual list.
 - [x] <a id="cui_list_item"></a>[List item](ui/gui/data-display/list-item.md) (`cui_list_item`): [API][fpas-data-display]. Data display
   shows the original Design review, Release 1.0, and Planning rows. The
   Notifications sheet shows its Recent rows.
-- [x] <a id="cui_tree_begin"></a>[Tree](ui/gui/data-display/tree.md) (`cui_tree_begin`, `cui_tree_clicked`): [API][fpas-data-display].
+- [x] <a id="cui_tree_begin"></a>[Tree](ui/gui/data-display/tree.md) (`cui_tree_begin`, `cui_tree_clicked`, `cui_tree_end`): [API][fpas-data-display].
   The [terminal tree](ui/tui/data-display/tree.md) shares the source file hierarchy and supports keyboard expansion.
   Data display uses the original source tree. Windows Software and OpenGL
   checks cover expansion, collapse and selection.
 - [x] <a id="cui_virtual_list"></a>[Virtual list](ui/gui/data-display/virtual-list.md) (`cui_virtual_list`): [API][fpas-data-display]. The
   original 10,000 invoices are realized on demand. Windows checks cover wheel
   scrolling and the immediate range after shrinking.
-- [x] <a id="cui_reorder_begin"></a>[Reorderable list and items](ui/gui/data-display/reorderable-list.md) (`cui_reorder_begin`, `cui_reorder_item`):
+- [x] <a id="cui_reorder_begin"></a>[Reorderable list and items](ui/gui/data-display/reorderable-list.md) (`cui_reorder_begin`, `cui_reorder_item`, `cui_reorder_end`):
   [API][fpas-data-display]. The original Tasks example saves the order
   proposed by native drag input and shows its toast.
 - [x] <a id="cui_table"></a>[Table, rows, and cells](ui/gui/data-display/table.md) (`cui_table`, `cui_table_row`, `cui_table_cell`,
@@ -759,11 +759,14 @@ See [Code](ui/gui/code/README.md) and [Editing tools](ui/gui/editing-tools/READM
 for gallery screenshots and FPAS examples.
 
 - [x] <a id="cui_code_block"></a>[Code block](ui/gui/code/code-block.md) (`cui_code_block`): the Code page reproduces the C, Python
-  and shell examples and adds a native SQL sample. The focused native test
-  verifies clipboard contents and focus after the copy button changes glyph.
+  and shell examples and adds a native SQL sample. The native test covers
+  indentation, clipboard bytes, copy focus and scroll bounds.
 - [x] <a id="cui_json_view"></a>[JSON viewer](ui/gui/code/json-viewer.md) (`cui_json_view`): the Code page reproduces the expandable
-  document and native parse error. Windows checks cover folding and invalid
-  numbers and string escapes.
+  document and native parse error. Native checks cover folding, scroll
+  bounds, invalid numbers and string escapes.
+
+  See the [Code gallery comparison](future/cui-compare/README.md#code-evidence)
+  for layout and interaction checks for both widgets.
 - [x] <a id="cui_markdown"></a>[Markdown view](ui/gui/code/markdown.md) (`cui_markdown`): original release notes, task checkboxes,
   links and streaming replay. The native test verifies keyboard activation and
   UTF-8 task offsets.
@@ -861,7 +864,7 @@ examples and widget options.
   (`cui_donut_chart`): [API](ui/widgets.md#charts).
   Charts reproduces their original data, labels, formatting and theme palette.
   See also [Bar chart](ui/gui/charts/bar-chart.md) and [Donut chart](ui/gui/charts/donut-chart.md).
-- [x] <a id="cui_sparkline"></a>[Sparkline](ui/gui/charts/sparkline.md) (`cui_sparkline`): a standalone example on Charts shows
+- [x] <a id="cui_sparkline"></a>[Sparkline](ui/gui/charts/sparkline.md) (`cui_sparkline`): the handbook shows
   the native compact line and endpoint. The [terminal sparkline](ui/tui/charts/sparkline.md)
   uses the same seven values in a fractionally filled cell plot.
 - [x] <a id="cui_gauge"></a>[Gauge](ui/gui/charts/gauge.md) (`cui_gauge`): original CPU and Memory examples in Charts.
@@ -949,13 +952,12 @@ See [Social and media](ui/gui/social-and-media/README.md) and
 
 - [x] <a id="cui_chat_message"></a>[Chat message](ui/gui/social-and-media/chat-message.md) (`cui_chat_message`): the original grouped conversation
   shows outgoing and incoming bubbles, sender information and read receipts.
-  The API accepts avatar paths and renders native Markdown in the message.
-  The standalone [Markdown widget](ui/gui/code/markdown.md) reports link and task events.
+  The API accepts avatar paths and can report native Markdown events.
 - [x] <a id="cui_chat_divider"></a>[Chat divider](ui/gui/social-and-media/chat-divider.md) (`cui_chat_divider`): the original Today divider.
 - [x] <a id="cui_typing_indicator"></a>[Typing indicator](ui/gui/social-and-media/typing-indicator.md) (`cui_typing_indicator`): Jonas and the native dots.
   The dots stay still with reduced motion.
 - [x] <a id="cui_comment"></a>[Comment](ui/gui/social-and-media/comment.md) (`cui_comment`): the original three threaded comments.
-  Windows checks cover pointer and keyboard likes and Reply events.
+  Native tests cover like counts, like state and Reply.
 - [x] <a id="cui_presence"></a>[Presence](ui/gui/social-and-media/presence.md) (`cui_presence`): the original overlapping avatars with away
   state, overflow and native hover expansion.
 - [x] <a id="cui_counter"></a>[Counter](ui/gui/social-and-media/counter.md) (`cui_counter`): Add a sale updates the original rolling amount
@@ -972,14 +974,11 @@ See [Social and media](ui/gui/social-and-media/README.md) and
 - [x] <a id="cui_image_compare"></a>[Image compare](ui/gui/social-and-media/image-compare.md) (`cui_image_compare`): the original grayscale and color
   scenes. The Windows test drags the divider and moves it with the keyboard.
 - [x] <a id="cui_card_stack_begin"></a>[Card stack and items](ui/gui/social-and-media/card-stack.md) (`cui_card_stack_begin`, `cui_card_stack_item_begin`):
-  the original destination deck with Saved and Skipped toasts. The Windows
-  test dismisses cards by mouse and keyboard and checks both directions.
+  the original destination deck with Saved and Skipped toasts. Tests check
+  both dismissal directions and visible keyboard focus.
 
-The five media examples match the pinned Windows gallery pixel for pixel with
-Software and OpenGL at scale one and a 1100×2130 client area. The Social and
-media content differs only at the typing dots because FPAS honors reduced
-motion. Feedback retains small timing and antialiasing differences. The
-standalone sparkline matches direct CUI in the fixed-frame Software comparison.
+See the [Social and media gallery comparison](future/cui-compare/README.md#social-and-media-evidence)
+for layout and input checks against the original page.
 
 - [x] <a id="cui_now_playing"></a>[Now playing](ui/gui/motion/now-playing.md) (`cui_now_playing`): [API][fpas-motion]. Motion shows the
   original Low Tide track with playback, transport and seeking. The Windows

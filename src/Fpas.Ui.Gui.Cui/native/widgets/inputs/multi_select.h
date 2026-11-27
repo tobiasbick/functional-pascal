@@ -13,6 +13,8 @@
  * @param placeholder Optional empty selection caption.
  * @param max_chips Number of visible selected chips before the overflow badge.
  * @param searchable Whether to show the native search field.
+ * @param width_kind Content zero, fill one, fixed two or percentage three.
+ * @param width Logical width or percentage.
  * @param enabled Whether the picker accepts input.
  * @param focus Request focus on the field.
  * @param nodes Output field and visible option nodes.
@@ -20,5 +22,5 @@
  * @return Whether CUI proposed a new selection. */
 CUI_API int fpas_cui_multi_select(cui_ctx *ui, const char *id, const char *const *labels,
     const char *const *icons, int count, int *selected, const char *label, const char *placeholder,
-    int max_chips, int searchable, int enabled, int focus, int *nodes, int *open);
+    int max_chips, int searchable, int width_kind, float width, int enabled, int focus, int *nodes, int *open);
 #endif

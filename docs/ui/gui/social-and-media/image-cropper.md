@@ -35,13 +35,22 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Value.X / Y / Width / Height` | All zero. A zero size requests the native initial crop. |
-| `Aspect / Round / MinimumSize` | 0 / false / 0. Zero Aspect permits free sizing. Round draws a circular mask and keeps a square selection. |
-| `Width / Height / Enabled` | Content / Content / true. |
+| `Value.X / Y / Width / Height` | All zero. A zero side requests a centered initial crop. |
+| `Aspect` | Zero. Allow free resizing. A positive value sets the width divided by the height. |
+| `Round` | False. Draw a circular mask and keep a square crop. |
+| `MinimumSize` | Zero. Use a minimum side of 16 image pixels. The image bounds limit the minimum. |
+| `Width / Height` | Content / Content. CUI fills the available width and uses a height of 360 logical units. |
+| `Enabled` | True. Accept pointer and keyboard input. |
 
 ## Interaction
 
-Drag the selection or pull its handles. Store the new rectangle. Use its
+Drag inside the selection to move it. Drag a corner or edge to resize it.
+Drag outside the selection to start a new crop. With the cropper focused,
+the arrows move the selection by one image pixel. Hold Shift to move by
+ten pixels.
+
+The enabled cropper proposes the computed initial rectangle when you pass
+a zero side. Store the proposed rectangle in the model. Use its image
 coordinates to crop or export the source in your application.
 
 ## See also
@@ -62,3 +71,4 @@ coordinates to crop or export the source in your application.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/media/`
   - [image_cropper.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image_cropper.c)
   - [image_cropper.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image_cropper.h)
+- [Native media tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/media.c)

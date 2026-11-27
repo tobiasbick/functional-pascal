@@ -41,7 +41,7 @@ begin
     Native.Add(
       new Cui.CuiShortcut(
         cast Entry.Combination.Key as int, cast Entry.Combination.Modifiers as int,
-        Entry.Enabled, Entry.Repeat, Entry.AllowWhileEditing
+        Entry.Enabled, Entry.Repeat, Entry.AllowWhileEditing, Entry.AllowInOverlays
       )
     );
   end for;

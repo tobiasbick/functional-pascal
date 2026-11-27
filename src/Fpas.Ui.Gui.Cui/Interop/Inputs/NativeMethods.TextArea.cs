@@ -10,5 +10,6 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial int TextArea(nint context, string id, byte* value, nuint capacity,
         string? label, string? placeholder, string? icon, string? hint, string? error, string? prefix, string? suffix,
-        int size, float height, int clearable, int readOnly, int enabled, int focus, int* nodes);
+        int size, float height, int clearable, int readOnly, int enabled, int focus,
+        int widthKind, float width, int autofocus, int* nodes);
 }

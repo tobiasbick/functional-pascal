@@ -13,7 +13,7 @@ uses Fpas.Ui.Elements as E;
 // - `Label`: Literal caption for the interactive row.
 // - `Selected`: Current model-owned value.
 // - `OnSelect`: Maps selection of an unselected item to an application message.
-// - `Description`: Optional secondary text below the caption.
+// - `Description`: Secondary text below the caption. Null omits the description.
 // - `Enabled`: Whether the row accepts input.
 // ## Returns
 // The graphical control that proposes changes to the model.
@@ -22,7 +22,7 @@ public function RadioButton of TMsg(
   Label: string;
   Selected: bool;
   OnSelect: function(): TMsg;
-  Description: string := '';
+  Description: string? := null;
   Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';

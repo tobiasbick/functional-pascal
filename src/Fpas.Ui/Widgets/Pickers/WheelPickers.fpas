@@ -3,12 +3,13 @@
 unit Fpas.Ui.Widgets.Pickers.WheelPickers;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Presentation and input settings for a native selection wheel.
 public type Options = record
-  // Logical width. Zero selects CUI's default.
-  public Width: float := 0.0F;
-  // Number of visible rows. CUI rounds an even count up to an odd one.
+  // Native width. Content selects CUI's default of 84 logical units.
+  public Width: L.Extent := L.Extent.Content;
+  // Visible rows. CUI uses five for nonpositive values and rounds even counts up.
   public Rows: int := 5;
   // Whether the wheel wraps at the ends.
   public Loop: bool := false;

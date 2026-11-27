@@ -33,13 +33,14 @@ public sealed partial class CuiWindow
         Utf8.Validate(mnemonic, nameof(mnemonic));
         if (mnemonic.Length > 1 || mnemonic.Length == 1 && !char.IsAsciiLetterOrDigit(mnemonic[0]))
             throw new ArgumentException("Expected an ASCII letter or digit.", nameof(mnemonic));
-        var (keys, labels, icons, shortcuts, flags) = PackMenuEntries(entries, trackingIds);
+        var (keys, labels, icons, shortcuts, rowOptions) = PackMenuEntries(entries, trackingIds);
         int[] nodes = new int[entries.Length + 1];
         int choice, open, highlighted;
-        fixed (int* bits = flags, parts = nodes)
+        fixed (NativeMenuRow* rows = rowOptions)
+        fixed (int* parts = nodes)
             choice = NativeMethods.MenuBarMenu(context, ChromeTitle(label, id),
                 mnemonic.Length == 0 ? 0 : mnemonic[0], width, enabled ? 1 : 0,
-                keys, labels, icons, shortcuts, bits, entries.Length, parts, out open, out highlighted);
+                keys, labels, icons, shortcuts, rows, entries.Length, parts, out open, out highlighted);
         TrackChromeParts(trackingIds, nodes);
         return new(choice, open != 0, highlighted);
     }

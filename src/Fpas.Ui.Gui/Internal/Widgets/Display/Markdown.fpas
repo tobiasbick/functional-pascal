@@ -9,6 +9,33 @@ uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Display.Markdowns as D;
 
+// Dispatches the native Markdown observations as application messages.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current GUI frame.
+// - `Result`: Native link, hover and task observations.
+// - `Changed`: Maps the observations to application messages.
+public procedure Report of TMsg(
+  Frame: C.State of TMsg;
+  Result: CuiDisplay.CuiMarkdownEvent;
+  Changed: function(D.Event): TMsg
+);
+begin
+  const Link: string? := Result.Link;
+  if Link <> null then
+    Frame.Messages.Add(Changed(D.Event.Link(Link)));
+  end if;
+
+  if Result.HoverChanged then
+    Frame.Messages.Add(Changed(D.Event.Hover(Result.Hovered)));
+  end if;
+
+  if Result.Offset >= 0 then
+    Frame.Messages.Add(Changed(D.Event.Task(Result.Offset, Result.Line, Result.Checked)));
+  end if;
+end procedure;
+
 // Renders the native Markdown and dispatches its proposals.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -35,18 +62,7 @@ begin
     Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Compact, 2) or Enc.Bits(Settings.Streaming, 4)
   );
   if Enabled then
-    const Link: string? := Result.Link;
-    if Link <> null then
-      Frame.Messages.Add(Changed(D.Event.Link(Link)));
-    end if;
-
-    if Result.HoverChanged then
-      Frame.Messages.Add(Changed(D.Event.Hover(Result.Hovered)));
-    end if;
-
-    if Result.Offset >= 0 then
-      Frame.Messages.Add(Changed(D.Event.Task(Result.Offset, Result.Line, Result.Checked)));
-    end if;
+    Report of TMsg(Frame, Result, Changed);
   end if;
 
   P.Root of TMsg(Frame, Id, Role, '', Enabled, '');

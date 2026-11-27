@@ -40,8 +40,18 @@ procedure Validate();
 begin
   const Trigger: E.Element of int := B.Button of int('trigger', 'Open', 1);
   const Text: E.Element of int := E.Text of int('Panel');
+  discard V.Prepare of int(
+    P.Popover of int(
+      'panel', Trigger, [Text, Text], false, 0,
+      new P.Options(Width := 200.5F, Padding := 4.25F, Gap := 1.5F)
+    ), V.Target.Graphical
+  );
   Reject(
-    P.Popover of int('panel', Trigger, Text, false, 0),
+    P.Popover of int('panel', Trigger, [Text], false, 0, new P.Options(Gap := float.NaN)),
+    V.Target.Graphical, 'finite nonnegative dimensions'
+  );
+  Reject(
+    P.Popover of int('panel', Trigger, [Text], false, 0),
     V.Target.Terminal,
     'Graphical profile'
   );
@@ -49,7 +59,11 @@ begin
     Q.ConfirmPopover of int('panel', Trigger, false, new Q.Options('Continue?'), 1, 0),
     V.Target.Portable, 'Graphical profile'
   );
-  Reject(P.Popover of int('panel', Text, Text, false, 0), V.Target.Graphical, 'button trigger');
+  discard V.Prepare of int(
+    Q.ConfirmPopover of int('panel', Trigger, false, new Q.Options(), 1, 0),
+    V.Target.Graphical
+  );
+  Reject(P.Popover of int('panel', Text, [Text], false, 0), V.Target.Graphical, 'button trigger');
 end procedure;
 
 // Verifies native popover placement, input and cancellation in the real gallery.
@@ -149,6 +163,17 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Panel.X = Anchor.X and Panel.Y >= Anchor.Y + Anchor.Height and Panel.Width = 280,
       'The filter panel must fit below the trigger at its requested width.'
     );
+    const Apply: Cui.CuiRectangle := Control('filters-apply').Bounds;
+    Check(
+      Sys.MathF.Abs(Apply.X + Apply.Width - (Panel.X + Panel.Width - 16.0F)) < 1.0F,
+      'The Apply button must align with the right inset.'
+    );
+    const Active: Cui.CuiRectangle := Control('filters-active').Bounds;
+    const Archived: Cui.CuiRectangle := Control('filters-archived').Bounds;
+    Check(
+      Sys.MathF.Abs(Archived.Y - Active.Y - Active.Height - 10.0F) < 1.0F,
+      'The native popover gap must apply between direct controls.'
+    );
     Session.CapturePng(Capture + '.popover.png');
     discard Session.Post(State.Msg.Preview);
     Step();
@@ -171,6 +196,9 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     );
     Select('filters-apply');
     Check(Find('filters') = null, 'Apply must close the panel through the application update.');
+    Select('filters-trigger');
+    Select('filters-trigger');
+    Check(Find('filters') = null, 'The trigger must also close the panel.');
     Select('filters-trigger');
     X := 5.0F;
     Y := 5.0F;

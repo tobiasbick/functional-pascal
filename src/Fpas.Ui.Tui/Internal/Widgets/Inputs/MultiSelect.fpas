@@ -205,15 +205,12 @@ begin
       Field.Settings.MaxChips
     end if
   );
-  const Placeholder: string := if Field.Settings.Placeholder = '' then
-    'Select'
-  else
-    G.SingleLine(Field.Settings.Placeholder)
-  end if;
-  const Name: string := if Field.Settings.Label = '' then
+  const Placeholder: string := G.SingleLine(Field.Settings.Placeholder ?? 'Select');
+  const Label: string := Field.Settings.Label ?? '';
+  const Name: string := if Label = '' then
     'Multi-select'
   else
-    Field.Settings.Label
+    Label
   end if;
   const Button: E.Element of TMsg := (E.Element of TMsg).Action(
     Field.Id, Field, Field.Settings.Enabled,
@@ -230,11 +227,11 @@ begin
       CaptionForWidth := Resolve
     )
   );
-  return if Field.Settings.Label = '' then
+  return if Label = '' then
     Button
   else
     (E.Element of TMsg).Stack(
-      [(E.Element of TMsg).Label(Field.Settings.Label), Button],
+      [(E.Element of TMsg).Label(Label), Button],
       false,
       new E.Flow()
     )

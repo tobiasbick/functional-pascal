@@ -164,14 +164,9 @@ begin
   return case Value of
     when Charts.Color.Automatic: Automatic;
     when Charts.Color.Rgba(const Explicit: G.Color): Explicit;
-    when Charts.Color.Palette(const Index: int): case Index of
-      when 1: Theme.Colors.Series1;
-      when 2: Theme.Colors.Series2;
-      when 3: Theme.Colors.Series3;
-      when 4: Theme.Colors.Series4;
-      when 5: Theme.Colors.Series5;
-      else Theme.Colors.Series6;
-    end case;
+    when Charts.Color.Theme(
+      const Token: Shared.ColorToken
+    ): Shared.PaletteColor(Theme.Colors, Token);
   end case;
 end function;
 

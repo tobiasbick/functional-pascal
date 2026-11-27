@@ -8,6 +8,39 @@ namespace Fpas.Ui.Gui.Cui.Tests.Media;
 /// <summary>Exercises the native capture widgets and real Windows file input.</summary>
 public sealed class CuiCaptureTests
 {
+    /// <summary>Explicit empty text and icon options suppress their native defaults.</summary>
+    [GuiFact]
+    public void DropzoneDistinguishesOmittedAndEmptyOptions()
+    {
+        using var directory = new TemporaryDirectory();
+        using var window = new CuiWindow("FPas Capture dropzone options", 360, 240, CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        uint[] defaults = Capture("default.png");
+
+        Assert.False(defaults.AsSpan().SequenceEqual(Capture("no-title.png", title: "")));
+        Assert.False(defaults.AsSpan().SequenceEqual(Capture("no-description.png", description: "")));
+        Assert.False(defaults.AsSpan().SequenceEqual(Capture("no-icon.png", icon: "")));
+
+        uint[] Capture(string file, string? title = null, string? description = null, string? icon = null)
+        {
+            for (int frame = 0; frame < 2; ++frame)
+            {
+                Assert.True(window.NextFrame());
+                window.MovePointer(-1, -1);
+                window.Dropzone("files", title, description, "", icon, 0, false, true, false, true,
+                    widthKind: 2, width: 176);
+                window.Present();
+            }
+
+            var bounds = window.GetControlRectangle("files");
+            Assert.Equal(176f, bounds.Width);
+            Assert.Equal(168f, bounds.Height);
+            string path = directory.File(file);
+            window.CapturePng(path);
+            return PngAssertions.ReadPixels(path, 360, 240);
+        }
+    }
+
     /// <summary>Shell drops keep accepted files in order and replace the avatar with a decoded image.</summary>
     [WindowsGuiFact]
     public void ShellDropFiltersPathsAndReplacesAvatar()
@@ -89,7 +122,7 @@ public sealed class CuiCaptureTests
             window.MovePointer(px, py);
             window.SetLeftButton(pressed);
             window.BeginColumn(12);
-            var result = window.SignaturePad("signature", "", 180, 0, enabled: true, focusClear: false,
+            var result = window.SignaturePad("signature", null, 1, 0, 180, default, enabled: true, focusClear: false,
                 track: true, readChanges: true, clearId: null, out _);
             window.EndColumn();
             window.Present();
@@ -111,7 +144,7 @@ public sealed class CuiCaptureTests
                 window.SetLeftButton(true);
             }
             window.BeginColumn(12);
-            window.SignaturePad("signature", "", 180, 0, enabled: true, focusClear: false,
+            window.SignaturePad("signature", null, 1, 0, 180, default, enabled: true, focusClear: false,
                 track: false, readChanges: false, clearId: "clear", out bool clearVisible);
             window.EndColumn();
             window.Present();
@@ -119,6 +152,37 @@ public sealed class CuiCaptureTests
         }
 
         Assert.True(window.GetControlRectangle("clear").Width > 0);
+    }
+
+    /// <summary>Resolves native percentage width and distinguishes a blank hint from the default.</summary>
+    [GuiFact]
+    public void SignatureUsesNativeWidthAndOptionalPlaceholder()
+    {
+        const int width = 400, height = 240;
+        using var window = new CuiWindow("Signature options", width, height, CuiRenderer.Software, continuous: true);
+        using var directory = new TemporaryDirectory();
+        window.SetReducedMotion(true);
+        uint[] standard = Draw("standard", null);
+        uint[] blank = Draw("blank", "");
+        Assert.False(standard.SequenceEqual(blank));
+
+        uint[] Draw(string name, string? hint)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            window.BeginColumn(12);
+            window.SignaturePad("signature", hint, 3, 50, -1, default, enabled: true, focusClear: false,
+                track: true, readChanges: false, clearId: null, out bool clearVisible);
+            window.EndColumn();
+            window.Present();
+            Assert.False(clearVisible);
+            var bounds = window.GetControlRectangle("signature");
+            Assert.Equal(188, bounds.Width);
+            Assert.Equal(180, bounds.Height);
+            string path = directory.File(name + ".png");
+            window.CapturePng(path);
+            return PngAssertions.ReadPixels(path, width, height);
+        }
     }
 
     /// <summary>The owner window's common dialog returns a Unicode file selection and handles cancellation.</summary>

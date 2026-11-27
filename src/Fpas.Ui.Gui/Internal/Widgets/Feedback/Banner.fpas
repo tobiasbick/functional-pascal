@@ -85,7 +85,7 @@ begin
       Frame.Controls.Add(
         new App.Control(
           ActionId,
-          Settings.ActionLabel,
+          Settings.ActionLabel ?? '',
           'banner-action',
           new Cui.CuiRectangle(),
           Enabled

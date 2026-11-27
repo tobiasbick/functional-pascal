@@ -10,7 +10,8 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial int TextField(nint context, string id, byte* value, nuint capacity,
         string? label, string? placeholder, string? icon, string? hint, string? error, string? prefix, string? suffix,
-        int size, int password, int clearable, int readOnly, int enabled, int focus, int* nodes, out int revealed);
+        int size, int password, int clearable, int readOnly, int enabled, int focus,
+        int widthKind, float width, int autofocus, int* nodes, out int revealed);
 
     [LibraryImport(Library, EntryPoint = "cui_input_text", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

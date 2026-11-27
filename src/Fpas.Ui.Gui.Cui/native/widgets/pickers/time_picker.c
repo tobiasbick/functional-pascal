@@ -2,12 +2,13 @@
 #include "../../fpas_cui.h"
 
 int fpas_cui_time_picker(cui_ctx *ui, const char *id, int value, const char *label,
-    float width, int twelve_hour, int step, int enabled, int focus, int *nodes) {
+    int width_kind, float width, int twelve_hour, int step, int enabled, int focus, int *nodes) {
     const cui_id key = cui_make_id(ui, id), popup_key = key ^ 0x7177u;
     const cui_popup *popup = cui__popup_get(ui, popup_key, false);
     const bool was_open = popup && popup->open;
     const bool escape = was_open && cui_key_pressed(ui, CUI_KEY_ESCAPE);
     const bool allowed = enabled && !cui_is_disabled(ui);
+    if (!allowed && ui->focus == key) ui->focus = 0;
     if (!allowed && was_open) cui__popup_set(ui, popup_key, false);
     if (allowed && focus) ui->focus_next_request = key;
 
@@ -17,7 +18,7 @@ int fpas_cui_time_picker(cui_ctx *ui, const char *id, int value, const char *lab
     fpas_own(ui, key, hours, minutes, popup_key);
 
     int hour = value / 60, minute = value % 60;
-    const cui_time_opts options = { .label = label, .width = width > 0 ? CUI_PX(width) : CUI_FIT,
+    const cui_time_opts options = { .label = label, .width = fpas_extent(width_kind, width),
         .twelve_hour = twelve_hour != 0, .minute_step = step };
     cui_push_disabled(ui, !enabled);
     cui_time_picker_ex(ui, id, &hour, &minute, &options);

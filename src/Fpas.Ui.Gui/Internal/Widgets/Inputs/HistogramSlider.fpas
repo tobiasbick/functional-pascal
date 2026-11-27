@@ -5,6 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Inputs.HistogramSlider;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Chart;
 uses Fpas.Ui.Widgets.Inputs.HistogramSliders as H;
 uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
 
@@ -41,8 +42,8 @@ begin
   var Lower: float := Value.Lower;
   var Upper: float := Value.Upper;
   if Frame.Window.HistogramSlider(
-    Token, Label, Bins, Lower, Upper, Minimum, Maximum, Settings.Height, Settings.DecimalPlaces,
-    Settings.Prefix, Settings.Suffix, Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
+    Token, Label, Bins, Lower, Upper, Minimum, Maximum, Settings.Height,
+    Chart.Format(Settings.Format), Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     not Frame.PaintingClosed, out Lower, out Upper
   )
   then

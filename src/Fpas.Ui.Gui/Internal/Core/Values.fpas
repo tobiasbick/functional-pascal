@@ -31,6 +31,20 @@ begin
     or (cast Color.Blue as uint shl 16) or (cast Color.Alpha as uint shl 24);
 end function;
 
+// Encodes an optional RGBA color.
+// ## Parameters
+// - `Color`: Straight-alpha color, or null.
+// ## Returns
+// Packed native channels, or null for the widget default.
+public function PackOptional(Color: G.Color?): uint?;
+begin
+  return if Color = null then
+    null
+  else
+    Pack(Color)
+  end if;
+end function;
+
 // Decodes an RGBA color.
 // ## Parameters
 // - `Value`: Packed native channels.

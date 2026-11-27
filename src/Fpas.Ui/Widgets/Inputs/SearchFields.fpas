@@ -3,7 +3,9 @@
 unit Fpas.Ui.Widgets.Inputs.SearchFields;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Inputs.TextFields as F;
 
 uses System as Sys;
 
@@ -11,8 +13,8 @@ uses System as Sys;
 public type Options = record
   // Caption above the field.
   public Label: string := '';
-  // Text displayed while empty. Empty uses the host's Search placeholder.
-  public Placeholder: string := '';
+  // Text displayed while empty. Null uses the host's Search placeholder.
+  public Placeholder: string? := null;
   // Optional leading CUI glyph. Empty uses the search icon.
   public Icon: string := '';
   // Supporting text below the field.
@@ -31,6 +33,12 @@ public type Options = record
   public ControlSize: B.Size := B.Size.Medium;
   // Maximum value size in UTF-8 bytes, excluding the terminator.
   public MaxUtf8Bytes: int := 255;
+  // Explicit native width. Null uses the default width of the active host.
+  public Width: L.Extent? := null;
+  // Request native focus on the first presentation of an enabled GUI field.
+  public Autofocus: bool := false;
+  // Mask the value and show the native reveal button. Limits capacity to 341 bytes.
+  public Password: bool := false;
 end record;
 
 // Builds a search editor with an embedded clear action.
@@ -65,7 +73,17 @@ end function;
 // The snapshot ID of the clear button when visible.
 public function ClearId(Id: string): string;
 begin
-  return Id + '/clear';
+  return F.ClearId(Id);
+end function;
+
+// Derives the identity of the native show or hide password button.
+// ## Parameters
+// - `Id`: Editor identity.
+// ## Returns
+// The snapshot ID of the reveal button when visible.
+public function RevealId(Id: string): string;
+begin
+  return F.RevealId(Id);
 end function;
 
 end unit;

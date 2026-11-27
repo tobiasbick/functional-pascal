@@ -3,18 +3,15 @@
 unit Fpas.Ui.Widgets.Inputs.HistogramSliders;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
 
 // Presentation and input settings for a histogram range slider.
 public type Options = record
   // Logical height of the bars. Zero selects CUI's default.
   public Height: float := 0.0F;
-  // Display precision from zero through six decimal places.
-  public DecimalPlaces: int := 0;
-  // Literal text before each endpoint, such as a currency symbol.
-  public Prefix: string := '';
-  // Literal text after each endpoint.
-  public Suffix: string := '';
+  // Endpoint format. Null shows zero fractional digits.
+  public Format: Charts.ValueFormat? := null;
   // Whether the range accepts input.
   public Enabled: bool := true;
 end record;
@@ -25,7 +22,7 @@ end record;
 // ## Parameters
 // - `Id`: Stable control identity.
 // - `Label`: Literal caption.
-// - `Bins`: Finite nonnegative heights in order across the full range.
+// - `Bins`: Finite nonnegative heights in order across the full range, or an empty array.
 // - `Value`: Ordered model-owned interval.
 // - `Minimum`: Finite inclusive lower bound.
 // - `Maximum`: Finite inclusive upper bound greater than Minimum.

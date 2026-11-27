@@ -15,10 +15,10 @@ uses System as Sys;
 // - `Label`: Required row caption.
 // - `Description`: Optional supporting text.
 // - `At`: Registered row location for diagnostics.
-public procedure CheckRowText(Label: string; Description: string; At: string);
+public procedure CheckRowText(Label: string; Description: string?; At: string);
 begin
   Rules.CheckText(Label, At + '/label');
-  Rules.CheckText(Description, At + '/description');
+  Rules.CheckText(Description ?? '', At + '/description');
   if Sys.String.IsNullOrWhiteSpace(Label) then
     Rules.Reject(At, 'A selection row needs an accessible label.');
   end if;
@@ -36,7 +36,7 @@ end procedure;
 public procedure CheckRow(
   Id: string;
   Label: string;
-  Description: string;
+  Description: string?;
   Profile: Rules.Profile;
   Location: string;
   Identify: function(string, string): string
@@ -115,8 +115,8 @@ begin
       At + '/card',
       Identify
     );
-    Rules.CheckText(Item.Icon, At + '/icon');
-    Rules.CheckText(Item.Badge, At + '/badge');
+    Rules.CheckText(Item.Icon ?? '', At + '/icon');
+    Rules.CheckText(Item.Badge ?? '', At + '/badge');
   end for;
 end procedure;
 

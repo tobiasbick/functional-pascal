@@ -8,7 +8,7 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Overlays;
 /// <param name="Icon">Optional glyph.</param>
 /// <param name="Group">Optional group heading.</param>
 /// <param name="Shortcut">Optional shortcut hint.</param>
-public readonly record struct CuiPaletteCommand(string Title, string Icon, string Group, string Shortcut);
+public readonly record struct CuiPaletteCommand(string Title, string? Icon, string? Group, string? Shortcut);
 
 /// <summary>Palette interaction and the indices of rendered command rows.</summary>
 /// <param name="Open">Proposed visibility.</param>

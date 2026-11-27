@@ -10,10 +10,10 @@ uses Fpas.Ui.Widgets.Charts.DonutCharts as Donuts;
 uses Fpas.Ui.Widgets.Charts.Gauges as Gauges;
 uses Fpas.Ui.Widgets.Charts.LineCharts as Lines;
 uses Fpas.Ui.Widgets.Charts.PatternMeters as Patterns;
-uses Fpas.Ui.Widgets.Charts.Sparklines as Sparklines;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Containers.Grids as Grids;
 uses Fpas.Ui.Widgets.Inputs.Checkboxes as Checks;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Charts.State as State;
@@ -109,12 +109,12 @@ begin
         new C.Series(
           'API',
           [22.0F, 19.0F, 17.0F, 21.0F, 30.0F, 38.0F, 41.0F, 37.0F, 34.0F, 39.0F, 33.0F, 26.0F],
-          C.Color.Palette(4)
+          C.Color.Theme(Themes.ColorToken.Series4)
         ),
         new C.Series(
           'Web',
           [18.0F, 15.0F, 13.0F, 16.0F, 24.0F, 33.0F, 36.0F, 40.0F, 38.0F, 42.0F, 35.0F, 28.0F],
-          C.Color.Palette(1)
+          C.Color.Theme(Themes.ColorToken.Series1)
         )
       ], new C.Options(
         Labels := [
@@ -216,13 +216,15 @@ begin
       Grid, Runs(),
       Card(
         'gauges-card',
-        new Cards.Options(Horizontal := true, Gap := 24.0F, Align := L.Alignment.Center),
+        new Cards.Options(
+          Direction := Cards.Arrangement.Row,
+          Gap := 24.0F,
+          Align := L.Alignment.Center
+        ),
         Gauges.Gauge of State.Msg('cpu', 'CPU', 0.42F, 130.0F),
         Gauges.Gauge of State.Msg('memory', 'Memory', 0.81F, 130.0F)
       )
-    ),
-    G.Heading of State.Msg(Strings.Get('Heading.Sparkline')),
-    Sparklines.Sparkline of State.Msg('chart-sparkline', [3.0F, 5.0F, 4.0F, 8.0F, 6.0F, 9.0F, 8.0F])
+    )
   ];
 end function;
 

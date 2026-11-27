@@ -1,10 +1,10 @@
 # Tree table
 
 Use a tree table when nested rows need columns for values such as file count
-and size. The gallery shows a virtual tree table and an ordinary table using
-indented tree cells. Available in **GUI**.
+and size. The widget realizes the visible rows. The Data grid gallery shows
+it below the source table. Available in **GUI**.
 
-![Virtual tree table in the FPAS gallery](images/tree-table.png)
+![Virtual tree table with file totals](images/tree-table.png)
 
 ## Example
 

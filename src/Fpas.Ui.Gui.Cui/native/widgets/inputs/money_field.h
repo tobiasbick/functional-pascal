@@ -7,10 +7,11 @@
  * @param text Editable NUL-terminated UTF-8 draft, copied for deferred painting.
  * @param capacity Total writable bytes including the terminator.
  * @param label Optional literal caption.
- * @param symbol Literal currency prefix, empty to omit it.
+ * @param symbol Optional literal currency prefix.
  * @param code Optional literal currency-code suffix.
  * @param hint Optional supporting text.
  * @param error Optional managed validation error.
+ * @param placeholder Formatted zero hint for an empty editor.
  * @param width_kind Content zero, fill one, fixed two or percentage three.
  * @param width Logical width or percentage.
  * @param enabled Whether input is accepted.
@@ -18,6 +19,6 @@
  * @param node Receives the native editable field.
  * @return Changed/submitted flags and bit 4 when the editor owns focus. */
 CUI_API int fpas_cui_money_field(cui_ctx *ui, const char *id, char *text, size_t capacity,
-    const char *label, const char *symbol, const char *code, const char *hint, const char *error,
+    const char *label, const char *symbol, const char *code, const char *hint, const char *error, const char *placeholder,
     int width_kind, float width, int enabled, int focus, int *node);
 #endif

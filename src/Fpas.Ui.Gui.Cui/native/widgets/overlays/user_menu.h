@@ -2,6 +2,8 @@
 #ifndef FPAS_USER_MENU_H
 #define FPAS_USER_MENU_H
 
+#include "menu.h"
+
 /** Draws the CUI account trigger and its keyed command menu.
  * @param ui Current UI context.
  * @param id Stable FPAS trigger identity.
@@ -13,7 +15,7 @@
  * @param labels Literal row captions.
  * @param icons Optional row glyphs.
  * @param shortcuts Optional display hints.
- * @param flags The row kind and item options used by fpas_cui_menu.
+ * @param rows The row kind and item options used by fpas_cui_menu.
  * @param count Number of menu rows.
  * @param placement Native popup placement ordinal.
  * @param width Logical popup width, zero for the native default.
@@ -27,6 +29,6 @@
 CUI_API int fpas_cui_user_menu(cui_ctx *ui, const char *id, const char *name,
     const char *detail, const char *status, const char *avatar_path, const char *const *keys,
     const char *const *labels, const char *const *icons, const char *const *shortcuts,
-    const int *flags, int count, int placement, float width, int compact, int enabled,
+    const fpas_cui_menu_row *rows, int count, int placement, float width, int compact, int enabled,
     int focus, int *nodes, int *open, int *highlighted);
 #endif

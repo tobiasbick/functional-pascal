@@ -42,19 +42,18 @@ begin
   const Sort: T.Sort? := Value.Order;
   const Reorder: bool := Sort <> null and (Before = null
     or Before.Column <> Sort.Column or Before.Descending <> Sort.Descending);
+  const NextOrder: array of int := if Reorder and Sort <> null then
+    P.Order(Sort, State.Names, State.Order)
+  else
+    State.Order
+  end if;
   return State with
-    Grid := if Reorder then
-      new D.Value(Order := Sort)
-    elsif Sys.Object.ReferenceEquals(Rows, State.Order) then
+    Grid := if Sys.Object.ReferenceEquals(Rows, NextOrder) then
       Value
     else
-      Rebase(Value, Rows, State.Order)
+      Rebase(Value, Rows, NextOrder)
     end if;
-    Order := if Reorder and Sort <> null then
-      P.Order(Sort, State.Names)
-    else
-      State.Order
-    end if;
+    Order := NextOrder;
     Selected := Selected;
   end with;
 end function;
@@ -104,7 +103,7 @@ begin
       Names[Index] := Name;
       const Sort: T.Sort? := State.Grid.Order;
       if Sort <> null and Sort.Column = 0 then
-        const Rows: array of int := P.Order(Sort, Names);
+        const Rows: array of int := P.Order(Sort, Names, State.Order);
         return State with
           Names := Names;
           Order := Rows;

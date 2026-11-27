@@ -5,6 +5,8 @@ unit Fpas.Ui.Gui.Internal.Widgets.Inputs.NumberField;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.NumberFields as N;
 
 uses System.Globalization as Culture;
@@ -35,6 +37,7 @@ begin
   const Token: string := C.Token('number-field', Id);
   const Decrease: string := N.DecreaseId(Id);
   const Increase: string := N.IncreaseId(Id);
+  const Width: Sizing.NativeExtent := Sizing.Extent(Settings.Width ?? L.Extent.Content);
   const Proposed: double := Frame.Window.NumberField(
     Token, Value, Minimum, Maximum, Settings.Label, Settings.Suffix, Settings.Step,
     Settings.DecimalPlaces, Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
@@ -43,7 +46,7 @@ begin
     else
       C.Token('button', Decrease)
     end if,
-    C.Token('button', Increase)
+    C.Token('button', Increase), Width.Kind, Width.Value
   );
   if Enabled and Proposed <> Value then
     Frame.Messages.Add(OnChange(Proposed));

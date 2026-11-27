@@ -60,7 +60,10 @@ begin
       const At: string := Identify(Id, Location + '/codeBlock');
       R.RequireProfile(Current, R.Profile.Graphical, At);
       InstrumentRules.Code(Code, Settings, At);
-      discard Identify(Id + '/copy', At);
+      if CodeBlocks.HasHeader(Settings) then
+        discard Identify(CodeBlocks.CopyId(Id), At);
+      end if;
+
       return true;
     when E.Element.JsonView(
       const Id: string,
@@ -273,7 +276,7 @@ begin
       return true;
     when E.Element.Gauge(
       const Id: string,
-      const Label: string,
+      const Label: string?,
       const Value: float,
       const Size: float
     ):

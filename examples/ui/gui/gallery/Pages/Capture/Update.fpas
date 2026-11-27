@@ -2,18 +2,16 @@
 
 unit GuiGallery.Pages.Capture.Update;
 
-uses Fpas.Ui.Gui.FileDialogs as Dialogs;
 uses Fpas.Ui.Mvu.Application as Mvu;
-uses Fpas.Ui.Widgets.Files.AvatarUploads as A;
 
 uses GuiGallery.Pages.Capture.State as S;
 
-// Records accepted files and requests the native file dialog on browse.
+// Records the main dropzone path and the selected avatar image.
 // ## Parameters
 // - `State`: Current Capture model.
-// - `Message`: User action or selected path.
+// - `Message`: Native drop result.
 // ## Returns
-// The next Capture model and any dialog command.
+// The next Capture model.
 public function Update(State: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
   case Message of
@@ -23,33 +21,13 @@ begin
           Last := Paths[0];
         end with, []
       );
-    when S.Msg.SetFile(const Path: string):
-      return new Mvu.Transition of (S.Model, S.Msg)(
-        State with
-          Last := Path;
-        end with, []
-      );
+    when S.Msg.CompactDrop:
+      return new Mvu.Transition of (S.Model, S.Msg)(State, []);
     when S.Msg.SetAvatar(const Path: string):
       return new Mvu.Transition of (S.Model, S.Msg)(
         State with
           Avatar := Path;
         end with, []
-      );
-    when S.Msg.Browse(const Accept: string):
-      return new Mvu.Transition of (S.Model, S.Msg)(
-        State, [Dialogs.OpenFile of S.Msg(S.Msg.SetFile, 'Select a file', 'Accepted files', Accept)]
-      );
-    when S.Msg.BrowseAvatar:
-      return new Mvu.Transition of (S.Model, S.Msg)(
-        State,
-        [
-          Dialogs.OpenFile of S.Msg(
-            S.Msg.SetAvatar,
-            'Select a profile photo',
-            'Images',
-            A.ImageExtensions
-          )
-        ]
       );
   end case;
 end function;

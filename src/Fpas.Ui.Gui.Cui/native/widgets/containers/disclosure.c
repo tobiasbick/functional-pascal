@@ -56,6 +56,11 @@ int fpas_cui_expandable_text(cui_ctx *ui, const char *id, const char *text,
     const bool changed = cui_expandable_text_ex(ui, id, text, &options);
     cui_pop_disabled(ui);
     *toggle = fpas_find(ui, toggle_key);
+    if (*toggle < 0) {
+        /* [CUI-049](../../../../../docs/future/cui-upstream-bugs.md#cui-049): release input when the text fits. */
+        fpas_clear_interaction(ui, toggle_key);
+        if (ui->focus_next_request == toggle_key) ui->focus_next_request = 0;
+    }
     const cui__et_state *state = cui__state_lazy(ui, key, sizeof *state, false);
     ui->last_node = fpas_find(ui, key);
     ui->last_id = key;

@@ -22,7 +22,7 @@ public function View(Open: bool): E.Element of string;
 begin
   return W.Popover of string('filters',
     B.Button of string('filters-trigger', 'Filters', 'toggle-filters'),
-    E.Text of string('Filter results'), Open, 'close-filters', new W.Options(Width := 280));
+    [E.Text of string('Filter results')], Open, 'close-filters', new W.Options(Width := 280.0F));
 end function;
 
 end unit;
@@ -32,12 +32,21 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Position` | BottomStart. CUI adjusts placement to fit the viewport. |
-| `Width / Padding / Gap` | 0 / 0 / 0, which use the native defaults. Positive values are logical points. |
+| `Children` | The direct child elements in layout order. |
+| `Position` | `BottomStart`. CUI adjusts the [placement](../../../../src/Fpas.Ui/Widgets/Overlays/Menus.fpas) to fit the viewport. |
+| `Width` | Zero fits the content and uses the anchor width as a minimum. |
+| `Padding` | Zero uses CUI's 16-unit inset. |
+| `Gap` | Zero uses CUI's 10-unit gap between direct children. |
+
+Width, padding and gap accept finite nonnegative `float` values in logical
+units. A positive value overrides the native default.
 
 ## Interaction
 
-Use the trigger message to open or close the panel in your model. Escape or a press outside sends the dismissal message. Buttons in the body can also close it through their own update. The panel is nonmodal.
+Set `Open` in the model to open or close the panel. Use the trigger message
+to toggle `Open`. Press Escape or press outside the panel and trigger to
+send `OnDismiss`. Clear `Open` in the update for `OnDismiss`. Actions in the
+panel can also clear it. The panel is nonmodal.
 
 ## See also
 

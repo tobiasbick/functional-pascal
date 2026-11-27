@@ -37,21 +37,43 @@ static void fpas_grid_restore(cui_ctx *ui, int node, struct cui_grid_build *prev
     ui->last_id = ui->nodes[node].id;
 }
 
-static void fpas_grid_cancel_edit(cui_ctx *ui, cui_id id, cui__grid_state *state) {
-    if (state->edit_row < 0) return;
-    uint32_t key[3] = { (uint32_t)state->edit_row, (uint32_t)state->edit_col, 0xED17u };
+/** Releases one draft's field state so its undo history cannot reach the next draft.
+ * CUI-060 (docs/future/cui-upstream-bugs.md#cui-060). */
+static void fpas_grid_release_editor(cui_ctx *ui, cui_id id, int row, int column) {
+    const uint32_t key[3] = { (uint32_t)row, (uint32_t)column, 0xED17u };
     const cui_id field = cui__hash(key, sizeof key, id) ^ 0xF1Du;
     if (ui->focus == field) ui->focus = id;
+    if (ui->tf_select_all == field) ui->tf_select_all = 0;
+    fpas_forget_state(ui, field);
+}
+
+/** Ends an edit whose original cell is unavailable. */
+static void fpas_grid_cancel_edit(cui_ctx *ui, cui_id id, cui__grid_state *state) {
+    if (state->edit_row < 0) return;
+    fpas_grid_release_editor(ui, id, state->edit_row, state->edit_col);
     state->edit_row = state->edit_col = -1;
+}
+
+/** Cancels the active draft when the GUI host retires its grid. */
+static void fpas_grid_retire_editor(cui_ctx *ui, cui_id id) {
+    cui__grid_state *state = cui__state_lazy(ui, id, sizeof *state, false);
+    if (state) fpas_grid_cancel_edit(ui, id, state);
 }
 
 static void fpas_grid_input(cui_ctx *ui, cui_id id, int enabled, int focus) {
     if (enabled && focus && !cui_is_disabled(ui)) ui->focus_next_request = id;
 }
 
+static void fpas_grid_reveal_cursor(cui_scroll_state *scroll, int cursor, float row_height) {
+    const float top = (float)cursor * row_height;
+    const float bottom = top + CUI__GRID_HEAD + row_height;
+    if (scroll->view_h <= 0 || top < scroll->ty) scroll->ty = top;
+    else if (bottom > scroll->ty + scroll->view_h) scroll->ty = bottom - scroll->view_h;
+}
+
 void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *titles,
     const float *widths, const int *flags, int columns, int rows, uint8_t *selected,
-    int *state, int height_kind, float height, float row_height, int options,
+    int *state, int height_kind, float height, float row_height, int width_kind, float width, int options,
     int *range, int *headers) {
     fpas_grid_frame *frame = cui__frame_alloc(ui, sizeof *frame);
     const cui_id key = cui_make_id(ui, id), edit_key = key ^ 0xF0D617u;
@@ -63,9 +85,20 @@ void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *t
         for (int k = 0; k < rows; ++k) frame->selected[k] = selected[k] != 0;
     }
     cui__grid_state *retained = cui_state(ui, key, sizeof *retained);
+    const cui_id scroll_key = key ^ CUI__GRID_SCROLL;
+    cui_scroll_state *scroll = cui_state(ui, scroll_key, sizeof *scroll);
+    /* CUI-057: the native cursor reveal requires a previously defined cursor.
+       See docs/future/cui-upstream-bugs.md#cui-057. */
+    if (frame->cursor >= 0 && (!retained->init || retained->cursor < 0))
+        fpas_grid_reveal_cursor(scroll, frame->cursor, row_height > 0 ? row_height : 40);
     fpas_grid_row_state *edit = cui_state(ui, edit_key, sizeof *edit);
     edit->double_clicked = -1;
     if (retained->init) {
+        /* CUI-062: appended columns need widths without resetting existing resize state.
+           See docs/future/cui-upstream-bugs.md#cui-062. */
+        for (int column = 0; column < columns; ++column)
+            if (retained->widths[column] <= 0)
+                retained->widths[column] = widths[column] > 0 ? widths[column] : 150;
         if (frame->cursor < 0) retained->cursor = -1;
         retained->anchor = frame->anchor;
         if (retained->edit_row >= rows || !frame->enabled) fpas_grid_cancel_edit(ui, key, retained);
@@ -74,14 +107,12 @@ void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *t
         }
         if (!frame->enabled) retained->resizing = -1;
     }
-    fpas_own(ui, key, key ^ 0x5C011u, edit_key, 0);
-    if (!frame->enabled) {
-        cui_scroll_state *scroll = cui_state(ui, key ^ 0x5C011u, sizeof *scroll);
-        scroll->drag_x = scroll->drag_y = false;
-    }
+    fpas_own(ui, key, scroll_key, edit_key, 0);
+    fpas_on_forget(ui, key, fpas_grid_retire_editor);
+    if (!frame->enabled) scroll->drag_x = scroll->drag_y = false;
     fpas_grid_input(ui, key, frame->enabled, options & 8);
     const cui_grid_opts settings = {
-        .height = fpas_extent(height_kind, height), .row_height = row_height,
+        .width = fpas_extent(width_kind, width), .height = fpas_extent(height_kind, height), .row_height = row_height,
         .selected = frame->selected, .sort = frame->sort.column >= -1 ? &frame->sort : NULL,
         .striped = (options & 2) != 0, .hide_checkboxes = (options & 4) != 0,
         .cursor = &frame->cursor, .anchor = &frame->anchor
@@ -104,9 +135,10 @@ void *fpas_cui_data_grid_begin(cui_ctx *ui, const char *id, const char *const *t
     return frame;
 }
 
-int fpas_cui_data_grid_row(cui_ctx *ui, int row, const char *id) {
+int fpas_cui_data_grid_row(cui_ctx *ui, int row, const char *id, int *row_clicked) {
     struct cui_grid_build *grid = ui->building.grid;
     const bool clicked = cui_data_grid_row(ui, row);
+    if (row_clicked) *row_clicked = clicked ? 1 : 0;
     const int node = cui__current(ui);
     fpas_grid_row_state *edit = cui_state(ui, grid->id ^ 0xF0D617u, sizeof *edit);
     /* CUI reports row_double on press and release. Deliver each completed pair once. */
@@ -125,19 +157,27 @@ void fpas_cui_data_grid_cell(cui_ctx *ui, const char *text) {
     else cui_data_grid_cell(ui);
 }
 
+/** Draws the current cell and copies a draft back only on commit. */
 int fpas_cui_data_grid_edit(cui_ctx *ui, char *value, int capacity) {
     struct cui_grid_build *grid = ui->building.grid;
-    if (!grid || grid->col <= 0) return 0;
+    if (!grid || !grid->in_row || grid->col <= 0 || grid->col > grid->ncols) return 0;
     cui__grid_state *state = grid->st;
+    const int column = grid->col - 1;
+    bool active = state->edit_row == grid->row && state->edit_col == column;
+    /* CUI-059 (docs/future/cui-upstream-bugs.md#cui-059):
+       Hidden columns must not start or keep the row's keyboard editor. */
+    if (grid->hidden[column]) {
+        if (active) fpas_grid_cancel_edit(ui, grid->id, state);
+        return 0;
+    }
     fpas_grid_row_state *edit = cui_state(ui, grid->id ^ 0xF0D617u, sizeof *edit);
-    bool active = state->edit_row == grid->row && state->edit_col == grid->col - 1;
     if (active && capacity != edit->capacity) {
         fpas_grid_cancel_edit(ui, grid->id, state);
         active = false;
     }
     char *buffer = active ? edit->draft : value;
     const bool committed = cui_data_grid_edit(ui, buffer, (size_t)capacity);
-    if (state->edit_row == grid->row && state->edit_col == grid->col - 1) {
+    if (state->edit_row == grid->row && state->edit_col == column) {
         if (edit->double_clicked == grid->row) edit->double_clicked = -1;
         edit->seen = true;
         if (!active) {
@@ -145,7 +185,7 @@ int fpas_cui_data_grid_edit(cui_ctx *ui, char *value, int capacity) {
             edit->capacity = capacity;
             memcpy(edit->draft, value, (size_t)capacity);
         }
-    }
+    } else if (active) fpas_grid_release_editor(ui, grid->id, grid->row, column);
     if (committed) memcpy(value, edit->draft, (size_t)capacity);
     return committed;
 }
@@ -161,8 +201,10 @@ int fpas_cui_data_grid_end(cui_ctx *ui, void *handle, uint8_t *selected, int *st
     if (selected) for (int k = 0; k < frame->rows; ++k) selected[k] = frame->selected[k];
     state[0] = frame->sort.column;
     state[1] = frame->sort.descending;
-    state[2] = frame->cursor;
-    state[3] = frame->anchor;
+    state[2] = grid->st->cursor;
+    /* CUI-056: the checkbox updates the retained range origin during row drawing.
+       See docs/future/cui-upstream-bugs.md#cui-056. */
+    state[3] = grid->st->anchor;
     fpas_grid_restore(ui, frame->node, frame->previous);
     return double_clicked;
 }

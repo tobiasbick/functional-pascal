@@ -5,6 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Pickers.WheelPicker;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Pickers.WheelPickers as W;
 
 // Draws the native wheel and publishes selection proposals.
@@ -29,11 +30,13 @@ begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
   const Role: string := 'wheel-picker';
   const Token: string := C.Token(Role, Id);
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   const Proposed: int := Frame.Window.WheelPicker(
     Token,
     Items,
     Selected,
-    Settings.Width,
+    Width.Kind,
+    Width.Value,
     Settings.Rows,
     Settings.Loop,
     Settings.JoinLeft,

@@ -6,10 +6,10 @@ uses Fpas.Ui.Elements as E;
 
 // Model-owned like state.
 public type Value = record
-  // Current number of likes.
-  public Likes: int := 0;
-  // Whether the current user has liked the comment.
-  public Liked: bool := false;
+  // Current number of likes. Null omits the count.
+  public Likes: int? := 0;
+  // Whether the current user has liked the comment. Null reports clicks without toggling.
+  public Liked: bool? := false;
 end record;
 
 // Native comment action.
@@ -23,13 +23,13 @@ end variant;
 // Native comment options.
 public type Options = record
   // Optional time caption.
-  public Time: string := '';
+  public Time: string? := null;
   // Thread indentation level.
   public Depth: int := 0;
   // Show the edited marker beside the time.
   public Edited: bool := false;
   // Optional badge beside the author.
-  public Badge: string := '';
+  public Badge: string? := null;
   // Accept like and reply actions.
   public Enabled: bool := true;
 end record;

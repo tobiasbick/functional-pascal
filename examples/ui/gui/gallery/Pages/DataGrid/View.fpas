@@ -3,15 +3,17 @@
 unit GuiGallery.Pages.DataGrid.View;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as Style;
 uses Fpas.Ui.Widgets.Collections.DataGrids as D;
 uses Fpas.Ui.Widgets.Collections.Tables as T;
 uses Fpas.Ui.Widgets.Collections.TreeTables as TT;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Feedback.Badges as B;
 uses Fpas.Ui.Widgets.Feedback.ProgressBars as Progress;
 uses Fpas.Ui.Widgets.Media.Avatars as A;
 uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Widgets.Theming.Themes as Theme;
 
 uses Gallery.Shared.PeopleFilters as Filters;
 uses Gallery.Shared.Strings as Strings;
@@ -58,7 +60,7 @@ begin
   ];
 end function;
 
-function GridRow(Model: S.Model; Position: int): D.Row of S.Msg;
+function GridRow(Model: S.Model; Position: int; Colors: Theme.Palette): D.Row of S.Msg;
 begin
   const Source: int := Model.Order[Position];
   const Id: string := 'grid-person-' + Source.ToString(Culture.CultureInfo.InvariantCulture);
@@ -80,14 +82,9 @@ begin
             Id + '/score', Score / 100.0F,
             new Progress.Options(Height := 5.0F, Width := Points(70))
           ),
-          E.Styled of S.Msg(
-            E.Styled of S.Msg(
-              E.Styled of S.Msg(
-                E.Text of S.Msg(Score.ToString('F1', Culture.CultureInfo.InvariantCulture)),
-                Style.Role.Secondary
-              ),
-              Style.Role.SmallBody
-            ), Style.Role.Tabular
+          E.FormattedText of S.Msg(
+            Score.ToString('F1', Culture.CultureInfo.InvariantCulture), Graphics.Font.Body,
+            13.0F, Colors.TextSecondary, Tabular := true
           )
         ]
       )
@@ -145,7 +142,8 @@ begin
   Rows.Add(OriginalRow('source-tree-readme', 'README.md', 0, '1', '12 KB', $E0CC));
   return T.Table of S.Msg(
     'source-tree', [
-      new T.Column('Name'), new T.Column('Files', Points(80), Align := T.Alignment.Right),
+      new T.Column('Name', Align := T.Alignment.Left),
+      new T.Column('Files', Points(80), Align := T.Alignment.Right),
       new T.Column('Size', Points(100), Align := T.Alignment.Right)
     ], Rows.ToArray()
   );
@@ -154,9 +152,10 @@ end function;
 // Builds the original Data grid page and a standalone tree-table example.
 // ## Parameters
 // - `Model`: Current demonstration state.
+// - `Colors`: Palette for the native score labels.
 // ## Returns
 // Gallery sections in display order.
-public function View(Model: S.Model): array of E.Element of S.Msg;
+public function View(Model: S.Model; Colors: Theme.Palette): array of E.Element of S.Msg;
 begin
   const Mask: array of bool := new bool[Model.Order.Length];
   var Any: bool := false;
@@ -173,26 +172,28 @@ begin
       Strings.Get('Heading.DataGridHint')
     ),
     D.DataGrid of S.Msg(
-      'people-grid', [
-        new D.Column('Name', 200.0F, Sortable := true),
-        new D.Column('Email', 196.0F),
-        new D.Column('Team', 110.0F, Sortable := true),
+      'people-grid',
+      [
+        new D.Column('Name', 200.0F, T.Alignment.Left, true),
+        new D.Column('Email', 196.0F, T.Alignment.Left),
+        new D.Column('Team', 110.0F, T.Alignment.Left, true),
         new D.Column('Commits', 96.0F, T.Alignment.Right, true),
         new D.Column('Score', 130.0F, T.Alignment.Right, true)
-      ], Model.Order.Length, function(Position: int): D.Row of S.Msg => GridRow(Model, Position),
+      ],
+      Model.Order.Length,
+      function(Position: int): D.Row of S.Msg => GridRow(Model, Position, Colors),
       Model.Grid with
         Selected := Mask;
-      end with, function(Value: D.Value): S.Msg => S.Msg.SetGrid(Value, Model.Order),
+      end with,
+      function(Value: D.Value): S.Msg => S.Msg.SetGrid(Value, Model.Order),
       new D.Options(Height := Points(420))
     ),
-    E.Styled of S.Msg(
-      E.Text of S.Msg(
-        if Any then
-          'Rows selected. Press Esc to clear.'
-        else
-          'Click a row, Shift+click to select a range, Ctrl+A for all.'
-        end if
-      ), Style.Role.Caption
+    Texts.Text of S.Msg(
+      if Any then
+        'Rows selected. Press Esc to clear.'
+      else
+        'Click a row, Shift+click to select a range, Ctrl+A for all.'
+      end if, Texts.Appearance.Muted
     ),
     H.Heading of S.Msg(Strings.Get('Heading.TreeTable'), Strings.Get('Heading.TreeTableHint')),
     OriginalTree(Model),
@@ -214,14 +215,12 @@ begin
       new TT.Options(Height := Points(240), Guides := true),
       Menu := function(Index: int): array of M.Entry of S.Msg => TreeMenu(Model, Index)
     ),
-    E.Styled of S.Msg(
-      E.Text of S.Msg(
-        if Model.Activated = '' then
-          'Enter opens the selected item. Right-click or Shift+F10 opens its menu.'
-        else
-          'Opened ' + Model.Activated
-        end if
-      ), Style.Role.Muted
+    Texts.Text of S.Msg(
+      if Model.Activated = '' then
+        'Enter opens the selected item. Right-click or Shift+F10 opens its menu.'
+      else
+        'Opened ' + Model.Activated
+      end if, Texts.Appearance.Muted
     )
   ];
 end function;

@@ -31,19 +31,22 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Value` | Use LF line endings and keep the value within `MaxUtf8Bytes`. |
-| `Height` | 96 logical points. Zero uses CUI's default. A negative value fills the available height. |
+| `Height` | 96 logical units. Zero uses CUI's default. A negative value fills the available height. |
 | `Label / Placeholder / Icon / Hint / Error` | Empty. Error replaces Hint. |
 | `Prefix / Suffix` | Empty. Affixes stay outside the editable text. |
 | `Clearable / ReadOnly / Enabled` | false / false / true. |
 | `ControlSize / MaxUtf8Bytes` | Medium / 4095. |
+| `Width / Autofocus` | Null / false. See the [GUI text field options](text-field.md#options-and-defaults). |
 
 ## Interaction
 
 Enter inserts LF. Ctrl+Enter invokes the optional submission callback on
 Windows and Linux. Up and Down move between visual lines. The wheel scrolls
 the field until it reaches an edge, then scrolls the enclosing viewport.
-The area edits plain text. To show a formatted Markdown preview, render it
-separately with the [Markdown widget](../code/markdown.md).
+The area edits plain text. Use a single-line [text field](text-field.md) for
+masked input. [CUI-021](../../../future/cui-upstream-bugs.md#cui-021)
+
+Use the [Markdown widget](../code/markdown.md) to show a formatted preview.
 
 ## See also
 

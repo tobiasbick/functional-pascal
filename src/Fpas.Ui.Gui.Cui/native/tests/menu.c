@@ -19,11 +19,13 @@ static bool parity(bool icon_only, int placement, float width, bool contextual) 
         if (!ui) { cui_sw_destroy(renderer); valid = false; break; }
         cui_set_viewport(ui, w, h, 1);
         cui_set_reduced_motion(ui, true);
-        const char *keys[] = { "", "rename", "", "delete", "disabled" };
-        const char *labels[] = { "Project", "Rename", "", "Delete", "Disabled" };
-        const char *icons[] = { "", CUI_ICON_PENCIL, "", CUI_ICON_TRASH_2, "" };
-        const char *shortcuts[] = { "", "F2", "", "", "" };
-        const int flags[] = { 1, 16, 2, 8, 4 };
+        const char *keys[] = { "", "rename", "", "delete", "disabled", "archive" };
+        const char *labels[] = { "Project", "Rename", "", "Delete", "Disabled", CUI_ICON_ARCHIVE };
+        const char *icons[] = { "", CUI_ICON_PENCIL, "", CUI_ICON_TRASH_2, "", CUI_ICON_COPY };
+        const char *shortcuts[] = { "", "F2", "", "", "", "Ctrl A" };
+        const fpas_cui_menu_row rows[] = {
+            {1}, {16, CUI_FONT_MONO, 21}, {2}, {8}, {4}, {0, CUI_FONT_ICONS, 18}
+        };
         bool opened = false;
         for (int frame = 0; frame < 6; ++frame) {
             cui_begin_frame(ui, 0.04f);
@@ -35,10 +37,10 @@ static bool parity(bool icon_only, int placement, float width, bool contextual) 
                     cui_card(ui, .id = "target", .muted = true, .width = CUI_PX(220), .height = CUI_PX(100), .hoverable = true) { }
                 }
                 if (pass) {
-                    int nodes[6], open, highlighted;
+                    int nodes[7], open, highlighted;
                     unsigned int owner;
                     fpas_cui_menu(ui, "fixture", "Options", CUI_ICON_SETTINGS, keys, labels,
-                        icons, shortcuts, flags, 5, 0, placement, width, icon_only, 1, 0,
+                        icons, shortcuts, rows, 6, 0, placement, width, icon_only, 1, 0,
                         contextual, nodes, &open, &highlighted, &owner);
                     opened = open != 0;
                 } else {
@@ -47,10 +49,13 @@ static bool parity(bool icon_only, int placement, float width, bool contextual) 
                     opened = contextual ? cui_context_menu_begin(ui, "fixture") : cui_menu_begin(ui, "Options", &options);
                     if (opened) {
                         cui_menu_label(ui, "Project");
-                        cui_menu_item(ui, "Rename", .icon = CUI_ICON_PENCIL, .shortcut = "F2", .checked = true);
+                        cui_menu_item(ui, "Rename", .icon = CUI_ICON_PENCIL, .shortcut = "F2",
+                            .checked = true, .font = CUI_FONT_MONO, .text_size = 21);
                         cui_menu_separator(ui);
                         cui_menu_item(ui, "Delete", .icon = CUI_ICON_TRASH_2, .danger = true);
                         cui_menu_item(ui, "Disabled", .disabled = true);
+                        cui_menu_item(ui, CUI_ICON_ARCHIVE, .icon = CUI_ICON_COPY,
+                            .shortcut = "Ctrl A", .font = CUI_FONT_ICONS, .text_size = 18);
                         if (contextual) cui_context_menu_end(ui); else cui_menu_end(ui);
                     }
                 }
@@ -83,7 +88,7 @@ static bool user_menu_rename(bool compact, const char *avatar_path) {
         const cui_texture avatar = avatar_path ? cui_image_load(ui, avatar_path, NULL, NULL) : 0;
         if (avatar_path && !avatar) valid = false;
         const char *keys[] = { "profile" }, *labels[] = { "Profile" }, *empty[] = { "" };
-        const int flags[] = { 0 };
+        const fpas_cui_menu_row rows[] = { {0} };
         for (int frame = 0; frame < 6; ++frame) {
             cui_begin_frame(ui, 0.04f);
             cui_input_mouse_move(ui, 40, 42);
@@ -94,7 +99,7 @@ static bool user_menu_rename(bool compact, const char *avatar_path) {
                 if (pass) {
                     int nodes[2], open, highlight;
                     fpas_cui_user_menu(ui, "account", frame < 4 ? "Daniel Carter" : "Maya ### Ortiz",
-                        "Account", "online", avatar_path, keys, labels, empty, empty, flags, 1,
+                        "Account", "online", avatar_path, keys, labels, empty, empty, rows, 1,
                         CUI_PLACE_BOTTOM_START, 0, compact, 1, 0, nodes, &open, &highlight);
                     if (frame >= 3 && (!open || !fpas_cui_focused(ui, nodes[0]))) {
                         fprintf(stderr, "Renaming an account must preserve its open menu and trigger focus.\n");

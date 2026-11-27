@@ -33,14 +33,24 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Height / Gap` | Both zero. Zero uses native sizing and spacing. |
-| `AutoAdvance / Loop` | 0 / false. Positive seconds enable automatic advance. Loop wraps manual navigation at the ends. |
+| `Height / Gap` | Both zero. CUI uses 220 logical units for the slide height and 12 between slides. |
+| `AutoAdvance` | Zero disables timed movement. Use a positive interval in seconds to advance and wrap through the slides. |
+| `Loop` | `false`. Set `true` to wrap manual navigation at the ends. |
 | `HideArrows / HideDots / Enabled` | false / false / true. |
 
 ## Interaction
 
-Use arrows, dots or a horizontal gesture to select another slide. Store
-the proposed index to accept manual or timed movement.
+Supply one to 64 slides in display order. Drag or use the horizontal
+wheel over a slide. Use Left and Right while the viewport has focus.
+The arrow buttons and dots are available unless you hide them.
+
+Store the proposed zero-based index to accept manual or timed movement.
+Timed movement pauses while the pointer rests over the carousel
+viewport. [CUI-075](../../../future/cui-upstream-bugs.md#cui-075)
+
+The carousel clips slides to the viewport. If the enclosing layout
+changes its width, the host requests a frame to fit each slide.
+[CUI-074](../../../future/cui-upstream-bugs.md#cui-074)
 
 ## See also
 

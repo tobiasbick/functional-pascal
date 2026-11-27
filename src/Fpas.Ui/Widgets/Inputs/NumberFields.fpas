@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Inputs.NumberFields;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Presentation and input settings for a number field.
 public type Options = record
@@ -10,12 +11,14 @@ public type Options = record
   public Label: string := '';
   // Muted unit text before the step buttons.
   public Suffix: string := '';
-  // Finite positive increment of the buttons and arrow keys.
+  // Finite nonnegative step. Zero uses the native increment of one.
   public Step: double := 1.0;
-  // Display zero through fifteen decimal places.
+  // Display zero through 61 decimal places within the native buffer capacity.
   public DecimalPlaces: int := 0;
   // Allow pointer and keyboard editing.
   public Enabled: bool := true;
+  // Native GUI width. Null uses CUI's soft 160-unit width.
+  public Width: L.Extent? := null;
 end record;
 
 // Builds a numeric editor with increment and decrement buttons.
@@ -24,7 +27,7 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
-// - `Value`: Finite model value within the inclusive bounds.
+// - `Value`: Finite model value within the inclusive bounds and native display buffer.
 // - `Minimum`: Finite lower bound.
 // - `Maximum`: Finite upper bound. Both bounds must fit the native display buffer.
 // - `OnChange`: Maps a proposed bounded value to a message.

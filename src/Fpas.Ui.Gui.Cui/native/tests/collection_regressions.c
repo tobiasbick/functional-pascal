@@ -135,6 +135,69 @@ static bool check_table_row_identity(void) {
     return valid;
 }
 
+static bool check_table_readonly_hover(void) {
+    enum { WIDTH = 400, HEIGHT = 220 };
+    static unsigned char pixels[2][2][WIDTH * HEIGHT * 4];
+    const cui_table_column columns[] = {
+        { "Title", CUI_GROW(1.2), CUI_TEXT_LEFT, false },
+        { "Amount", CUI_PX(110), CUI_TEXT_RIGHT, false }
+    };
+    const char *titles[] = { "Title", "Amount" };
+    const int kinds[] = { 1, 2 }, aligns[] = { CUI_TEXT_LEFT, CUI_TEXT_RIGHT }, sortable[] = { 0, 0 };
+    const float widths[] = { 1.2f, 110 };
+    const char *ids[] = { "first", "second", "third" };
+    const char *labels[] = { "First ## literal", "Second", "Third" };
+    const cui_table_opts options = { .height = CUI_PX(130), .striped = true, .compact = true };
+    bool valid = true;
+    for (int bridge = 0; bridge < 2; ++bridge) {
+        cui_sw_renderer *renderer = cui_sw_create();
+        const cui_ctx_desc description = { .renderer = cui_sw_iface(renderer) };
+        cui_ctx *ui = cui_create(&description);
+        if (!ui) { cui_sw_destroy(renderer); return false; }
+        cui_set_viewport(ui, WIDTH, HEIGHT, 1);
+        cui_set_reduced_motion(ui, true);
+        cui_input_mouse_leave(ui);
+        for (int hover = 0; hover < 2; ++hover) {
+            cui_begin_frame(ui, .016f);
+            int table_node = -1, sort = -2, descending = 0, row_node = -1;
+            if (bridge) {
+                table_node = fpas_cui_table_begin(ui, "table", titles, kinds, widths, aligns, sortable, 2,
+                    2, 130, 1, 1, 0, 1, &sort, &descending, -1, NULL);
+            } else cui_table_begin_ex(ui, "table", columns, 2, &options);
+            for (int i = 0; i < 3; ++i) {
+                int row;
+                if (bridge) {
+                    fpas_cui_table_row(ui, ids[i], false, true, false, &row);
+                    fpas_cui_table_cell(ui, NULL);
+                } else {
+                    cui_table_row(ui, false);
+                    row = fpas_cui_last_node(ui);
+                    cui_table_cell(ui);
+                }
+                if (i == 1) row_node = row;
+                cui_text(ui, labels[i], .font = CUI_FONT_MEDIUM, .nowrap = true);
+                if (bridge) {
+                    fpas_cui_table_cell(ui, "$12.34");
+                    fpas_cui_table_row_end(ui);
+                } else cui_table_cell_text(ui, "$12.34");
+            }
+            if (bridge) fpas_cui_table_end(ui, table_node);
+            else cui_table_end(ui);
+            cui_end_frame(ui);
+            const cui_rect row = fpas_cui_node_rect(ui, row_node);
+            valid &= row.h == 36.0f && !fpas_cui_focused(ui, row_node);
+            cui_input_mouse_move(ui, row.x + row.w * 0.5f, row.y + row.h * 0.5f);
+            cui_sw_render(renderer, cui_get_draw_data(ui), pixels[bridge][hover], WIDTH, HEIGHT, WIDTH * 4, CUI_SW_RGBA);
+        }
+        cui_destroy(ui);
+        cui_sw_destroy(renderer);
+    }
+    valid &= memcmp(pixels[0][0], pixels[0][1], sizeof pixels[0][0]) != 0;
+    valid &= memcmp(pixels[0], pixels[1], sizeof pixels[0]) == 0;
+    if (!valid) fprintf(stderr, "A read-only table must keep native hover and compact row geometry.\n");
+    return valid;
+}
+
 static bool check_range(bool bridge) {
     cui_ctx *ui = cui_create(NULL);
     cui_set_viewport(ui, 400, 220, 1);
@@ -163,6 +226,86 @@ static bool check_range(bool bridge) {
     return first == 0 && last == 1;
 }
 
+/** A stable viewport height change needs one more frame for the native row range. */
+static bool check_virtual_list_resize(void) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 640, 920, 1);
+    cui_set_reduced_motion(ui, true);
+    bool valid = true;
+    for (int frame = 0; frame < 6; ++frame) {
+        int first, last;
+        cui_begin_frame(ui, .016f);
+        const int node = fpas_cui_virtual_list_begin(ui, "list", 100, 0, 2,
+            frame < 4 ? 120 : 620, 1, -1, &first, &last);
+        fpas_cui_virtual_list_end(ui, node);
+        cui_end_frame(ui);
+        if (frame >= 3) {
+            valid &= first == 0 && last == (frame < 5 ? 6 : 20);
+            valid &= cui_needs_redraw(ui) == (frame == 4);
+        }
+    }
+    cui_destroy(ui);
+    if (!valid) fprintf(stderr, "Virtual list did not settle after a model-only viewport resize.\n");
+    return valid;
+}
+
+/** A rejected swipe draw must preserve all enclosing integer scopes. */
+static bool check_swipe_id_capacity(void) {
+    enum { capacity = 64 };
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 400, 220, 1);
+    cui_begin_frame(ui, .016f);
+    for (int index = 0; index < capacity; ++index) cui_push_id_int(ui, index);
+    const cui_id anchor = cui_make_id(ui, "anchor");
+    int nodes[2];
+    const int refused = fpas_cui_swipe_begin(ui, "row", NULL, NULL, NULL, 0, 0, 1, NULL, nodes);
+    bool valid = refused == -1 && cui_make_id(ui, "anchor") == anchor;
+    if (refused >= 0) fpas_cui_swipe_end(ui, refused, NULL);
+    cui_pop_id(ui);
+    const cui_id enclosing = cui_make_id(ui, "anchor");
+    const char *labels[] = { NULL }, *icons[] = { CUI_ICON_CHECK };
+    const int tones[] = { CUI_TONE_SUCCESS };
+    const int row = fpas_cui_swipe_begin(ui, "row", labels, icons, tones, 1, 0, 1, NULL, nodes);
+    valid &= row >= 0;
+    if (row >= 0) {
+        cui_text(ui, "Row");
+        valid &= fpas_cui_swipe_end(ui, row, NULL) == -1;
+    }
+    valid &= cui_make_id(ui, "anchor") == enclosing;
+    for (int index = 1; index < capacity; ++index) cui_pop_id(ui);
+    cui_end_frame(ui);
+    cui_destroy(ui);
+    if (!valid) fprintf(stderr, "A swipe row did not preserve its enclosing native identity.\n");
+    return valid;
+}
+
+/** Empty reaction groups and count-only pills use the original CUI behavior. */
+static bool check_reaction_options(void) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 400, 220, 1);
+    cui_set_reduced_motion(ui, true);
+    int nodes[2], count = 0, active = 0;
+    const char *icons[] = { NULL };
+    cui_begin_frame(ui, .016f);
+    bool valid = fpas_cui_reactions(ui, "empty", NULL, NULL, NULL, 0, 1, 0, nodes) == -1;
+    valid &= nodes[0] >= 0;
+    valid &= fpas_cui_reactions(ui, "count", icons, &count, &active, 1, 1, 1, nodes) == -1;
+    cui_end_frame(ui);
+    valid &= fpas_cui_focused(ui, nodes[1]) != 0;
+    cui_input_key(ui, CUI_KEY_ENTER, true, 0);
+    cui_input_key(ui, CUI_KEY_ENTER, false, 0);
+    cui_begin_frame(ui, .016f);
+    valid &= fpas_cui_reactions(ui, "count", icons, &count, &active, 1, 1, 0, nodes) == 0;
+    valid &= count == 1 && active == 1;
+    cui_end_frame(ui);
+    cui_destroy(ui);
+    if (!valid) fprintf(stderr, "A reaction without a native icon did not toggle.\n");
+    return valid;
+}
+
 static bool check_list_item(void) {
     cui_ctx *ui = cui_create(NULL);
     cui_set_viewport(ui, 400, 220, 1);
@@ -178,6 +321,31 @@ static bool check_list_item(void) {
     cui_end_frame(ui);
     cui_destroy(ui);
     return focused && activated;
+}
+
+/** Retiring a tracked reorder row releases its native spring state. */
+static bool check_reorder_retirement(void) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 400, 220, 1);
+    const int order = 0;
+    int proposed;
+    cui_begin_frame(ui, .016f);
+    const int list = fpas_cui_reorder_begin(ui, "reorder", &order, 1, 1, &proposed);
+    const int row = fpas_cui_reorder_item_begin(ui, 0, 1);
+    const cui_id key = fpas_cui_node_key(ui, row);
+    fpas_cui_reorder_item_end(ui, row);
+    fpas_cui_reorder_end(ui, list);
+    cui_end_frame(ui);
+    /* CUI's reorder item state is one two-float spring at row ID XOR 1. */
+    float *spring = cui_state(ui, key ^ 1u, 2 * sizeof *spring);
+    spring[0] = 12;
+    fpas_cui_forget(ui, key);
+    spring = cui_state(ui, key ^ 1u, 2 * sizeof *spring);
+    const bool reset = key && proposed == order && spring[0] == 0;
+    cui_destroy(ui);
+    if (!reset) fprintf(stderr, "A removed reorder row retained its animation state.\n");
+    return reset;
 }
 
 static bool check_palette_close(bool bridge) {
@@ -214,13 +382,20 @@ static bool check_palette_close(bool bridge) {
     return shown && selected == -1 && enter;
 }
 
+/** Runs the native collection checks in the selected reference mode. */
 int main(int argc, char **argv) {
     const bool bridge = argc < 2 || strcmp(argv[1], "upstream") != 0;
     const bool focus = check_focus(bridge);
     const bool identity = !bridge || check_table_row_identity();
+    const bool hover = !bridge || check_table_readonly_hover();
     const bool range = check_range(bridge);
+    const bool resize = !bridge || check_virtual_list_resize();
+    const bool swipe = !bridge || check_swipe_id_capacity();
+    const bool reactions = !bridge || check_reaction_options();
     const bool list_item = !bridge || check_list_item();
     const bool palette_close = check_palette_close(bridge);
+    const bool reorder_retirement = !bridge || check_reorder_retirement();
     if (!list_item) fprintf(stderr, "List item did not activate from keyboard focus.\n");
-    return focus && identity && range && list_item && palette_close ? 0 : 1;
+    return focus && identity && hover && range && resize && swipe && reactions &&
+        list_item && palette_close && reorder_retirement ? 0 : 1;
 }

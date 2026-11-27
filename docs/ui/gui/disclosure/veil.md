@@ -34,13 +34,19 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Revealed` | Pass the current visibility flag from the model. |
-| `Label / Hint` | null / null. Add optional text to the cover. |
-| `Toggle / Radius` | false / 0. Enable Toggle to allow activation to cover the content again. |
-| `Color / Width / Enabled` | null / Content / true. |
+| `Label`, `Hint` | null. Add text and a smaller instruction to the cover. |
+| `Toggle` | false. Set it to true to cover revealed content with a click. |
+| `Radius` | 0 logical units. |
+| `Color` | `Charts.Color.Automatic` uses the muted surface. `Charts.Color.Theme(Token)` selects an active theme color and `Charts.Color.Rgba(Value)` sets an explicit color. RGBA with zero alpha uses the muted surface. |
+| `Width` | `Content` uses the child's width. |
+| `Enabled` | true. Set it to false to disable input on the veil and its child. |
 
 ## Interaction
 
-Click the covered area or activate it with Enter when focused to propose a reveal. Accept the proposal in the model. The cover is a visual effect. Keep sensitive data out of the view when the user lacks access.
+Click the covered area to propose a reveal. Enter or Space on the focused
+veil toggles either state. Accept the proposal in the model. A covered veil
+disables input to its child. The cover is a visual effect. Keep sensitive
+data out of the view when the user lacks access.
 
 ## See also
 
@@ -62,3 +68,4 @@ Click the covered area or activate it with Enter when focused to propose a revea
   - [veil.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/veil.h)
 - `tests/Fpas.Ui.Gui.Cui.Tests/Overlays/`
   - [CuiVeilScopeTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiVeilScopeTests.cs)
+- [Native color parity test](../../../../src/Fpas.Ui.Gui.Cui/native/tests/display.c)

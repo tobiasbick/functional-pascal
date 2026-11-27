@@ -30,14 +30,16 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Label` | Name used for control inspection. |
-| `Value` | A model-owned integer from zero through Maximum. |
-| `Maximum` | 5. Accepts 1 through 16 stars. |
+| `Value` | A model-owned integer from zero through the effective star count. |
+| `Maximum` | 5. CUI uses five for nonpositive values and limits the count to sixteen. |
 | `Enabled` | true. |
-| `StarSize` | 22 logical points. Accepts any finite positive size. |
+| `StarSize` | 22 logical units. Accepts any finite positive size. |
 
 ## Interaction
 
-Click a star to propose its number. Click the selected star again to propose zero. The native rating takes pointer input.
+Click a star to propose its number. Click the selected star again to propose
+zero. The native rating takes pointer input and retains its ID when the
+model changes the rating or star count.
 
 ## See also
 
@@ -57,3 +59,4 @@ Click a star to propose its number. Click the selected star again to propose zer
 - `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
   - [rating.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/rating.c)
   - [rating.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/rating.h)
+- [CuiChipRatingTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiChipRatingTests.cs)

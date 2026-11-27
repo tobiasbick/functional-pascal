@@ -52,6 +52,9 @@ end unit;
 ## Usage
 
 Use Body for wrapping paragraphs and Code for a compact monospaced span.
+HeadingOne through HeadingFour use `cui_heading` levels 1 through 4.
+Secondary uses the body size and the secondary color from `cui_secondary`.
+Muted uses the small text size and the muted color from `cui_muted`.
 Place the code span in a row with the surrounding text. For a label shared
 between hosts, use `Elements.Text`.
 

@@ -8,7 +8,7 @@ public sealed partial class CuiWindow
     /// <summary>Draws CUI's analog hour and minute dial.</summary>
     /// <param name="id">Stable dial identity.</param>
     /// <param name="value">Model time at minute precision.</param>
-    /// <param name="size">Face diameter in logical points, or zero for CUI's default.</param>
+    /// <param name="size">Face diameter in logical units, at least 160 when specified. Nonpositive uses 248.</param>
     /// <param name="enabled">Whether the dial accepts input.</param>
     /// <param name="focus">Zero for no request, one for hours or two for minutes.</param>
     /// <param name="hours">Hours selector tracking ID, or null to skip tracking.</param>
@@ -19,7 +19,7 @@ public sealed partial class CuiWindow
         string? hours, string minutes, string face)
     {
         CheckFrame();
-        if (!float.IsFinite(size) || size < 0) throw new ArgumentOutOfRangeException(nameof(size));
+        if (!float.IsFinite(size)) throw new ArgumentOutOfRangeException(nameof(size));
         if (focus is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(focus));
         int* nodes = stackalloc int[4];
         int proposed = NativeMethods.TimeDial(context, Stable(id), MinuteOfDay(value), size,

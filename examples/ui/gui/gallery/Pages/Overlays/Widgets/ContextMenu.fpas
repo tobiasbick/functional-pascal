@@ -4,44 +4,48 @@ unit GuiGallery.Pages.Overlays.Widgets.ContextMenu;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Display.IconGlyphs as Glyphs;
+uses Fpas.Ui.Widgets.Display.Icons as Icons;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Overlays.Menus as M;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses GuiGallery.Pages.Overlays.State as State;
 uses GuiGallery.Pages.Overlays.Widgets.Popover as Filter;
+uses GuiGallery.Shared.Sections as G;
 uses GuiGallery.Shared.State as Demo;
-uses System as Sys;
-
-function Icon(Code: int): string;
-begin
-  return Sys.Char.ConvertFromUtf32(Code);
-end function;
 
 // Shows the Filters panel and the native right-click area.
 // ## Parameters
 // - `Data`: Shared demo values owned by the application.
 // - `Model`: Filter values and visibility.
 // ## Returns
-// A muted target with Cut, Copy, Paste and Delete; commands only update preview state.
-public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
+// The section heading and native card with the filter and context menu.
+public function View(Model: State.Model; Data: Demo.Model): array of E.Element of State.Msg;
 begin
-  const Target: E.Element of State.Msg := E.Styled of State.Msg(
-    E.Column of State.Msg(
-      new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(28)), Align := L.Alignment.Center),
-      E.Styled of State.Msg(E.Text of State.Msg('Right click this area'), S.Role.Secondary)
-    ), S.Role.MutedPanel
+  const Target: E.Element of State.Msg := Cards.Card of State.Msg(
+    'ctx-area',
+    [
+      Icons.Icon of State.Msg(Glyphs.Ellipsis, 18.0F, ThemeColor := Themes.ColorToken.TextMuted),
+      Texts.Text of State.Msg(
+        'Right click this area', Texts.Appearance.Secondary,
+        new Texts.Options(Align := Texts.Alignment.Center)
+      )
+    ],
+    new Cards.Options(
+      Muted := true,
+      Padding := 28.0F,
+      Align := L.Alignment.Center,
+      Hoverable := true
+    )
   );
-  return E.Column of State.Msg(
-    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(16))),
-    E.Styled of State.Msg(E.Text of State.Msg('Popover and context menu'), S.Role.Heading),
-    E.Styled of State.Msg(
-      E.Column of State.Msg(
-        new L.Flow(
-          Padding := L.Spacing.Fixed(L.Measure.Logical(24)),
-          Gap := L.Spacing.Fixed(L.Measure.Logical(16))
-        ),
+  return [
+    G.Heading of State.Msg('Popover and context menu'),
+    Cards.Card of State.Msg(
+      'overlays-context-card', [
         E.Row of State.Msg(
-          new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Wrap := true),
+          new L.Flow(Gap := G.Points(8), Wrap := true, Clip := false),
           Filter.View(Model, Data)
         ),
         M.ContextMenu of State.Msg(
@@ -51,7 +55,7 @@ begin
                 'cut',
                 'Cut',
                 State.Msg.Shared(Demo.Msg.MenuChoice('Cut')),
-                Icon($E14E),
+                Glyphs.Scissors,
                 Shortcut := 'Ctrl X'
               )
             ),
@@ -60,7 +64,7 @@ begin
                 'copy',
                 'Copy',
                 State.Msg.Shared(Demo.Msg.MenuChoice('Copy')),
-                Icon($E09E),
+                Glyphs.Copy,
                 Shortcut := 'Ctrl C'
               )
             ),
@@ -69,7 +73,7 @@ begin
                 'paste',
                 'Paste',
                 State.Msg.Shared(Demo.Msg.MenuChoice('Paste')),
-                Icon($E085),
+                Glyphs.Clipboard,
                 Shortcut := 'Ctrl V'
               )
             ),
@@ -79,15 +83,15 @@ begin
                 'delete',
                 'Delete',
                 State.Msg.Shared(Demo.Msg.MenuChoice('Delete')),
-                Icon($E18E),
+                Glyphs.Trash2,
                 Danger := true
               )
             )
           ]
         )
-      ), S.Role.OutlinedPanel
+      ], new Cards.Options(Gap := 16.0F)
     )
-  );
+  ];
 end function;
 
 end unit;

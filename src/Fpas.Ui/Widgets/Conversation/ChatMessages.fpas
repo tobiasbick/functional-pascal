@@ -3,24 +3,27 @@
 unit Fpas.Ui.Widgets.Conversation.ChatMessages;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Display.Markdowns as D;
 
-// Native chatmessage options.
+uses System as Sys;
+
+// Native chat message options.
 public type Options = record
   // Use the outgoing bubble.
   public Mine: bool := false;
   // Sender name.
-  public Author: string := '';
+  public Author: string? := null;
   // Optional time caption.
-  public Time: string := '';
+  public Time: string? := null;
   // Optional delivery or read receipt.
-  public Status: string := '';
+  public Status: string? := null;
   // Continue the previous bubble group.
   public Grouped: bool := false;
   // Show the avatar or receipt for the final bubble.
   public LastInGroup: bool := false;
   // Optional avatar image file.
   public Avatar: string := '';
-  // Render the body as native Markdown without link or task actions.
+  // Render the body as native Markdown.
   public Markdown: bool := false;
 end record;
 
@@ -31,16 +34,18 @@ end record;
 // - `Id`: Stable widget identity.
 // - `Text`: Message body.
 // - `Settings`: Optional native settings.
+// - `OnMarkdown`: Optional mapper for native Markdown link, hover and task messages.
 // ## Returns
 // The graphical element.
 public function ChatMessage of TMsg(
   Id: string;
   Text: string;
-  Settings: Options? := null
+  Settings: Options? := null;
+  OnMarkdown: Sys.Func of (D.Event, TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin
-  return (E.Element of TMsg).ChatMessage(Id, Text, Settings ?? new Options());
+  return (E.Element of TMsg).ChatMessage(Id, Text, Settings ?? new Options(), OnMarkdown);
 end function;
 
 end unit;

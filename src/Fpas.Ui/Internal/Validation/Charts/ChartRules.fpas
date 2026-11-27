@@ -43,15 +43,15 @@ begin
     end if;
   end if;
 
+  if not Sys.Double.IsFinite(Settings.XMinimum)
+    or not Sys.Double.IsFinite(Settings.XMaximum - Settings.XMinimum)
+    or Settings.XMaximum < Settings.XMinimum
+  then
+    R.Reject(At, 'Chart X bounds must be finite and ordered.');
+  end if;
+
   for Item: C.Annotation in Settings.Annotations do
-    R.CheckText(Item.Label, At);
-    R.CheckText(Item.Detail, At);
-    if not Sys.Enum.IsDefined of C.AnnotationKind(
-      Item.Kind
-    ) or not Sys.Double.IsFinite(Item.X) or not Sys.Double.IsFinite(Item.Y)
-    then
-      R.Reject(At, 'Invalid chart annotation.');
-    end if;
+    Common.Annotation(Item, At);
   end for;
 end procedure;
 
@@ -84,17 +84,15 @@ end procedure;
 
 // Validates a fraction gauge.
 // ## Parameters
-// - `Label`: Literal caption.
-// - `Value`: Fraction.
-// - `Size`: Logical diameter.
+// - `Label`: Optional literal caption.
+// - `Value`: Finite reading.
+// - `Size`: Finite logical diameter.
 // - `At`: Diagnostic location.
-public procedure Gauge(Label: string; Value: float; Size: float; At: string);
+public procedure Gauge(Label: string?; Value: float; Size: float; At: string);
 begin
-  R.CheckText(Label, At);
-  Common.Distance(Size, At);
-  Common.Distance(Value, At);
-  if Value > 1.0F then
-    R.Reject(At, 'A gauge fraction cannot exceed one.');
+  R.CheckText(Label ?? '', At);
+  if not Sys.Single.IsFinite(Value) or not Sys.Single.IsFinite(Size) then
+    R.Reject(At, 'A gauge needs a finite reading and diameter.');
   end if;
 end procedure;
 

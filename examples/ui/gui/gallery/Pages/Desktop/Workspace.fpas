@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Desktop.Workspace;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
 uses Fpas.Ui.Widgets.Collections.ListItems as Item;
@@ -11,7 +12,6 @@ uses Fpas.Ui.Widgets.Desktop.Dockspaces as Dock;
 uses Fpas.Ui.Widgets.Desktop.Toolbars as Tools;
 uses Fpas.Ui.Widgets.Developer.LogConsoles as Log;
 uses Fpas.Ui.Widgets.Editors.PropertyInspectors as Property;
-uses Fpas.Ui.Widgets.Motion.Motion as Text;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
 
 uses GuiGallery.Pages.Desktop.State as S;
@@ -144,7 +144,7 @@ begin
     new L.Flow(Background := Colors.SurfaceMuted),
     E.Column of S.Msg(
       new L.Flow(Padding := G.Points(10)),
-      E.FormattedText of S.Msg('Perspective', Text.Font.Medium, 12.0F, Colors.TextSecondary)
+      E.FormattedText of S.Msg('Perspective', Graphics.Font.Medium, 12.0F, Colors.TextSecondary)
     ),
     Canvas.Canvas of S.Msg(
       'dock-viewport',
@@ -154,7 +154,7 @@ begin
     ),
     E.Column of S.Msg(
       new L.Flow(Padding := G.Points(10)),
-      E.FormattedText of S.Msg('1280 x 720  16.4 ms', Text.Font.Mono, 11.0F, Colors.TextMuted)
+      E.FormattedText of S.Msg('1280 x 720  16.4 ms', Graphics.Font.Mono, 11.0F, Colors.TextMuted)
     )
   );
 end function;

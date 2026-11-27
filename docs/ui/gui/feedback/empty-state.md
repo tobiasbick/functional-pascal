@@ -29,14 +29,18 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Title / Description` | A heading and optional description. Description defaults to empty. |
-| `Icon` | Empty. Supply a CUI glyph for the illustration position. |
-| `ActionLabel / OnAction` | Empty / null. Supply both to add an action. |
-| `Enabled` | true. |
+| `Title` | Literal heading. |
+| `Description` | Null omits the supporting text. An empty string reserves a blank line. |
+| `Icon` | Null omits the illustration. Supply a CUI glyph or an empty string to reserve a blank icon area. |
+| `ActionLabel` | Null omits the action. An empty string shows a button with only its plus icon. |
+| `OnAction` | Null. Supply a message factory with any action caption, including an empty caption. |
+| `Enabled` | True. False disables the action button. |
 
 ## Interaction
 
-The optional button sends the supplied message. Apply it in the update and replace the empty state when the collection has content. Use `ActionId(Id)` to address that button for focus.
+The optional button sends the supplied message. Apply it in the update and
+replace the empty state when the collection has content. Use `ActionId(Id)` to
+address the button for focus. Press Enter or Space to activate the focused button.
 
 ## See also
 

@@ -31,16 +31,20 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Detail / Status` | Both empty |
+| `Detail` | Null omits detail from the trigger and popup header. An empty string reserves a blank line. |
+| `Status` | Null omits the avatar status dot. `online`, `busy` and `away` use different colors. Other strings, including the empty string, use gray. |
 | `AvatarPath` | Null uses initials. A PNG/JPEG path supplies the native trigger and popup image. Failed loads use initials. |
-| `Compact / Enabled` | false / true |
-| `Position / Width` | BottomStart / 0 for automatic width |
+| `Compact` | false. Set true to show only the avatar in the trigger. |
+| `Enabled` | true. |
+| `Position` | `BottomStart` selects CUI's default. The full trigger uses `TopStart` and the compact trigger uses `BottomEnd`. |
+| `Width` | Zero uses the native 248-unit popup width. |
 
 ## Interaction
 
-Click, Enter or Space opens the menu. Select an enabled command to send its
-message. Escape dismisses the popup and returns focus to the trigger. Use
-the same keyed command entries as a dropdown menu.
+Click or press Enter or Space on the trigger. Press Up or Down to highlight
+a command. Select an enabled command to send its message and close the popup.
+Press Escape or click outside to dismiss the popup. The user menu uses the
+same keyed commands and decorations as a [dropdown menu](dropdown-menu.md).
 
 ## See also
 

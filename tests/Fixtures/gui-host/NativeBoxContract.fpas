@@ -13,7 +13,6 @@ uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Containers.Stacks as Stacks;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
-uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 
 uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as State;
@@ -142,8 +141,9 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
             )
           ),
           E.FormattedText of State.Msg(
-            'שלום', Motion.Font.Body, 12.0F, new Graphics.Color(0, 0, 0),
-            new Texts.Options(ReadingDirection := L.Direction.RightToLeft)
+            'שלום', Graphics.Font.Body, 12.0F, new Graphics.Color(0, 0, 0),
+            new Texts.Options(ReadingDirection := L.Direction.RightToLeft),
+            Width := L.Extent.Fixed(L.Measure.Points(49.5F)), LineHeight := 1.2F, Tabular := true
           ),
           Texts.Text of State.Msg('Layout', Texts.Appearance.Body),
           Buttons.Button of State.Msg('auto-first', 'One', State.Msg.Preview),

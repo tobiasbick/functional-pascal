@@ -31,12 +31,17 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Selected` | Pass true for the choice currently held by the model. |
-| `Description` | Empty. |
+| `Description` | null omits the secondary text. An empty string reserves a blank description. |
 | `Enabled` | true. |
 
 ## Interaction
 
-Click the row or activate it with Space or Enter while focused. The callback runs when an unselected row is activated. Keep one selection in the model and derive each row's Boolean from it.
+Click the row or focus it and press Space or Enter. Activating an unselected
+row sends its selection message. Keep one selection in the model and derive
+each row's Boolean from it.
+
+CUI uses the shared `cui_check_opts` type for checkboxes, switches and radio
+buttons. Only the checkbox uses its `indeterminate` field.
 
 ## See also
 

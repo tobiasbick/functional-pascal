@@ -4,6 +4,7 @@ unit GuiGallery.Pages.SmartInputs.Widgets.Editors;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 uses Fpas.Ui.Widgets.Inputs.InlineEdits as I;
 uses Fpas.Ui.Widgets.Inputs.MoneyFields as M;
 uses Fpas.Ui.Widgets.Inputs.ScrubFields as Scrubs;
@@ -51,14 +52,18 @@ begin
       Strings.Get('Heading.ScrubFieldsHint')
     ),
     E.Row of S.Msg(
-      new L.Flow(Gap := G.Points(12), Wrap := true),
+      new L.Flow(Gap := G.Points(12), Wrap := true, Clip := false),
       Scrubs.ScrubField of S.Msg(
         'opacity', 'Opacity', Model.Opacity, 0.0F, 100.0F, S.Msg.SetOpacity,
         new Scrubs.Options(Suffix := '%')
       ),
       Scrubs.ScrubField of S.Msg(
         'radius', 'Radius', Model.Radius, 0.0F, 48.0F, S.Msg.SetRadius,
-        new Scrubs.Options(Step := 0.5F, DecimalPlaces := 1, Suffix := 'px')
+        new Scrubs.Options(
+          Step := 0.5F,
+          Format := new C.ValueFormat(DecimalPlaces := 1),
+          Suffix := 'px'
+        )
       ),
       Scrubs.ScrubField of S.Msg(
         'blur', 'Blur', Model.Blur, 0.0F, 80.0F, S.Msg.SetBlur,
@@ -78,9 +83,10 @@ begin
   return [
     G.Heading of S.Msg(Strings.Get('Heading.Money'), Strings.Get('Heading.MoneyHint')),
     E.Row of S.Msg(
-      new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start),
+      new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start, Clip := false),
       E.Size of S.Msg(
         E.Column of S.Msg(
+          new L.Flow(Clip := false),
           M.MoneyField of S.Msg(
             'amount',
             Model.Amount,
@@ -92,6 +98,7 @@ begin
       ),
       E.Size of S.Msg(
         E.Column of S.Msg(
+          new L.Flow(Clip := false),
           M.MoneyField of S.Msg(
             'salary', Model.Salary, S.Msg.SetSalary,
             new M.Options(

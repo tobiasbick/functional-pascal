@@ -33,16 +33,18 @@ public sealed partial class CuiWindow
             edit = new MoneyEdit(value, decimalPlaces);
             moneyFields.Add(id, edit);
         }
-        if (edit.Expected != value || edit.Places != decimalPlaces || !enabled || !edit.Focused)
-            edit.Reset(value, decimalPlaces);
+        bool editing = enabled && (focus || edit.Key != 0 && NativeMethods.FocusKey(context, edit.Key) != 0);
+        if (edit.Expected != value || edit.Places != decimalPlaces || !editing || !edit.Focused)
+            edit.Reset(value, decimalPlaces, editing);
         Span<byte> buffer = stackalloc byte[129];
         int length = Utf8.Encoding.GetBytes(edit.Draft, buffer);
         buffer[length] = 0;
         int flags, node;
         fixed (byte* bytes = buffer)
             flags = NativeMethods.MoneyField(context, identity, bytes, (nuint)buffer.Length,
-                Optional(label), symbol, Optional(code), Optional(hint),
+                Optional(label), Optional(symbol), Optional(code), Optional(hint),
                 edit.Invalid ? "Enter an exact decimal amount within the selected precision." : null,
+                decimalPlaces == 0 ? "0" : "0.00",
                 widthKind, width, enabled ? 1 : 0, focus ? 1 : 0, out node);
         edit.Key = NativeMethods.NodeKey(context, node);
         moneyDrawn.Add(id);
@@ -51,13 +53,21 @@ public sealed partial class CuiWindow
         try { draft = Utf8.Encoding.GetString(buffer[..buffer.IndexOf((byte)0)]); }
         catch (DecoderFallbackException) { draft = edit.Draft; }
         decimal proposed = value;
-        bool valid = MoneyAmounts.TryParse(draft, decimalPlaces, out decimal parsed);
-        if (enabled && (flags & 1) != 0 && valid) proposed = parsed;
+        bool changed = (flags & 1) != 0;
+        if (changed)
+        {
+            edit.Invalid = !MoneyAmounts.TryParse(draft, decimalPlaces, out decimal parsed);
+            if (!edit.Invalid) proposed = parsed;
+        }
         edit.Expected = proposed;
         edit.Focused = (flags & 4) != 0;
         edit.Draft = draft;
-        edit.Invalid = !valid;
-        if (!edit.Focused || (flags & 2) != 0) edit.Reset(proposed, decimalPlaces);
+        // CUI-040: Pointer focus can arrive during native drawing, after preparing the grouped display.
+        if (!edit.Focused || (flags & 2) != 0 || (!editing && !changed))
+        {
+            edit.Reset(proposed, decimalPlaces, edit.Focused);
+            if (!string.Equals(draft, edit.Draft, StringComparison.Ordinal)) RequestFrame();
+        }
         return proposed;
     }
 }

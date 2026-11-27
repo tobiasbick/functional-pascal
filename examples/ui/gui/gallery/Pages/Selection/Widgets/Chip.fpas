@@ -21,7 +21,7 @@ public function View(Model: State.Model; Data: Demo.Model): E.Element of State.M
   begin
     return Chips.Chip of State.Msg(
       'category-' + Label.ToLowerInvariant(), Label, (Model.SelectedChips and Mask) <> 0,
-      function(Selected: bool): State.Msg => State.Msg.SetChip(Mask, Selected)
+      function(Selected: bool?): State.Msg => State.Msg.SetChip(Mask, Selected ?? false)
     );
   end function;
 begin

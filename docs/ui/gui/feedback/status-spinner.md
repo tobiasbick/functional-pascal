@@ -31,12 +31,25 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Status` | Pass Idle, Busy, Success or Error from the model. |
-| `Size / Color` | 0 uses the native diameter of 20 logical points. Automatic uses the theme's busy ring color. |
+| `Size` | Zero uses the native 20-unit diameter. |
+| `Color` / `ThemeColor` | Choose an RGBA busy ring color or an active theme token. The default is the foreground color. |
 | `Keep` | false. Set true to retain the result marker. |
 
 ## Interaction
 
-Set Busy when work starts, then pass Success or Error when it finishes. Idle has no indicator. CUI animates the ring and expires the result marker unless Keep is enabled. The gallery pairs it with an Upload button and a caption.
+Set `Busy` when work starts. Set `Success` or `Error` when work finishes. `Idle`
+reserves space without drawing an indicator. The busy ring uses the chosen
+ink. Results use the theme's success and danger colors. CUI removes the
+result after its animation unless `Keep` is true. Reduced motion displays
+the result immediately. A spinner that returns before its native state
+expires resumes the existing result timer.
+
+The gallery's Upload button starts a two-second background effect using the
+session clock. Success and error alternate. The button accepts input again
+after the completion message is processed.
+
+Read CUI's presentation clock through `Painting.Surface.Time` in a
+[canvas callback](../canvas-and-bars/painting.md).
 
 ## See also
 

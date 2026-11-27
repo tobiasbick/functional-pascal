@@ -6,12 +6,13 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    /// <summary>Reports the native primary+K shortcut when an editor has no keyboard claim.</summary>
-    /// <returns>Whether the shortcut was pressed.</returns>
-    public bool CommandPaletteShortcut()
+    /// <summary>Consumes the native primary+K shortcut when an editor has no keyboard claim.</summary>
+    /// <param name="open">Whether the palette is already open and owns the search field.</param>
+    /// <returns>Whether this call consumed the shortcut.</returns>
+    public bool CommandPaletteShortcut(bool open = false)
     {
         CheckFrame();
-        return NativeMethods.PaletteShortcut(context) != 0;
+        return NativeMethods.PaletteShortcut(context, open ? 0 : shortcutEditor) != 0;
     }
 
     /// <summary>Draws CUI's searchable modal and returns the chosen command and visibility.</summary>
@@ -28,16 +29,16 @@ public sealed partial class CuiWindow
         ArgumentNullException.ThrowIfNull(commands);
         int count = commands.Length;
         var titles = new string[count];
-        var icons = new string[count];
-        var groups = new string[count];
-        var shortcuts = new string[count];
+        var icons = new string?[count];
+        var groups = new string?[count];
+        var shortcuts = new string?[count];
         for (int i = 0; i < count; i++)
         {
             var cmd = commands[i];
             Utf8.Validate(cmd.Title, nameof(commands));
-            Utf8.Validate(cmd.Icon, nameof(commands));
-            Utf8.Validate(cmd.Group, nameof(commands));
-            Utf8.Validate(cmd.Shortcut, nameof(commands));
+            if (cmd.Icon is not null) Utf8.Validate(cmd.Icon, nameof(commands));
+            if (cmd.Group is not null) Utf8.Validate(cmd.Group, nameof(commands));
+            if (cmd.Shortcut is not null) Utf8.Validate(cmd.Shortcut, nameof(commands));
             titles[i] = cmd.Title;
             icons[i] = cmd.Icon;
             groups[i] = cmd.Group;

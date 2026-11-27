@@ -4,6 +4,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Pickers.DatePicker;
 
 uses Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing;
 uses Fpas.Ui.Gui.Internal.Widgets.Pickers.CalendarParts as Parts;
 uses Fpas.Ui.Widgets.Pickers.DatePickers as P;
 
@@ -29,13 +30,14 @@ begin
   const Accept: bool := Settings.Enabled and Frame.AcceptInput;
   const Role: string := 'date-picker';
   const Token: string := C.Token(Role, Id);
+  const Width: Sizing.NativeExtent := Sizing.Extent(Settings.Width);
   const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Part: int): string => Parts.Token(Id, Part)
   end if;
   const Result: CuiPickers.CuiCalendarResult := Frame.Window.DatePicker(
-    Token, Value, Settings.Label, Settings.Placeholder, Settings.Width, Accept,
+    Token, Value, Settings.Label, Settings.Placeholder, Width.Kind, Width.Value, Accept,
     C.WantsFocus of TMsg(Frame, Id, Token, Accept), Track
   );
   if Settings.Label <> '' and not Frame.PaintingClosed then

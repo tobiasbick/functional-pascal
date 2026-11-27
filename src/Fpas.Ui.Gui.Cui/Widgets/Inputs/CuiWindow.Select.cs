@@ -12,21 +12,25 @@ public sealed partial class CuiWindow
     /// <param name="icons">One glyph or empty string per choice.</param>
     /// <param name="selected">Current index, or minus one.</param>
     /// <param name="label">Optional caption above the trigger.</param>
-    /// <param name="placeholder">Optional unselected caption.</param>
+    /// <param name="placeholder">Unselected caption. Null uses CUI's Select placeholder.</param>
     /// <param name="searchable">Whether the popup includes a filter field.</param>
     /// <param name="enabled">Whether the control accepts input.</param>
     /// <param name="focus">Whether to request trigger focus.</param>
     /// <param name="trackOption">Maps original indices to tracking IDs, or null to skip tracking.</param>
+    /// <param name="widthKind">Native width kind. Zero uses the default for the label.</param>
+    /// <param name="width">Fixed width in logical units or percentage of available width.</param>
     /// <returns>Current native selection and popup state.</returns>
     public unsafe CuiSelectResult Select(string id, string[] items, string[] icons, int selected,
-        string label, string placeholder, bool searchable, bool enabled, bool focus, Func<int, string>? trackOption)
+        string label, string? placeholder, bool searchable, bool enabled, bool focus, Func<int, string>? trackOption,
+        int widthKind = 0, float width = 0)
     {
         CheckFrame();
         string stable = Stable(id);
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(icons);
         Utf8.Validate(label, nameof(label));
-        Utf8.Validate(placeholder, nameof(placeholder));
+        if (placeholder is not null) Utf8.Validate(placeholder, nameof(placeholder));
+        CheckExtent(widthKind, width, nameof(width));
         if (items.Length == 0 || icons.Length != items.Length)
             throw new ArgumentException("Supply a nonempty list of choices with one glyph per choice.");
         if (selected < -1 || selected >= items.Length) throw new ArgumentOutOfRangeException(nameof(selected));
@@ -42,7 +46,8 @@ public sealed partial class CuiWindow
         bool open;
         fixed (int* parts = nodes)
             open = NativeMethods.Select(context, stable, items, icons, items.Length, ref selected,
-                Optional(label), Optional(placeholder), searchable ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0, parts) != 0;
+                Optional(label), placeholder, searchable ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0,
+                widthKind, width, parts) != 0;
         if (trackOption is not null) TrackControl(id, nodes[0]);
         if (!open) return new(selected, false, []);
 

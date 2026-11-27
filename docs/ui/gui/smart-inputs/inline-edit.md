@@ -40,16 +40,23 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Placeholder` | Empty. Shown when the model value is empty. |
-| `Face / FontSize` | Medium / 0. The other faces are Display and Mono. Zero uses the native body size. |
+| `Placeholder` | Null. CUI shows Untitled at rest when the value is empty. An empty caption hides the placeholder. |
+| `Face` | Medium. Display, Mono, and Icons are also available. The same face displays the text at rest and while editing. |
+| `FontSize` | 0 uses the native body size. Set a positive size in logical units to override it. |
 | `MaxUtf8Bytes` | 255. Set 1 to 511 bytes, excluding the terminator. |
-| `Width / Enabled` | Content / true. |
+| `Width` | Content fits the text and grows the editor as the user types. Fill, Fixed, and Percent set the outer width. |
+| `Enabled` | true. Disabling an editor discards its draft. |
 
 ## Interaction
 
-Click the text to edit it. CUI retains the draft until Enter or focus loss
-proposes a commit. Escape restores the model text. Handle the committed
-proposal in the update and return the accepted title to the view.
+Click the text to select it for editing. Tab focuses the text. Enter or Space
+on focused text starts editing. Enter or focus loss proposes a commit if the
+draft differs from the model. Escape discards the draft and its undo history.
+Handle the committed proposal in the update and return the accepted value.
+
+If the model changes while editing, the editor replaces the draft and resets
+the undo history. Use the font roles to customize the selected face for the
+window. [Fonts and native captions](../host.md#fonts-and-native-captions)
 
 ## See also
 

@@ -31,7 +31,7 @@ begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
   const Token: string := C.Token('status-button', Id);
   if Frame.Window.StatusButton(
-    Token, Label, cast State as int, Text.Caption(Label, B.Status.Busy, Settings),
+    Token, Label, cast State as int, Settings.BusyLabel,
     Settings.SuccessLabel, Settings.ErrorLabel, Settings.Icon,
     cast Settings.Variant as int, cast Settings.ControlSize as int, Enabled,
     C.WantsFocus of TMsg(Frame, Id, Token, Enabled)

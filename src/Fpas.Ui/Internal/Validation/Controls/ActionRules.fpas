@@ -24,14 +24,11 @@ begin
     R.Reject(At, 'A speed dial needs one through sixteen actions and a native placement.');
   end if;
 
-  R.CheckText(Settings.Icon, At + '/icon');
-  R.CheckText(Settings.Tooltip, At + '/tooltip');
+  R.CheckText(Settings.Icon ?? '', At + '/icon');
+  R.CheckText(Settings.Tooltip ?? '', At + '/tooltip');
   for Item: D.Item in Items do
-    R.CheckText(Item.Label, At + '/action');
-    R.CheckText(Item.Icon, At + '/glyph');
-    if Sys.String.IsNullOrWhiteSpace(Item.Label) or Item.Icon = '' then
-      R.Reject(At, 'Each speed dial action needs a label and glyph.');
-    end if;
+    R.CheckText(Item.Label ?? '', At + '/action');
+    R.CheckText(Item.Icon ?? '', At + '/glyph');
   end for;
 end procedure;
 
@@ -50,19 +47,16 @@ public procedure SwipeRow(
   procedure Check(Items: array of S.Item);
   begin
     for Item: S.Item in Items do
-      R.CheckText(Item.Label, At + '/action');
-      R.CheckText(Item.Icon, At + '/glyph');
-      if Sys.String.IsNullOrWhiteSpace(
-        Item.Label
-      ) or not Sys.Enum.IsDefined of Styles.Tone(Item.Tone)
-      then
-        R.Reject(At, 'Each swipe action needs a label and native tone.');
+      R.CheckText(Item.Label ?? '', At + '/action');
+      R.CheckText(Item.Icon ?? '', At + '/glyph');
+      if not Sys.Enum.IsDefined of Styles.Tone(Item.Tone) then
+        R.Reject(At, 'Each swipe action needs a native tone.');
       end if;
     end for;
   end procedure;
 begin
-  if Left.Length > 100 or (Left.Length = 0 and Right.Length = 0) then
-    R.Reject(At, 'A swipe row needs an action and can have at most 100 left actions.');
+  if Left.Length > 100 then
+    R.Reject(At, 'A swipe row can have at most 100 left actions.');
   end if;
 
   R.CheckText(Settings.Icon, At + '/icon');

@@ -8,8 +8,8 @@ internal static partial class NativeMethods
 {
     [LibraryImport(Library, EntryPoint = "fpas_cui_alert", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int Alert(nint context, string id, string title, string description,
-        string icon, int tone, int dismissible, int enabled, int focus,
+    internal static partial int Alert(nint context, string id, string title, string? description,
+        string? icon, int tone, int dismissible, int enabled, int focus,
         out int node, out int dismiss, out uint key);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_progress", StringMarshalling = StringMarshalling.Utf8)]

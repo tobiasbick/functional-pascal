@@ -13,8 +13,9 @@ uses Fpas.Ui.Elements as E;
 // - `Label`: Literal caption for the interactive row.
 // - `On`: Current model-owned value.
 // - `OnChange`: Maps a changed value to an application message.
-// - `Description`: Optional secondary text below the caption.
+// - `Description`: Secondary text below the caption. Null omits the line.
 // - `Enabled`: Whether the row accepts input.
+// - `HideLabel`: Draw only the switch while retaining its accessible label.
 // ## Returns
 // The control that proposes changes to the model.
 public function Switch of TMsg(
@@ -22,12 +23,13 @@ public function Switch of TMsg(
   Label: string;
   On: bool;
   OnChange: function(bool): TMsg;
-  Description: string := '';
-  Enabled: bool := true
+  Description: string? := null;
+  Enabled: bool := true;
+  HideLabel: bool := false
 ): E.Element of TMsg;
 requires Id <> '';
 begin
-  return (E.Element of TMsg).SwitchAction(Id, Label, On, OnChange, Description, Enabled);
+  return (E.Element of TMsg).SwitchAction(Id, Label, On, OnChange, Description, Enabled, HideLabel);
 end function;
 
 end unit;

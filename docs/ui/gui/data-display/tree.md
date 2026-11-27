@@ -41,13 +41,24 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Open / OnChange` | Pass the current flag to Branch and handle the next flag in the model. |
-| `OnActivate` | Optional message factory for a leaf. |
-| `Icon` | Empty uses the native file or folder icon. |
-| `Selected / Enabled` | false / true. Pass selection from the model. |
+| `OnActivate` | Null. Supply a message factory for a leaf or for a GUI branch. |
+| `Icon` | Null uses the native file or folder icon. An empty string draws no glyph. |
+| `Selected` | False. True applies CUI's selected background and text weight. |
+| `Enabled` | True. False disables row input. |
 
 ## Interaction
 
-Expand or collapse a branch at its header. CUI draws the chevron and indents its children. Activating a leaf sends its own message. Give each branch and leaf a stable ID independent of its caption.
+Click a branch or press Enter or Space to toggle it. Right opens a focused
+branch and Left closes it. `OnChange` proposes the new expansion state. CUI
+draws the chevron and indents the children.
+
+Click a row or press Enter or Space to invoke its `OnActivate` factory. If both
+callbacks apply to a branch, the GUI dispatches the expansion message first.
+Give each row a stable ID independent of its caption.
+
+In the gallery, the four component files can change the selection. Expand
+the assets branch to reveal the logo. The logo and `main.c` keep the current
+file selection when clicked.
 
 ## See also
 
@@ -69,5 +80,6 @@ Expand or collapse a branch at its header. CUI draws the chevron and indents its
 - `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
   - [tree.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree.c)
   - [tree.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree.h)
+- [CuiTreeTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiTreeTests.cs)
 
 - [Shared source tree sample](../../../../examples/ui/gui/gallery/Shared/SourceTree.fpas)

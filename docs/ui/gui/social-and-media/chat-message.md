@@ -33,15 +33,26 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Mine / Grouped / LastInGroup` | All false. Mine selects the outgoing bubble. Grouped continues the previous group. LastInGroup displays its avatar or receipt at the end. |
-| `Author / Time / Status / Avatar` | All empty. Avatar accepts a local image path. |
-| `Markdown` | false. Enables formatting inside the bubble. |
+| `Mine` | False. True uses the outgoing accent bubble. |
+| `Grouped` | False. True continues the previous group with tighter spacing and suppresses author and time above the bubble. |
+| `LastInGroup` | False. True shows the avatar for incoming messages and permits a receipt for grouped outgoing messages. |
+| `Author` | Null. Supplies the incoming sender label and avatar initials. |
+| `Time` | Null. Supplies the incoming time or the time after an outgoing receipt. |
+| `Status` | Null. Supplies the outgoing receipt on an ungrouped or final bubble. |
+| `Avatar` | Empty. Pass a local image path to replace the incoming sender's initials. |
+| `Markdown` | False. True renders compact Markdown inside the bubble. |
+| `OnMarkdown` | Null. With a Markdown body, supply a mapper to enable link and task interaction. |
 
 ## Interaction
 
-Set Grouped and LastInGroup from the message order in your transcript.
-The bubble is passive. For interactive Markdown link and task events, use
-the standalone Markdown widget.
+Set `Grouped` and `LastInGroup` from the message order in the transcript.
+Null text options omit the corresponding labels. An empty string keeps the
+label or receipt slot with blank text.
+
+The mapper receives the same link, hover and task messages as the standalone
+[Markdown widget](../code/markdown.md). Task offsets refer to the UTF-8 body
+of the bubble. Handle link activation and persist task changes in the update
+function.
 
 ## See also
 

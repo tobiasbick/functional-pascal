@@ -52,9 +52,10 @@ void fpas_cui_group_style(cui_ctx *ui, int node, uint32_t background, int backgr
 
 /** Draws text with explicit typography, reading direction, alignment and wrapping. */
 void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba,
-                             int direction, int alignment, int nowrap) {
+                             int direction, int alignment, int nowrap, int width_kind, float width, float line_height, int tabular) {
     const cui_text_opts options = { .font = (cui_font)font, .size = size, .color = fpas_chart_color(-1, rgba),
-        .direction = (cui_direction)direction, .align = (cui_text_align)alignment, .nowrap = nowrap != 0 };
+        .direction = (cui_direction)direction, .align = (cui_text_align)alignment, .nowrap = nowrap != 0,
+        .width = fpas_extent(width_kind, width), .line_height = line_height, .tabular = tabular != 0 };
     cui_text_ex(ui, text, &options);
 }
 

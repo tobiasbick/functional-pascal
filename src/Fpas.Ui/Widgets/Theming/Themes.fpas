@@ -300,6 +300,55 @@ begin
   return new Theme(Mode.Dark, Color, CreatePalette(true, cast Color as int));
 end function;
 
+// Resolves one semantic color from a palette.
+// ## Parameters
+// - `Value`: The active palette.
+// - `Token`: The semantic color to resolve.
+// ## Returns
+// The palette's straight-alpha color.
+public function PaletteColor(Value: Palette; Token: ColorToken): G.Color;
+requires cast Token as int >= cast ColorToken.Background as int
+  and cast Token as int <= cast ColorToken.Series6 as int;
+begin
+  return case Token of
+    when ColorToken.Background: Value.Background;
+    when ColorToken.Surface: Value.Surface;
+    when ColorToken.SurfaceRaised: Value.SurfaceRaised;
+    when ColorToken.SurfaceMuted: Value.SurfaceMuted;
+    when ColorToken.Foreground: Value.Foreground;
+    when ColorToken.TextSecondary: Value.TextSecondary;
+    when ColorToken.TextMuted: Value.TextMuted;
+    when ColorToken.Border: Value.Border;
+    when ColorToken.BorderSubtle: Value.BorderSubtle;
+    when ColorToken.BorderStrong: Value.BorderStrong;
+    when ColorToken.Accent: Value.Accent;
+    when ColorToken.AccentStrong: Value.AccentStrong;
+    when ColorToken.AccentSubtle: Value.AccentSubtle;
+    when ColorToken.AccentForeground: Value.AccentForeground;
+    when ColorToken.Success: Value.Success;
+    when ColorToken.Warning: Value.Warning;
+    when ColorToken.Danger: Value.Danger;
+    when ColorToken.Info: Value.Info;
+    when ColorToken.ControlOn: Value.ControlOn;
+    when ColorToken.ControlGlyph: Value.ControlGlyph;
+    when ColorToken.ControlTrack: Value.ControlTrack;
+    when ColorToken.ControlTrackHover: Value.ControlTrackHover;
+    when ColorToken.ControlThumb: Value.ControlThumb;
+    when ColorToken.ControlThumbOn: Value.ControlThumbOn;
+    when ColorToken.Hover: Value.Hover;
+    when ColorToken.Active: Value.Active;
+    when ColorToken.Scrim: Value.Scrim;
+    when ColorToken.FocusRing: Value.FocusRing;
+    when ColorToken.Series1: Value.Series1;
+    when ColorToken.Series2: Value.Series2;
+    when ColorToken.Series3: Value.Series3;
+    when ColorToken.Series4: Value.Series4;
+    when ColorToken.Series5: Value.Series5;
+    when ColorToken.Series6: Value.Series6;
+    else Value.Background;
+  end case;
+end function;
+
 // Composites a palette color onto an opaque background for explicit cell drawing.
 //
 // ## Parameters

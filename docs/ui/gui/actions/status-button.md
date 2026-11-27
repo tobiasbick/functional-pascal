@@ -30,16 +30,25 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `BusyLabel` | null uses the idle caption followed by an ellipsis |
-| `SuccessLabel / ErrorLabel` | Done / Failed |
-| `Variant / ControlSize / Enabled` | Primary / Medium / true |
+| `BusyLabel` | Null uses the idle caption followed by an ellipsis. |
+| `SuccessLabel` | `Done`. |
+| `ErrorLabel` | `Failed`. |
+| `Icon` | Null omits the idle glyph. An empty string reserves the glyph's space. |
+| `Variant` | `Primary`. `Default` also uses the native primary appearance. Other choices are `Secondary`, `Destructive`, `Outline`, `Ghost` and `Link`. |
+| `ControlSize` | `Medium`. Also accepts `Small` and `Large`. |
+| `Enabled` | True. False rejects activation and focus. |
 
 ## Interaction
 
 The application owns Idle, Busy, Success and Error. Click, Enter or Space
 sends the message only in Idle. Busy and result states remain focusable
-while enabled. Use a background command to report completion and reset the
-model when appropriate.
+while enabled. CUI draws a spinner, check or error glyph. Use an empty caption
+to show the corresponding glyph on its own.
+
+Use a background command to report completion and reset the model. The gallery
+shows Busy for 1.4 seconds and Saved for 1.6 seconds. The host wakes when it
+receives the timed messages. [Redraw requests](../host.md#invalidation-and-inspection)
+repaint a view without advancing its model.
 
 ## See also
 

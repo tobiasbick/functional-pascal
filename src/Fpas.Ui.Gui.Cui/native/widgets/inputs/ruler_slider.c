@@ -1,8 +1,9 @@
 // [Documentation](../../../../../docs/ui/gui/pickers/ruler-slider.md)
 #include "../../fpas_cui.h"
 
+/** Draws the retained native ruler with a stable tape identity. */
 int fpas_cui_ruler_slider(cui_ctx *ui, const char *id, const char *label, float *value,
-    float minimum, float maximum, float step, int major_every, float spacing, float width,
+    float minimum, float maximum, float step, int major_every, float spacing, int width_kind, float width,
     const char *format, const char *unit, int enabled, int focus, int *track) {
     const cui_id group = cui_make_id(ui, id), key = group ^ 0x2017u;
     const bool allowed = enabled && !cui_is_disabled(ui);
@@ -14,8 +15,8 @@ int fpas_cui_ruler_slider(cui_ctx *ui, const char *id, const char *label, float 
 
     const cui_ruler_opts options = {
         .step = step, .major_every = major_every, .spacing = spacing,
-        .width = width > 0 ? CUI_PX(width) : CUI_FILL,
-        .format = cui__frame_strdup(ui, format, -1), .unit = unit
+        .width = fpas_extent(width_kind, width),
+        .format = format ? cui__frame_strdup(ui, format, -1) : NULL, .unit = unit
     };
     float next = *value;
     cui_push_disabled(ui, !enabled);

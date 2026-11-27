@@ -36,8 +36,15 @@ begin
   Tokens.Add(C.Token('tabs', Id));
   var Focus: int := 0;
   for Index: int := 0 to Items.Length - 1 do
-    Labels.Add(Items[Index].Label);
-    Icons.Add(Items[Index].Icon);
+    const Item: T.Item := Items[Index];
+    Labels.Add(
+      if Item.IconOnly then
+        ''
+      else
+        Item.Label
+      end if
+    );
+    Icons.Add(Item.Icon);
     const Token: string := C.Token('tab', Id, Index.ToString());
     Tokens.Add(Token);
     if C.WantsFocus of TMsg(Frame, T.ItemId(Id, Index), Token, Enabled)

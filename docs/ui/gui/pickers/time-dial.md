@@ -31,13 +31,14 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
+| `Id` | Stable dial ID. |
 | `Value` | System.TimeOnly at minute precision. |
-| `Size` | 0 selects CUI's default face size of 248 logical points. |
+| `Size` | Finite face diameter in logical units. Nonpositive uses 248. Positive values below 160 use 160. |
 | `Enabled` | true. |
 
 ## Interaction
 
-Activate the hour or minute selector and choose a point on the dial. Selecting an hour switches the face to minutes. The outer hour ring shows 1–12 and the inner ring shows the remaining 24-hour values. Use `SelectorId` and `FaceId` to identify the native controls.
+Activate the hour or minute selector and drag the clock hand. Releasing the hour hand switches the face to minutes. The outer ring shows 1 through 12. The inner ring shows 00 and 13 through 23. Use `SelectorId` and `FaceId` to identify the native controls.
 
 ## See also
 

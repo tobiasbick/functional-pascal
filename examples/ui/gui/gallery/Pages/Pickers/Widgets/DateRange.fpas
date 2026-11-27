@@ -4,7 +4,7 @@ unit GuiGallery.Pages.Pickers.Widgets.DateRange;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Pickers.DateRangeCalendars as C;
 uses Fpas.Ui.Widgets.Pickers.DateRangePickers as P;
 
@@ -16,32 +16,31 @@ uses GuiGallery.Shared.Sections as G;
 // - `Model`: Picker and shared stay selections.
 // ## Returns
 // The presets and preset-free fields followed by the linked calendar.
-public function View(Model: State.Model): E.Element of State.Msg;
+public function View(Model: State.Model): array of E.Element of State.Msg;
 begin
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
+  const Width: L.Extent := L.Extent.Fixed(L.Measure.Logical(300));
+  return [
     E.Row of State.Msg(
-      new L.Flow(Gap := G.Points(12), Wrap := true),
+      new L.Flow(Gap := G.Points(12), Wrap := true, Clip := false),
       P.DateRangePicker of State.Msg(
-        'picker-date-range', Model.DateRange, State.Msg.SetDateRange, new P.Options(Width := 300.0F)
+        'picker-date-range', Model.DateRange, State.Msg.SetDateRange, new P.Options(Width := Width)
       ),
       P.DateRangePicker of State.Msg(
         'picker-stay',
         Model.Stay,
         State.Msg.SetStay,
-        new P.Options(Width := 300.0F, Presets := false)
+        new P.Options(Width := Width, Presets := false)
       )
     ),
     E.Row of State.Msg(
-      E.Styled of State.Msg(
-        E.Column of State.Msg(
-          new L.Flow(Padding := G.Points(16)),
+      new L.Flow(Clip := false),
+      Cards.Card of State.Msg(
+        'picker-inline-range-card', [
           C.DateRangeCalendar of State.Msg('picker-inline-range', Model.Stay, State.Msg.SetStay)
-        ),
-        S.Role.OutlinedPanel
+        ], new Cards.Options(Padding := 16.0F)
       )
     )
-  );
+  ];
 end function;
 
 end unit;

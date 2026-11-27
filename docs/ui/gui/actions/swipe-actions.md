@@ -32,16 +32,25 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Item.Icon / Item.Tone` | Empty / Neutral |
-| `Options.Icon / Options.Detail` | Both empty |
-| `Options.Enabled` | true |
+| `Id` | Stable row ID. Assign a different ID to each repeated row. |
+| `Content` | Foreground view in a native horizontal row. |
+| `Left / Right` | Ordered actions on each side. Either list can be empty. The left side accepts up to 100 actions. |
+| `Item.Label` | Optional caption. Pass null to omit it. |
+| `Item.Icon` | Null. Supply a CUI glyph to show it above the caption. |
+| `Item.Tone` | Neutral. Sets the action tile's color. |
+| `Options.Icon / Options.Detail` | Both empty. Supply a leading glyph or a trailing annotation for the foreground. |
+| `Options.Enabled` | true. Set to false to close the row and stop gesture input. |
 
 ## Interaction
 
-Drag the row sideways with the pointer or scroll horizontally over it to
-reveal the actions. The callback receives the revealed side and zero-based
-index when an action is chosen. Provide another way to reach the commands if
-the app needs keyboard-only operation.
+Drag the row sideways with the pointer or scroll horizontally over it. Moving
+right reveals the left actions. Moving left reveals the right actions. A long
+swipe selects the first action on that side. Select an exposed tile or click
+elsewhere to close the row. The callback receives the side and zero-based
+index when an action is chosen.
+
+Use `ItemId` to inspect a revealed action. Provide a separate control for
+keyboard access to the same commands.
 
 ## See also
 

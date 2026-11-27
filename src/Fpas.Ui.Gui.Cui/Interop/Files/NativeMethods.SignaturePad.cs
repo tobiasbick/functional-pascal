@@ -8,8 +8,8 @@ internal static partial class NativeMethods
 {
     [LibraryImport(Library, EntryPoint = "fpas_cui_signature_pad", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int SignaturePad(nint context, string id, string? placeholder, float height, uint rgba,
-        int enabled, int focusClear, out int node, out int clear);
+    internal static partial int SignaturePad(nint context, string id, string? placeholder, int widthKind,
+        float width, float height, int inkPalette, uint rgba, int enabled, int focusClear, out int node, out int clear);
 
     [LibraryImport(Library, EntryPoint = "cui_signature_points", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

@@ -1,6 +1,7 @@
 // [Documentation](../../../../../docs/ui/gui/disclosure/link.md)
 #include "../../fpas_cui.h"
 
+/** Draws the focus indication missing from CUI-050 (docs/future/cui-upstream-bugs.md#cui-050). */
 static void fpas_paint_link(cui_ctx *ui, cui_node *node, void *data) {
     cui__paint_underline(ui, node, data);
     const cui__btn_state *state = cui__state_lazy(ui, node->id, sizeof *state, false);

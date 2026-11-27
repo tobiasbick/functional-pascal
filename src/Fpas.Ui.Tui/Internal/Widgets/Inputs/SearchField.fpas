@@ -50,11 +50,7 @@ begin
     Id, Value, Propose,
     new Fields.Options(
       Label := Settings.Label,
-      Placeholder := if Settings.Placeholder = '' then
-        'Search'
-      else
-        Settings.Placeholder
-      end if,
+      Placeholder := Settings.Placeholder ?? 'Search',
       Enabled := Settings.Enabled,
       ReadOnly := Settings.ReadOnly,
       MaxUtf8Bytes := Settings.MaxUtf8Bytes

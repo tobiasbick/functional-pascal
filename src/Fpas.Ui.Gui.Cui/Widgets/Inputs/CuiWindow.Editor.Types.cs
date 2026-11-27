@@ -16,5 +16,9 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Inputs;
 /// <param name="Size">Native medium, small or large size ordinal.</param>
 /// <param name="ReadOnly">Allow focus and selection while preventing edits.</param>
 /// <param name="MaxUtf8Bytes">Maximum value size excluding the terminator.</param>
-public sealed record CuiEditorOptions(string Label, string Placeholder, string Icon, string Hint, string Error,
-    string Prefix, string Suffix, int Size, bool ReadOnly, int MaxUtf8Bytes);
+/// <param name="WidthKind">Default, fill, fixed or percentage in that order.</param>
+/// <param name="Width">Fixed logical width or percentage, when selected.</param>
+/// <param name="Autofocus">Request focus on the first presentation of an enabled editor.</param>
+public sealed record CuiEditorOptions(string Label, string? Placeholder, string Icon, string Hint, string Error,
+    string Prefix, string Suffix, int Size, bool ReadOnly, int MaxUtf8Bytes,
+    int WidthKind = 0, float Width = 0, bool Autofocus = false);

@@ -30,11 +30,17 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Password` | Pass the same model value used by the password field. |
-| `Score` | CUI computes a score from 0 through 4 and selects the label. |
 
 ## Interaction
 
-The meter is read-only. When the editor proposes a change, update the password in the model and pass it to both widgets in the next view. The GUI snapshot reports the strength label and score.
+When the editor proposes a change, update the password in the model.
+Pass the new value to both widgets in the next view.
+
+CUI adds one point each for eight UTF-8 bytes, twelve UTF-8 bytes, mixed ASCII
+letter case, an ASCII digit, and a symbol. Other bytes count as symbols.
+CUI caps the sum at four, or at one for a draft shorter than eight bytes.
+An empty draft hides the label. The GUI snapshot reports the strength label
+and score.
 
 ## See also
 

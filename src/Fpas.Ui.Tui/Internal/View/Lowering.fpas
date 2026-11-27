@@ -297,7 +297,7 @@ public function Prepare of TMsg(
         const Label: string,
         const Checked: bool,
         const Change: function(bool): TMsg,
-        const Description: string,
+        const Description: string?,
         const Enabled: bool,
         const Indeterminate: bool,
         const HideLabel: bool
@@ -307,7 +307,7 @@ public function Prepare of TMsg(
           Label,
           Checked,
           Change,
-          Description,
+          Description ?? '',
           Enabled,
           Indeterminate,
           HideLabel
@@ -317,10 +317,11 @@ public function Prepare of TMsg(
         const Label: string,
         const On: bool,
         const Change: function(bool): TMsg,
-        const Description: string,
-        const Enabled: bool
+        const Description: string?,
+        const Enabled: bool,
+        const HideLabel: bool
       ):
-        return Toggles.Switch of TMsg(Id, Label, On, Change, Description, Enabled);
+        return Toggles.Switch of TMsg(Id, Label, On, Change, Description ?? '', Enabled, HideLabel);
       when Ui.Element.TextArea(
         const Id: string, const Value: string, const Change: function(string): TMsg,
         const Settings: Areas.Options, const Submit: Sys.Func of (string, TMsg)?
@@ -328,7 +329,10 @@ public function Prepare of TMsg(
         const Rows: int := Geometry.Cells(
           L.Measure.Logical(
             if Settings.Height > 0 then
-              Settings.Height
+              cast Sys.Math.Min(
+                Sys.Math.Ceiling(cast Settings.Height as double),
+                cast int.MaxValue as double
+              ) as int
             else
               96
             end if
@@ -485,8 +489,12 @@ public function Prepare of TMsg(
           Id, Visit(Base, Colors, ParentHorizontal), Open,
           new E.ModalOptions(
             Settings.Title,
-            Settings.Description,
-            Settings.Size,
+            Settings.Description ?? '',
+            if Settings.Size > 0.0F then
+              Settings.Size
+            else
+              400.0F
+            end if,
             Settings.Edge,
             Settings.InitialFocus,
             Sheets.CloseId(Id)
@@ -501,7 +509,13 @@ public function Prepare of TMsg(
         return Panel.Lower of TMsg(
           Id, Visit(Base, Colors, ParentHorizontal), Open,
           new E.ModalOptions(
-            Settings.Title, Settings.Description, Settings.Width, null, Settings.InitialFocus,
+            Settings.Title, Settings.Description ?? '',
+            if Settings.Width > 0.0F then
+              Settings.Width
+            else
+              440.0F
+            end if,
+            null, Settings.InitialFocus,
             if Settings.CloseButton then
               Dialogs.CloseId(Id)
             else

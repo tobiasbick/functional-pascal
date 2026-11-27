@@ -10,8 +10,8 @@ public type Field = record
   public Name: string;
   // Options in bit order, with at most 32 entries.
   public Values: array of string;
-  // Optional CUI glyph.
-  public Icon: string := '';
+  // Optional CUI glyph. Null omits the icon slot.
+  public Icon: string? := null;
 end record;
 
 // Current filter state and a change proposal.

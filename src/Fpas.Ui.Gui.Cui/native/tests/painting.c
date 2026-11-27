@@ -25,7 +25,7 @@ static void paint(void *user, cui_ctx *ui, cui_rect r, cui_id images, int disabl
     if (s->adapter) {
         fpas_cui_canvas_primitive(ui,10,r.x,r.y,clip,0,0,NULL);
         fpas_cui_canvas_primitive(ui,3,r.x,r.y,rect,other,packed,NULL);
-        fpas_cui_canvas_primitive(ui,1,r.x,r.y,circle,packed,0,NULL);
+        fpas_cui_canvas_primitive(ui,1,r.x,r.y,circle,fpas_cui_canvas_color(ui,CUI_TOKEN_ACCENT),0,NULL);
         fpas_cui_canvas_primitive(ui,2,r.x,r.y,line,packed,0,NULL);
         fpas_cui_canvas_primitive(ui,5,r.x,r.y,shadow,packed,0,NULL);
         fpas_cui_canvas_primitive(ui,0,r.x,r.y,rect,other,0,NULL);
@@ -41,7 +41,7 @@ static void paint(void *user, cui_ctx *ui, cui_rect r, cui_id images, int disabl
     } else {
         cui_push_clip(ui,(cui_rect){r.x+5,r.y+5,360,180});
         cui_draw_rect_border(ui,(cui_rect){r.x+10,r.y+10,100,60},CUI_CORNERS(8),fill,ink,2);
-        cui_draw_circle(ui,(cui_vec2){r.x+145,r.y+40},18,ink);
+        cui_draw_circle(ui,(cui_vec2){r.x+145,r.y+40},18,CUI_COLOR_ACCENT);
         cui_draw_line(ui,(cui_vec2){r.x+10,r.y+90},(cui_vec2){r.x+180,r.y+90},2,ink);
         cui_draw_shadow(ui,(cui_rect){r.x+210,r.y+20,50,50},CUI_CORNERS(5),8,-2,(cui_vec2){0,3},ink);
         cui_draw_rect(ui,(cui_rect){r.x+10,r.y+10,100,60},CUI_CORNERS(8),fill);
@@ -176,4 +176,48 @@ static bool resources(void) {
     return count.blocks==0;
 }
 
-int main(void) { return parity(false,1)&&parity(true,1)&&parity(false,2)&&parity(true,2)&&resources()&&image_lifetime()?0:1; }
+/** Compares the native palette interpolation and checks that reapplication does not restart it. */
+static bool theme_transition(void) {
+    cui_ctx *actual = cui_create(NULL);
+    cui_ctx *direct = cui_create(NULL);
+    const cui_ctx_desc description = { .theme = CUI_THEME_DARK, .accent = CUI_ACCENT_BLUE };
+    cui_ctx *target = cui_create(&description);
+    uint32_t light[CUI_TOKEN_COUNT - 1], dark[CUI_TOKEN_COUNT - 1];
+    fpas_cui_theme_read(actual, light);
+    fpas_cui_theme_read(target, dark);
+    float metrics[40];
+    fpas_cui_theme_metrics(actual, metrics, 0);
+    metrics[3] = 31;
+
+    cui_set_theme(direct, CUI_THEME_DARK);
+    cui_set_accent(direct, CUI_ACCENT_BLUE);
+    fpas_cui_theme(actual, 1, CUI_ACCENT_BLUE, dark, metrics, 1);
+    bool ok = cui_needs_redraw(actual) && cui_theme_get(actual)->control_sm == 31;
+    const int index = CUI_TOKEN_BACKGROUND - 1;
+    for (int frame = 0; frame < 10; frame++) {
+        cui_begin_frame(actual, .04f);
+        cui_begin_frame(direct, .04f);
+        fpas_cui_theme(actual, 1, CUI_ACCENT_BLUE, dark, metrics, 1);
+        const uint32_t color = fpas_cui_canvas_color(actual, CUI_TOKEN_BACKGROUND);
+        uint32_t painted[CUI_TOKEN_COUNT - 1], expected[CUI_TOKEN_COUNT - 1];
+        fpas_cui_theme_read(actual, painted);
+        fpas_cui_theme_read(direct, expected);
+        ok = ok && color == expected[index] && memcmp(painted, expected, sizeof painted) == 0;
+        if (frame == 0) ok = ok && color != light[index] && color != dark[index];
+        cui_end_frame(actual);
+        cui_end_frame(direct);
+    }
+    ok = ok && fpas_cui_canvas_color(actual, CUI_TOKEN_BACKGROUND) == dark[index];
+    metrics[14] = 0;
+    fpas_cui_theme(actual, 0, CUI_ACCENT_NEUTRAL, light, metrics, 1);
+    ok = ok && fpas_cui_canvas_color(actual, CUI_TOKEN_BACKGROUND) == light[index];
+    cui_destroy(target);
+    cui_destroy(direct);
+    cui_destroy(actual);
+    if (!ok) fprintf(stderr, "Theme palette transition diverged from CUI.\n");
+    return ok;
+}
+
+int main(void) {
+    return parity(false,1)&&parity(true,1)&&parity(false,2)&&parity(true,2)&&resources()&&image_lifetime()&&theme_transition()?0:1;
+}

@@ -2,11 +2,12 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Files.SignaturePad;
 
-uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as ChartData;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Files.SignaturePads as S;
 
 uses System as Sys;
@@ -43,18 +44,11 @@ begin
   const ClearRole: string := 'signature-clear';
   const ClearId: string := S.ClearId(Id);
   const ClearToken: string := C.Token(ClearRole, ClearId);
-  const Ink: G.Color? := Settings.Ink;
-  const Rgba: uint := if Ink = null then
-    0u
-  elsif Ink.Alpha = 0 then
-    1u
-  else
-    cast Ink.Red as uint or (cast Ink.Green as uint shl 8)
-    or (cast Ink.Blue as uint shl 16) or (cast Ink.Alpha as uint shl 24)
-  end if;
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   var ClearVisible: bool := false;
   const Value: CuiFiles.CuiSignature? := Frame.Window.SignaturePad(
-    C.Token(Role, Id), Settings.Placeholder, Settings.Height, Rgba, Enabled,
+    C.Token(Role, Id), Settings.Placeholder, Width.Kind, Width.Value,
+    Settings.Height, ChartData.Color(Settings.Ink), Enabled,
     C.WantsFocus of TMsg(Frame, ClearId, ClearToken, Enabled),
     not Frame.PaintingClosed, OnChange <> null, ClearToken, out ClearVisible
   );

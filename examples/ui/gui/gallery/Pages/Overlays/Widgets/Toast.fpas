@@ -6,6 +6,7 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Toasts as Toasts;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Overlays.State as State;
@@ -15,11 +16,11 @@ uses GuiGallery.Shared.State as Demo;
 // Builds the four toast triggers from CUI's Overlays page.
 //
 // ## Returns
-// The native gallery section with passive notifications and timed Undo.
-public function View(): E.Element of State.Msg;
+// The section heading and native card for the toast examples.
+public function View(): array of E.Element of State.Msg;
 begin
   const Buttons: E.Element of State.Msg := E.Row of State.Msg(
-    new L.Flow(Gap := G.Points(8), Wrap := true),
+    new L.Flow(Gap := G.Points(8), Wrap := true, Clip := false),
     B.Button of State.Msg(
       'toast-save-profile', 'Save profile',
       State.Msg.Shared(
@@ -44,7 +45,12 @@ begin
         )
       )
     ),
-    B.Button of State.Msg('toast-archive', 'Archive a message', State.Msg.ArchiveMessage),
+    B.Button of State.Msg(
+      'toast-archive', 'Archive a message',
+      State.Msg.Shared(
+        Demo.Msg.Notify('Message archived', new Toasts.Options(ActionLabel := 'Undo'))
+      )
+    ),
     B.Button of State.Msg(
       'toast-update', 'Check for updates',
       State.Msg.Shared(
@@ -58,11 +64,10 @@ begin
       )
     )
   );
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
+  return [
     G.Heading of State.Msg(Strings.Get('Heading.Toasts'), Strings.Get('Heading.ToastsHint')),
-    G.Card of State.Msg(12, [Buttons])
-  );
+    Cards.Card of State.Msg('overlays-toast-card', [Buttons])
+  ];
 end function;
 
 end unit;

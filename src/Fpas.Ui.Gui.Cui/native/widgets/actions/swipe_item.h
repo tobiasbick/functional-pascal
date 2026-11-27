@@ -5,7 +5,7 @@
 /** Begins a native swipe row. Child content is drawn before calling fpas_cui_swipe_end.
  * @param ui Current drawing context.
  * @param id Stable row identity.
- * @param labels Ordered left then right action labels.
+ * @param labels Optional action labels, in left then right order.
  * @param icons Optional glyphs for each action.
  * @param tones Native tone ordinal for each action.
  * @param left_count Number of actions on the left.
@@ -13,7 +13,7 @@
  * @param enabled Whether the row accepts input.
  * @param icon Optional leading glyph for the row.
  * @param nodes Output row and revealed action nodes.
- * @return Native outer node used by fpas_cui_swipe_end. */
+ * @return Native outer node used by fpas_cui_swipe_end, or -1 at a CUI nesting limit. */
 CUI_API int fpas_cui_swipe_begin(cui_ctx *ui, const char *id, const char *const *labels,
     const char *const *icons, const int *tones, int left_count, int right_count, int enabled,
     const char *icon, int *nodes);

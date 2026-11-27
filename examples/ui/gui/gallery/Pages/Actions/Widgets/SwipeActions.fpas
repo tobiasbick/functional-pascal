@@ -3,18 +3,22 @@
 unit GuiGallery.Pages.Actions.Widgets.SwipeActions;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.SwipeActions as Swipe;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 
 uses GuiGallery.Pages.Actions.State as State;
-uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 
 function Row(Id: string; Title: string): E.Element of State.Msg;
 begin
   return Swipe.SwipeItem of State.Msg(
-    Id, E.Size of State.Msg(E.Text of State.Msg(Title), new L.Flex(Basis := L.Extent.Fill)),
+    Id, E.FormattedText of State.Msg(
+      Title, Graphics.Font.Body, 0.0F, new Graphics.Color(0, 0, 0, 0),
+      NoWrap := true, Width := L.Extent.Fill
+    ),
     [new Swipe.Item('Done', Sys.Char.ConvertFromUtf32($E06C), S.Tone.Success)],
     [
       new Swipe.Item('Archive', Sys.Char.ConvertFromUtf32($E041), S.Tone.Info),
@@ -30,14 +34,12 @@ end function;
 // A compact card of preview tasks.
 public function View(): E.Element of State.Msg;
 begin
-  return E.Styled of State.Msg(
-    E.Column of State.Msg(
-      new L.Flow(Padding := G.Points(6), Gap := G.Points(6)),
+  return Cards.Card of State.Msg(
+    'swipe-card', [
       Row('swipe-design', 'Review the design tokens'),
       Row('swipe-release', 'Reply to Jonas about the release'),
       Row('swipe-venue', 'Book the offsite venue')
-    ),
-    S.Role.OutlinedPanel
+    ], new Cards.Options(Padding := 6.0F, Gap := 6.0F)
   );
 end function;
 

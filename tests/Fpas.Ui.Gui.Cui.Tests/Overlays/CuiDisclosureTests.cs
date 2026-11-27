@@ -77,7 +77,11 @@ public sealed class CuiDisclosureTests
         Assert.Equal(7, Draw(longText, key: 2));
         Assert.Equal(6, Draw(longText));
         Assert.True(window.GetControlRectangle("text").Height > clamped);
+        Assert.True(window.ControlFocused("toggle"));
+        Assert.Equal(5, Draw(longText, key: 6));
+        Assert.Equal(7, Draw(longText, key: 2));
         Assert.Equal(6, Draw(longText, enabled: false, key: 6));
+        Assert.False(window.ControlFocused("toggle"));
         Assert.Equal(5, Draw(longText, focus: true, key: 6));
         Assert.Equal(4, Draw(longText));
         window.Resize(280, 500);
@@ -86,9 +90,11 @@ public sealed class CuiDisclosureTests
         Assert.Equal(4, Draw(longText));
         window.Resize(700, 500);
         Draw("Short text");
-        Assert.Equal(0, Draw("Short text"));
+        Assert.Equal(0, Draw("Short text", focus: true));
         Assert.Throws<KeyNotFoundException>(() => window.GetControlRectangle("toggle"));
         Draw(longText);
+        Assert.Equal(4, Draw(longText, key: 6));
+        Assert.False(window.ControlFocused("toggle"));
         Assert.Equal(7, Draw(longText, focus: true, key: 2));
         Assert.True(window.NextFrame());
         window.Text("Text removed");

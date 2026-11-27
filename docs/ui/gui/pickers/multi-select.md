@@ -35,15 +35,28 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Items` | Ordered Selects.Item choices. |
+| `Items` | Supply ordered `Selects.Item` choices. Each choice can include a native glyph shown in the popup. |
 | `Selected` | Supply one Boolean per item in the same order. |
-| `Label / Placeholder` | Empty. |
-| `Searchable / Enabled` | false / true. |
-| `MaxChips` | 0 uses CUI's default limit of three visible chips. Extra selections appear as a count. |
+| `Label` | Null omits the native label wrapper. An empty string keeps the wrapper without a caption. |
+| `Placeholder` | Null uses Select for an empty selection. Pass an empty string to hide the placeholder. |
+| `Searchable` | false. Enable to filter by text with ASCII case folding. |
+| `Enabled` | true. Disabling the field closes the popup. |
+| `MaxChips` | 0 shows up to three selected items as chips. Extra selections appear as a count. |
+| `Width` | Null uses a soft 300-unit width without a label and fills the container with a label. Fill, Fixed, and Percent set the GUI width. |
 
 ## Interaction
 
-Open the list and toggle checkboxes or use its bulk selection action. Remove a chip to deselect that item. Search filters the visible choices while preserving their original indices. Accept the fresh Boolean array in the model. Escape closes the popup and restores focus to the field.
+Click the field to open the popup. Enter, Space, or Down also opens it from
+the focused field. Up and Down move the highlight in the list. Enter or
+Space toggles the highlighted choice. Space types a character when the search
+field receives text input.
+
+The popup stays open when you toggle a choice. Select all and Clear affect
+the entire list. Remove a chip to deselect its item. Search preserves the
+original indices and the selection of hidden choices. Accept a fresh Boolean
+array in the model to apply each proposal.
+
+Escape closes the popup and restores focus to the field.
 
 ## See also
 

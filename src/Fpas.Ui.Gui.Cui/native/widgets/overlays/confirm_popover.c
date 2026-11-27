@@ -24,7 +24,13 @@ int fpas_cui_confirm_popover(cui_ctx *ui, const char *id, const char *title,
     const cui_id confirm_key = cui_make_id(ui, confirm_slot);
     cui_pop_id(ui);
 
+    /* CUI-048 (docs/future/cui-upstream-bugs.md#cui-048):
+       The native Enter shortcut also runs when focus is outside the panel. */
+    const bool owns_focus = ui->focus == cancel_key || ui->focus == confirm_key;
+    const uint8_t enter = ui->kpressed[CUI_KEY_ENTER];
+    if (!owns_focus) ui->kpressed[CUI_KEY_ENTER] = 0;
     const bool confirmed = cui_confirm_popover_ex(ui, id, &options);
+    if (!owns_focus) ui->kpressed[CUI_KEY_ENTER] = enter;
     const int cancel_node = fpas_find(ui, cancel_key);
     const int confirm_node = fpas_find(ui, confirm_key);
     if (cancel_node >= 0) fpas_literal(ui, cancel_node, cancel, CUI_C(ui, FOREGROUND));
@@ -35,7 +41,9 @@ int fpas_cui_confirm_popover(cui_ctx *ui, const char *id, const char *title,
         nodes[1] = cancel_node;
         nodes[2] = confirm_node;
     } else if (enabled) {
-        fpas_return_popup_focus(ui, key, anchor);
+        /* Disabled buttons can clear focus while the popup animates out. */
+        if (owns_focus && !ui->focus) ui->focus = anchor;
+        else fpas_return_popup_focus(ui, key, anchor);
     }
     ui->last_node = base;
     ui->last_id = anchor;

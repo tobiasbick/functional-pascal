@@ -36,6 +36,8 @@ public type Options = record
   public HideCheckboxes: bool := false;
   // Whether the grid accepts input.
   public Enabled: bool := true;
+  // Grid width. Content and Fill both use the available width.
+  public Width: L.Extent := L.Extent.Fill;
 end record;
 
 // Model-owned state in display order.
@@ -60,7 +62,9 @@ public type Cell of TMsg = variant
   Text(Caption: string);
   // Composed graphical children.
   Content(Children: array of E.Element of TMsg);
-  // Editable text, with optional preceding children and a commit mapper.
+  // Editable single-line text. Caption comes from the model.
+  // Capacity includes the UTF-8 terminator and ranges from 2 to 256 bytes.
+  // OnCommit maps the final draft to a message. Pass an empty array for no leading children.
   Editable(Caption: string; Capacity: int; OnCommit: function(string): TMsg; Leading: array of E.Element of TMsg);
 end variant;
 
@@ -86,6 +90,7 @@ end record;
 // - `OnChange`: Maps a native state proposal to a message.
 // - `Settings`: Optional viewport and input configuration.
 // - `OnDoubleClick`: Optional action for a double-click on a row, with its display index.
+// - `OnRowClick`: Optional message from a native row click, with its display index.
 // ## Returns
 // The graphical grid.
 public function DataGrid of TMsg(
@@ -96,7 +101,8 @@ public function DataGrid of TMsg(
   Current: Value;
   OnChange: function(Value): TMsg;
   Settings: Options? := null;
-  OnDoubleClick: Sys.Func of (int, TMsg)? := null
+  OnDoubleClick: Sys.Func of (int, TMsg)? := null;
+  OnRowClick: Sys.Func of (int, TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin
@@ -107,7 +113,7 @@ begin
     BuildRow,
     Current,
     OnChange,
-    Settings ?? new Options(), OnDoubleClick
+    Settings ?? new Options(), OnDoubleClick, OnRowClick
   );
 end function;
 

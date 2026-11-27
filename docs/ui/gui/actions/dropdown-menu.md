@@ -33,14 +33,21 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Variant` | Default resolves to secondary for a labeled trigger and ghost for an icon-only trigger |
+| `Icon` | Empty. An icon-only trigger uses the native ellipsis when no icon is set. |
 | `IconOnly / Enabled` | false / true |
 | `Position` | BottomStart |
 | `Width` | 0 uses content sizing with a 180-point minimum in GUI |
 
+Each command has a key, caption, and message. `Icon` and `Shortcut` default to
+empty. `Enabled` defaults to true. `Danger` and `Checked` default to false.
+In the GUI, `Font` defaults to `Body`. `TextSize` uses logical units and defaults
+to zero for the theme body size. A larger caption can increase the row height.
+
 ## Interaction
 
-Click, Enter or Down opens the menu. Up and Down move through enabled commands.
-Enter chooses and Escape closes. Command keys stay stable when captions change.
+Click the trigger or press Enter, Space, or Down when it has focus. Up and Down
+move the menu highlight. Press Enter on an enabled command to choose it.
+Press Escape to close the menu. Command keys stay stable when captions change.
 Section labels and separators have no action. Shortcut text displays a hint.
 
 ## See also

@@ -18,7 +18,7 @@ function Command(
   Message: G.Msg;
   Icon: int;
   Group: string;
-  Shortcut: string := ''
+  Shortcut: string? := null
 ): P.Command of G.Msg;
 begin
   return new P.Command of G.Msg(Title, Message, Sys.Char.ConvertFromUtf32(Icon), Group, Shortcut);
@@ -34,7 +34,8 @@ begin
   return [
     new Shortcuts.Binding of G.Msg(
       new Keys.Combination(Keys.Key.J, Keys.PrimaryModifier()),
-      G.Msg.Shared(S.Msg.ToggleAppearance)
+      G.Msg.Shared(S.Msg.ToggleAppearance),
+      AllowInOverlays := true
     )
   ];
 end function;

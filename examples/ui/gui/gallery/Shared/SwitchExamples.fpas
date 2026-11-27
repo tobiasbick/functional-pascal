@@ -14,7 +14,7 @@ public type Sample = record
   // Visible label.
   public Label: string;
   // Optional supporting text.
-  public Description: string := '';
+  public Description: string? := null;
 end record;
 
 // Wi-Fi setting on Selection.

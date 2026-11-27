@@ -2,7 +2,8 @@
 #include "../../fpas_cui.h"
 
 int fpas_cui_range_picker(cui_ctx *ui, const char *id, int *start, int *end,
-    const char *label, const char *placeholder, float width, int presets, int enabled, int focus,
+    const char *label, const char *placeholder, int width_kind, float width,
+    int presets, int enabled, int focus,
     int *trigger, int *parts, int *nodes, int *count, int *open) {
     static const char *names[] = {
         "Today", "Yesterday", "Last 7 days", "Last 30 days", "This month", "Last month", "This year"
@@ -22,7 +23,7 @@ int fpas_cui_range_picker(cui_ctx *ui, const char *id, int *start, int *end,
     fpas_own(ui, key, calendar, 0, popup_key);
 
     const cui_date_range_opts options = {
-        .label = label, .placeholder = placeholder, .width = width > 0 ? CUI_PX(width) : CUI_FIT,
+        .label = label, .placeholder = placeholder, .width = fpas_extent(width_kind, width),
         .no_presets = !presets
     };
     const int first = ui->node_count;

@@ -33,12 +33,14 @@ end unit;
 | --- | --- |
 | `User.Name / Avatar` | Pass a name for initials and the hover label. An avatar file is optional. |
 | `User.Color / Idle` | Automatic / false. Idle shows the user as away. |
-| `MaximumVisible / Size` | 5 / 30 logical points. |
+| `MaximumVisible` | Five. Zero also uses five. Remaining participants appear in the count badge. |
+| `Size` | 30 logical units. Zero also uses 30. |
 
 ## Interaction
 
-Hover to spread the avatars. Update the supplied list as people join,
-leave or go idle.
+Hover an avatar to spread the strip and display the user's name. Away users
+have a gray ring, reduced opacity, and an away label in their tooltip.
+Update the supplied list as people join, leave or go idle.
 
 ## See also
 

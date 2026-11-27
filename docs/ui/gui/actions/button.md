@@ -29,17 +29,24 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Variant` | Default, which uses the secondary appearance |
+| `Variant` | Default uses Secondary on its own and Ghost in a GUI button group. |
 | `ControlSize` | Medium. Small and Large are also available. |
 | `Enabled / Loading / Selected` | true / false / false |
-| `Width` | Content. Fill and Fixed are portable. GUI also accepts Percent. |
+| `Width` | Content. Use Fill for the available width, or Fixed for an explicit width. GUI also accepts Percent. |
 | `Icon / IconRight` | Empty. Supply TerminalIcon and TerminalIconRight for terminal glyphs. |
+| `Tooltip / Shortcut` | Empty. GUI displays the shortcut hint with a nonblank caption. Exclude the middle-dot delimiter with two spaces on each side. Both strings must fit 255 UTF-8 bytes, including six separator bytes for the shortcut. |
+| `Color` | null. The button variant supplies the foreground. |
+
+Use `Elements.Size` with a width growth weight to allocate a weighted share of a
+GUI row. [Sizing and units](../../layout/sizing.md#independent-gui-axes)
 
 ## Interaction
 
-Click, Enter or Space sends the supplied message. Tab focuses the button.
-Keep its ID stable when the label or icon changes. Loading keeps focus and
-suppresses activation. GUI shows a spinner and TUI shows an ellipsis.
+Click, Enter or Space sends the supplied message. Tab focuses enabled buttons.
+Keep the ID stable when the label or icon changes. During loading, the button
+keeps its label and focus and suppresses activation. GUI shows a spinner.
+TUI shows an ellipsis. Set `Selected` for the selected appearance.
+Bind the shortcut key separately.
 
 ## See also
 

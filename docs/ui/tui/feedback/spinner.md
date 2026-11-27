@@ -4,9 +4,9 @@ The **Components → Feedback** page pairs a spinner with **Syncing 24 files**.
 
 Use `Spinners.Spinner` while work is in progress and the amount remaining is
 unknown. Pair it with a short activity label. The terminal uses one cell and
-chooses its glyph sequence from the style. `Color` sets the ink and `Inverse`
-changes the background and default ink. The graphical host uses the diameter
-and track color.
+chooses its glyph sequence from `Animation`. Choose `Color` for explicit ink
+or `ThemeColor` for a palette token. The terminal spinner defaults to the theme
+accent. The graphical host uses the requested size and track color.
 
 Visible spinners advance automatically in an interactive session, including
 while the application waits for input. Headless frames and themes with

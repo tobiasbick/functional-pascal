@@ -42,8 +42,8 @@ public procedure Draw of TMsg(
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Titles: Lists.List of string := new Lists.List of string(Steps.Length);
-  const Descriptions: Lists.List of string := new Lists.List of string(Steps.Length);
-  const Actions: Lists.List of string := new Lists.List of string(Steps.Length);
+  const Descriptions: Lists.List of string? := new Lists.List of string? (Steps.Length);
+  const Actions: Lists.List of string? := new Lists.List of string? (Steps.Length);
   const Completed: array of int := new int[Steps.Length];
   var Focus: int := 0;
   var Done: int := 0;
@@ -64,7 +64,7 @@ begin
 
     if ActiveIndex < 0 and not Step.Done then
       ActiveIndex := Index;
-      if Step.ActionLabel <> '' and C.WantsFocus of TMsg(
+      if Step.ActionLabel <> null and C.WantsFocus of TMsg(
         Frame,
         K.ActionId(Id, Index),
         PartToken(Id, Index * 2 + 1),
@@ -104,7 +104,7 @@ begin
 
   Frame.Controls.Add(
     new App.Control(
-      Id, Settings.Title, 'checklist', new Cui.CuiRectangle(), Enabled,
+      Id, Settings.Title ?? 'Get started', 'checklist', new Cui.CuiRectangle(), Enabled,
       Value := Done.ToString() + '/' + Steps.Length.ToString()
     )
   );
@@ -124,7 +124,7 @@ begin
   for Index: int in Result.VisibleActions do
     Frame.Controls.Add(
       new App.Control(
-        K.ActionId(Id, Index), Steps[Index].ActionLabel, 'checklist-action',
+        K.ActionId(Id, Index), Steps[Index].ActionLabel ?? '', 'checklist-action',
         new Cui.CuiRectangle(), Enabled and Index = ActiveIndex
       )
     );

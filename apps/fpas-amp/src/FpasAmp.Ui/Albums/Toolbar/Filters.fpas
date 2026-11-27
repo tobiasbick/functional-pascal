@@ -219,11 +219,11 @@ begin
     )
   );
   return Popovers.Popover of TMsg(
-    Id + '-filter-panel', Trigger, Panel, Open, Toggle(false),
+    Id + '-filter-panel', Trigger, [Panel], Open, Toggle(false),
     new Popovers.Options(
       Position := Menus.Placement.BottomEnd,
-      Width := Sys.Math.Min(360, Width),
-      Padding := 16
+      Width := cast Sys.Math.Min(360, Width) as float,
+      Padding := 16.0F
     )
   );
 end function;

@@ -242,8 +242,7 @@ for how the assemblies are built and loaded.
   donut, stacked dither areas, storage pattern meter, stacked bars and CPU/Memory
   gauges. Hover to inspect native values; Tab and arrows inspect meter parts.
   Grayscale changes only the meter's palette. Native CUI owns drawing,
-  layout, legends, animation and local interaction. A standalone sparkline
-  demonstrates the native compact chart.
+  layout, legends, animation and local interaction.
 - **More charts** reproduces the complete original page: weekday/hour heatmap,
   yearly activity, module treemap, release radar, signup funnel, frame-time split
   bar, platform waffle, Sankey, ranked pages with Shuffle, activity rings, bubble

@@ -15,7 +15,7 @@ public sealed partial class CuiWindow
     /// <param name="widthKind">Encoded width extent.</param>
     /// <param name="width">Logical width or percentage.</param>
     /// <param name="height">Logical height.</param>
-    /// <param name="aspect">Image aspect ratio, or zero to use the first picture.</param>
+    /// <param name="aspect">Shared image aspect ratio, or zero to stretch each whole image to fill.</param>
     /// <param name="beforeLabel">Left caption.</param>
     /// <param name="afterLabel">Right caption.</param>
     /// <param name="enabled">Accepts native input.</param>

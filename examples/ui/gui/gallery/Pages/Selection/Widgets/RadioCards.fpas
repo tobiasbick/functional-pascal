@@ -6,17 +6,15 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Inputs.RadioCards as R;
 
 uses GuiGallery.Pages.Selection.State as State;
-uses GuiGallery.Shared.State as Demo;
 uses System as Sys;
 
 // Builds the save destination choices from the native Selection page.
 //
 // ## Parameters
-// - `Data`: Shared demo values owned by the application.
 // - `Model`: Current gallery state.
 // ## Returns
 // The native radio card grid.
-public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
   return R.RadioCards of State.Msg(
     'places',

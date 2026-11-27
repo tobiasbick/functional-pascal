@@ -3,31 +3,29 @@
 unit GuiGallery.Pages.Overlays.View;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Layout as L;
 
 uses GuiGallery.Pages.Overlays.State as S;
 uses GuiGallery.Pages.Overlays.Widgets.ContextMenu as Context;
 uses GuiGallery.Pages.Overlays.Widgets.Dialog as Dialog;
 uses GuiGallery.Pages.Overlays.Widgets.Toast as Toast;
 uses GuiGallery.Pages.Overlays.Widgets.Tooltip as Tooltip;
-uses GuiGallery.Shared.Sections as G;
 uses GuiGallery.Shared.State as Demo;
+uses System.Collections.Generic as Collections;
 
 // Builds the native overlay triggers and examples.
 // ## Parameters
 // - `Model`: Overlay visibility.
 // - `Data`: Shared form and filter values.
 // ## Returns
-// The Overlays page.
-public function View(Model: S.Model; Data: Demo.Model): E.Element of S.Msg;
+// The section headings and native cards in page order.
+public function View(Model: S.Model; Data: Demo.Model): array of E.Element of S.Msg;
 begin
-  return E.Column of S.Msg(
-    new L.Flow(Gap := G.Points(20)),
-    Dialog.Section(),
-    Context.View(Model, Data),
-    Toast.View(),
-    Tooltip.View()
-  );
+  const Parts: Collections.List of E.Element of S.Msg := new Collections.List of E.Element of S.Msg();
+  Parts.AddRange(Dialog.Section());
+  Parts.AddRange(Context.View(Model, Data));
+  Parts.AddRange(Toast.View());
+  Parts.AddRange(Tooltip.View());
+  return Parts.ToArray();
 end function;
 
 end unit;

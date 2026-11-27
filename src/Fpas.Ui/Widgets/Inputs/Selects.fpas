@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Inputs.Selects;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // A choice in a select list.
 public type Item = record
@@ -16,12 +17,14 @@ end record;
 public type Options = record
   // Caption above the trigger.
   public Label: string := '';
-  // Caption for an unselected trigger. Empty uses CUI's Select placeholder.
-  public Placeholder: string := '';
+  // Caption for an unselected trigger. Null uses CUI's Select placeholder.
+  public Placeholder: string? := null;
   // Show a search field in the list.
   public Searchable: bool := false;
   // Allow pointer and keyboard interaction.
   public Enabled: bool := true;
+  // Native GUI width. Null uses CUI's width for the current label.
+  public Width: L.Extent? := null;
 end record;
 
 // Builds a select, with an optional search field.

@@ -24,55 +24,67 @@ uses GuiGallery.Pages.Feedback.Widgets.Loading as Loading;
 uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 
-// Reproduces the accepted native CUI Feedback examples.
-// ## Type parameters
-// - `TMsg`: Message type of the containing application.
-// ## Parameters
-// - `CreateProject`: The empty-state action message.
-// - `State`: Current upload state.
-// - `Upload`: Starts the status spinner example.
-// ## Returns
-// Native feedback widgets with their responsive card layout.
-public function View of TMsg(
-  CreateProject: TMsg;
-  State: Model.Model;
-  Upload: TMsg
-): E.Element of TMsg;
+function Alerts of TMsg(StorageDismissed: bool; DismissStorage: TMsg): E.Element of TMsg;
 begin
-  const Columns: Grid.Options := new Grid.Options(
-    Columns := 2,
-    MinimumColumnWidth := 260.0F,
-    Gap := G.Points(16)
+  const Update: E.Element of TMsg := A.Alert of TMsg(
+    'update', 'A new version is available',
+    new A.Options(Description := 'Restart to update to 1.1.')
   );
-  return E.Column of TMsg(
-    new L.Flow(Gap := G.Points(20), Clip := false),
-    G.Heading of TMsg(Strings.Get('Heading.Alerts'), Strings.Get('Heading.AlertsHint')),
-    E.Column of TMsg(
-      new L.Flow(Gap := G.Points(10)),
-      A.Alert of TMsg(
-        'update', 'A new version is available',
-        new A.Options(Description := 'Restart to update to 1.1.')
-      ),
-      A.Alert of TMsg(
-        'payment', 'Payment received',
-        new A.Options(Description := 'Your invoice was paid on November 5.', Tone := S.Tone.Success)
-      ),
+  const Payment: E.Element of TMsg := A.Alert of TMsg(
+    'payment', 'Payment received',
+    new A.Options(Description := 'Your invoice was paid on November 5.', Tone := S.Tone.Success)
+  );
+  const Build: E.Element of TMsg := A.Alert of TMsg(
+    'build', 'Build failed',
+    new A.Options(
+      Description := 'Missing symbol cui_frame in main.c line 42.', Tone := S.Tone.Danger
+    )
+  );
+  const Rows: array of E.Element of TMsg := if StorageDismissed then
+    [Update, Payment, Build]
+  else
+    [
+      Update, Payment,
       A.Alert of TMsg(
         'storage', 'Storage almost full',
         new A.Options(
           Description := 'You have used 92% of your plan.',
           Tone := S.Tone.Warning,
           Dismissible := true
-        )
+        ),
+        function(): TMsg => DismissStorage
       ),
-      A.Alert of TMsg(
-        'build', 'Build failed',
-        new A.Options(
-          Description := 'Missing symbol cui_frame in main.c line 42.',
-          Tone := S.Tone.Danger
-        )
-      )
-    ),
+      Build
+    ]
+  end if;
+  return E.Column of TMsg(new L.Flow(Gap := G.Points(10), Clip := false), Rows);
+end function;
+
+// Reproduces the accepted native CUI Feedback examples.
+// ## Type parameters
+// - `TMsg`: Message type of the containing application.
+// ## Parameters
+// - `CreateProject`: The empty-state action message.
+// - `State`: Current feedback state.
+// - `Upload`: Starts the status spinner example.
+// - `DismissStorage`: Records dismissal of the storage alert.
+// ## Returns
+// Native feedback widgets with their responsive card layout.
+public function View of TMsg(
+  CreateProject: TMsg;
+  State: Model.Model;
+  Upload: TMsg;
+  DismissStorage: TMsg
+): array of E.Element of TMsg;
+begin
+  const Columns: Grid.Options := new Grid.Options(
+    Columns := 2,
+    MinimumColumnWidth := 260.0F,
+    Gap := G.Points(16)
+  );
+  return [
+    G.Heading of TMsg(Strings.Get('Heading.Alerts'), Strings.Get('Heading.AlertsHint')),
+    Alerts of TMsg(State.StorageDismissed, DismissStorage),
     Grid.Grid of TMsg(
       Columns,
       Cards.Card of TMsg(
@@ -106,11 +118,11 @@ begin
             Skel.Skeleton of TMsg('loading-avatar', L.Extent.Fixed(L.Measure.Logical(40)), 40.0F),
             E.Size of TMsg(
               E.Column of TMsg(
-                new L.Flow(Gap := G.Points(8)),
+                new L.Flow(Gap := G.Points(8), Clip := false),
                 Skel.Skeleton of TMsg('loading-title', L.Extent.Percent(70.0F), 12.0F),
                 Skel.Skeleton of TMsg('loading-subtitle', L.Extent.Percent(45.0F), 12.0F)
               ),
-              new L.Flex(Basis := L.Extent.Fill)
+              new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
             )
           ),
           Skel.Skeleton of TMsg('loading-body', Height := 88.0F),
@@ -175,7 +187,7 @@ begin
         )
       ]
     )
-  );
+  ];
 end function;
 
 end unit;

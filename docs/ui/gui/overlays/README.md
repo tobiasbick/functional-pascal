@@ -17,14 +17,33 @@ a toast command from your update to send a notification.
 | [Toast](toast.md) | Show a notification without moving focus. | GUI |
 | [Guided tour](guided-tour.md) | Highlight controls and explain them in order. | GUI |
 
+## Overlays gallery page
+
+The page groups triggers in four [native cards](../feedback/card.md).
+The Dialogs and sheets card opens Edit profile, Notifications, Delete project
+and the command palette. The profile dialog shares Name and Email with Inputs.
+Its Public profile switch shares a value with Wi-Fi on Selection.
+
+The Popover and context menu card uses a gap of 16 logical units. Filters
+opens a 280-unit panel anchored to the button. The checkboxes and slider
+share their values with Email notifications, Marketing and Brightness on
+Selection. Apply closes the panel. The muted context target opens Cut,
+Copy, Paste and Delete on right click.
+
+The Toasts card shows four notifications. The archive notification includes
+an Undo action. Hover over the stack to expand it and pause expiration.
+The Tooltips card uses a [wrapping row](../layout/row.md) with a gap of 4.
+A [divider](../layout/divider.md) separates formatting from alignment, list
+and link controls. The first three tools include shortcut hints.
+
 ## See also
 
 - [UI handbook](../README.md)
 - [Disclosure](../disclosure/README.md)
-- [Overlays in the gallery](../../../../examples/ui/gui/gallery/Pages/Overlays/View.fpas)
 
 ## Source files
 
 - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Overlays/State.fpas)
 - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Overlays/Update.fpas)
+- [View.fpas](../../../../examples/ui/gui/gallery/Pages/Overlays/View.fpas)
 - [CuiWidgetOptionTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiWidgetOptionTests.cs)

@@ -50,7 +50,7 @@ end unit;
 | `XLabel / ValueLabel` | Both null. Optional callbacks format X-axis and readout coordinates or the readout value during painting. |
 | `Width / Height / Pitch` | Fill / 0 / 0. Zero uses native height or dot spacing. |
 | `Grid / Axis / Readout / Enabled` | All true. |
-| `Annotations` | Empty. Reference lines and points use axis units. |
+| [`Annotations`](../charts/README.md#annotations) | Empty. Reference lines and points use axis units and the shared annotation colors. |
 
 ## Interaction
 

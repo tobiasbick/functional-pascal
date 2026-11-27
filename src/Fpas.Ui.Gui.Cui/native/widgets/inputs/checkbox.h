@@ -4,7 +4,7 @@
 
 /** Draws a model-controlled checkbox.
  * @param ui Current UI-thread context.
- * @param id Stable row identity.
+ * @param id Stable row identity with the CUI triple-hash marker.
  * @param label Borrowed literal caption.
  * @param description Borrowed secondary text, or NULL.
  * @param checked_value Current model-owned value.

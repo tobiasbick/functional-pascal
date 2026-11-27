@@ -4,11 +4,10 @@ unit GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as P;
 
-uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Disclosure.State as State;
 uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
@@ -18,7 +17,7 @@ uses System as Sys;
 // ## Parameters
 // - `Model`: Current confirmation and preview result.
 // ## Returns
-// The Confirm popover section on the Disclosure page.
+// The wrapping row with the question and its result.
 public function View(Model: State.Model): E.Element of State.Msg;
 begin
   const Trigger: E.Element of State.Msg := B.Button of State.Msg(
@@ -33,22 +32,15 @@ begin
     ),
     State.Msg.PreviewBranchDeletion, State.Msg.SetBranchQuestion(false)
   );
-  const Row: E.Element of State.Msg := if Model.BranchDeleted then
+  return if Model.BranchDeleted then
     E.Row of State.Msg(
-      new L.Flow(Gap := G.Points(12), Wrap := true), Question,
-      E.Styled of State.Msg(E.Text of State.Msg('Branch deleted'), S.Role.Muted)
+      new L.Flow(Gap := G.Points(12), Wrap := true, Clip := false),
+      Question,
+      Texts.Text of State.Msg('Branch deleted', Texts.Appearance.Muted)
     )
   else
-    E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true), Question)
+    E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true, Clip := false), Question)
   end if;
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
-    G.Heading of State.Msg(
-      Strings.Get('Heading.ConfirmPopover'),
-      Strings.Get('Heading.ConfirmPopoverHint')
-    ),
-    Row
-  );
 end function;
 
 end unit;

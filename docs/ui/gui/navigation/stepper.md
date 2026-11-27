@@ -29,12 +29,14 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Steps` | A nonempty array of step captions. |
+| `Steps` | A nonempty array of literal captions. Use an empty string for an unlabeled step. |
 | `Current` | Zero-based step in progress. Pass the step count once all steps are complete. |
 
 ## Interaction
 
-The stepper marks preceding steps complete. In a narrow view it keeps the current caption visible and shows markers for the other steps. The indicator is read-only. Handle navigation in separate controls such as the gallery's Back and Next buttons.
+The stepper marks preceding steps complete. Each stepper adapts to the width of its own row. A narrow row shows the step markers and the current caption. When every step is complete, a narrow row shows only the markers.
+
+The stepper is read-only and does not receive keyboard focus. The Back and Next buttons in the gallery move between steps. At the last step, Finish shows a completion toast.
 
 ## See also
 

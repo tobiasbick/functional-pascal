@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Inputs.Widgets.PickerFields;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Containers.Grids as Grid;
 uses Fpas.Ui.Widgets.Inputs.NumberFields as N;
@@ -33,7 +34,8 @@ begin
     'input-due-date', Model.DueDate, State.Msg.SetDueDate, new D.Options(Label := 'Due date')
   );
   const Seats: E.Element of State.Msg := N.NumberField of State.Msg(
-    'input-seats', Model.Seats, 0.0, 99.0, State.Msg.SetSeats, new N.Options(Label := 'Seats')
+    'input-seats', Model.Seats, 0.0, 99.0, State.Msg.SetSeats,
+    new N.Options(Label := 'Seats', Width := L.Extent.Fill)
   );
   const Brand: E.Element of State.Msg := BrandColor.View(Model);
   const Fields: array of E.Element of State.Msg := [

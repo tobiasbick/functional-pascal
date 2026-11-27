@@ -56,3 +56,30 @@ static void fpas_literal(cui_ctx *ui, int node, const char *text, cui_color colo
     ui->last_node = node;
     ui->last_id = ui->nodes[node].id;
 }
+
+/** Makes the native document view clamp its offset after a content size change. */
+static void fpas_document_scroll_layout(cui_ctx *ui, cui_node *node, void *data) {
+    (void)data;
+    /* CUI-065: CUI clamps against the new content bounds on the next build.
+       See docs/future/cui-upstream-bugs.md#cui-065. */
+    const cui_scroll_state *state = cui_state(ui, node->id, sizeof *state);
+    const float width = CUI_MAX(0, node->content_w - node->rect.w);
+    const float height = CUI_MAX(0, node->content_h - node->rect.h);
+    if (state->tx > width || state->x > width || state->ty > height || state->y > height)
+        cui_request_redraw(ui);
+}
+
+/** Gives wheel input to the enclosing viewport on the next frame. */
+static void fpas_disabled_document_scroll_layout(cui_ctx *ui, cui_node *node, void *data) {
+    fpas_document_scroll_layout(ui, node, data);
+    if (ui->hit_count > 0 && ui->hits[ui->hit_count - 1].id == node->id)
+        ui->hits[ui->hit_count - 1].flags &= ~(CUI_NF_SCROLL_X | CUI_NF_SCROLL_Y);
+}
+
+/** Drops input already routed to a document viewport that has become disabled. */
+static void fpas_document_scroll_input(cui_ctx *ui, cui_id viewport, bool enabled) {
+    if (enabled) return;
+    if (ui->scroll_target == viewport) ui->scroll_target = 0;
+    cui_scroll_state *state = cui__state_lazy(ui, viewport, sizeof *state, false);
+    if (state) state->drag_x = state->drag_y = false;
+}

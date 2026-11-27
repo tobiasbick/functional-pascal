@@ -4,6 +4,7 @@ unit Fpas.Ui.Widgets.Canvas.Painting;
 
 uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Widgets.Media.MediaImages as Images;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 // A point in canvas-local logical units.
 public type Point = record
@@ -47,6 +48,8 @@ public type Surface = protocol
   function Time(): double;
   // Returns the native frame duration in seconds.
   function DeltaTime(): float;
+  // Resolves Token from the current CUI palette, including any active transition.
+  function Color(Token: Themes.ColorToken): G.Color;
   // Fills a rectangle. X/Y are its origin, Width/Height its nonnegative size,
   // Radius its nonnegative corner radius and Color its straight-alpha fill.
   procedure Rectangle(

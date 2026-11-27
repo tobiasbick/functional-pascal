@@ -27,15 +27,20 @@ int fpas_cui_inline_edit(cui_ctx *ui, const char *id, char *value, size_t capaci
         snprintf(binding->draft, capacity, "%s", value);
         snprintf(binding->model, capacity, "%s", value);
         snprintf(state->backup, sizeof state->backup, "%s", value);
-        cui_edit_state *edit = cui__state_lazy(ui, field, sizeof *edit, false);
-        if (edit) fpas_text_reset(ui, edit, (int)strlen(value));
     }
     const bool allowed = enabled && !cui_is_disabled(ui);
+    const bool cancel = state->editing && (!allowed || (ui->focus == field && cui_key_pressed(ui, CUI_KEY_ESCAPE)));
     if (!allowed) {
         state->editing = false;
         snprintf(binding->draft, capacity, "%s", value);
         if (fpas_has_focus(ui, *key) || ui->focus == field) ui->focus = 0;
     } else if (focus) ui->focus_next_request = state->editing ? field : *key;
+    /* CUI-036 (docs/future/cui-upstream-bugs.md#cui-036): Undo must not
+       resurrect text from a canceled edit when the field opens again. */
+    if (replace || cancel) {
+        cui_edit_state *edit = cui__state_lazy(ui, field, sizeof *edit, false);
+        if (edit) fpas_text_reset(ui, edit, (int)strlen(cancel && allowed ? state->backup : binding->draft));
+    }
     const cui_inline_edit_opts options = { .placeholder = placeholder ? cui__frame_strdup(ui, placeholder, -1) : NULL,
         .font = font, .size = size, .width = fpas_extent(width_kind, width) };
     cui_push_disabled(ui, !allowed);
@@ -45,6 +50,7 @@ int fpas_cui_inline_edit(cui_ctx *ui, const char *id, char *value, size_t capaci
     *editing = state->editing;
     fpas_owned_state *owner = cui_state(ui, fpas_owner_key(*key), sizeof *owner);
     owner->focus = field;
+    owner->hover = field;
     if (result & CUI_CHANGED) snprintf(binding->model, capacity, "%s", binding->draft);
     snprintf(value, capacity, "%s", binding->draft);
     ui->last_node = *node; ui->last_id = *key;

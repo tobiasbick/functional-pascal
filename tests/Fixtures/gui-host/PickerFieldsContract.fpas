@@ -6,6 +6,7 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Validation as V;
 uses Fpas.Ui.Widgets.Inputs.NumberFields as N;
 uses Fpas.Ui.Widgets.Inputs.Selects as S;
@@ -66,6 +67,11 @@ begin
     discard V.Prepare of string(S.Select of string('select', Items, -1, Pick), Profile);
     Reject(S.Select of string('select', Items, 1, Pick), Profile, 'valid index');
   end for;
+  const Sized: E.Element of string := S.Select of string(
+    'select', Items, -1, Pick, new S.Options(Width := L.Extent.Fixed(L.Measure.Points(184.5F)))
+  );
+  discard V.Prepare of string(Sized, V.Target.Graphical);
+  Reject(Sized, V.Target.Terminal, 'Graphical profile');
 
   Reject(
     N.NumberField of string('number', Sys.Double.NaN, 0.0, 99.0, Edit),
@@ -75,6 +81,18 @@ begin
   const Number: E.Element of string := N.NumberField of string('number', 3.0, 0.0, 99.0, Edit);
   discard V.Prepare of string(Number, V.Target.Terminal);
   Reject(Number, V.Target.Portable, 'terminal or graphical profile');
+  const Precision: N.Options := new N.Options(
+    Step := 0.0,
+    DecimalPlaces := 61,
+    Width := L.Extent.Percent(62.5F)
+  );
+  discard V.Prepare of string(
+    N.NumberField of string('number', 0.25, 0.0, 1.0, Edit, Precision), V.Target.Graphical
+  );
+  Reject(
+    N.NumberField of string('number', 0.25, -1.0, 1.0, Edit, Precision),
+    V.Target.Graphical, 'native display capacity'
+  );
 end procedure;
 
 // Exercises native choice and number editing on the original Inputs page.
@@ -159,7 +177,8 @@ begin
   Check(
     Country.Value = 'Germany' and Language.Value = 'Pick a language' and Seats.Value = '3'
     and Country.Bounds.Y = Language.Bounds.Y and Language.Bounds.X = Seats.Bounds.X
-    and Country.Bounds.Width = Language.Bounds.Width and Seats.Bounds.Y > Language.Bounds.Y,
+    and Country.Bounds.Width = Language.Bounds.Width and Seats.Bounds.Width = Language.Bounds.Width
+    and Seats.Bounds.Y > Language.Bounds.Y,
     'The original pickers must retain their positions and initial values.'
   );
   Session.CapturePng(Capture + '.pickers.png');

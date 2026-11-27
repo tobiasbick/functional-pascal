@@ -5,8 +5,8 @@
 /** Draws CUI's anchored confirmation question and both native actions.
  * @param ui Drawing context after the trigger.
  * @param id Stable native panel identity.
- * @param title Borrowed question.
- * @param description Borrowed optional supporting text.
+ * @param title Borrowed question, or NULL to omit it.
+ * @param description Borrowed supporting text, or NULL to omit it.
  * @param confirm Borrowed affirmative caption.
  * @param cancel Borrowed cancellation caption.
  * @param placement CUI placement.

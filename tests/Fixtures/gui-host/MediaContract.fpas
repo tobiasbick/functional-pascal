@@ -16,9 +16,9 @@ uses GuiGallery.Pages.Social.State as Social;
 uses System as Sys;
 uses System.IO as IO;
 
-// Exercises each media example through native input and captures the initial page.
+// Exercises the Social and media examples through native input and captures the initial page.
 // ## Parameters
-// - `Renderer`: Windows renderer to verify.
+// - `Renderer`: GUI renderer to verify.
 // - `Capture`: Directory for the PNG.
 // - `Suffix`: Renderer label for the PNG.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string; Suffix: string);
@@ -75,7 +75,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string; Suffix: stri
 
       // The desktop can constrain a requested tall window. Scroll over the
       // gallery gutter so image tools cannot consume the wheel as zoom input.
-      const Main: Cui.CuiRectangle := A.Control(Session, 'main-0').Bounds;
+      const Main: Cui.CuiRectangle := A.Control(Session, State.MainScrollId).Bounds;
       X := Main.X + 4.0F;
       Y := Session.Snapshot().Size.Height * 0.5F;
       Step(Session, 1);
@@ -105,6 +105,13 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string; Suffix: stri
     Left := 0;
     Step(Session);
   end procedure;
+
+  procedure Click(Session: Gui.Session of State.Msg; Id: string);
+  begin
+    const Box: Cui.CuiRectangle := Bounds(Session, Id);
+    Move(Session, Box.X + Box.Width * 0.5F, Box.Y + Box.Height * 0.5F);
+    Drag(Session, 0.0F, 0.0F);
+  end procedure;
 begin
   var X: float := -1.0F;
   var Y: float := -1.0F;
@@ -124,10 +131,20 @@ begin
   );
   Step(Session, 9);
   Window.CapturePng(IO.Path.Combine(Capture, 'media-' + Suffix + '.png'));
+  Click(Session, 'social-comment-1/like');
+  A.Check(
+    Latest.Social.Likes[0].Likes = 11 and Latest.Social.Likes[0].Liked = false,
+    'Unliking the first comment did not update its count.'
+  );
+  Click(Session, 'social-comment-1/like');
+  A.Check(
+    Latest.Social.Likes[0].Likes = 12 and Latest.Social.Likes[0].Liked = true,
+    'Liking the first comment did not restore its count.'
+  );
+  Click(Session, 'social-sale');
+  A.Check(Latest.Social.Revenue = 49497.0, 'The sale did not increase the counter.');
   A.Check(Latest.Social.Slide = 1, 'The original ARM64 slide is missing.');
-  const Dot: Cui.CuiRectangle := Bounds(Session, 'social-tour/dot-2');
-  Move(Session, Dot.X + Dot.Width * 0.5F, Dot.Y + Dot.Height * 0.5F);
-  Drag(Session, 0.0F, 0.0F);
+  Click(Session, 'social-tour/dot-2');
   A.Check(Latest.Social.Slide = 2, 'The third dot did not select the third slide.');
   const Tour: Cui.CuiRectangle := Bounds(Session, 'social-tour/viewport');
   Move(Session, Tour.X + Tour.Width * 0.5F, Tour.Y + Tour.Height * 0.5F);

@@ -10,10 +10,10 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 public type Options = record
   // Caption shown after the first activation.
   public ConfirmLabel: string := 'Click to confirm';
-  // Positive confirmation window in milliseconds, starting at the first activation.
-  public TimeoutMilliseconds: int := 3000;
-  // Optional native glyph before the resting caption.
-  public Icon: string := '';
+  // Confirmation window in milliseconds. Zero uses CUI's three-second default.
+  public TimeoutMilliseconds: int := 0;
+  // Native glyph before the resting caption. Null omits its space.
+  public Icon: string? := null;
   // Resting appearance; the confirmation uses the destructive style.
   public Variant: S.ButtonVariant := S.ButtonVariant.Secondary;
   // Requested control size.

@@ -21,17 +21,39 @@ and their transitions in the GUI. The TUI also supports determinate progress bar
 | [Grid](grid.md) | Arrange the feedback cards in responsive columns. |
 | [Card](card.md) | Group related controls on a native surface. |
 
+## Feedback gallery page
+
+The Alerts section uses a [column](../layout/column.md) with a gap of 10
+logical units. The storage alert includes a dismiss button. The gallery keeps
+the alert hidden when the user leaves Feedback and returns.
+
+Two responsive grids group the following cards. Each grid fits up to two
+columns with a minimum width of 260 logical units and a gap of 16.
+
+| Grid | Cards |
+| --- | --- |
+| First | Progress, Loading and Dither spinners |
+| Second | Activity and Goals |
+
+The Progress card uses a gap of 18 logical units. The other grid cards
+use 14. The Goals row distributes the available space around its two rings.
+The Activity card shows three timeline items. The final item omits the connector.
+
+The Badges and avatars card has two wrapping [rows](../layout/row.md).
+The team avatar group shows four people and a +3 overflow count. The final
+card offers a New project action, which shows a success toast.
+
 ## See also
 
 - [UI handbook](../README.md)
 - [Toast](../overlays/toast.md)
-- [Feedback in the gallery](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 
 ## Source files
 
 - `examples/ui/gui/gallery/Pages/Feedback/`
   - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Feedback/State.fpas)
   - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Feedback/Update.fpas)
+  - [View.fpas](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - `examples/ui/gui/gallery/Pages/Feedback/Widgets/`
   - [BadgesAndAvatars.fpas](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/BadgesAndAvatars.fpas)
   - [Loading.fpas](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/Loading.fpas)

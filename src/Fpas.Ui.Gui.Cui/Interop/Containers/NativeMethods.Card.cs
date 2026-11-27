@@ -10,7 +10,7 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int CardBegin(nint context, string id, int widthKind, float width,
         int heightKind, float height, float minimum, float maximum, float padding, float paddingX,
-        float paddingY, float gap, int row, int align, int wrap, int muted, int selected,
+        float paddingY, float gap, int direction, int align, int wrap, int muted, int selected,
         int hoverable, int enabled, int focus, out int node);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_card_end")]

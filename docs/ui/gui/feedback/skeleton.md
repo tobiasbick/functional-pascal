@@ -29,11 +29,11 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Width` | Omitted width fills the parent. Fixed logical widths and percentages from 0 through 100 are also valid. |
-| `Height` | 0 uses the native 14-point default. Supply a finite nonnegative height. |
+| `Height` | 0 uses the native default of 14 logical units. Supply a finite nonnegative height. |
 
 ## Interaction
 
-CUI draws and animates the placeholder. Replace it with the loaded content when the model is ready. The placeholder is passive and has no content or activation of its own.
+CUI draws a passive placeholder with an animated shine. Reduced motion displays the static shape. Apply `Elements.Size` with a positive `Grow` to weight the width in a row. Replace the placeholder with the loaded content when the model is ready.
 
 ## See also
 

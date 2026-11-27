@@ -31,7 +31,7 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Checked` | Pass the Boolean from the model. |
-| `Description` | Empty. Adds a second line beneath the label. |
+| `Description` | Null omits the second line. An empty string reserves that line in the GUI. |
 | `Enabled` | true. |
 | `Indeterminate` | false. On a checked box, true draws a dash. |
 | `HideLabel` | false. Set true to draw only the box and retain the accessible label. |

@@ -31,13 +31,14 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Label` | Literal caption. |
-| `Value` | A finite fraction from 0 through 1. |
-| `Size` | 0 uses CUI's 140-point diameter. Supply a logical size when a smaller gauge is needed. |
+| `Id` | Stable gauge ID. Keep it when the caption changes. |
+| `Label` | Literal caption. Pass null to omit it. |
+| `Value` | Finite reading. CUI clamps the displayed value to the range 0 through 1. |
+| `Size` | Finite diameter in logical units. Zero or a negative value uses 140. |
 
 ## Interaction
 
-Pass the current model reading. CUI draws and animates the gauge as it changes. Use a radial gauge when you need a scale in physical units, threshold bands or a target marker.
+CUI animates the arc and displays the reading as a whole percentage. The arc uses the warning color above 75% and the danger color above 90%. The gauge is passive. Use a radial gauge for a scale in physical units, threshold bands or a target marker.
 
 ## See also
 

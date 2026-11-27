@@ -46,7 +46,7 @@ begin
     function(SharedValue: float): State.Msg => State.Msg.Shared(
       Demo.Msg.SetBrightness(SharedValue)
     ),
-    new S.Options(Step := 10.0F, ShowValue := true, Percent := true)
+    new S.Options(Step := State.BrightnessStep, ShowValue := true, Format := '%.0f%%')
   );
 end function;
 

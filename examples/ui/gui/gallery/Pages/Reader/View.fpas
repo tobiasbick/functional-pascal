@@ -3,10 +3,12 @@
 unit GuiGallery.Pages.Reader.View;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Navigation.ScrollAnchors as A;
 uses Fpas.Ui.Widgets.Navigation.TableOfContents as T;
+uses Fpas.Ui.Widgets.Theming.Themes as Theme;
 
 uses GuiGallery.Shared.Sections as G;
 uses System.Collections.Generic as Lists;
@@ -17,9 +19,11 @@ const Paragraph: string := 'Components are functions. They draw themselves, hand
 // Builds the original Reader example with native anchor navigation.
 // ## Type parameters
 // - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Colors`: Palette for the outline heading.
 // ## Returns
 // The article viewport and its outline.
-public function View of TMsg(): E.Element of TMsg;
+public function View of TMsg(Colors: Theme.Palette): E.Element of TMsg;
 begin
   const Items: array of T.Item := [
     new T.Item('Introduction', 'intro'), new T.Item('Install', 'install'),
@@ -28,15 +32,15 @@ begin
     new T.Item('Layout', 'layout'), new T.Item('Next steps', 'next')
   ];
   const Sections: Lists.List of E.Element of TMsg := new Lists.List of E.Element of TMsg();
-  const Body: E.Element of TMsg := E.Styled of TMsg(E.Text of TMsg(Paragraph), S.Role.Secondary);
+  const Body: E.Element of TMsg := Texts.Text of TMsg(Paragraph, Texts.Appearance.Secondary);
   for Item: T.Item in Items do
     Sections.Add(A.ScrollAnchor of TMsg(Item.Anchor));
     Sections.Add(
-      E.Styled of TMsg(
-        E.Text of TMsg(Item.Title), if Item.Level = 0 then
-          S.Role.SectionTitle
+      Texts.Text of TMsg(
+        Item.Title, if Item.Level = 0 then
+          Texts.Appearance.HeadingThree
         else
-          S.Role.Heading
+          Texts.Appearance.HeadingFour
         end if
       )
     );
@@ -48,23 +52,20 @@ begin
   Sections.Add(G.Space of TMsg(200));
   const Article: E.Element of TMsg := E.ScrollView of TMsg(
     'reader',
-    E.Column of TMsg(new L.Flow(Gap := G.Points(14), Clip := false), Sections.ToArray()),
-    new L.ScrollOptions(FadeEdges := true)
+    Sections.ToArray(),
+    new L.ScrollOptions(
+      Width := L.Extent.Fill, Height := L.Extent.Fixed(L.Measure.Logical(560)),
+      Gap := G.Points(14), FadeEdges := true
+    )
   );
   return E.Row of TMsg(
-    new L.Flow(Gap := G.Points(28), Align := L.Alignment.Start),
-    E.Size of TMsg(
-      E.Column of TMsg(
-        E.Size of TMsg(Article, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(560))))
-      ),
-      new L.Flex(Basis := L.Extent.Fill)
-    ),
+    new L.Flow(Gap := G.Points(28), Align := L.Alignment.Start, Clip := false),
+    Article,
     E.Size of TMsg(
       E.Column of TMsg(
         new L.Flow(Gap := G.Points(10), Clip := false),
-        E.Styled of TMsg(
-          E.Styled of TMsg(E.Text of TMsg('On this page'), S.Role.Strong),
-          S.Role.Caption
+        E.FormattedText of TMsg(
+          'On this page', Graphics.Font.Medium, 12.0F, Colors.TextMuted
         ),
         T.TableOfContents of TMsg('reader-outline', 'reader', Items)
       ),

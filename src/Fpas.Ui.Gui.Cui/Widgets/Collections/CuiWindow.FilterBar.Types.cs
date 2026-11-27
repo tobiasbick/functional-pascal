@@ -1,13 +1,11 @@
 // [Documentation](../../../../docs/ui/gui/data-grid/filter-bar.md)
-using Fpas.Ui.Gui.Cui.Interop;
-
 namespace Fpas.Ui.Gui.Cui.Widgets.Collections;
 
 /// <summary>A native filter field.</summary>
 /// <param name="Name">Literal heading.</param>
-/// <param name="Icon">Optional CUI glyph.</param>
+/// <param name="Icon">CUI glyph, or null to omit the icon slot.</param>
 /// <param name="Values">Options in mask bit order.</param>
-public readonly record struct CuiFilterField(string Name, string Icon, string[] Values);
+public readonly record struct CuiFilterField(string Name, string? Icon, string[] Values);
 
 /// <summary>The native filter bar's output.</summary>
 /// <param name="Changed">Whether the native widget changed a model value.</param>

@@ -39,7 +39,7 @@ public procedure Draw of TMsg(
   begin
     return Current.Window.BeginSheet(
       C.Token('sheet', Id), Settings.Title, Settings.Description, cast Settings.Edge as int,
-      cast Settings.Size as float, Open, Enabled, FocusClose, CloseToken
+      Settings.Size, Open, Enabled, FocusClose, CloseToken
     );
   end function;
   procedure EndNative();

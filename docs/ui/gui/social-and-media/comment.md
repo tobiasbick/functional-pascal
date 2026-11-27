@@ -32,14 +32,20 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Likes / Liked` | 0 / false. |
-| `Depth / Edited` | 0 / false. Use Depth to indent replies. |
-| `Time / Badge / Enabled` | Empty / empty / true. Badge appears beside the author. |
+| `Likes` | Zero. Null omits the count. CUI displays positive counts beside the heart. |
+| `Liked` | False. Null reports a click without toggling the flag or changing the count. |
+| `Depth` | Zero. Each reply level indents by 44 logical units. CUI draws the connector through depth seven. |
+| `Edited` | False. True appends an edited marker to the supplied time. |
+| `Time` | Null omits the timestamp. An empty string keeps a blank caption. |
+| `Badge` | Null omits the badge. An empty string draws an empty badge. |
+| `Enabled` | True. Allows Like and Reply input. |
 
 ## Interaction
 
 Persist the value from `Event.Like` for the correct comment. Handle
 `Event.Reply` by opening or focusing the reply editor for that thread.
+When both count and flag are supplied, liking increments the count and
+unliking decrements it. Click the buttons or activate them with Enter or Space.
 
 ## See also
 

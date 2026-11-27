@@ -19,13 +19,9 @@ end record;
 public type Msg = variant
   // Record the first accepted file.
   Dropped(Paths: array of string);
-  // Open the file dialog with the source target's extensions.
-  Browse(Accept: string);
-  // Record a file chosen through a dialog.
-  SetFile(Path: string);
-  // Open the profile photo dialog.
-  BrowseAvatar;
-  // Set the profile photo from a drop or a dialog.
+  // A compact dropzone uses native feedback and leaves the displayed path unchanged.
+  CompactDrop;
+  // Set the profile photo from a drop.
   SetAvatar(Path: string);
 end variant;
 

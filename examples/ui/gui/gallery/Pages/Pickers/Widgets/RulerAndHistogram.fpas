@@ -4,7 +4,9 @@ unit GuiGallery.Pages.Pickers.Widgets.RulerAndHistogram;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Inputs.HistogramSliders as H;
 uses Fpas.Ui.Widgets.Inputs.RulerSliders as R;
 
@@ -28,7 +30,7 @@ begin
       Step := 0.5F,
       MajorEvery := 4,
       Spacing := 14.0F,
-      DecimalPlaces := 1,
+      Format := new Charts.ValueFormat(DecimalPlaces := 1),
       UnitLabel := '°C'
     )
   );
@@ -38,24 +40,19 @@ begin
   ];
   const Price: E.Element of State.Msg := H.HistogramSlider of State.Msg(
     'picker-price', 'Price', Bins, Model.Price, 0.0F, 240.0F, State.Msg.SetPrice,
-    new H.Options(Prefix := '$')
+    new H.Options(Format := new Charts.ValueFormat(Prefix := '$'))
   );
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
   return E.Row of State.Msg(
-    new L.Flow(Gap := G.Points(24), Align := L.Alignment.Start),
+    new L.Flow(Gap := G.Points(24), Align := L.Alignment.Start, Clip := false),
     E.Size of State.Msg(
-      E.Column of State.Msg(new L.Flow(Gap := G.Points(20)), Height, Temperature),
+      E.Column of State.Msg(new L.Flow(Gap := G.Points(20), Clip := false), Height, Temperature),
       Fill
     ),
-    E.Size of State.Msg(
-      G.Card of State.Msg(
-        6,
-        [
-          Price,
-          E.Styled of State.Msg(E.Text of State.Msg('1,204 listings in range'), S.Role.Caption)
-        ]
-      ),
-      Fill
+    Cards.Card of State.Msg(
+      'picker-price-card',
+      [Price, Texts.Text of State.Msg('1,204 listings in range', Texts.Appearance.Muted)],
+      new Cards.Options(Width := L.Extent.Fill, Gap := 6.0F)
     )
   );
 end function;

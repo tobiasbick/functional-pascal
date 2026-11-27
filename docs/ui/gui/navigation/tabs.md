@@ -30,14 +30,29 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Items` | One through 32 tabs. Icons are optional. |
+| `Items` | One through 32 tabs in display order. |
+| `Item.Label` | Required literal caption and accessible name. |
+| `Item.Icon / Item.IconOnly` | Empty / false. An icon-only tab requires a glyph. It keeps its caption in the TUI. |
 | `Selected` | Zero-based index from the model. |
 | `Appearance` | Underline. Pill is also available. |
 | `FullWidth / Enabled` | false / true. |
 
 ## Interaction
 
-Click a tab or move with Left and Right while the strip has focus. The callback receives the proposed index. Use it to select the content in your view. CUI scrolls overflowing strips horizontally. Use `ItemId(Id, Index)` to focus a specific tab.
+In the GUI, Tab moves focus to another tab. Click a tab or focus it and press
+Enter or Space to select it.
+Left and Right move focus and propose the adjacent tab without wrapping.
+The selected tab sends no change when activated. Use the proposed index to
+select the content in your view.
+
+Set `FullWidth` to distribute the tabs across the available width. Overflowing
+underline strips and content-width pill strips scroll horizontally. After the
+first layout, changing the selected index brings that tab into view. An initial
+selection outside the viewport can stay offscreen. A full-width pill strip
+allocates equal widths to the tabs without a scroll viewport.
+
+Use `ItemId(Id, Index)` to focus a specific tab. A focus request for the strip
+ID targets its selected tab.
 
 ## See also
 
@@ -60,3 +75,5 @@ Click a tab or move with Left and Right while the strip has focus. The callback 
 - `src/Fpas.Ui.Gui.Cui/native/widgets/navigation/`
   - [tabs.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/tabs.c)
   - [tabs.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/tabs.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Navigation/`
+  - [CuiTabsTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Navigation/CuiTabsTests.cs)

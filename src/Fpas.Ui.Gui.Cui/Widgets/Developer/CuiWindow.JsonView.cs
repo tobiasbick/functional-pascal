@@ -10,7 +10,7 @@ public sealed partial class CuiWindow
     /// <param name="json">Literal JSON or a parse-error example.</param>
     /// <param name="depth">Initial expansion depth.</param>
     /// <param name="height">Maximum viewport height, or zero.</param>
-    /// <param name="enabled">Whether folding accepts input.</param>
+    /// <param name="enabled">Whether folding and scrolling accept input.</param>
     /// <returns>Whether native CUI parsed the JSON.</returns>
     public bool JsonView(string id, string json, int depth, float height, bool enabled)
     {

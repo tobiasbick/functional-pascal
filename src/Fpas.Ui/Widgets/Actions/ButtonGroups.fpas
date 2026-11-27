@@ -9,7 +9,8 @@ uses Fpas.Ui.Elements as E;
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
-// - `Children`: Direct buttons and icon buttons in focus order.
+// - `Children`: Button, icon, copy, hold, confirm or status buttons in focus order.
+//   Each button can carry a tooltip.
 // ## Returns
 // A horizontal button group.
 public function ButtonGroup of TMsg(params Children: array of E.Element of TMsg): E.Element of TMsg;

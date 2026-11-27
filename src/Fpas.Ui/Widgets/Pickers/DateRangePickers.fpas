@@ -3,16 +3,17 @@
 unit Fpas.Ui.Widgets.Pickers.DateRangePickers;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 
 // Presentation and input settings for the native date range field.
 public type Options = record
-  // Optional caption above the field.
-  public Label: string := '';
-  // Caption for an empty range. Empty selects CUI's default.
-  public Placeholder: string := '';
-  // Logical field width. Zero selects CUI's default.
-  public Width: float := 0.0F;
+  // Caption above the field. Null omits its wrapper. Empty shows no caption.
+  public Label: string? := null;
+  // Caption for an empty range. Null uses CUI's default. An empty string hides it.
+  public Placeholder: string? := null;
+  // Native field width. Content uses CUI's default width policy.
+  public Width: L.Extent := L.Extent.Content;
   // Whether to show the relative date presets.
   public Presets: bool := true;
   // Whether the picker accepts input.

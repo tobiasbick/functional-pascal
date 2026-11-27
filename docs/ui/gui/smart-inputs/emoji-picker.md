@@ -45,8 +45,8 @@ begin
   return E.Row of Msg(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
     F.TextField of Msg('message', Text, Msg.Edit),
-    P.Popover of Msg('emoji-popup', Trigger, Picker, Open, Msg.SetOpen(false),
-      new P.Options(Position := M.Placement.BottomEnd, Width := 340))
+    P.Popover of Msg('emoji-popup', Trigger, [Picker], Open, Msg.SetOpen(false),
+      new P.Options(Position := M.Placement.BottomEnd, Width := 340.0F))
   );
 end function;
 
@@ -57,18 +57,31 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `State.Recent / Tone` | Empty / 0. History is space-separated, newest first, up to 255 UTF-8 bytes. Tone ranges from 0 to 5. |
-| `Width / Height / Size` | All zero. CUI chooses the palette width, grid height and glyph size. |
-| `Placeholder / EmptyText / Hint` | Empty. Override the search prompt, empty result text and preview hint. |
-| `Search / Preview / ToneSelector / Enabled` | All true. |
+| `Id` | Stable picker ID. |
+| `State.Recent` | Empty model-owned history. Separate emoji with spaces and list the newest first. Pass null for CUI-owned history. |
+| `RecentCapacity` | 256 bytes, including the terminating byte. Applies when the application owns the history. |
+| `State.Tone` | 0. The tones range from 0 to 5. Pass null for CUI-owned tone state. |
+| `Width` | `Content` fills the available width up to 360 logical units. Use `Fill`, a fixed logical width or a percentage to set a different extent. |
+| `Height` | Grid height. Zero uses 280 logical units. |
+| `Size` | Emoji size. Zero uses 26 logical units. |
+| `Placeholder / EmptyText / Hint` | Null uses CUI's default captions: `Search emoji`, `No emoji found`, and `Pick an emoji`. |
+| `GroupNames` | Null uses CUI's names. Supply ten captions to rename the tabs and group headings. |
+| `Search / Preview / ToneSelector / Enabled` | All true. Hide individual controls or disable input. |
 
 ## Interaction
 
-Search by name or jump to a group. Accept `Change.Value` in the update
-to keep history and skin tone. A tone change has a null `Change.Emoji`,
-so the gallery keeps the palette open. When an emoji is selected, the
-gallery appends it and closes the popover if the resulting message fits
-the field's UTF-8 capacity.
+Search by name or use a group tab. Supply `GroupNames` in this order:
+Recent, Smileys & emotion, People & body, Animals & nature, Food & drink,
+Travel & places, Activities, Objects, Symbols, Flags.
+
+Store `Change.Value` to retain model-owned history and tone. A model-owned
+tone change has a null `Change.Emoji`. A selected emoji still reaches the
+application when it exceeds the recent-history capacity. CUI-owned values
+stay null in proposals.
+
+The gallery keeps the popover open when the user selects a tone. Selecting
+an emoji appends it and closes the popover if the result fits the field's
+UTF-8 capacity.
 
 ![Message field before the emoji palette opens](images/emoji-message.png)
 
@@ -84,6 +97,7 @@ the field's UTF-8 capacity.
 
 ## Source files
 
+- [CuiEmojiPickerTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiEmojiPickerTests.cs)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
   - [EmojiPicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/EmojiPicker.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`

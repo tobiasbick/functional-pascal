@@ -87,7 +87,6 @@ uses Fpas.Ui.Widgets.Inputs.TextAreas as TextAreas;
 uses Fpas.Ui.Widgets.Inputs.TextFields as TextFields;
 uses Fpas.Ui.Widgets.Media.AvatarGroups as AvatarGroups;
 uses Fpas.Ui.Widgets.Media.Avatars as Avatars;
-uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 uses Fpas.Ui.Widgets.Navigation.Navigation as N;
 uses Fpas.Ui.Widgets.Navigation.TableOfContents as Toc;
 uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
@@ -216,14 +215,17 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         Rules.CheckText(Settings.Title, At + '/title');
-        Rules.CheckText(Settings.Description, At + '/description');
+        const Description: string? := Settings.Description;
+        if Description <> null then
+          Rules.CheckText(Description, At + '/description');
+        end if;
         const Initial: string? := Settings.InitialFocus;
         if Initial <> null then
           Rules.CheckText(Initial, At + '/initialFocus');
         end if;
 
-        if Settings.Width <= 0 then
-          Rules.Reject(At, 'A dialog needs a positive width.');
+        if not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0F then
+          Rules.Reject(At, 'A dialog needs a finite nonnegative width.');
         end if;
 
         Visit(Base, At + '/base');
@@ -324,8 +326,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/spinner');
         FeedbackRules.Nonnegative(Size, At);
         if Settings <> null then
-          ChartChecks.Color(Settings.Color, At);
-          ChartChecks.Color(Settings.Track, At);
+          ContainerRules.CheckColor(Settings.Color, Settings.ThemeColor, At + '/color');
+          ContainerRules.CheckColor(Settings.Track, Settings.ThemeTrack, At + '/track');
           if not Sys.Enum.IsDefined of Spinners.Style(Settings.Animation) then
             Rules.Reject(At, 'Unknown spinner animation.');
           end if;
@@ -478,7 +480,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           end procedure
         );
       when E.Element.Popover(
-        const Id: string, const Trigger: E.Element of TMsg, const Content: E.Element of TMsg, _, _,
+        const Id: string, const Trigger: E.Element of TMsg,
+        const Children: array of E.Element of TMsg, _, _,
         const Settings: Popovers.Options
       ):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/popover');
@@ -486,7 +489,14 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         PopupRules.CheckPanel(Settings, At);
         PopupRules.CheckTrigger of TMsg(Trigger, At);
         Visit(Trigger, At + '/trigger');
-        VisitScopedContent(Content, At + '/content', Detached := true);
+        InNativeScope(
+          true,
+          procedure() begin
+            for Index: int := 0 to Children.Length - 1 do
+              Visit(Children[Index], At + '/content/' + Index.ToString());
+            end for;
+          end procedure
+        );
       when E.Element.ConfirmPopover(
         const Id: string,
         const Trigger: E.Element of TMsg,
@@ -506,20 +516,16 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Path: string := Location + '/reactions';
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Path);
         const At: string := Identify(Id, Path);
-        if Items.Length = 0 then
-          Rules.Reject(At, 'A reaction group needs at least one item.');
-        end if;
-
         for Index: int := 0 to Items.Length - 1 do
           const Item: Reactions.Item := Items[Index];
           const Part: string := Identify(Reactions.ItemId(Id, Index), At + '/item');
           Rules.CheckText(Item.Label, Part + '/label');
-          Rules.CheckText(Item.Icon, Part + '/icon');
+          Rules.CheckText(Item.Icon ?? '', Part + '/icon');
           if Sys.String.IsNullOrWhiteSpace(Item.Label) or Item.Label.Contains(#10)
-            or Item.Label.Contains(#13) or Item.Icon = ''
+            or Item.Label.Contains(#13)
             or Item.Count < 0 or (not Item.Active and Item.Count = int.MaxValue)
           then
-            Rules.Reject(Part, 'A reaction needs a single-line name, an icon and a valid count.');
+            Rules.Reject(Part, 'A reaction needs a single-line name and a valid count.');
           end if;
         end for;
       when E.Element.SpeedDialAction(
@@ -556,14 +562,15 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Path: string := Location + '/userMenu';
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Path);
         MenuRules.Check of TMsg(Id, Name, Entries, null, Path, Identify);
-        Rules.CheckText(Settings.Detail, Path + '/detail');
-        Rules.CheckText(Settings.Status, Path + '/status');
+        const Detail: string := Settings.Detail ?? '';
+        Rules.CheckText(Detail, Path + '/detail');
+        Rules.CheckText(Settings.Status ?? '', Path + '/status');
         const AvatarPath: string? := Settings.AvatarPath;
         if AvatarPath <> null then
           Rules.CheckText(AvatarPath, Path + '/avatar');
         end if;
 
-        if Settings.Detail.Contains(#10) or Settings.Detail.Contains(#13)
+        if Detail.Contains(#10) or Detail.Contains(#13)
           or not Sys.Enum.IsDefined of Menus.Placement(Settings.Position)
           or not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0
         then
@@ -581,16 +588,21 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         MenuRules.Check of TMsg(Id, Label, Entries, Settings, Location, Identify);
       when E.Element.FormattedText(
         const Value: string,
-        const Font: Motion.Font,
+        const Font: G.Font,
         const FontSize: float,
         _,
         const Settings: Texts.Options,
+        _,
+        const Width: L.Extent,
+        const LineHeight: float,
         _
       ):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         Rules.CheckText(Value, Location);
         ChartChecks.Distance(FontSize, Location);
-        if not Sys.Enum.IsDefined of Motion.Font(Font) then
+        LayoutRules.CheckExtent(Width, Mode, Location + '/width');
+        ChartChecks.Distance(LineHeight, Location + '/lineHeight');
+        if not Sys.Enum.IsDefined of G.Font(Font) then
           Rules.Reject(Location, 'Unknown graphical text font.');
         end if;
 
@@ -602,8 +614,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Label: string,
         _,
         _,
-        const Description: string,
-        _
+        const Description: string?,
+        _, _
       ):
         SelectionRules.CheckRowText(Label, Description, Identify(Id, Location + '/switch'));
       when E.Element.CheckboxAction(
@@ -611,7 +623,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Label: string,
         _,
         _,
-        const Description: string,
+        const Description: string?,
         _,
         _, _
       ):
@@ -621,7 +633,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Label: string,
         _,
         _,
-        const Description: string,
+        const Description: string?,
         _
       ):
         SelectionRules.CheckRow(Id, Label, Description, Mode, Location + '/selection', Identify);
@@ -698,8 +710,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.CheckText(Settings.IconRight, At + '/iconRight');
         Rules.CheckText(Settings.TerminalIcon, At + '/terminalIcon');
         Rules.CheckText(Settings.TerminalIconRight, At + '/terminalIconRight');
-        Rules.CheckText(Settings.Tooltip, At + '/tooltip');
-        Rules.CheckText(Settings.Shortcut, At + '/shortcut');
+        TooltipRules.CheckCaption(Settings.Tooltip, Settings.Shortcut, At + '/tooltip', true);
         if not Sys.Enum.IsDefined of S.ButtonVariant(Settings.Variant)
           or not Sys.Enum.IsDefined of B.Size(Settings.ControlSize)
         then
@@ -717,10 +728,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/iconButton');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Icon, At + '/icon');
-        Rules.CheckText(Tooltip, At + '/tooltip');
-        Rules.CheckText(Settings.Shortcut, At + '/shortcut');
-        if Sys.String.IsNullOrWhiteSpace(Icon) or Sys.String.IsNullOrWhiteSpace(Tooltip) then
-          Rules.Reject(At, 'An icon button needs an icon and a tooltip.');
+        TooltipRules.CheckCaption(Tooltip, Settings.Shortcut, At + '/tooltip');
+        if Sys.String.IsNullOrWhiteSpace(Icon) then
+          Rules.Reject(At, 'An icon button needs an icon.');
         end if;
 
         if not Sys.Enum.IsDefined of S.ButtonVariant(Settings.Variant)
@@ -728,6 +738,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         then
           Rules.Reject(At, 'Unknown icon button variant or size.');
         end if;
+
+        LayoutRules.CheckExtent(Settings.Width, Mode, At + '/width');
       when E.Element.CopyAction(const Id: string, const Value: string, _, _):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         Rules.CheckText(Value, Identify(Id, Location + '/copyButton') + '/text');
@@ -758,14 +770,14 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.ConfirmLabel, At + '/confirmLabel');
-        Rules.CheckText(Settings.Icon, At + '/icon');
-        if Settings.TimeoutMilliseconds <= 0 or Settings.Variant = S.ButtonVariant.Active
+        Rules.CheckText(Settings.Icon ?? '', At + '/icon');
+        if Settings.TimeoutMilliseconds < 0 or Settings.Variant = S.ButtonVariant.Active
           or not Sys.Enum.IsDefined of S.ButtonVariant(Settings.Variant)
           or not Sys.Enum.IsDefined of B.Size(Settings.ControlSize)
         then
           Rules.Reject(
             At,
-            'A confirm button needs a positive timeout and a valid button variant and size.'
+            'A confirm button needs a nonnegative timeout and a valid button variant and size.'
           );
         end if;
       when E.Element.StatusAction(
@@ -780,7 +792,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.SuccessLabel, At + '/successLabel');
         Rules.CheckText(Settings.ErrorLabel, At + '/errorLabel');
-        Rules.CheckText(Settings.Icon, At + '/icon');
+        Rules.CheckText(Settings.Icon ?? '', At + '/icon');
         const Busy: string? := Settings.BusyLabel;
         if Busy <> null then
           Rules.CheckText(Busy, At + '/busyLabel');
@@ -941,24 +953,28 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/listItem');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Title, At + '/title');
-        Rules.CheckText(Settings.Subtitle, At + '/subtitle');
-        Rules.CheckText(Settings.Trailing, At + '/trailing');
-        Rules.CheckText(Settings.Avatar, At + '/avatar');
-        Rules.CheckText(Settings.Icon, At + '/icon');
+        Rules.CheckText(Settings.Subtitle ?? '', At + '/subtitle');
+        Rules.CheckText(Settings.Trailing ?? '', At + '/trailing');
+        Rules.CheckText(Settings.Avatar ?? '', At + '/avatar');
+        Rules.CheckText(Settings.Icon ?? '', At + '/icon');
       when E.Element.TreeNode(
         const Id: string,
         const Label: string,
         const Open: bool?,
         const Children: array of E.Element of TMsg,
         const Change: Sys.Func of (bool, TMsg)?,
-        _,
+        const Activate: (Sys.Func of TMsg)?,
         const Settings: Trees.Options
       ):
         const At: string := Identify(Id, Location + '/tree');
         Rules.CheckText(Label, At + '/label');
-        Rules.CheckText(Settings.Icon, At + '/icon');
+        Rules.CheckText(Settings.Icon ?? '', At + '/icon');
         if (Open = null) <> (Change = null) or (Open = null and Children.Length <> 0) then
           Rules.Reject(At, 'Expansion and its callback belong to a branch.');
+        end if;
+
+        if Open <> null and Activate <> null then
+          Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         end if;
 
         for Child: E.Element of TMsg in Children do
@@ -1006,11 +1022,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         GridRules.FilterBar(Id, Fields, Current, Capacity, Mode, Location, Identify);
       when E.Element.DataGrid(
         const Id: string, const Columns: array of DataGrids.Column, const Count: int,
-        _, const Current: DataGrids.Value, _, const Settings: DataGrids.Options, _
+        _, const Current: DataGrids.Value, _, const Settings: DataGrids.Options, _, _
       ):
         const At: string := Identify(Id, Location + '/dataGrid');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         GridRules.Grid(Columns, Count, Current.Order, Settings.Height, Settings.RowHeight, At);
+        LayoutRules.CheckExtent(Settings.Width, Mode, At + '/width');
         const Selected: (array of bool)? := Current.Selected;
         if (Selected <> null and Selected.Length <> Count)
           or Current.Cursor < -1 or Current.Cursor >= Count or Current.Anchor < -1
@@ -1051,13 +1068,26 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         GridRules.Grid(Columns, Nodes.Length, Order, Settings.Height, Settings.RowHeight, At);
         GridRules.Tree(Nodes, Columns.Length, Cursor, At);
       when E.Element.ReorderableList(
-        const Id: string, const Items: array of E.Element of TMsg, const Order: array of int, _, _
+        const Id: string,
+        const Items: array of array of E.Element of TMsg,
+        const Order: array of int,
+        _,
+        _
       ):
         const At: string := Identify(Id, Location + '/reorder');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         CollectionRules.Reorder(Items.Length, Order, At);
-        for Child: E.Element of TMsg in Items do
-          Visit(Child, At);
+        for Index: int := 0 to Items.Length - 1 do
+          const Row: array of E.Element of TMsg := Items[Index];
+          const Path: string := At + '/row/' + Index.ToString();
+          InNativeScope(
+            false,
+            procedure() begin
+              for Child: E.Element of TMsg in Row do
+                Visit(Child, Path);
+              end for;
+            end procedure
+          );
         end for;
       when E.Element.VirtualList(
         const Id: string,
@@ -1073,12 +1103,17 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'The virtual list scroll offset must be finite and nonnegative.');
         end if;
 
-        if Count < 0 or not Sys.Single.IsFinite(RowHeight) or RowHeight < 1.0F
-          or cast RowHeight as double * Count >= int.MaxValue
+        const EffectiveRowHeight: float := if RowHeight = 0.0F then
+          36.0F
+        else
+          RowHeight
+        end if;
+        if Count < 0 or not Sys.Single.IsFinite(EffectiveRowHeight) or EffectiveRowHeight < 1.0F
+          or cast EffectiveRowHeight as double * Count >= int.MaxValue
         then
           Rules.Reject(
             At,
-            'The virtual list needs a nonnegative count and a finite logical row height of at least one.'
+            'The virtual list needs a nonnegative count and a finite row height of at least one, or zero for the default.'
           );
         end if;
       when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
@@ -1320,9 +1355,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             At
           );
           Rules.CheckText(Item.Title, At + '/title');
-          Rules.CheckText(Item.Icon, At + '/icon');
-          Rules.CheckText(Item.Group, At + '/group');
-          Rules.CheckText(Item.Shortcut, At + '/shortcut');
+          Rules.CheckText(Item.Icon ?? '', At + '/icon');
+          Rules.CheckText(Item.Group ?? '', At + '/group');
+          Rules.CheckText(Item.Shortcut ?? '', At + '/shortcut');
         end for;
 
         Visit(Base, At);
@@ -1338,9 +1373,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           discard Identify(GridId, At);
         end if;
 
-        for Index: int := 0 to Children.Length - 1 do
-          Visit(Children[Index], At + '[' + Index.ToString() + ']');
-        end for;
+        VisitScrollChildren(Children, At, Flow.Scrolling <> L.ScrollMode.None);
       when E.Element.Card(
         const Id: string,
         const Children: array of E.Element of TMsg,
@@ -1438,9 +1471,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           discard Identify(ContainerId, Location + '/layers');
         end if;
 
-        for Index: int := 0 to Children.Length - 1 do
-          Visit(Children[Index], Location + '/layers[' + Index.ToString() + ']');
-        end for;
+        VisitScrollChildren(Children, Location + '/layers', Flow.Scrolling <> L.ScrollMode.None);
       when E.Element.Stack(
         const Children: array of E.Element of TMsg,
         const Horizontal: bool,
@@ -1457,9 +1488,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           discard Identify(ContainerId, At);
         end if;
 
-        for Index: int := 0 to Children.Length - 1 do
-          Visit(Children[Index], At + '[' + Index.ToString() + ']');
-        end for;
+        VisitScrollChildren(Children, At, Flow.Scrolling <> L.ScrollMode.None);
       when E.Element.Sized(const Child: E.Element of TMsg, const Flex: L.Flex):
         LayoutRules.CheckFlex(Flex, Mode, Location + '/size');
         Visit(Child, Location + '/size');
@@ -1518,7 +1547,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           when is string as Owner:
             AnchorPlacements.Add(Id, new AnchorPlacement(Owner, AnchorPlacements.Count));
           else
-            Rules.Reject(At, 'A scroll anchor needs an enclosing scroll viewport.');
+            Rules.Reject(
+              At,
+              'A scroll anchor needs an enclosing scroll viewport without an intervening scroller.'
+            );
         end case;
       when E.Element.Scroll(
         const Id: string,
@@ -1563,21 +1595,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           end case;
         end if;
 
-        const ParentScroll: string? := ScrollOwner;
-        After(
-          procedure() begin
-            ScrollOwner := Id;
-          end procedure
-        );
-        for Index: int := 0 to Children.Length - 1 do
-          Visit(Children[Index], At + '[' + Index.ToString() + ']');
-        end for;
-
-        After(
-          procedure() begin
-            ScrollOwner := ParentScroll;
-          end procedure
-        );
+        VisitScrollChildren(Children, At, true, Id);
       when E.Element.Sheet(
         const Id: string, const Base: E.Element of TMsg, const Content: E.Element of TMsg, _,
         const Settings: Sheets.Options, _
@@ -1588,14 +1606,16 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/sheet');
         discard Identify(Sheets.CloseId(Id), At + '/close');
         Rules.CheckText(Settings.Title, At + '/title');
-        Rules.CheckText(Settings.Description, At + '/description');
+        Rules.CheckText(Settings.Description ?? '', At + '/description');
         const Initial: string? := Settings.InitialFocus;
         if Initial <> null then
           Rules.CheckText(Initial, At + '/initialFocus');
         end if;
 
-        if Settings.Size <= 0 or not Sys.Enum.IsDefined of Sheets.Side(Settings.Edge) then
-          Rules.Reject(At, 'A sheet needs a positive size and a valid edge.');
+        if not Sys.Single.IsFinite(Settings.Size) or Settings.Size < 0.0F
+          or not Sys.Enum.IsDefined of Sheets.Side(Settings.Edge)
+        then
+          Rules.Reject(At, 'A sheet needs a finite nonnegative size and a valid edge.');
         end if;
 
         Visit(Base, At + '/base');
@@ -1735,6 +1755,36 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
   procedure After(Action: procedure());
   begin
     Pending.Add((Work of TMsg).Resume(Action));
+  end procedure;
+
+  // An independent scroller hides the outer scroll owner without changing native IDs.
+  procedure VisitScrollChildren(
+    Children: array of E.Element of TMsg;
+    Location: string;
+    ScrollBoundary: bool;
+    Owner: string? := null
+  );
+  begin
+    const ParentScroll: string? := ScrollOwner;
+    if ScrollBoundary then
+      After(
+        procedure() begin
+          ScrollOwner := Owner;
+        end procedure
+      );
+    end if;
+
+    for Index: int := 0 to Children.Length - 1 do
+      Visit(Children[Index], Location + '[' + Index.ToString() + ']');
+    end for;
+
+    if ScrollBoundary then
+      After(
+        procedure() begin
+          ScrollOwner := ParentScroll;
+        end procedure
+      );
+    end if;
   end procedure;
 
   // Native widgets can scope IDs without lifting their content out of an enclosing scroll.

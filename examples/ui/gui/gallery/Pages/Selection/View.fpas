@@ -4,6 +4,8 @@ unit GuiGallery.Pages.Selection.View;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Containers.Grids as Grids;
 
 uses Gallery.Shared.CheckboxExamples as Checkbox;
 uses Gallery.Shared.SaveFrequency as Frequency;
@@ -24,20 +26,18 @@ uses GuiGallery.Shared.State as Demo;
 // - `Data`: Shared demo values owned by the application.
 // - `Model`: Current controlled values.
 // - `WeeklySummary`: The workspace preference shown in the disabled example.
-// - `Wide`: Whether two 260-point columns fit with the native gap.
 // ## Returns
-// The complete Selection page.
+// The native grid, headings, and cards in page order.
 public function View(
   Model: State.Model;
   Data: Demo.Model;
-  WeeklySummary: bool;
-  Wide: bool
-): E.Element of State.Msg;
+  WeeklySummary: bool
+): array of E.Element of State.Msg;
 begin
-  const SectionFlow: L.Flow := new L.Flow(Gap := G.Points(12));
+  const SectionFlow: L.Flow := new L.Flow(Gap := G.Points(12), Clip := false);
   const Checkboxes: E.Element of State.Msg := E.Column of State.Msg(
-    SectionFlow, G.Heading of State.Msg(Strings.Get('Text.Checkbox')), G.Card of State.Msg(
-      14, Checkbox.Rows of State.Msg(
+    SectionFlow, G.Heading of State.Msg(Strings.Get('Text.Checkbox')), Cards.Card of State.Msg(
+      'selection-checkbox-card', Checkbox.Rows of State.Msg(
         Data.Newsletter,
         Data.Marketing,
         WeeklySummary,
@@ -46,43 +46,46 @@ begin
           Demo.Msg.SetMarketing(Value)
         ),
         State.Msg.Preview
-      )
+      ), new Cards.Options(Gap := 14.0F)
     )
   );
   const Switches: E.Element of State.Msg := E.Column of State.Msg(
     SectionFlow,
     G.Heading of State.Msg(Strings.Get('Text.Switch')),
-    G.Card of State.Msg(14, Switch.Rows(Model, Data))
+    Cards.Card of State.Msg(
+      'selection-switch-card',
+      Switch.Rows(Model, Data),
+      new Cards.Options(Gap := 14.0F)
+    )
   );
-  const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
-    if Wide then
-      E.Row of State.Msg(
-        new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start),
-        E.Size of State.Msg(Checkboxes, Fill), E.Size of State.Msg(Switches, Fill)
-      )
-    else
-      E.Column of State.Msg(new L.Flow(Gap := G.Points(16)), Checkboxes, Switches)
-    end if,
+  return [
+    Grids.Grid of State.Msg(
+      new Grids.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
+      Checkboxes, Switches
+    ),
     G.Heading of State.Msg(Strings.Get('Text.RadioGroup')),
-    G.Card of State.Msg(
-      12,
-      [Frequency.View of State.Msg(Model.SaveFrequency, State.Msg.SetSaveFrequency)]
+    Cards.Card of State.Msg(
+      'selection-radio-card',
+      Frequency.Rows of State.Msg(Model.SaveFrequency, State.Msg.SetSaveFrequency),
+      new Cards.Options(Gap := 12.0F)
     ),
     G.Heading of State.Msg(
       Strings.Get('Heading.RadioCards'),
       Strings.Get('Heading.RadioCardsHint')
     ),
-    RadioCards.View(Model, Data),
+    RadioCards.View(Model),
     G.Heading of State.Msg(Strings.Get('Heading.Sliders'), Strings.Get('Heading.SlidersHint')),
-    G.Card of State.Msg(
-      20,
-      [Slider.Volume(Model, Data), Slider.Brightness(Model, Data), RangeSlider.View(Model, Data)]
+    Cards.Card of State.Msg(
+      'selection-sliders-card',
+      [Slider.Volume(Model, Data), Slider.Brightness(Model, Data), RangeSlider.View(Model, Data)],
+      new Cards.Options(Gap := 20.0F)
     ),
     G.Heading of State.Msg(Strings.Get('Heading.ChipsAndRating')),
-    G.Card of State.Msg(16, [Chip.View(Model, Data), Rating.View(Model, Data)])
-  );
+    Cards.Card of State.Msg(
+      'selection-chips-card', [Chip.View(Model, Data), Rating.View(Model, Data)],
+      new Cards.Options(Gap := 16.0F)
+    )
+  ];
 end function;
 
 end unit;

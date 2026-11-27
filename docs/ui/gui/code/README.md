@@ -13,6 +13,15 @@ revisions and displays a build log. These widgets require the GUI host.
 | [Hex viewer](hex-viewer.md) | Inspect or overwrite bytes, mark ranges and jump to offsets. |
 | [Log console](log-console.md) | Show timestamped messages with filtering and follow controls. |
 
+## Code gallery page
+
+The original page places the C counter in a full-width code block. Python
+and shell share a row with a 16-unit gap and two equal growth weights. The
+JSON section shows one nested document and one parse error.
+
+The SQL sample and the editing tools follow the original sections in the
+FPAS gallery.
+
 ## See also
 
 - [UI handbook](../README.md)
@@ -20,6 +29,7 @@ revisions and displays a build log. These widgets require the GUI host.
 - [Terminal](../files/terminal.md)
 - [Static code examples in the gallery](../../../../examples/ui/gui/gallery/Pages/Code/View.fpas)
 - [Interactive code examples in the gallery](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
+- [CUI gallery comparison](../../../future/cui-compare/README.md#code-evidence)
 
 ## Source files
 

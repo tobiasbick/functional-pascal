@@ -30,16 +30,20 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Exclusive / IconOnly` | false / false |
-| `ControlSize / Enabled` | Medium / true |
-| `Items` | 1 to 32 positional items |
+| `Items` | Supply one through 32 items in stable order. Each item needs a single-line label and can include an icon. |
+| `Exclusive` | false. When true, selecting a different item clears the other flags. |
+| `IconOnly` | false. When true, items with icons use their labels as tooltips. Items without icons keep their visible labels. |
+| `ControlSize` | Medium. Small and Large are also available. |
+| `Enabled` | true. Set to false to block input and remove the items from the Tab order. |
 
 ## Interaction
 
-Pass one selected flag per item. Exclusive mode requires exactly one
-selected item. Tab visits enabled items and the arrow keys move focus
-horizontally. Click, Enter or Space proposes a fresh array of flags. Keep
+Pass one selected flag per item. Exclusive mode requires exactly one selected
+item. Tab visits enabled items. Left and Right move to the previous or next
+item. Click, Enter, or Space proposes a fresh array when the flags change. Keep
 the array in the model after accepting a proposal.
+
+An icon-only item's label follows the native tooltip text rules. [Tooltip](../overlays/tooltip.md#options-and-defaults)
 
 ## See also
 

@@ -68,6 +68,11 @@ The themed entry points enable CUI's native appearance following. On a native
 change the host resolves the model's theme again, including custom palette
 overrides and `Theme.Metrics`; the native theme never becomes a second model.
 
+The first view applies its palette immediately. Later appearance and accent
+changes use CUI's palette transition. Zero motion applies the target palette
+immediately. The view receives the target theme. A custom canvas can read the
+colors of the current transition frame. See [canvas painting](canvas-and-bars/painting.md).
+
 ## Fonts and native captions
 
 `Fonts.Apply of TMsg` schedules a typed `Fonts.Operation of TMsg` between frames:
@@ -203,13 +208,15 @@ message. Unavailable clipboard text is passed as an empty string.
 Supply `BindingsFor(Model)` to Start/Run or their themed variants. It returns
 immutable `Fpas.Ui.Gui.Shortcuts.Binding of TMsg` values using the existing
 `ShortcutRecorders.Combination`, `Key`, `Modifier` and `PrimaryModifier()`.
-Each binding carries its message, Enabled, Repeat and AllowWhileEditing policy.
+Each binding carries its message and the Enabled, Repeat, AllowWhileEditing, and AllowInOverlays policies.
 `Binding.Map of TParent(Messages)` wraps a feature slice's message. Bindings are
 prepared with the model view and reused on native repaints; enabled key/modifier
 combinations must be unique. None is not an application key.
 
-CUI processes widgets first. Open popups and modals block application bindings,
-including their dismissal frame. Focused widgets retain navigation/activation
+CUI processes widgets first. By default, popups and modals block application
+bindings through their dismissal frame. Use `AllowInOverlays` for an
+unconsumed combination such as changing the gallery appearance.
+Focused widgets retain navigation/activation
 and bare typing keys. By default, text editing blocks application bindings;
 `AllowWhileEditing` explicitly enables global commands such as Save. Use it
 only for combinations not assigned to native editing; already-consumed keys
@@ -286,8 +293,9 @@ timer. CUI defaults to four seconds, or six seconds with the timer line.
 A negative duration keeps the toast until dismissal. Hovering expands the
 stack and pauses the countdown. Close or swipe right to dismiss it.
 
-Supply an action caption and an `OnAction` message factory together.
-The host invokes the factory once after the native action is activated.
+An action caption adds a button that dismisses the toast. If you supply an
+`OnAction` message factory, the host calls it once when the user activates the
+button.
 The action can be reached by Tab and activated by Enter or Space.
 Toasts leave the current focus in place when they appear. The
 `Snapshot().Controls` list includes visible cards and buttons.

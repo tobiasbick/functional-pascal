@@ -1,0 +1,44 @@
+// [Documentation](../../docs/ui/gui/layout/scroll-view.md#request-a-scroll-offset)
+
+unit Fpas.Ui.Gui.Scrolls;
+
+uses Fpas.Ui.Mvu.Application as Mvu;
+
+// Requests a native scroll target for the next view.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Request of TMsg = record implements Mvu.HostExtension of TMsg
+  // Stable scroll view ID.
+  public Id: string;
+  // Vertical offset from the start, in logical units.
+  public Offset: float;
+
+  // Retains the target when a child command maps into its parent.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Parent message mapper.
+  // ## Returns
+  // The same request in the parent message space.
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
+  begin
+    return new Request of TNext(self.Id, self.Offset);
+  end function;
+end record;
+
+// Sets a host-owned scroll view's native vertical target.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable scroll view ID.
+// - `Offset`: Finite nonnegative offset in logical units.
+// ## Returns
+// A command for the next view. CUI clamps the target and applies its native scroll motion.
+public function To of TMsg(Id: string; Offset: float): Mvu.Command of TMsg;
+requires Id <> '';
+requires Offset >= 0.0F and Offset <= float.MaxValue;
+begin
+  return (Mvu.Command of TMsg).Host(Mvu.HostRequest.Extension(new Request of TMsg(Id, Offset)));
+end function;
+
+end unit;

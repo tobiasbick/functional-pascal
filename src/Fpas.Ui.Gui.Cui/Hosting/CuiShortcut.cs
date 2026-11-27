@@ -7,5 +7,6 @@ namespace Fpas.Ui.Gui.Cui;
 /// <param name="Enabled">Whether the binding is active in this view.</param>
 /// <param name="Repeat">Whether native repeats may activate the binding in later frames.</param>
 /// <param name="AllowWhileEditing">Whether an unconsumed combination may run while editing text.</param>
+/// <param name="AllowInOverlays">Whether an unconsumed combination may run while a popup or modal is active.</param>
 public readonly record struct CuiShortcut(int Key, int Modifiers = 0, bool Enabled = true,
-    bool Repeat = false, bool AllowWhileEditing = false);
+    bool Repeat = false, bool AllowWhileEditing = false, bool AllowInOverlays = false);

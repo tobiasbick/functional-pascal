@@ -34,8 +34,10 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Title / Description` | Title is required. Description defaults to empty. |
-| `Edge / Size` | Right / 400. Use Left, Top or Bottom for other edges. Size is the width for horizontal placement or the height for vertical placement. |
+| `Title` | Required heading. |
+| `Description` | Null omits supporting text. In GUI, an empty string reserves a blank line. |
+| `Edge` | Right. Use Left, Top or Bottom for another edge. |
+| `Size` | 400 logical units. Zero uses the default. Set the width for Left or Right, or the height for Top or Bottom. |
 | `InitialFocus` | null. The close button is the fallback focus target. |
 
 ## Interaction

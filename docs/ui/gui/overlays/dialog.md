@@ -32,11 +32,13 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Title / Description` | Title is required. Description defaults to empty. |
-| `Width` | 440 logical points. Both hosts fit the width to the viewport. |
+| `Title` | Required literal heading. |
+| `Description` | Null omits the supporting text. In the GUI, an empty string reserves a blank line below the heading. |
+| `Width` | 440 logical units. Zero uses the default. Both hosts fit the width to the viewport. |
 | `Persistent / CloseButton` | false / true. Persistent suppresses Escape and scrim dismissal. |
 | `InitialFocus` | null. Supply the ID of an enabled control inside the dialog to choose where focus starts. |
-| `Draggable / Resizable` | Both default to false. Enable either in a GUI view. |
+| `Draggable` | False. In the GUI, dragging the header moves the dialog within the window. |
+| `Resizable` | False. In the GUI, dragging an edge or corner changes the dialog size. |
 
 ## Interaction
 
@@ -46,7 +48,8 @@ the close button still sends the message when shown. Closing the dialog restores
 
 In the TUI, put ordinary buttons in a row for actions. The dialog stays
 centered when the terminal resizes and its body scrolls if space is limited.
-In the GUI, keep the body available during the exit transition.
+In the GUI, keep the body available during the exit transition. CUI clips the
+body if it cannot fit after a resize.
 
 ## See also
 
@@ -75,3 +78,4 @@ In the GUI, keep the body available during the exit transition.
   - [DialogContract.fpas](../../../../tests/Fixtures/gui-host/DialogContract.fpas)
   - [ModalCompositionContract.fpas](../../../../tests/Fixtures/gui-host/ModalCompositionContract.fpas)
   - [ModalPreflightContract.fpas](../../../../tests/Fixtures/gui-host/ModalPreflightContract.fpas)
+- [CuiDialogTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiDialogTests.cs)

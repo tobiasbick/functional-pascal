@@ -8,7 +8,7 @@ public sealed partial class CuiWindow
 {
     /// <summary>Draws CUI's reaction group without modifying the application values.</summary>
     /// <param name="id">Stable group identity.</param>
-    /// <param name="items">Nonempty list of ordered reactions.</param>
+    /// <param name="items">Ordered reactions.</param>
     /// <param name="enabled">Whether the group accepts input.</param>
     /// <param name="focus">Zero or one plus the requested item index.</param>
     /// <param name="trackingIds">Group and ordered item identities, or null.</param>
@@ -19,20 +19,19 @@ public sealed partial class CuiWindow
         CheckFrame();
         ArgumentNullException.ThrowIfNull(items);
         int length = items.Length;
-        if (length == 0) throw new ArgumentException("Supply at least one reaction.", nameof(items));
         if (focus < 0 || focus > length) throw new ArgumentOutOfRangeException(nameof(focus));
         if (trackingIds is not null && trackingIds.Length != length + 1)
             throw new ArgumentException("Supply group and item tracking IDs.", nameof(trackingIds));
-        var icons = new string[length];
+        var icons = new string?[length];
         var counts = new int[length];
         var active = new int[length];
         var nodes = new int[length + 1];
         for (int i = 0; i < length; i++)
         {
             CuiReaction item = items[i];
-            Utf8.Validate(item.Icon, nameof(items));
-            if (item.Icon.Length == 0 || item.Count < 0 || (!item.Active && item.Count == int.MaxValue))
-                throw new ArgumentException("Supply an icon and an incrementable count for each inactive reaction.", nameof(items));
+            if (item.Icon is not null) Utf8.Validate(item.Icon, nameof(items));
+            if (item.Count < 0 || (!item.Active && item.Count == int.MaxValue))
+                throw new ArgumentException("Supply nonnegative counts and leave room to increment inactive reactions.", nameof(items));
             icons[i] = item.Icon;
             counts[i] = item.Count;
             active[i] = item.Active ? 1 : 0;

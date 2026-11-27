@@ -37,6 +37,17 @@ opens the shared [project confirmation dialog](../overlays/dialog.md).
 
 - [CUI Buttons comparison](../../../future/cui-compare/README.md#buttons-evidence)
 
+## Actions gallery page
+
+The Split button, Toggle group and Morphing buttons sections use wrapping
+rows with a gap of 12 logical units. Save displays its most recent action.
+Delete project displays a result after confirmation. The status button runs
+through Idle, Busy and Success before returning to Idle.
+
+The appearance controls share a wrapping row with a gap of 16 logical units.
+The account trigger uses a 260-unit box. A native card holds the three swipe
+rows. The 80-unit speed dial row centers the trigger and the selected caption.
+
 ## See also
 
 - [First window](../README.md#first-window)

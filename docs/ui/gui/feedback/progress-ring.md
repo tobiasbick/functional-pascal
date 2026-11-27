@@ -35,7 +35,8 @@ end unit;
 
 ## Interaction
 
-CUI formats the percentage and interpolates the ring as the model changes. The ring keeps its diameter within the surrounding layout and has no input action.
+CUI interpolates the arc and displays the corresponding whole percentage.
+Reduced motion shows the new value immediately. The ring is read-only.
 
 ## See also
 

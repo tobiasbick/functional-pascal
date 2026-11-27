@@ -1,6 +1,8 @@
 // [Documentation](../../../../../docs/ui/gui/data-grid/tree-table.md)
 #ifndef FPAS_CUI_TREE_TABLE_H
 #define FPAS_CUI_TREE_TABLE_H
+
+#include "../overlays/menu.h"
 /** Draws a literal tree cell. depth is nonnegative; open is -1 for a leaf, otherwise
  * an input/output expansion boolean. enabled gates interaction; part receives the
  * frame-local chevron (leaf root for leaves). Returns nonzero on an enabled toggle. */
@@ -42,6 +44,6 @@ CUI_API int fpas_cui_tree_table_menu_begin(cui_ctx *ui, const char *id, int enab
  * Makes the table root the last layout target again. Returns the chosen entry index, or -1. */
 CUI_API int fpas_cui_tree_table_menu_end(cui_ctx *ui, unsigned int popup, int table, int visible,
     const char *const *keys, const char *const *labels, const char *const *icons,
-    const char *const *shortcuts, const int *flags, int count, int *nodes,
+    const char *const *shortcuts, const fpas_cui_menu_row *rows, int count, int *nodes,
     int *open, int *highlighted, unsigned int *owner);
 #endif

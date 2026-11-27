@@ -11,6 +11,14 @@ static cui_id fpas_checklist_action(cui_id scope, int index) {
     return cui__hash_str("###action", cui__hash(&index, sizeof index, scope));
 }
 
+static const char *fpas_checklist_caption(cui_ctx *ui, const char *action) {
+    if (!action) return NULL;
+    const int prefix = cui__display_len(action);
+    /* Keep literal hashes outside the ID delimiter and retain a label node. */
+    const bool separate = prefix > 0 ? action[prefix - 1] == '#' : *action != '\0';
+    return cui__frame_printf(ui, "%.*s%s###action", prefix, action, separate ? " " : "");
+}
+
 static void fpas_checklist_forget_steps(cui_ctx *ui, const fpas_checklist_state *state, int first) {
     for (int index = first; index < state->count; ++index) {
         const cui_id step = fpas_checklist_step(state->key, index);
@@ -35,7 +43,8 @@ static void fpas_paint_focused_checklist_circle(cui_ctx *ui, cui_node *node, voi
 static void fpas_checklist_circle(cui_ctx *ui, int node, cui_id key) {
     cui_node *circle = &ui->nodes[node];
     if (circle->paint != cui__paint_focus_after) return;
-    /* Keep the checklist circle visible when the generic focus painter replaces it. */
+    /* CUI-053: keep the status circle visible under the generic focus painter.
+       See docs/future/cui-upstream-bugs.md#cui-053. */
     const cui__step_state *state = cui_state(ui, key, sizeof *state);
     cui__circle_paint *paint = cui__frame_alloc(ui, sizeof *paint);
     *paint = (cui__circle_paint){
@@ -69,10 +78,8 @@ int fpas_cui_checklist(cui_ctx *ui, const char *id, const char *title, const cha
     for (int index = 0; index < count; ++index) {
         steps[index] = (cui_check_step){
             .title = cui__frame_strdup(ui, titles[index], -1),
-            .description = *descriptions[index] ? cui__frame_strdup(ui, descriptions[index], -1) : NULL,
-            .action = *actions[index] ? (cui__display_len(actions[index]) ?
-                cui__frame_printf(ui, "%.*s###action", cui__display_len(actions[index]), actions[index])
-                : "x###action") : NULL,
+            .description = descriptions[index] ? cui__frame_strdup(ui, descriptions[index], -1) : NULL,
+            .action = fpas_checklist_caption(ui, actions[index]),
             .done = completed[index] != 0
         };
     }
@@ -87,9 +94,9 @@ int fpas_cui_checklist(cui_ctx *ui, const char *id, const char *title, const cha
     for (int index = 0; index < count; ++index) {
         const cui_id step = fpas_checklist_step(key, index);
         const int circle = fpas_find(ui, step ^ 0xC1u);
-        const int button = *actions[index] ? fpas_find(ui, fpas_checklist_action(scope, index)) : -1;
+        const int button = actions[index] ? fpas_find(ui, fpas_checklist_action(scope, index)) : -1;
         fpas_checklist_circle(ui, circle, step);
-        if (button >= 0 && strstr(actions[index], "##")) fpas_text(ui, fpas_label_node(ui, button), actions[index]);
+        if (button >= 0 && strchr(actions[index], '#')) fpas_text(ui, fpas_label_node(ui, button), actions[index]);
         if (parts) { parts[index * 2] = circle; parts[index * 2 + 1] = button; }
         if (allowed) completed[index] = steps[index].done;
     }

@@ -1,8 +1,10 @@
 // [Documentation](../../../../../docs/ui/gui/inputs/tag-input.md)
 #include "../../fpas_cui.h"
 
+/** Applies tag options and returns the native editor and remove button nodes. */
 void fpas_cui_tag_input(cui_ctx *ui, const char *id, char *value, size_t capacity,
-    const char *label, const char *placeholder, int max_tags, int enabled, int focus, int count, int *nodes) {
+    const char *label, const char *placeholder, int max_tags, int width_kind, float width,
+    int enabled, int focus, int count, int *nodes) {
     const cui_id key = cui_make_id(ui, id);
     const cui_id editor = key ^ 0x7A6u;
     const bool allowed = enabled && !cui_is_disabled(ui);
@@ -12,7 +14,10 @@ void fpas_cui_tag_input(cui_ctx *ui, const char *id, char *value, size_t capacit
     if (allowed && focus) ui->focus_next_request = editor;
     if (placeholder) placeholder = cui__frame_strdup(ui, placeholder, (int)strlen(placeholder));
 
-    const cui_tag_opts options = { .label = label, .placeholder = placeholder, .max_tags = max_tags };
+    const cui_tag_opts options = {
+        .label = label, .placeholder = placeholder, .max_tags = max_tags,
+        .width = fpas_extent(width_kind, width)
+    };
     cui_push_disabled(ui, !enabled);
     cui_tag_input_ex(ui, id, value, capacity, &options);
     cui_pop_disabled(ui);

@@ -13,12 +13,14 @@ public type Font = enum: byte
   Display;
   // Native monospace face.
   Mono;
+  // Native icon face.
+  Icons;
 end enum;
 
 // Native inline editor presentation and capacity.
 public type Options = record
-  // Literal text displayed for an empty value.
-  public Placeholder: string := '';
+  // Literal text for an empty value at rest. Null uses the native Untitled caption.
+  public Placeholder: string? := null;
   // Face used both at rest and while editing.
   public Face: Font := Font.Medium;
   // Logical text size; zero selects the native body size.

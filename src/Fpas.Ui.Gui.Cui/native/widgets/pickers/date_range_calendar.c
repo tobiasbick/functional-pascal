@@ -13,7 +13,8 @@ static bool fpas_range_propose(cui_date_range range, int *start, int *end) {
 
 static int fpas_range_prepare(cui_ctx *ui, cui_id key, cui_date_range range) {
     cui__rcal_state *state = cui_state(ui, key, sizeof *state);
-    /* The same model can be edited by an inline calendar and a popup. */
+    /* CUI-044 (docs/future/cui-upstream-bugs.md#cui-044): retain the selection phase
+     * when an inline calendar and a popup edit the same range. */
     state->picking = range.start.year != 0 && range.end.year == 0;
     cui_date month = state->init ? (cui_date){state->view_y, state->view_m, 1}
         : range.start.year ? range.start : cui_date_today();

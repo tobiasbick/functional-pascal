@@ -8,17 +8,17 @@ uses Fpas.Ui.Elements as E;
 public type Item = record
   // Literal title.
   public Title: string;
-  // Optional supporting description.
-  public Description: string := '';
-  // Optional CUI icon-font glyph.
-  public Icon: string := '';
-  // Optional literal badge text.
-  public Badge: string := '';
+  // Supporting text. Null omits the description.
+  public Description: string? := null;
+  // CUI icon-font glyph. Null omits the icon slot.
+  public Icon: string? := null;
+  // Literal badge text. Null omits the badge.
+  public Badge: string? := null;
 end record;
 
 // Native grid and input settings.
 public type Options = record
-  // Maximum cards per row, or zero for CUI's automatic choice.
+  // Maximum cards per row. Zero uses up to three columns for up to three cards and two columns otherwise.
   public Columns: int := 0;
   // Whether the cards accept pointer and keyboard input.
   public Enabled: bool := true;

@@ -30,7 +30,7 @@ static void fpas_morph_end(cui_ctx *ui, cui__morph_state *state, fpas_morph_widt
 static void fpas_morph_captions(cui_ctx *ui, const char *slots, const char *const *captions) {
     for (int i = ui->last_node + 1; i < ui->node_count; ++i) {
         cui_node *text = &ui->nodes[i];
-        if (!(text->flags & CUI_NF_TEXT) || text->font == CUI_FONT_ICONS) continue;
+        if (!(text->flags & CUI_NF_TEXT) || text->font == CUI_FONT_ICONS || text->text_len != 1) continue;
         const char *slot = strchr(slots, text->text[0]);
         if (!slot) continue;
         const char *literal = captions[slot - slots];

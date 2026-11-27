@@ -16,16 +16,16 @@ public sealed partial class CuiWindow
     /// <param name="enabled">Whether the row accepts input.</param>
     /// <param name="focus">Whether to request keyboard focus.</param>
     /// <returns>Whether the row was activated.</returns>
-    public bool ListItem(string id, string title, string subtitle, string trailing, string avatar,
-        string icon, bool selected, bool enabled, bool focus)
+    public bool ListItem(string id, string title, string? subtitle, string? trailing, string? avatar,
+        string? icon, bool selected, bool enabled, bool focus)
     {
         CheckFrame();
         Utf8.Validate(title, nameof(title));
-        Utf8.Validate(subtitle, nameof(subtitle));
-        Utf8.Validate(trailing, nameof(trailing));
-        Utf8.Validate(avatar, nameof(avatar));
-        Utf8.Validate(icon, nameof(icon));
-        return NativeMethods.ListItem(context, Stable(id), title, Optional(subtitle), Optional(trailing),
-            Optional(avatar), Optional(icon), selected ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0) != 0;
+        if (subtitle is not null) Utf8.Validate(subtitle, nameof(subtitle));
+        if (trailing is not null) Utf8.Validate(trailing, nameof(trailing));
+        if (avatar is not null) Utf8.Validate(avatar, nameof(avatar));
+        if (icon is not null) Utf8.Validate(icon, nameof(icon));
+        return NativeMethods.ListItem(context, Stable(id), title, subtitle, trailing, avatar, icon,
+            selected ? 1 : 0, enabled ? 1 : 0, focus ? 1 : 0) != 0;
     }
 }

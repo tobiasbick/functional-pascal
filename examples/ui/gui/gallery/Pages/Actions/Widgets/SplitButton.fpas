@@ -6,6 +6,7 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.SplitButtons as Split;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 
 uses GuiGallery.Pages.Actions.State as State;
 uses GuiGallery.Shared.Sections as G;
@@ -59,9 +60,9 @@ begin
   const Content: array of E.Element of State.Msg := if Model.SplitResult = '' then
     [Save, Export]
   else
-    [Save, Export, E.Styled of State.Msg(E.Text of State.Msg(Model.SplitResult), S.Role.Muted)]
+    [Save, Export, Texts.Text of State.Msg(Model.SplitResult, Texts.Appearance.Muted)]
   end if;
-  return E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true), Content);
+  return E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true, Clip := false), Content);
 end function;
 
 end unit;

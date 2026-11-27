@@ -36,15 +36,24 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Zoom / CenterX / CenterY` | All zero. Zero Zoom fits the image. Positive Zoom gives logical points per image pixel. Centers are image coordinates. |
-| `Width / Height / MaximumZoom` | Content / Content / 0. Zero MaximumZoom uses the native maximum. |
+| `Width / Height` | Content / Content. CUI fills the available width and uses a height of 360 logical units. |
+| `MaximumZoom` | Zero. CUI uses 16 logical units per image pixel and always permits fit. |
 | `HideToolbar / Checkerboard / Enabled` | false / false / true. |
 
 ## Interaction
 
-Use the wheel to zoom around the pointer and drag to pan. Double-click
-switches from fit or a zoom below 100 percent to 100 percent; otherwise it
-fits the image. Store the proposed value. To request fit from the
-application, set Zoom to zero.
+Use the wheel or a pinch gesture to zoom around the pointer. Drag to pan.
+Double-click from fit or below 100 percent to show actual pixels.
+Double-click at 100 percent or above to fit the image.
+
+With the viewer focused, use Plus and Minus to zoom, the arrows to pan,
+0 to fit, and 1 to show actual pixels. The toolbar shows the zoom and
+provides zoom and fit buttons. `HideToolbar` hides the buttons and
+keeps keyboard navigation available.
+
+Store the proposed zoom and center in the model. Set `Zoom` to zero to fit
+the image from the application. A disabled viewer passes wheel input to
+its enclosing scroll area.
 
 ## See also
 
@@ -66,3 +75,4 @@ application, set Zoom to zero.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/media/`
   - [image_viewer.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image_viewer.c)
   - [image_viewer.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image_viewer.h)
+- [Native media tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/media.c)

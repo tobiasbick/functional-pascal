@@ -31,13 +31,19 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Tone / Icon` | Accent / empty. Supply a CUI glyph to add an icon. |
-| `ActionLabel` | Empty. Supply it together with an action message factory to show the action. |
-| `OnDismiss / Enabled` | null / true. Providing a dismiss factory adds a close button. |
+| `Tone` | `Accent`. Sets the color of the banner and its action. CUI treats `Neutral` as `Accent`. |
+| `Icon` | Null omits the icon slot. A CUI glyph draws an icon and an empty string keeps the slot blank. |
+| `ActionLabel` | Null omits the action. An empty caption shows the arrow. Pair the caption value with `OnAction`. |
+| `OnDismiss` | Null. Supply a message factory to add a close button. |
+| `Enabled` | True. Allows input on both buttons. |
 
 ## Interaction
 
-Keep visibility in the model. When the close button sends its message, set Open to false. The optional action has its own message and can keep the banner visible. Use `ActionId` and `DismissId` to identify the buttons.
+Keep visibility in the model. When the close button sends its message, set
+`Open` to false. The action sends its own message and leaves the banner open.
+CUI places the action below the message in a narrow layout.
+Keyboard focus draws an outline around the action.
+Use `ActionId` and `DismissId` to identify the buttons.
 
 ## See also
 

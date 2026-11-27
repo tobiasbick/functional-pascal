@@ -8,6 +8,7 @@ uses Fpas.Ui.Widgets.Actions.ActionFooters as F;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Overlays.Dialogs as D;
 
+uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Overlays.State as State;
 
 // Wraps the active page with the shared project deletion confirmation.
@@ -29,16 +30,18 @@ begin
   return D.Dialog of TMsg(
     'delete-project', Base,
     F.ActionFooter of TMsg(
-      B.Button of TMsg('delete-project-cancel', 'Cancel', Cancel),
+      B.Button of TMsg('delete-project-cancel', Strings.Get('Text.Cancel'), Cancel),
       B.Button of TMsg(
-        'delete-project-confirm', 'Delete project', Messages(State.Msg.DeleteProject),
+        'delete-project-confirm',
+        Strings.Get('Text.DeleteProject'),
+        Messages(State.Msg.DeleteProject),
         new B.Options(Variant := S.ButtonVariant.Destructive)
       )
     ),
     Open,
     new D.Options(
-      'Delete this project?',
-      Description := 'This removes the project and its history for everyone. You cannot undo this.',
+      Strings.Get('Text.DeleteProjectQuestion'),
+      Description := Strings.Get('Text.DeleteProjectWarning'),
       Width := 400
     ),
     Cancel

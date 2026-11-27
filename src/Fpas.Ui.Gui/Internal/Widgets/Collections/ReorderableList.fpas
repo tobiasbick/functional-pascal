@@ -14,7 +14,7 @@ uses Fpas.Ui.Layout as L;
 // ## Parameters
 // - `Frame`: Current presentation context.
 // - `Id`: Stable list identity.
-// - `Items`: Items indexed in canonical order.
+// - `Items`: Direct children of each row in canonical order.
 // - `Order`: Model-owned permutation.
 // - `Change`: Maps a proposed order to a message.
 // - `Enabled`: Whether the list accepts dragging.
@@ -22,7 +22,7 @@ uses Fpas.Ui.Layout as L;
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
   Id: string;
-  Items: array of E.Element of TMsg;
+  Items: array of array of E.Element of TMsg;
   Order: array of int;
   Change: function(array of int): TMsg;
   Enabled: bool;
@@ -38,7 +38,10 @@ begin
   for Position: int := 0 to Proposed.Length - 1 do
     const Index: int := Proposed[Position];
     Frame.Window.BeginReorderItem(Position, Accept);
-    Visit(Items[Index], Frame, true, L.Alignment.Default);
+    for Child: E.Element of TMsg in Items[Index] do
+      Visit(Child, Frame, true, L.Alignment.Center);
+    end for;
+
     Frame.Window.EndReorderItem();
     C.Track of TMsg(
       Frame, new App.Control(

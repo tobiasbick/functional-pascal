@@ -20,7 +20,7 @@ uses System.Collections.Generic as Lists;
 // - `Frame`: Drawing context.
 // - `Id`: Panel identity.
 // - `Trigger`: Native anchor button.
-// - `Content`: Floating view.
+// - `Children`: Direct panel children in layout order.
 // - `Open`: Model-owned visibility.
 // - `Dismiss`: Proposed dismissal.
 // - `Settings`: Placement and spacing.
@@ -31,7 +31,7 @@ public procedure Draw of TMsg(
   Frame: C.State of TMsg;
   Id: string;
   Trigger: E.Element of TMsg;
-  Content: E.Element of TMsg;
+  Children: array of E.Element of TMsg;
   Open: bool;
   Dismiss: TMsg;
   Settings: P.Options;
@@ -46,10 +46,10 @@ begin
   end if;
 
   const ContainsModal: bool := Frame.Interactive and Frame.ActiveModal <> null
-    and F.TopModal of TMsg(Content, Frame.Prepared, Frame.Previous) = Frame.ActiveModal;
+    and F.TopModalIn of TMsg(Children, Frame.Prepared, Frame.Previous) = Frame.ActiveModal;
   const Result: int := Frame.Window.BeginPopover(
-    C.Token('popover', Id), cast Settings.Position as int, cast Settings.Width as float,
-    cast Settings.Padding as float, cast Settings.Gap as float,
+    C.Token('popover', Id), cast Settings.Position as int, Settings.Width,
+    Settings.Padding, Settings.Gap,
     Open and (Frame.AcceptInput or ContainsModal), Frame.AcceptInput
   );
   if (Result and 2) <> 0 then
@@ -73,7 +73,10 @@ begin
       new Lists.List of string()
     end if;
   end with;
-  Visit(Content, Inside, false, L.Alignment.Default);
+  for Child: E.Element of TMsg in Children do
+    Visit(Child, Inside, false, L.Alignment.Default);
+  end for;
+
   Frame.Window.EndPopover();
 end procedure;
 

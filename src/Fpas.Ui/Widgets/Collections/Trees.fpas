@@ -8,8 +8,8 @@ uses System as Sys;
 
 // Appearance and input for a native tree row.
 public type Options = record
-  // Optional glyph overriding the native file or folder icon.
-  public Icon: string := '';
+  // CUI glyph. Null uses the native file or folder icon. Empty text draws no glyph.
+  public Icon: string? := null;
   // Whether to show the selection.
   public Selected: bool := false;
   // Whether the row accepts input.
@@ -26,6 +26,7 @@ end record;
 // - `Children`: Nested tree rows.
 // - `OnChange`: Maps the proposed expansion to a message.
 // - `Settings`: Optional row appearance.
+// - `OnActivate`: Optional GUI message factory for pointer, Enter or Space activation.
 // ## Returns
 // The tree branch element.
 public function Branch of TMsg(
@@ -34,7 +35,8 @@ public function Branch of TMsg(
   Open: bool;
   Children: array of E.Element of TMsg;
   OnChange: function(bool): TMsg;
-  Settings: Options? := null
+  Settings: Options? := null;
+  OnActivate: (Sys.Func of TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin
@@ -44,7 +46,7 @@ begin
     Open,
     Children,
     OnChange,
-    null,
+    OnActivate,
     Settings ?? new Options()
   );
 end function;

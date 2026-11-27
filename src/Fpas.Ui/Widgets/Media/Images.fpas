@@ -3,8 +3,8 @@
 unit Fpas.Ui.Widgets.Media.Images;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as C;
 uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 
 // Native image layout and appearance.
@@ -15,8 +15,8 @@ public type Options = record
   public Height: L.Extent := L.Extent.Fixed(L.Measure.Logical(64));
   // Corner radius in logical points.
   public Radius: float := 0.0F;
-  // Optional tint multiplied with the image.
-  public Tint: G.Color? := null;
+  // Theme or RGBA tint multiplied with the image. Automatic preserves its colors.
+  public Tint: C.Color := C.Color.Automatic;
 end record;
 
 // Creates a native CUI image element.

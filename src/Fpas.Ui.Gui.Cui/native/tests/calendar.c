@@ -27,7 +27,7 @@ static void draw(calendar *c, bool adapter, bool picker, int focus) {
     cui_column(c->ui, .pad = 10) {
         if (adapter) {
             c->day = picker
-                ? fpas_cui_date_picker(c->ui, "cal", c->day, NULL, NULL, 0, 1, focus,
+                ? fpas_cui_date_picker(c->ui, "cal", c->day, NULL, NULL, 0, 0, 1, focus,
                     &c->root, c->parts, c->nodes, &c->count)
                 : fpas_cui_calendar(c->ui, "cal", c->day, 1, focus,
                     &c->root, c->parts, c->nodes, &c->count);
@@ -131,6 +131,42 @@ static void check_picker(void) {
     destroy(&c);
 }
 
+/** Compares every native width against CUI for empty labeled and unlabeled fields. */
+static void check_picker_widths(void) {
+    const struct { cui_size size; float width; const char *placeholder; } cases[] = {
+        { CUI_FIT, 0, NULL },
+        { CUI_FILL, 0, "" },
+        { CUI_PX(142), 142, "Choose a day" },
+        { CUI_PCT(40), 40, "Choose a day" }
+    };
+    for (int labeled = 0; labeled < 2; ++labeled) {
+        const char *label = labeled ? "Due date" : NULL;
+        calendar pair[] = { create(false), create(false) };
+        for (int kind = 0; kind < 4; ++kind) {
+            for (int pass = 0; pass < 2; ++pass) {
+                calendar *c = &pair[pass];
+                const char *placeholder = cases[kind].placeholder;
+                cui_begin_frame(c->ui, .04f);
+                cui_column(c->ui, .width = CUI_FILL, .pad = 10) {
+                    if (pass) fpas_cui_date_picker(c->ui, "date-width", -1, label, placeholder,
+                        kind, cases[kind].width, 1, 0, &c->root, NULL, NULL, &c->count);
+                    else {
+                        cui_date absent = {0};
+                        cui_date_picker(c->ui, "date-width", &absent, .label = label,
+                            .placeholder = placeholder, .width = cases[kind].size);
+                    }
+                }
+                cui_end_frame(c->ui);
+                cui_sw_render(c->sw, cui_get_draw_data(c->ui), c->pixels,
+                    WIDTH, HEIGHT, WIDTH * 4, CUI_SW_RGBA);
+            }
+            CHECK(memcmp(pair[0].pixels, pair[1].pixels, WIDTH * HEIGHT * 4) == 0);
+        }
+        destroy(&pair[0]);
+        destroy(&pair[1]);
+    }
+}
+
 static void check_requested_focus(void) {
     calendar c = create(false);
     for (int focus = 1; focus <= 3; ++focus) {
@@ -140,10 +176,12 @@ static void check_requested_focus(void) {
     destroy(&c);
 }
 
+/** Checks date presentation and calendar interaction with the software renderer. */
 int main(void) {
     check_views(false);
     check_views(true);
     check_picker();
+    check_picker_widths();
     check_requested_focus();
     printf("Calendar pixels and navigation: %s (%d failures)\n", failures ? "FAILED" : "passed", failures);
     return failures ? 1 : 0;

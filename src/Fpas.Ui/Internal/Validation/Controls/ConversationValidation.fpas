@@ -3,14 +3,17 @@
 unit Fpas.Ui.Internal.Validation.Controls.ConversationValidation;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart;
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
+uses Fpas.Ui.Internal.Validation.Core.ContainerRules as Containers;
 uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
 uses Fpas.Ui.Widgets.Actions.StatusButtons as Status;
 uses Fpas.Ui.Widgets.Charts.Sparklines as Sparklines;
 uses Fpas.Ui.Widgets.Conversation.ChatMessages as ChatMessages;
 uses Fpas.Ui.Widgets.Conversation.Comments as Comments;
 uses Fpas.Ui.Widgets.Conversation.Presences as Presences;
+uses Fpas.Ui.Widgets.Display.Markdowns as Markdowns;
 uses Fpas.Ui.Widgets.Feedback.Counters as Counters;
 uses Fpas.Ui.Widgets.Feedback.SkeletonGroups as SkeletonGroups;
 uses Fpas.Ui.Widgets.Feedback.StatusSpinners as StatusSpinners;
@@ -41,25 +44,30 @@ begin
     when E.Element.ChatMessage(
       const Id: string,
       const Body: string,
-      const Settings: ChatMessages.Options
+      const Settings: ChatMessages.Options,
+      const OnMarkdown: Sys.Func of (Markdowns.Event, TMsg)?
     ):
       const At: string := Identify(Id, Location + '/chat-message');
       R.RequireProfile(Current, R.Profile.Graphical, At);
       R.CheckText(Body, At);
-      R.CheckText(Settings.Author, At);
-      R.CheckText(Settings.Time, At);
-      R.CheckText(Settings.Status, At);
+      R.CheckText(Settings.Author ?? '', At);
+      R.CheckText(Settings.Time ?? '', At);
+      R.CheckText(Settings.Status ?? '', At);
       R.CheckText(Settings.Avatar, At);
+      if OnMarkdown <> null and not Settings.Markdown then
+        R.Reject(At, 'Chat Markdown messages require a Markdown body.');
+      end if;
+
       return true;
     when E.Element.ChatDivider(const Id: string, const Label: string):
       const At: string := Identify(Id, Location + '/chat-divider');
       R.RequireProfile(Current, R.Profile.Graphical, At);
       R.CheckText(Label, At);
       return true;
-    when E.Element.TypingIndicator(const Id: string, const Name: string):
+    when E.Element.TypingIndicator(const Id: string, const Name: string?):
       const At: string := Identify(Id, Location + '/typing-indicator');
       R.RequireProfile(Current, R.Profile.Graphical, At);
-      R.CheckText(Name, At);
+      R.CheckText(Name ?? '', At);
       return true;
     when E.Element.Comment(
       const Id: string,
@@ -75,14 +83,15 @@ begin
       discard Identify(Id + '/reply', At);
       R.CheckText(Author, At);
       R.CheckText(Body, At);
-      R.CheckText(Settings.Time, At);
-      R.CheckText(Settings.Badge, At);
-      if Settings.Depth < 0 or Value.Likes < (if Value.Liked then
+      R.CheckText(Settings.Time ?? '', At);
+      R.CheckText(Settings.Badge ?? '', At);
+      if Settings.Depth < 0 or (Value.Likes <> null and (Value.Likes.Value < (if Value.Liked =
+        true
+      then
         1
       else
         0
-      end if)
-        or Value.Likes = Sys.Int32.MaxValue
+      end if) or (Value.Likes.Value = Sys.Int32.MaxValue and Value.Liked <> null)))
       then
         R.Reject(At, 'Invalid comment depth or like count.');
       end if;
@@ -96,8 +105,8 @@ begin
       const At: string := Identify(Id, Location + '/presence');
       R.RequireProfile(Current, R.Profile.Graphical, At);
       Chart.Distance(Settings.Size, At);
-      if Settings.MaximumVisible <= 0 then
-        R.Reject(At, 'A presence strip needs a positive visibility limit.');
+      if Settings.MaximumVisible < 0 then
+        R.Reject(At, 'A presence visibility limit must be nonnegative.');
       end if;
 
       for User: Presences.User in Users do
@@ -117,6 +126,10 @@ begin
       Chart.Distance(Settings.Size, At);
       Chart.Color(Settings.Color, At);
       Chart.Format(Settings.Format, At);
+      if not Sys.Enum.IsDefined of G.Font(Settings.Font) then
+        R.Reject(At, 'A counter needs a valid CUI font role.');
+      end if;
+
       if not Sys.Double.IsFinite(Value) then
         R.Reject(At, 'A counter value must be finite.');
       end if;
@@ -133,7 +146,7 @@ begin
       Chart.Distance(Settings.Height, At);
       for Item: Tickers.Item in Items do
         R.CheckText(Item.Label, At);
-        R.CheckText(Item.Value, At);
+        R.CheckText(Item.Value ?? '', At);
         if not Sys.Single.IsFinite(Item.Delta) then
           R.Reject(At, 'A ticker change must be finite.');
         end if;
@@ -148,7 +161,7 @@ begin
       const At: string := Identify(Id, Location + '/status-spinner');
       R.RequireProfile(Current, R.Profile.Graphical, At);
       Chart.Distance(Settings.Size, At);
-      Chart.Color(Settings.Color, At);
+      Containers.CheckColor(Settings.Color, Settings.ThemeColor, At + '/color');
       if not Sys.Enum.IsDefined of Status.Status(CurrentStatus) then
         R.Reject(At, 'Unknown spinner status.');
       end if;

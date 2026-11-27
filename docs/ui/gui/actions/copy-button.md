@@ -35,6 +35,7 @@ end unit;
 Click, Enter or Space submits the text. The check mark lasts 1.6 seconds and
 focus stays on the button. GUI uses the platform clipboard. The optional callback
 reports submission.
+The host disables the control when the platform clipboard is unavailable.
 
 ## See also
 

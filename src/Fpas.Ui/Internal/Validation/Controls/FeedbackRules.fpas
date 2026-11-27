@@ -18,8 +18,8 @@ uses System as Sys;
 public procedure Alert(Title: string; Settings: A.Options; Location: string);
 begin
   R.CheckText(Title, Location + '/title');
-  R.CheckText(Settings.Description, Location + '/description');
-  R.CheckText(Settings.Icon, Location + '/icon');
+  R.CheckText(Settings.Description ?? '', Location + '/description');
+  R.CheckText(Settings.Icon ?? '', Location + '/icon');
   if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined of S.Tone(Settings.Tone) then
     R.Reject(Location, 'An alert needs a nonempty title and a valid tone.');
   end if;

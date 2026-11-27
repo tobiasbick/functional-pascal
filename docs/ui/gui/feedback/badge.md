@@ -29,7 +29,7 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Text` | Literal caption. |
-| `Tone / Size` | Neutral / Medium. |
+| `Tone / Size` | Neutral / Medium. Small and Large are also available. |
 | `Dot / Solid` | false / false. Dot adds a leading status marker. Solid uses a filled style. |
 | `Icon` | Empty. Supply a CUI glyph for an icon. |
 

@@ -12,7 +12,7 @@ uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as Update;
 uses GuiGallery.App.View as View;
 
-// Selects a gallery row and checks its identity through both sort directions.
+// Checks table sorting and the task list's native drag-to-reorder interaction.
 // ## Parameters
 // - `Renderer`: Native renderer used for the presented gallery.
 public procedure Verify(Renderer: Cui.CuiRenderer);
@@ -49,11 +49,51 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
 
     A.Check(Count = 1, 'The selected person must remain the only selected row.');
   end procedure;
+  procedure CheckReordering(Session: Gui.Session of State.Msg);
+  begin
+    const Id: string := 'task-order';
+    const First: Cui.CuiRectangle := A.Control(Session, Id, '0').Bounds;
+    const Last: Cui.CuiRectangle := A.Control(Session, Id, '4').Bounds;
+    A.Check(First.Width > 0.0F and Last.Y > First.Y, 'The native task rows must start in order.');
+
+    X := First.X + 16.0F;
+    Y := First.Y + First.Height / 2.0F;
+    Button := 1;
+    A.Check(Session.Step(), 'The task list closed on press.');
+    Y := Last.Y + Last.Height / 2.0F + 2.0F;
+    A.Check(Session.Step(), 'The task list closed during drag.');
+    A.Check(
+      A.Control(Session, Id, '0').Bounds.Y > First.Y and A.Control(Session, Id, '0').Value = '0',
+      'Dragging must move the native row while retaining its model position.'
+    );
+
+    Button := 0;
+    A.Check(Session.Step(), 'The task list closed on release.');
+    X := -1.0F;
+    Y := -1.0F;
+    A.Check(Session.Step(), 'The task list closed before applying the new order.');
+    for Index: int := 1 to 4 do
+      A.Check(
+        A.Control(Session, Id, Index.ToString()).Value = (Index - 1).ToString(),
+        'The drop must advance each following row by one position.'
+      );
+    end for;
+
+    A.Check(A.Control(Session, Id, '0').Value = '4', 'The drop must save the first row last.');
+    var Notices: int := 0;
+    for Control: Gui.Control in Session.Snapshot().Controls do
+      if Control.Role = 'toast' and Control.Text = 'Order saved' then
+        Notices := Notices + 1;
+      end if;
+    end for;
+
+    A.Check(Notices = 1, 'The drop must show a single Order saved toast.');
+  end procedure;
 begin
   var X: float := -1.0F;
   var Y: float := -1.0F;
   var Button: int := -1;
-  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Table', 1100, 760, Renderer, true);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Table', 1240, 1680, Renderer, true);
   Window.SetReducedMotion(true);
   using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Lists), Update.Update, View.Build, Window, 32, Inject,
@@ -85,6 +125,7 @@ begin
     'The next header click must restore ascending order.'
   );
   CheckSelection(Session, Aiko);
+  CheckReordering(Session);
 end procedure;
 
 end unit;

@@ -18,7 +18,7 @@ internal static partial class NativeMethods
     internal static unsafe partial int DonutChart(nint context, string id, float* values, int count, in NativeChartOptions options);
     [LibraryImport(Library, EntryPoint = "fpas_cui_gauge", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int Gauge(nint context, string id, string label, float value, float size);
+    internal static partial int Gauge(nint context, string id, string? label, float value, float size);
     [LibraryImport(Library, EntryPoint = "fpas_cui_pattern_meter", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial int PatternMeter(nint context, string id, NativeMeterPart* parts, int count,

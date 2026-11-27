@@ -9,11 +9,11 @@ int fpas_cui_tree_begin(cui_ctx *ui, const char *id, const char *label, const ch
     bool expanded = *open != 0;
     *node = ui->node_count;
     cui_push_disabled(ui, !enabled);
-    cui_tree_begin(ui, id, &expanded, &options);
+    const bool opened = cui_tree_begin(ui, id, leaf ? NULL : &expanded, &options);
     cui_pop_disabled(ui);
     fpas_text(ui, fpas_label_node(ui, *node), label);
     ui->last_node = *node;
-    *open = expanded && !leaf;
+    *open = opened;
     return cui_tree_clicked(ui);
 }
 

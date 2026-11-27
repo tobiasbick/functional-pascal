@@ -11,7 +11,6 @@ uses Fpas.Ui.Widgets.Media.ImageComparisons as Comparisons;
 uses Fpas.Ui.Widgets.Media.ImageCroppers as Croppers;
 uses Fpas.Ui.Widgets.Media.ImageViewers as Viewers;
 uses Fpas.Ui.Widgets.Media.MediaImages as Images;
-uses Fpas.Ui.Widgets.Motion.Motion as M;
 
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Social.Scenes as Scene;
@@ -55,7 +54,7 @@ begin
         end if
       ),
       E.FormattedText of S.Msg(
-        Title, M.Font.Display, if Deck then
+        Title, Color.Font.Display, if Deck then
           22.0F
         else
           24.0F
@@ -64,9 +63,9 @@ begin
       ),
       E.FormattedText of S.Msg(
         Description, if Deck then
-          M.Font.Medium
+          Color.Font.Medium
         else
-          M.Font.Body
+          Color.Font.Body
         end if,
         if Deck then
           13.0F

@@ -36,17 +36,35 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Field.Values / Icon` | Up to 32 values per field. The CUI glyph defaults to empty. |
-| `Value.Selected` | Supply one unsigned mask per field. Bit zero corresponds to the first value. A zero mask clears the field. |
-| `Value.Search` | Pass an empty string to show an empty search box or null to hide it. |
-| `SearchCapacity / Enabled` | 256 UTF-8 bytes including the terminator / true. |
+| `Fields` | Up to 32 fields, in display order. |
+| `Field.Name` | Literal caption for the chip and the Filter menu. |
+| `Field.Values` | Up to 32 values, in mask bit order. |
+| `Field.Icon` | `null` omits the glyph. An empty string keeps the icon slot. |
+| `Value.Selected` | One unsigned mask per field. Bit zero selects the first value. A zero mask clears the choices. |
+| `Value.Search` | `null` hides the search field. An empty string shows an empty search field. |
+| `SearchCapacity` | 256 UTF-8 bytes including the terminator. With search enabled, use 2 through 65,536 bytes. |
+| `Enabled` | `true`. |
 
 ## Interaction
 
-Use Filter to add a field, open its chip to edit the selected values, and use
-Clear all to reset the bar. A change proposes new masks and search text. In
-your update, store the value and apply the criteria to the data you display.
-For the example, `new W.Value([5u, 0u], '')` selects Engine and Platform.
+Use **Filter** to add a field. CUI opens the field's checklist and
+keeps its chip until you remove it. Click a value to toggle it while the
+checklist remains open. You can use the keyboard to open a chip. Use the
+pointer to select its values. [CUI-061](../../../future/cui-upstream-bugs.md#cui-061)
+
+Use the clear button on a chip to remove it. **Clear all** appears when
+the search or any mask contains a value. It clears the search and removes
+all chips.
+
+The bar proposes new masks and search text. In your update, store the
+proposal and apply the criteria to your data. The gallery shows the
+controls and does not apply them to the nearby grid. For the example,
+`new W.Value([5u, 0u], '')` selects Engine and Platform.
+
+The GUI host reports the visible controls as `<id>/search`, `<id>/add`,
+`<id>/clear` and `<id>/chip/<index>`. Chip indices start at zero. A
+focus request for the bar selects Search if present, then Filter if
+present, then the first chip.
 
 ## See also
 

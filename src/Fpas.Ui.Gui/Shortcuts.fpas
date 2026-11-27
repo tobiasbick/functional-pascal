@@ -17,8 +17,10 @@ public type Binding of TMsg = record
   // Allow OS-repeat activation in later frames; false waits for an observed key release.
   public Repeat: bool := false;
   // Permit an unconsumed combination while editing; use only for commands such as Save.
-  // Native popups, modals, navigation keys and consumed widget shortcuts retain priority.
+  // Native navigation keys and consumed widget shortcuts retain priority.
   public AllowWhileEditing: bool := false;
+  // Permit an unconsumed combination while a native popup or modal owns input.
+  public AllowInOverlays: bool := false;
 
   // Wraps a child message while preserving the combination and activation policy.
   // ## Type parameters
@@ -31,7 +33,7 @@ public type Binding of TMsg = record
   begin
     return new Binding of TNext(
       self.Combination, Messages(self.Message), self.Enabled,
-      self.Repeat, self.AllowWhileEditing
+      self.Repeat, self.AllowWhileEditing, self.AllowInOverlays
     );
   end function;
 end record;

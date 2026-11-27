@@ -20,12 +20,16 @@
  * @param read_only Allow selection while preventing edits.
  * @param enabled Whether the field and its actions accept input.
  * @param focus Request editor focus.
+ * @param width_kind Default=0, fill=1, fixed=2, percentage=3.
+ * @param width Fixed logical width or percentage, when selected.
+ * @param autofocus Request focus on the first presentation of an enabled editor.
  * @param nodes Receives the editor, clear and reveal node indices or -1.
  * @param revealed Receives whether a password is displayed in plain text.
  * @return CUI_CHANGED and CUI_SUBMITTED flags. */
 CUI_API int fpas_cui_text_field(cui_ctx *ui, const char *id, char *value, size_t capacity,
     const char *label, const char *placeholder, const char *icon, const char *hint, const char *error,
     const char *prefix, const char *suffix, int size, int password, int clearable,
-    int read_only, int enabled, int focus, int *nodes, int *revealed);
+    int read_only, int enabled, int focus, int width_kind, float width, int autofocus,
+    int *nodes, int *revealed);
 
 #endif

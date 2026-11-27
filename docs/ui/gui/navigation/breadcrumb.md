@@ -29,13 +29,18 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Items` | A nonempty array in path order. The last caption is the current location. |
+| `Id` | A stable trail ID. |
+| `Items` | A nonempty array of literal captions in path order. The last caption shows the current location. |
 | `OnNavigate` | Receives the zero-based position of the activated ancestor. |
 | `Enabled` | true. |
 
 ## Interaction
 
-Click an ancestor or focus it with Tab and press Enter or Space. Position identifies the link, so captions may repeat. Use `ItemId(Id, Index)` to focus one. The final caption is informational.
+CUI draws a row of captions with chevrons between items. Click an ancestor or
+focus it with Tab and press Enter or Space. Position identifies each link, so
+captions may repeat. Use `ItemId(Id, Index)` to request focus on an ancestor.
+The final caption is informational and skips Tab. Set `Enabled` to `false` to
+disable every link.
 
 ## See also
 

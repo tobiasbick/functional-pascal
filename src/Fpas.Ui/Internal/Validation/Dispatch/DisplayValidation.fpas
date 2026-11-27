@@ -136,6 +136,7 @@ begin
       LR.CheckExtent(Options.Width, Profile, Path);
       LR.CheckExtent(Options.Height, Profile, Path);
       C.Distance(Options.Radius, Path);
+      C.Color(Options.Tint, Path);
     when E.Element.Canvas(
       const Id: string,
       const Drawing: array of Canvas.Shape,
@@ -167,6 +168,7 @@ begin
       R.CheckText(Options.Label ?? '', Path);
       R.CheckText(Options.Hint ?? '', Path);
       C.Distance(Options.Radius, Path);
+      C.Color(Options.Color, Path);
       LR.CheckExtent(Options.Width, Profile, Path);
       Visit(Child, Path);
     else

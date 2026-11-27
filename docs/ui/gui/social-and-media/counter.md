@@ -35,13 +35,17 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Format / Color` | null / Automatic. A value format controls precision and literal prefix or suffix. |
-| `Size / GroupThousands` | 0 / false. Zero uses the native font size. GroupThousands separates thousands with commas. |
+| `Font` | `Graphics.Font.Display`. CUI also uses Display for Body. |
+| `Size / GroupThousands` | 0 / false. Zero uses 32 logical units. GroupThousands separates thousands with commas. |
 
 ## Interaction
 
 Pass a new value with the same ID when the total changes. CUI animates
 the display to the new value. The button that changes the total belongs
 to the application.
+
+The format can use a Unicode currency symbol or unit.
+[CUI-072](../../../future/cui-upstream-bugs.md#cui-072)
 
 ## See also
 

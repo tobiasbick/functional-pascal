@@ -107,10 +107,8 @@ public function Lower of TMsg(Field: Trigger of TMsg): E.Element of TMsg;
 begin
   const Value: string := if Field.Selected >= 0 then
     Field.Items[Field.Selected].Label
-  elsif Field.Settings.Placeholder <> '' then
-    Field.Settings.Placeholder
   else
-    'Select'
+    Field.Settings.Placeholder ?? 'Select'
   end if;
   const Button: E.Element of TMsg := (E.Element of TMsg).Action(
     Field.Id, Field, Field.Settings.Enabled,

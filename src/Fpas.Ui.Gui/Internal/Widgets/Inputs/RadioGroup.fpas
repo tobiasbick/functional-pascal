@@ -30,7 +30,15 @@ public procedure Draw of TMsg(
   Gap: L.Spacing
 );
 begin
-  Frame.Window.BeginGroup(false, 0, Size.Spacing(Gap), cast L.Alignment.Default as int, false);
+  Frame.Window.BeginGroup(
+    false,
+    0,
+    Size.Spacing(Gap),
+    cast L.Alignment.Default as int,
+    false,
+    false,
+    false
+  );
   for Index: int := 0 to Items.Length - 1 do
     const Item: R.Item := Items[Index];
     Radio.Draw of TMsg(

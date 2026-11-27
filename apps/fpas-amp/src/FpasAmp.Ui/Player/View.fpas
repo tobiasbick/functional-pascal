@@ -225,9 +225,9 @@ begin
         IconRight := Glyph($E06D), Tooltip := 'Equalizer preset', Selected := Current.PresetsOpen
       )
     ),
-    E.Column of M.Msg(new L.Flow(Align := L.Alignment.Stretch), Rows.ToArray()),
+    [E.Column of M.Msg(new L.Flow(Align := L.Alignment.Stretch), Rows.ToArray())],
     Current.PresetsOpen, M.Msg.ShowPresets(false),
-    new Popovers.Options(Position := Menus.Placement.TopEnd, Width := 150, Padding := 4)
+    new Popovers.Options(Position := Menus.Placement.TopEnd, Width := 150.0F, Padding := 4.0F)
   );
 end function;
 

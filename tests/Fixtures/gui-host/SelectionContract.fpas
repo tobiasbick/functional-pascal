@@ -132,7 +132,8 @@ begin
       1.0F,
       function(Value: R.Interval): int => 5
     ),
-    Chips.Chip of int('chip', 'Chip', false, function(Value: bool): int => 6),
+    Chips.Chip of int('chip', 'Chip', false, function(Value: bool?): int => 6),
+    Chips.Chip of int('chip-action', 'Action', null, function(Value: bool?): int => 7),
     Ratings.Rating of int('rating', 'Rating', 0, function(Value: int): int => Value),
     E.Row of int(new L.Flow(Wrap := true), E.Text of int('Wrap'))
   ];
@@ -146,6 +147,21 @@ begin
     S.Slider of int('invalid', 'Slider', 0.0F, 0.0F, 0.0F, function(Value: float): int => 4),
     V.Target.Graphical, 'finite increasing bounds'
   );
+  discard V.Prepare of int(
+    S.Slider of int(
+      'formatted', 'Slider', 0.0F, 0.0F, 1.0F, function(Value: float): int => 4,
+      new S.Options(ShowValue := true, Format := 'Level %+6.2e%%', Width := L.Extent.Percent(75.0F))
+    ), V.Target.Graphical
+  );
+  for Format: string in ['%d', '%*f', '%f %f'] do
+    Reject(
+      S.Slider of int(
+        'invalid', 'Slider', 0.0F, 0.0F, 1.0F, function(Value: float): int => 4,
+        new S.Options(ShowValue := true, Format := Format)
+      ), V.Target.Graphical, 'floating-point conversion'
+    );
+  end for;
+
   Reject(
     R.RangeSlider of int(
       'invalid',
@@ -159,6 +175,36 @@ begin
   );
   Reject(
     Ratings.Rating of int('invalid', 'Rating', 6, function(Value: int): int => Value),
+    V.Target.Graphical, 'value within that range'
+  );
+  discard V.Prepare of int(
+    Ratings.Rating of int(
+      'default-stars',
+      'Rating',
+      5,
+      function(Value: int): int => Value,
+      Maximum := 0
+    ),
+    V.Target.Graphical
+  );
+  discard V.Prepare of int(
+    Ratings.Rating of int(
+      'capped-stars',
+      'Rating',
+      16,
+      function(Value: int): int => Value,
+      Maximum := 30
+    ),
+    V.Target.Graphical
+  );
+  Reject(
+    Ratings.Rating of int(
+      'invalid',
+      'Rating',
+      17,
+      function(Value: int): int => Value,
+      Maximum := 30
+    ),
     V.Target.Graphical, 'value within that range'
   );
   Reject(
@@ -354,6 +400,16 @@ begin
     'Right must adjust brightness using its ten-point step.'
   );
 
+  discard Session.Post(State.Msg.Show(State.Page.Overlays));
+  discard Session.Post(State.Msg.Shared(SliceShared.Msg.SetBrightness(43.0F)));
+  Step(Session);
+  discard Session.Post(State.Msg.Show(State.Page.Selection));
+  Step(Session);
+  Check(
+    Control(Session, 'brightness').Value = '40',
+    'Entering Selection must snap the shared filter value to the native brightness step.'
+  );
+
   const Track: Cui.CuiRectangle := Control(Session, 'price-range').Bounds;
   Press(Session, Track, 1.0F / Track.Width);
   Step(Session);
@@ -418,20 +474,34 @@ begin
     'Clicking the selected star again must clear the rating.'
   );
 
-  Window.Resize(520, 760);
-  for Attempt: int := 1 to 4 do
-    Step(Session);
+  // The compact page insets leave 536 logical points at a window width of 568.
+  // Two 260-point columns and their 16-point gap fit at that width.
+  for Width: int in [520, 568, 567] do
+    Window.Resize(Width, 760);
+    for Attempt: int := 1 to 4 do
+      Step(Session);
+    end for;
+    const CheckboxBounds: Cui.CuiRectangle := Control(Session, 'newsletter').Bounds;
+    const SwitchBounds: Cui.CuiRectangle := Control(Session, 'wifi').Bounds;
+    if Width = 568 then
+      Check(CheckboxBounds.X < SwitchBounds.X, 'Two columns must fit at the minimum grid width.');
+    else
+      Check(
+        CheckboxBounds.X = SwitchBounds.X and CheckboxBounds.Y < SwitchBounds.Y,
+        'The checkbox and switch cards must stack below the minimum grid width.'
+      );
+    end if;
+
+    if Width = 520 then
+      Check(
+        Control(
+          Session,
+          'category-design'
+        ).Bounds.Y < Control(Session, 'category-finance').Bounds.Y,
+        'At compact width, the last chip must wrap below the first.'
+      );
+    end if;
   end for;
-  const NarrowCheck: Cui.CuiRectangle := Control(Session, 'newsletter').Bounds;
-  const NarrowSwitch: Cui.CuiRectangle := Control(Session, 'wifi').Bounds;
-  Check(
-    NarrowCheck.X = NarrowSwitch.X and NarrowCheck.Y < NarrowSwitch.Y,
-    'The compact checkbox and switch cards should stack.'
-  );
-  Check(
-    Control(Session, 'category-design').Bounds.Y < Control(Session, 'category-finance').Bounds.Y,
-    'At compact width, the last chip must wrap below the first.'
-  );
 end procedure;
 
 end unit;

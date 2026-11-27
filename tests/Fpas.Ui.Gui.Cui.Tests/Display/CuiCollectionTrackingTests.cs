@@ -92,10 +92,33 @@ public sealed class CuiCollectionTrackingTests
     {
         using var window = new CuiWindow("Filter parts", renderer: CuiRenderer.Software, continuous: true);
         Assert.True(window.NextFrame());
-        var result = window.FilterBar("filters", [new CuiFilterField("Status", "", ["Open"])], [0],
+        var result = window.FilterBar("filters", [new CuiFilterField("Status", null, ["Open"])], [0],
             "", 64, enabled: true, focus: false, partId: null);
         window.Present();
 
         Assert.Equal([true, true, false, false], result.Parts);
+    }
+
+    /// <summary>Preserves a blank icon and focuses the chip when the search and add controls are absent.</summary>
+    [GuiFact]
+    public void FilterBarPreservesChipGlyphSpaceAndFallbackFocus()
+    {
+        using var window = new CuiWindow("Filter chip", renderer: CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        var omitted = Draw(null, true);
+        Assert.True(window.ControlFocused("part-3"));
+        var blank = Draw("", false);
+        Assert.True(blank.Width > omitted.Width);
+
+        CuiRectangle Draw(string? icon, bool focus)
+        {
+            Assert.True(window.NextFrame());
+            var result = window.FilterBar("filters", [new CuiFilterField("Status", icon, ["Open"])], [1u],
+                null, 0, enabled: true, focus: focus, partId: index => $"part-{index}");
+            window.Present();
+            Assert.False(result.Changed);
+            Assert.Equal([false, false, true, true], result.Parts);
+            return window.GetControlRectangle("part-3");
+        }
     }
 }

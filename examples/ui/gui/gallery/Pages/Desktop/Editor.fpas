@@ -3,11 +3,11 @@
 unit GuiGallery.Pages.Desktop.Editor;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Desktop.DocumentTabs as Docs;
 uses Fpas.Ui.Widgets.Desktop.MenuBars as Bar;
 uses Fpas.Ui.Widgets.Desktop.Toolbars as Tools;
-uses Fpas.Ui.Widgets.Motion.Motion as Glyphs;
 uses Fpas.Ui.Widgets.Overlays.Menus as M;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
 
@@ -157,14 +157,14 @@ begin
           E.Column of S.Msg(
             new L.Flow(Align := L.Alignment.End), E.FormattedText of S.Msg(
               (41 + Index).ToString(),
-              Glyphs.Font.Mono,
+              Graphics.Font.Mono,
               12.0F,
               Colors.TextMuted
             )
           ),
           new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(18))))
         ),
-        E.FormattedText of S.Msg(Lines[Index], Glyphs.Font.Mono, 12.0F, Colors.Foreground)
+        E.FormattedText of S.Msg(Lines[Index], Graphics.Font.Mono, 12.0F, Colors.Foreground)
       )
     );
   end for;

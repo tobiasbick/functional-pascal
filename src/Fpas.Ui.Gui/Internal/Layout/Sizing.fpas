@@ -79,7 +79,12 @@ begin
   end case;
 end function;
 
-function ThemeToken(Value: Themes.ColorToken?): int;
+// Encodes an optional native theme color selector.
+// ## Parameters
+// - `Value`: Theme color token, or null.
+// ## Returns
+// The token ordinal, or zero for the native default.
+public function ThemeToken(Value: Themes.ColorToken?): int;
 begin
   return if Value = null then
     0

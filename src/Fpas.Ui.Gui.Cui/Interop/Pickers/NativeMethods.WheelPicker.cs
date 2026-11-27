@@ -11,6 +11,6 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int WheelPicker(nint context, string id,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] items,
-        int count, int index, float width, int rows, int loop, int joinLeft, int joinRight, int enabled,
+        int count, int index, int widthKind, float width, int rows, int loop, int joinLeft, int joinRight, int enabled,
         int focus, out int node);
 }

@@ -3,7 +3,8 @@
 unit Fpas.Ui.Widgets.Files.SignaturePads;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 uses System as Sys;
 
@@ -25,12 +26,14 @@ end record;
 
 // Display and input settings for a native signature pad.
 public type Options = record
-  // Height in logical points. Zero selects the native default.
+  // Native width. Content and Fill both fill the available width.
+  public Width: L.Extent := L.Extent.Fill;
+  // Height in logical units. Nonpositive values use the native default of 180.
   public Height: float := 0.0F;
-  // Literal instruction. Empty selects the native default.
-  public Placeholder: string := '';
-  // Optional straight-alpha ink color.
-  public Ink: G.Color? := null;
+  // Literal instruction. Null selects the native default.
+  public Placeholder: string? := null;
+  // Active theme color or explicit ink. Automatic uses the foreground color.
+  public Ink: Charts.Color := Charts.Color.Automatic;
   // Whether the pad accepts drawing and clearing.
   public Enabled: bool := true;
 end record;

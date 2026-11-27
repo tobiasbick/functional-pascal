@@ -80,5 +80,3 @@ use the track's curve keys and apply curve edits to that same track.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/editors/`
   - [timeline_editor.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/timeline_editor.c)
   - [timeline_editor.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/timeline_editor.h)
-- `tests/Fpas.Ui.Gui.Cui.Tests/Display/`
-  - [CuiTimelineTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiTimelineTests.cs)

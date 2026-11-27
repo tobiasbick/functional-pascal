@@ -11,9 +11,9 @@ uses Fpas.Ui.Elements as E;
 // ## Parameters
 // - `Id`: Stable control identity.
 // - `Label`: Name for control inspection.
-// - `Value`: Model-owned rating from zero through Maximum.
+// - `Value`: Model-owned rating from zero through the effective star count.
 // - `OnChange`: Maps a proposed rating to a message.
-// - `Maximum`: Number of stars, from one through sixteen.
+// - `Maximum`: Number of stars. CUI uses five for nonpositive values and caps the count at sixteen.
 // - `Enabled`: Whether the stars accept input.
 // - `StarSize`: Positive logical edge length of each star's hit area.
 // ## Returns

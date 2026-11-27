@@ -4,12 +4,23 @@ unit Gallery.Shared.SaveFrequency;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Inputs.RadioButtons as Radio;
 uses Fpas.Ui.Widgets.Inputs.RadioGroups as R;
 
 uses Gallery.Shared.Strings as Strings;
+uses System.Collections.Generic as Collections;
 
 // Initially select Every 5 minutes in both galleries.
 public const Initial: int := 1;
+
+function Choices(): array of R.Item;
+begin
+  return [
+    new R.Item(Strings.Get('Text.EveryChange'), Strings.Get('Text.EveryChangeHint')),
+    new R.Item(Strings.Get('Text.EveryFiveMinutes'), Strings.Get('Text.EveryFiveMinutesHint')),
+    new R.Item(Strings.Get('Text.OnlyManualSave'), Strings.Get('Text.OnlyManualSaveHint'))
+  ];
+end function;
 
 // Builds the Selection page's save-frequency choices.
 // ## Type parameters
@@ -23,13 +34,38 @@ public const Initial: int := 1;
 public function View of TMsg(Selected: int; Change: function(int): TMsg): E.Element of TMsg;
 begin
   return R.RadioGroup of TMsg(
-    'save-frequency', [
-      new R.Item(Strings.Get('Text.EveryChange'), Strings.Get('Text.EveryChangeHint')),
-      new R.Item(Strings.Get('Text.EveryFiveMinutes'), Strings.Get('Text.EveryFiveMinutesHint')),
-      new R.Item(Strings.Get('Text.OnlyManualSave'), Strings.Get('Text.OnlyManualSaveHint'))
-    ], Selected, Change,
+    'save-frequency', Choices(), Selected, Change,
     Gap := L.Spacing.Fixed(L.Measure.Logical(12))
   );
+end function;
+
+// Places the radio rows directly in the graphical gallery's card.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Selected`: Current save frequency.
+// - `Change`: Maps a new frequency to a message.
+// ## Returns
+// Radio rows with stable positional IDs.
+public function Rows of TMsg(
+  Selected: int;
+  Change: function(int): TMsg
+): array of E.Element of TMsg;
+  function Row(Choice: R.Item; Index: int): E.Element of TMsg;
+  begin
+    return Radio.RadioButton of TMsg(
+      R.ItemId('save-frequency', Index), Choice.Label, Selected = Index,
+      function(): TMsg => Change(Index), Choice.Description
+    );
+  end function;
+begin
+  const Items: array of R.Item := Choices();
+  const Result: Collections.List of E.Element of TMsg := new Collections.List of E.Element of TMsg();
+  for Index: int := 0 to Items.Length - 1 do
+    Result.Add(Row(Items[Index], Index));
+  end for;
+
+  return Result.ToArray();
 end function;
 
 end unit;

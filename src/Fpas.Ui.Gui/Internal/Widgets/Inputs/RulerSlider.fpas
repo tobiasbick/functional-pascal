@@ -5,6 +5,8 @@ unit Fpas.Ui.Gui.Internal.Widgets.Inputs.RulerSlider;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Chart;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Inputs.RulerSliders as R;
 
 uses System.Globalization as Culture;
@@ -35,9 +37,10 @@ begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
   const Role: string := 'ruler-slider';
   const Token: string := C.Token(Role, Id);
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   const Proposed: float := Frame.Window.RulerSlider(
     Token, Label, Value, Minimum, Maximum, Settings.Step, Settings.MajorEvery, Settings.Spacing,
-    Settings.Width, Settings.DecimalPlaces, Settings.UnitLabel, Enabled,
+    Width.Kind, Width.Value, Chart.Format(Settings.Format), Settings.UnitLabel, Enabled,
     C.WantsFocus of TMsg(Frame, Id, Token, Enabled), not Frame.PaintingClosed
   );
   if Proposed <> Value then

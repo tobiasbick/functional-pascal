@@ -4,8 +4,8 @@ unit GuiGallery.Pages.Actions.Widgets.SpeedDial;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.SpeedDials as D;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 
 uses GuiGallery.Pages.Actions.State as State;
 uses GuiGallery.Shared.Sections as G;
@@ -31,15 +31,15 @@ begin
   else
     [
       Trigger,
-      E.Styled of State.Msg(E.Text of State.Msg(Items[Model.DialChoice].Label), S.Role.Muted)
+      Texts.Text of State.Msg(Items[Model.DialChoice].Label ?? '', Texts.Appearance.Muted)
     ]
   end if;
   return E.Size of State.Msg(
     E.Row of State.Msg(
-      new L.Flow(Gap := G.Points(16), Align := L.Alignment.Center, Wrap := true),
+      new L.Flow(Gap := G.Points(16), Align := L.Alignment.Center, Clip := false),
       Row
     ),
-    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(80)))
+    new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(80))))
   );
 end function;
 

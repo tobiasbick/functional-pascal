@@ -12,7 +12,6 @@ uses Fpas.Ui.Widgets.Display.Icons as I;
 uses Fpas.Ui.Widgets.Display.Keycaps as K;
 uses Fpas.Ui.Widgets.Display.Texts as T;
 uses Fpas.Ui.Widgets.Media.Images as Image;
-uses Fpas.Ui.Widgets.Motion.Motion as M;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
 
 uses Gallery.Shared.Strings as Strings;
@@ -60,11 +59,11 @@ begin
   return E.Row of State.Msg(
     new L.Flow(Gap := G.Points(6), Align := L.Alignment.Center, Clip := false),
     Em.Emoji of State.Msg('🎉', 18.0F),
-    E.FormattedText of State.Msg('3', M.Font.Body, 13.0F, Colors.Foreground),
+    E.FormattedText of State.Msg('3', Color.Font.Body, 13.0F, Colors.Foreground),
     Em.Emoji of State.Msg('👀', 18.0F),
-    E.FormattedText of State.Msg('5', M.Font.Body, 13.0F, Colors.Foreground),
+    E.FormattedText of State.Msg('5', Color.Font.Body, 13.0F, Colors.Foreground),
     Em.Emoji of State.Msg('🚀', 18.0F),
-    E.FormattedText of State.Msg('2', M.Font.Body, 13.0F, Colors.Foreground)
+    E.FormattedText of State.Msg('2', Color.Font.Body, 13.0F, Colors.Foreground)
   );
 end function;
 
@@ -92,7 +91,7 @@ begin
     E.Row of State.Msg(
       new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center, Clip := false),
       I.Icon of State.Msg(Glyphs.FileText, 18.0F),
-      E.FormattedText of State.Msg('File text', M.Font.Body, 12.0F, Colors.TextSecondary)
+      E.FormattedText of State.Msg('File text', Color.Font.Body, 12.0F, Colors.TextSecondary)
     ),
     EmojiRow(Colors),
     K.Keycap of State.Msg('Ctrl Shift P'),

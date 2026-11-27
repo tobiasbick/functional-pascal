@@ -2,6 +2,7 @@
 /* Drives CUI's status button with real input and deterministic frame time. */
 #include "../fpas_cui.h"
 #include <stdio.h>
+#include <string.h>
 
 static int frame(cui_ctx *ui, int status, int key, int enabled, int focus, const char *label) {
     cui_begin_frame(ui, 0.04f);
@@ -46,6 +47,49 @@ static bool verify(cui_ctx *ui) {
     return frame(ui, 2, CUI_KEY_ENTER, 1, 0, "Save") == 0;
 }
 
+static bool option_faces(void) {
+    enum { width = 240, height = 100, pitch = width * 4 };
+    cui_sw_renderer *sw[2] = { cui_sw_create(), cui_sw_create() };
+    cui_ctx *ui[2] = { NULL, NULL };
+    unsigned char pixels[2][height * pitch];
+    bool match = sw[0] && sw[1];
+    for (int pass = 0; pass < 2 && match; ++pass) {
+        const cui_ctx_desc settings = { .renderer = cui_sw_iface(sw[pass]) };
+        ui[pass] = cui_create(&settings);
+        match = ui[pass] != NULL;
+        if (match) {
+            cui_set_viewport(ui[pass], width, height, 1);
+            cui_set_reduced_motion(ui[pass], true);
+            cui_input_mouse_leave(ui[pass]);
+        }
+    }
+    for (int i = 0; i < 8 && match; ++i) {
+        int status = i % 4;
+        const char *caption = i < 4 ? "" : NULL;
+        const char *icon = i == 4 ? "" : CUI_ICON_SAVE;
+        for (int pass = 0; pass < 2; ++pass) {
+            cui_begin_frame(ui[pass], 0.04f);
+            if (pass) {
+                fpas_cui_status_button(ui[pass], "###option", i == 0 ? "" : "Save", status,
+                    caption, caption, caption, icon, 0, 0, 1, 0);
+            } else {
+                const cui_status_button_opts options = { .busy_label = caption,
+                    .success_label = caption, .error_label = caption, .icon = icon };
+                cui_status_button_ex(ui[pass], i == 0 ? "###option" : "Save###option", status, &options);
+            }
+            cui_end_frame(ui[pass]);
+            cui_sw_render(sw[pass], cui_get_draw_data(ui[pass]), pixels[pass], width, height, pitch, CUI_SW_RGBA);
+        }
+        match = memcmp(pixels[0], pixels[1], sizeof pixels[0]) == 0;
+    }
+    for (int pass = 0; pass < 2; ++pass) {
+        if (ui[pass]) cui_destroy(ui[pass]);
+        if (sw[pass]) cui_sw_destroy(sw[pass]);
+    }
+    if (!match) fprintf(stderr, "Empty and default status faces must match CUI.\n");
+    return match;
+}
+
 int main(void) {
     cui_sw_renderer *renderer = cui_sw_create();
     if (!renderer) return 1;
@@ -58,5 +102,5 @@ int main(void) {
     cui_destroy(ui);
     cui_sw_destroy(renderer);
     if (!passed) fprintf(stderr, "Status did not preserve idle-only activation, model state, geometry or focus.\n");
-    return passed ? 0 : 1;
+    return passed && option_faces() ? 0 : 1;
 }

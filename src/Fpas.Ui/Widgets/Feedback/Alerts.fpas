@@ -9,12 +9,12 @@ uses System as Sys;
 
 // Inline alert presentation and input options.
 public type Options = record
-  // Supporting text below the title.
-  public Description: string := '';
+  // Supporting text below the title. Null omits it. Empty text reserves a blank GUI line.
+  public Description: string? := null;
   // Semantic surface and icon color.
   public Tone: S.Tone := S.Tone.Neutral;
-  // Optional CUI icon-font glyph; empty selects the native tone icon.
-  public Icon: string := '';
+  // CUI icon-font glyph. Null selects the tone icon. Empty text draws no glyph.
+  public Icon: string? := null;
   // Whether the host supplies a dismiss action.
   public Dismissible: bool := false;
   // Whether the dismiss action accepts input.

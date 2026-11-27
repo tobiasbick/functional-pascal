@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Inputs.Sliders;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Presentation and input settings for a native slider.
 public type Options = record
@@ -10,12 +11,12 @@ public type Options = record
   public Step: float := 0.0F;
   // Show the current value beside the label.
   public ShowValue: bool := false;
-  // Display zero through six decimal places when the value is visible.
-  public DecimalPlaces: int := 0;
-  // Append a percent sign to the value.
-  public Percent: bool := false;
+  // Safe floating-point display format. Null uses CUI's whole-number display.
+  public Format: string? := null;
   // Whether pointer and keyboard adjustment is permitted.
   public Enabled: bool := true;
+  // Native width. Content uses CUI's fill policy.
+  public Width: L.Extent := L.Extent.Fill;
 end record;
 
 // Creates CUI's graphical elastic slider.

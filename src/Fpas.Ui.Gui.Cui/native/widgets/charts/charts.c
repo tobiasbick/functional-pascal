@@ -3,6 +3,7 @@
 static cui_color fpas_chart_color(int palette, uint32_t rgba) {
     if (palette > 0) return CUI_TOKEN_COLOR(CUI_TOKEN_SERIES_1 + palette - 1);
     if (palette == -1) return (cui_color){ (uint8_t)rgba, (uint8_t)(rgba >> 8), (uint8_t)(rgba >> 16), (uint8_t)(rgba >> 24) };
+    if (palette < -1 && palette >= -CUI_TOKEN_SERIES_1) return CUI_TOKEN_COLOR(-palette - 1);
     return (cui_color){0};
 }
 
@@ -11,6 +12,7 @@ static cui_chart_opts fpas_chart_options_of(cui_ctx *ui, const fpas_chart_option
         .width = fpas_extent(o->width_kind, o->width), .height = o->height,
         .labels = o->label_count > 0 ? o->labels : NULL, .label_count = o->label_count,
         .format = o->format, .min = o->minimum, .max = o->maximum,
+        .x_min = o->x_minimum, .x_max = o->x_maximum,
         .area = (o->flags & 1) != 0, .no_grid = (o->flags & 2) != 0, .no_legend = (o->flags & 4) != 0,
         .stacked = (o->flags & 8) != 0, .smooth = (o->flags & 16) != 0, .dither = (o->flags & 32) != 0
     };
@@ -19,8 +21,8 @@ static cui_chart_opts fpas_chart_options_of(cui_ctx *ui, const fpas_chart_option
         for (int i = 0; i < o->annotation_count; ++i) {
             const fpas_chart_annotation *a = &o->annotations[i];
             annotations[i] = (cui_chart_annotation){ .kind = a->kind, .x = a->x, .y = a->y,
-                .label = a->label && *a->label ? a->label : NULL,
-                .detail = a->detail && *a->detail ? a->detail : NULL, .accent = a->accent != 0 };
+                .label = a->label, .detail = a->detail, .accent = a->accent != 0,
+                .color = fpas_chart_color(a->palette, a->rgba) };
         }
         result.annotations = annotations; result.annotation_count = o->annotation_count;
     }

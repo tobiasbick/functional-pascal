@@ -24,7 +24,7 @@ public procedure Draw of TMsg(
   Label: string;
   Selected: bool;
   OnSelect: function(): TMsg;
-  Description: string;
+  Description: string?;
   Enabled: bool
 );
 begin

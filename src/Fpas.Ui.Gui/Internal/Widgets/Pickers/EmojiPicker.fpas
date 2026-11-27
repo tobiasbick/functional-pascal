@@ -6,11 +6,12 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Pickers.EmojiPickers as P;
 
 uses System as Sys;
 
-const GroupNames: array of string := [
+const DefaultNames: array of string := [
   'Recent', 'Smileys & emotion', 'People & body', 'Animals & nature', 'Food & drink',
   'Travel & places', 'Activities', 'Objects', 'Symbols', 'Flags'
 ];
@@ -71,9 +72,11 @@ begin
   else
     0
   end if;
+  const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   const Result: CuiPickers.CuiEmojiPickerResult := Frame.Window.EmojiPicker(
-    C.Token(Role, Id), Value.Recent, Value.Tone, Settings.Width, Settings.Height, Settings.Size,
-    Settings.Placeholder, Settings.EmptyText, Settings.Hint, Settings.Search, Settings.Preview,
+    C.Token(Role, Id), Value.Recent, Settings.RecentCapacity, Value.Tone, Width.Kind, Width.Value,
+    Settings.Height, Settings.Size, Settings.Placeholder, Settings.EmptyText, Settings.Hint,
+    Settings.GroupNames, Settings.Search, Settings.Preview,
     Settings.ToneSelector, Accept, Focus, Track
   );
   if Result.Emoji <> null or Result.Recent <> Value.Recent or Result.Tone <> Value.Tone then
@@ -88,25 +91,25 @@ begin
 
   Frame.Controls.Add(
     new App.Control(
-      Id, 'Emoji picker', Role, new Cui.CuiRectangle(), Accept, Value := Value.Recent
+      Id, 'Emoji picker', Role, new Cui.CuiRectangle(), Accept, Value := Value.Recent ?? ''
     )
   );
   for Part: int in Result.VisibleParts do
     const Caption: string := case Part of
-      when 0: 'Search emoji';
+      when 0: Settings.Placeholder ?? 'Search emoji';
       when 1: 'Emoji grid';
       when 2: 'Skin tone';
       else if Part < 9 then
         'Skin tone ' + (Part - 3).ToString()
       else
-        GroupNames[Part - 9]
+        (Settings.GroupNames ?? DefaultNames)[Part - 9]
       end if;
     end case;
     Frame.Controls.Add(
       new App.Control(
         Identity(Id, Part), Caption, 'emoji-part', new Cui.CuiRectangle(), Accept,
-        Value := if Part = 2 then
-          Value.Tone.ToString()
+        Value := if Part = 2 and Value.Tone <> null then
+          (Value.Tone ?? 0).ToString()
         else
           ''
         end if

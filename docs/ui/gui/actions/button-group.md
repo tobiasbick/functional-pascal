@@ -31,7 +31,7 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Children` | Direct buttons, including icon, copy and hold buttons. Each child supplies its own options. |
+| `Children` | Button, icon, copy, hold, confirm or status buttons. Each button can carry a tooltip. |
 
 ## Interaction
 

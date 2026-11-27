@@ -51,7 +51,9 @@ begin
             Item.Shortcut,
             Item.Enabled,
             Item.Danger,
-            Item.Checked
+            Item.Checked,
+            cast Item.Font as int,
+            Item.TextSize
           )
         );
         Tokens.Add(C.Token('menu-item', M.ItemId(Id, Item.Key)));

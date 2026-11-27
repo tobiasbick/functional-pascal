@@ -67,11 +67,11 @@ begin
     Rules.Reject(At, 'The minimum exceeds the maximum width.');
   end if;
 
-  if not Sys.Enum.IsDefined of L.Alignment(
-    Settings.Align
-  ) or (Settings.Wrap and not Settings.Horizontal)
+  if not Sys.Enum.IsDefined of C.Arrangement(Settings.Direction)
+    or not Sys.Enum.IsDefined of L.Alignment(Settings.Align)
+    or (Settings.Wrap and Settings.Direction <> C.Arrangement.Row)
   then
-    Rules.Reject(At, 'A card needs a known alignment. Only horizontal cards wrap.');
+    Rules.Reject(At, 'A card needs a known arrangement and alignment. Only row cards wrap.');
   end if;
 end procedure;
 
@@ -123,11 +123,10 @@ end procedure;
 // - `At`: Diagnostic location.
 public procedure AvatarGroup(Names: array of string; Settings: A.Options; At: string);
 begin
-  if Names.Length = 0 or Settings.MaximumVisible < 1 or Settings.Size <= 0.0F then
-    Rules.Reject(At, 'An avatar group needs names and a positive visible count and size.');
+  if Names.Length = 0 or not Sys.Single.IsFinite(Settings.Size) then
+    Rules.Reject(At, 'An avatar group needs at least one name and a finite size.');
   end if;
 
-  CheckDistance(Settings.Size, At + '/size');
   for Name: string in Names do
     Rules.CheckText(Name, At + '/name');
   end for;
@@ -142,10 +141,10 @@ end procedure;
 public procedure EmptyState(Title: string; Settings: E.Options; HasAction: bool; At: string);
 begin
   Rules.CheckText(Title, At + '/title');
-  Rules.CheckText(Settings.Icon, At + '/icon');
-  Rules.CheckText(Settings.Description, At + '/description');
-  Rules.CheckText(Settings.ActionLabel, At + '/action');
-  if (Settings.ActionLabel <> '') <> HasAction then
+  Rules.CheckText(Settings.Icon ?? '', At + '/icon');
+  Rules.CheckText(Settings.Description ?? '', At + '/description');
+  Rules.CheckText(Settings.ActionLabel ?? '', At + '/action');
+  if (Settings.ActionLabel <> null) <> HasAction then
     Rules.Reject(At, 'Supply both an action caption and a message factory.');
   end if;
 end procedure;

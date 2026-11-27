@@ -32,14 +32,23 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Width / Height / Visible` | Content / 0 / 0. Zero uses the native card height or visible count. |
-| `Enabled` | true. Allows dismissing the top card. |
+| `Width` | Content. CUI prefers 320 logical units and can shrink the deck to fit. Use Fill, Fixed, or Percent to set the width. |
+| `Height` | Zero uses 320 logical units for each card. Use a finite nonnegative height to set the card height. |
+| `Visible` | Zero shows up to three cards. A positive count includes the top card. |
+| `Enabled` | True. Allows dismissing the top card and interacting with its contents. |
 
 ## Interaction
 
-Flick the top card left or right, or dismiss it using the arrow keys.
-Handle the reported direction and remove or rotate the top card in
-the model.
+Build the cards from front to back. The deck reserves 12 logical units of
+additional height for each visible position below the top card.
+Only the top card accepts input. An empty deck has no focus target.
+
+Flick the top card to dismiss it. Tab moves focus to the top card and shows
+its focus ring. Press Left or Right to dismiss it in that physical direction.
+During a pointer drag, the pointer owns the swipe until release.
+
+Handle the reported direction and remove or rotate the top card in the
+model. The message arrives once the dismissed card leaves the deck.
 
 ## See also
 

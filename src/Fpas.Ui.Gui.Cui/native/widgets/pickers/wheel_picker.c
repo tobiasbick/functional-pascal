@@ -1,8 +1,9 @@
 // [Documentation](../../../../../docs/ui/gui/pickers/wheel-picker.md)
 #include "../../fpas_cui.h"
 
+/** Draws the native wheel with a frame-local copy of each caption. */
 int fpas_cui_wheel_picker(cui_ctx *ui, const char *id, const char *const *items, int count,
-    int index, float width, int rows, int loop, int join_left, int join_right, int enabled,
+    int index, int width_kind, float width, int rows, int loop, int join_left, int join_right, int enabled,
     int focus, int *node) {
     const cui_id key = cui_make_id(ui, id);
     const bool allowed = enabled && !cui_is_disabled(ui);
@@ -16,7 +17,7 @@ int fpas_cui_wheel_picker(cui_ctx *ui, const char *id, const char *const *items,
     const char **captions = cui__frame_alloc(ui, (size_t)count * sizeof *captions);
     for (int i = 0; i < count; ++i) captions[i] = cui__frame_strdup(ui, items[i], -1);
 
-    const cui_wheel_opts options = { .width = width > 0 ? CUI_PX(width) : CUI_FIT, .rows = rows,
+    const cui_wheel_opts options = { .width = fpas_extent(width_kind, width), .rows = rows,
         .loop = loop != 0, .join_left = join_left != 0, .join_right = join_right != 0 };
     int selected = index;
     cui_push_disabled(ui, !enabled);

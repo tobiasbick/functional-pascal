@@ -9,6 +9,7 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Validation as V;
 uses Fpas.Ui.Widgets.Charts.Meters as Meters;
@@ -16,6 +17,7 @@ uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
 uses Fpas.Ui.Widgets.Feedback.ProgressBars as P;
 uses Fpas.Ui.Widgets.Feedback.ProgressRings as Rings;
 uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
+uses Fpas.Ui.Widgets.Media.AvatarGroups as Groups;
 uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
 uses Fpas.Ui.Widgets.Planning.TimelineItems as Timeline;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
@@ -26,6 +28,7 @@ uses GuiGallery.App.Update as Update;
 uses GuiGallery.App.View as Gallery;
 uses GuiGallery.Shared.State as Shared;
 uses System as Sys;
+uses System.Threading.Channels as Channels;
 
 procedure Validate();
   procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
@@ -88,6 +91,15 @@ begin
     E.Column of int(Timeline.TimelineItem of int('same', 'Entry'), Spin.Spinner of int('same')),
     V.Target.Graphical, 'Duplicate'
   );
+  discard V.Prepare of int(
+    Groups.AvatarGroup of int(
+      'group',
+      ['Member'],
+      new Groups.Options(MaximumVisible := 0, Size := -1.0F)
+    ),
+    V.Target.Graphical
+  );
+  Reject(Groups.AvatarGroup of int('group', []), V.Target.Graphical, 'at least one name');
   Reject(Rings.ProgressRing of int('r', 'Quota', 0.35F), V.Target.Terminal, 'Graphical profile');
   Reject(Rings.ProgressRing of int('r', '', 0.0F), V.Target.Portable, 'Graphical profile');
   Reject(
@@ -324,6 +336,13 @@ end procedure;
 // - `Renderer`: Native renderer to exercise.
 // - `Capture`: Prefix for gallery screenshots.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
+  function Change(
+    Model: State.Model;
+    Message: State.Msg
+  ): Mvu.Transition of (State.Model, State.Msg);
+  begin
+    return Effects.Wrap of State.Model(Update.Update(Model, Message));
+  end function;
   procedure Inject();
   begin
     Window.MovePointer(X, Y);
@@ -337,6 +356,56 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Left := -1;
     end if;
   end procedure;
+  procedure VerifyUpload(Session: Gui.Session of State.Msg);
+    procedure Activate();
+    begin
+      const Button: Cui.CuiRectangle := A.Control(Session, 'feedback-upload').Bounds;
+      X := Button.X + Button.Width / 2.0F;
+      Y := Button.Y + Button.Height / 2.0F;
+      Left := 1;
+      A.Check(Session.Step(), 'Feedback closed on upload press.');
+      Left := 0;
+      A.Check(Session.Step(), 'Feedback closed on upload release.');
+      A.Check(Session.Step(), 'Feedback closed while dispatching the upload.');
+    end procedure;
+  begin
+    const Spinner: string := 'feedback-upload-status';
+    A.Check(
+      A.Control(Session, Spinner).Value = '' and A.Control(Session, Spinner).Bounds.Width = 18.0F,
+      'The idle spinner must reserve its native size without showing a mark.'
+    );
+    const Limit: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(8.0);
+    for Caption: string in ['Uploaded', 'Upload failed'] do
+      const Signal: Channels.ChannelReader of Replies.Reply of State.Msg := Effects.Watch(
+        'feedback/upload'
+      );
+      Activate();
+      const Result: Replies.Reply of State.Msg := Signal.ReadAsync().AsTask().WaitAsync(
+        Limit
+      ).GetAwaiter().GetResult();
+      Activate();
+      A.Check(
+        not A.Control(Session, 'feedback-upload').Enabled and A.HasText(Session, 'Uploading')
+        and A.Control(Session, Spinner).Value = 'Busy',
+        'A held completion must leave Upload busy and disabled.'
+      );
+      Result.Release().WaitAsync(Limit).GetAwaiter().GetResult();
+      A.Check(Session.Step(), 'Feedback closed while presenting the upload result.');
+      const Status: string := if Caption = 'Uploaded' then
+        'Success'
+      else
+        'Error'
+      end if;
+      A.Check(
+        A.Control(Session, 'feedback-upload').Enabled and A.HasText(Session, Caption)
+        and A.Control(Session, Spinner).Value = Status,
+        'Releasing the reply must show the next upload result and re-enable Upload.'
+      );
+    end for;
+
+    X := -1.0F;
+    Y := -1.0F;
+  end procedure;
 begin
   Validate();
   Notification(Renderer);
@@ -344,10 +413,11 @@ begin
   var Y: float := -1.0F;
   var Wheel: float := 0.0F;
   var Left: int := -1;
+  const Effects: Replies.Effects of State.Msg := (Replies.Effects of State.Msg).Create();
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI feedback', 1100, 1700, Renderer, true);
   Window.SetReducedMotion(true);
   using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
-    new State.Model(Active := State.Page.Feedback), Update.Update, Gallery.Build,
+    new State.Model(Active := State.Page.Feedback), Change, Gallery.Build,
     Window, 32, Inject, ThemeFor := Update.ThemeFor
   );
   A.Check(Session.Step(), 'Feedback gallery closed.');
@@ -450,6 +520,7 @@ begin
   Window.Resize(1100, 1700);
   A.Check(Session.Step(), 'Feedback gallery closed after widening.');
   A.Check(Session.Step(), 'Feedback gallery closed while settling.');
+  VerifyUpload(Session);
   X := 700.0F;
   Y := 900.0F;
   Wheel := -16.0F;
@@ -476,6 +547,23 @@ begin
   end for;
 
   A.Check(Created, 'The original empty state action must show the success toast.');
+
+  A.Send(Session, State.Msg.Show(State.Page.Feedback));
+  const Dismiss: Cui.CuiRectangle := A.Control(Session, 'storage/dismiss').Bounds;
+  X := Dismiss.X + Dismiss.Width / 2.0F;
+  Y := Dismiss.Y + Dismiss.Height / 2.0F;
+  Left := 1;
+  A.Check(Session.Step(), 'Feedback closed on alert dismiss press.');
+  Left := 0;
+  A.Check(Session.Step(), 'Feedback closed on alert dismiss release.');
+  A.Check(Session.Step(), 'Feedback closed while applying alert dismissal.');
+  A.Check(not A.HasText(Session, 'Storage almost full'), 'The storage alert must dismiss.');
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  A.Send(Session, State.Msg.Show(State.Page.Feedback));
+  A.Check(
+    not A.HasText(Session, 'Storage almost full'),
+    'The storage alert must stay dismissed after page navigation.'
+  );
 end procedure;
 
 end unit;

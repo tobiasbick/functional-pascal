@@ -158,6 +158,13 @@ begin
     'The original fields must display 24-hour and 12-hour time respectively.'
   );
   A.Check(
+    A.Control(
+      Session,
+      Start
+    ).Bounds.Width = 150.0F and A.Control(Session, Finish).Bounds.Width = 150.0F,
+    'Both time fields use the native default width.'
+  );
+  A.Check(
     A.Control(Session, Day).Text = '14' and A.Control(Session, Month).Text = 'November'
     and A.Control(Session, Year).Text = '2026' and A.Control(Session, Dial).Value = '07:25',
     'The native reel and dial must show the original initial choices.'

@@ -7,7 +7,7 @@
  * @param id Stable identity.
  * @param name Display name for initials.
  * @param path Model-owned image path, or NULL for initials.
- * @param size Logical diameter, or zero for the default.
+ * @param size Logical diameter. Nonpositive values use the native default.
  * @param enabled Whether the avatar accepts input.
  * @param focus Whether to request focus.
  * @param node Receives the native root.

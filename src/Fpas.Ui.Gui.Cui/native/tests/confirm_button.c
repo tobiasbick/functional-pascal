@@ -16,7 +16,7 @@ static int frame(cui_ctx *ui, int key, int enabled, int focus, int timeout, cons
 }
 
 static bool verify(cui_ctx *ui) {
-    if (frame(ui, 0, 1, 1, 3000, "Delete ## literally") != 0) return false;
+    if (frame(ui, 0, 1, 1, 0, "Delete ## literally") != 0) return false;
     const unsigned int key = fpas_cui_node_key(ui, fpas_cui_last_node(ui));
     if (!key || !fpas_cui_focus_key(ui, key)) return false;
     const float width = cui_last_rect(ui).w;
@@ -26,8 +26,8 @@ static bool verify(cui_ctx *ui) {
     if (frame(ui, 0, 1, 0, 3000, "Delete ## literally") != 0) return false;
     if (cui_last_rect(ui).w != width) return false;
 
-    if (frame(ui, CUI_KEY_ENTER, 1, 0, 3000, "Delete") != 2) return false;
-    for (int i = 0; i < 73; ++i) if (frame(ui, 0, 1, 0, 3000, "Delete") != 2) return false;
+    if (frame(ui, CUI_KEY_ENTER, 1, 0, 0, "Delete") != 2) return false;
+    for (int i = 0; i < 73; ++i) if (frame(ui, 0, 1, 0, 0, "Delete") != 2) return false;
     for (int i = 0; i < 4; ++i) frame(ui, 0, 1, 0, 3000, "Delete");
     if (frame(ui, CUI_KEY_ENTER, 1, 0, 3000, "Delete") != 2) return false;
     if (frame(ui, CUI_KEY_ESCAPE, 1, 0, 3000, "Delete") != 0) return false;

@@ -1,6 +1,7 @@
 // [Documentation](../../../../docs/ui/gui/layout/README.md)
 /* Insets, RTL, stacks and spacing must paint exactly like direct CUI calls. */
 #include "../fpas_cui.h"
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -152,12 +153,15 @@ static bool check_text_alignment(void) {
             }
         }
         if (pass) {
-            fpas_cui_formatted_text(ui, "Formatted", CUI_FONT_MEDIUM, 15, 0xffd02010u,
-                                    CUI_DIRECTION_LTR, CUI_TEXT_END, 0);
+            fpas_cui_formatted_text(ui, "0123\n8765", CUI_FONT_MEDIUM, 15, 0xffd02010u,
+                                    CUI_DIRECTION_LTR, CUI_TEXT_END, 0, 2, 98, 1.8f, 1);
+            fpas_cui_formatted_text(ui, CUI_ICON_COPY, CUI_FONT_ICONS, 16, 0,
+                                    CUI_DIRECTION_INHERIT, CUI_TEXT_START, 0, 0, 0, 0, 0);
         } else {
-            const cui_text_opts options = { .font = CUI_FONT_MEDIUM, .size = 15, .color = CUI_RGBA(0x1020d0ff),
-                .direction = CUI_DIRECTION_LTR, .align = CUI_TEXT_END };
-            cui_text_ex(ui, "Formatted", &options);
+            cui_text(ui, "0123\n8765", .font = CUI_FONT_MEDIUM, .size = 15, .color = CUI_RGBA(0x1020d0ff),
+                     .direction = CUI_DIRECTION_LTR, .align = CUI_TEXT_END,
+                     .width = CUI_PX(98), .line_height = 1.8f, .tabular = true);
+            cui_text(ui, CUI_ICON_COPY, .font = CUI_FONT_ICONS, .size = 16);
         }
         cui_end_frame(ui);
         cui_sw_render(renderer, cui_get_draw_data(ui), pixels[pass], WIDTH, HEIGHT, WIDTH * 4, CUI_SW_RGBA);
@@ -173,7 +177,7 @@ static bool check_text_alignment(void) {
 static bool check_formatted_text_clipping(void) {
     enum { WIDTH = 300, HEIGHT = 140, PIXELS = WIDTH * HEIGHT * 4 };
     static unsigned char pixels[2][2][PIXELS];
-    const char *text = "A long team member name that must remain on a single line";
+    const char *text = "111: a long team member name that must remain on a single line";
     for (int pass = 0; pass < 2; ++pass) {
         cui_sw_renderer *renderer = cui_sw_create();
         const cui_ctx_desc settings = { .renderer = cui_sw_iface(renderer) };
@@ -188,10 +192,11 @@ static bool check_formatted_text_clipping(void) {
             cui_column(ui, .width = CUI_PX(100), .pad_top = 40) {
                 if (pass) {
                     fpas_cui_formatted_text(ui, text, CUI_FONT_MEDIUM, 14, 0xffd02010u,
-                                            CUI_DIRECTION_LTR, CUI_TEXT_START, 1);
+                                            CUI_DIRECTION_LTR, CUI_TEXT_CENTER, 1, 2, 84, 0, 1);
                 } else {
                     cui_text(ui, text, .font = CUI_FONT_MEDIUM, .size = 14, .color = CUI_RGBA(0x1020d0ff),
-                             .direction = CUI_DIRECTION_LTR, .nowrap = true);
+                             .direction = CUI_DIRECTION_LTR, .nowrap = true, .width = CUI_PX(84),
+                             .align = CUI_TEXT_CENTER, .tabular = true);
                 }
             }
             cui_end_frame(ui);
@@ -209,8 +214,117 @@ static bool check_formatted_text_clipping(void) {
     return matched && tooltip_visible;
 }
 
+/** Compares every card child layout and the full native card options against direct CUI. */
+static bool check_card_arrangements(void) {
+    enum { WIDTH = 300, HEIGHT = 180 };
+    static unsigned char pixels[2][WIDTH * HEIGHT * 4];
+    for (int direction = CUI_COLUMN; direction <= CUI_GRID; ++direction) {
+        for (int pass = 0; pass < 2; ++pass) {
+            cui_sw_renderer *renderer = cui_sw_create();
+            const cui_ctx_desc context = { .renderer = cui_sw_iface(renderer) };
+            cui_ctx *ui = cui_create(&context);
+            if (!ui) { cui_sw_destroy(renderer); return false; }
+            const cui_card_opts card = {
+                .id = "arrangement", .width = CUI_PCT(80), .height = CUI_PX(145),
+                .min_width = 170, .max_width = 195, .pad = 12, .pad_x = 17, .pad_y = 8,
+                .gap = 7, .dir = (cui_dir)direction, .align = CUI_ALIGN_CENTER,
+                .wrap = direction == CUI_ROW, .hoverable = true,
+                .muted = direction == CUI_STACK, .selected = true
+            };
+            int node = -1;
+            cui_set_viewport(ui, WIDTH, HEIGHT, 1);
+            cui_set_reduced_motion(ui, true);
+            cui_begin_frame(ui, .016f);
+            if (pass) {
+                fpas_cui_card_begin(ui, card.id, 3, card.width.value, 2, card.height.value,
+                    card.min_width, card.max_width, card.pad, card.pad_x, card.pad_y, card.gap,
+                    direction, card.align, card.wrap, card.muted, card.selected, card.hoverable, 1, 0, &node);
+            } else cui_card_begin(ui, &card);
+            cui_button(ui, "First", .width = CUI_PX(95));
+            cui_button(ui, "Second", .width = CUI_PX(90));
+            if (pass) fpas_cui_card_end(ui, node);
+            else cui_card_end(ui);
+            cui_end_frame(ui);
+            cui_sw_render(renderer, cui_get_draw_data(ui), pixels[pass], WIDTH, HEIGHT, WIDTH * 4, CUI_SW_RGBA);
+            cui_destroy(ui);
+            cui_sw_destroy(renderer);
+        }
+        if (memcmp(pixels[0], pixels[1], sizeof pixels[0]) != 0) {
+            fprintf(stderr, "Card arrangement %d differs from direct CUI.\n", direction);
+            return false;
+        }
+    }
+    return true;
+}
+
+typedef struct { float inset; bool geometry_retained; } reader_geometry;
+
+static int reader_frame(cui_ctx *ui, reader_geometry *geometry) {
+    const char *titles[] = {"Introduction", "Installation", "First window"};
+    const char *anchors[] = {"intro", "install", "window"};
+    const int levels[] = {0, 1, 0};
+    int active = -1;
+    cui_id install = 0;
+    cui_begin_frame(ui, .04f);
+    cui_row(ui, .width = CUI_FILL, .gap = 16) {
+        cui_scroll(ui, .id = "reader", .width = CUI_FILL, .height = CUI_PX(240)) {
+            for (int index = 0; index < 3; ++index) {
+                fpas_cui_scroll_anchor(ui, anchors[index]);
+                if (index == 1) install = fpas_cui_node_key(ui, fpas_cui_last_node(ui));
+                cui_heading(ui, titles[index], 3);
+                cui_gap(ui, 400);
+            }
+        }
+        cui_column(ui, .width = CUI_PX(180)) {
+            const float previous = cui_get_rect(ui, install).y;
+            int outline;
+            active = fpas_cui_table_of_contents(ui, "reader", titles, anchors, levels, 3, 1, 0, &outline, NULL);
+            geometry->geometry_retained &= cui_get_rect(ui, install).y == previous;
+        }
+    }
+    cui_end_frame(ui);
+    geometry->inset = cui_get_rect(ui, install).y - cui_get_rect(ui, cui_make_id(ui, "reader")).y;
+    return active;
+}
+
+static void reader_key(cui_ctx *ui, cui_key key) {
+    cui_input_key(ui, key, true, 0);
+    cui_input_key(ui, key, false, 0);
+}
+
+/** Jump while the article receives another scroll request in the same frame. */
+static bool check_reader_jump(bool reduced_motion) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 640, 320, 1);
+    cui_set_reduced_motion(ui, reduced_motion);
+    reader_geometry geometry = {.geometry_retained = true};
+    bool valid = reader_frame(ui, &geometry) == 0;
+    reader_key(ui, CUI_KEY_TAB);
+    valid = reader_frame(ui, &geometry) == 0 && valid;
+    reader_key(ui, CUI_KEY_TAB);
+    valid = reader_frame(ui, &geometry) == 0 && valid;
+
+    cui_scroll_to(ui, "reader", 280);
+    reader_key(ui, CUI_KEY_ENTER);
+    int active = reader_frame(ui, &geometry);
+    valid = active == 1 && valid;
+    for (int frame = 0; frame < 80 && cui_needs_redraw(ui); ++frame) {
+        active = reader_frame(ui, &geometry);
+        if (reduced_motion) valid = active == 1 && valid;
+    }
+    valid = active == 1 && !cui_needs_redraw(ui) && geometry.geometry_retained &&
+        fabsf(geometry.inset - 12) < 1 && valid;
+    cui_destroy(ui);
+    if (!valid) fprintf(stderr, "Reader jump differs from the anchor inset: reduced=%d active=%d inset=%g\n",
+        reduced_motion, active, geometry.inset);
+    return valid;
+}
+
 int main(void) {
-    bool valid = check_hover() && check_box_close() && check_text_alignment() && check_formatted_text_clipping();
+    bool valid = check_hover() && check_box_close() && check_text_alignment() &&
+                 check_formatted_text_clipping() && check_card_arrangements() &&
+                 check_reader_jump(false) && check_reader_jump(true);
     for (int axis = 0; axis < 3; ++axis)
         for (int rtl = 0; rtl < 2; ++rtl)
             for (int dark = 0; dark < 2; ++dark)

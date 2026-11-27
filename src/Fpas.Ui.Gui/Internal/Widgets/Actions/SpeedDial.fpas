@@ -30,8 +30,8 @@ public procedure Draw of TMsg(
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('speed-dial', Id);
-  const Labels: Lists.List of string := new Lists.List of string(Items.Length);
-  const Icons: Lists.List of string := new Lists.List of string(Items.Length);
+  const Labels: Lists.List of string? := new Lists.List of string? (Items.Length);
+  const Icons: Lists.List of string? := new Lists.List of string? (Items.Length);
   var Focus: int := if C.WantsFocus of TMsg(Frame, Id, Token, Enabled) then
     1
   else
@@ -64,7 +64,7 @@ begin
 
   Frame.Controls.Add(
     new App.Control(
-      Id, Settings.Tooltip, 'speed-dial', new Cui.CuiRectangle(), Enabled,
+      Id, Settings.Tooltip ?? '', 'speed-dial', new Cui.CuiRectangle(), Enabled,
       Value := if Result.Open then
         'true'
       else
@@ -75,7 +75,11 @@ begin
   for Index: int in Result.VisibleActions do
     Frame.Controls.Add(
       new App.Control(
-        S.ItemId(Id, Index), Items[Index].Label, 'speed-action', new Cui.CuiRectangle(), Enabled
+        S.ItemId(Id, Index),
+        Items[Index].Label ?? '',
+        'speed-action',
+        new Cui.CuiRectangle(),
+        Enabled
       )
     );
   end for;

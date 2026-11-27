@@ -10,6 +10,10 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int ShortcutOwners(nint context);
 
+    [LibraryImport(Library, EntryPoint = "fpas_cui_shortcut_editor")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial uint ShortcutEditor(nint context);
+
     [LibraryImport(Library, EntryPoint = "fpas_cui_take_shortcut")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int TakeShortcut(nint context, int modifiers, int key);

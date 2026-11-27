@@ -10,6 +10,10 @@ int fpas_cui_shortcut_owners(cui_ctx *ui) {
     return owners;
 }
 
+uint32_t fpas_cui_shortcut_editor(cui_ctx *ui) {
+    return cui_wants_keyboard(ui) ? ui->focus : 0;
+}
+
 int fpas_cui_take_shortcut(cui_ctx *ui, int mods, int key) {
     if (!cui_shortcut(ui, mods, (cui_key)key)) return 0;
     ui->kpressed[key] = 0;

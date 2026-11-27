@@ -2,6 +2,7 @@
 
 unit GuiGallery.App.Update;
 
+uses Fpas.Ui.Gui.Scrolls as Scrolls;
 uses Fpas.Ui.Gui.Toasts as Toasts;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Mvu.Composition as C;
@@ -418,11 +419,13 @@ begin
         end with, []
       );
     when G.Msg.Show(const Value: G.Page), G.Msg.Jump(const Value: G.Page):
-      const Revision: int := case Message of
-        when G.Msg.Show(_): State.NavigationRevision + 1;
-        else State.NavigationRevision;
-      end case;
       const Commands: Collections.List of Mvu.Command of G.Msg := new Collections.List of Mvu.Command of G.Msg();
+      case Message of
+        when G.Msg.Show(_):
+          Commands.Add(Scrolls.To of G.Msg(G.MainScrollId, 0.0F));
+        else
+      end case;
+
       if Value <> State.Active then
         if State.Active = G.Page.Audio then
           Commands.Add(Mvu.CancelBackground of G.Msg(AudioClock.Id));
@@ -488,7 +491,16 @@ begin
       return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Active := Value;
-          NavigationRevision := Revision;
+          Shared := if Value = G.Page.Selection then
+            State.Shared with
+              Brightness := Sys.MathF.Round(
+                State.Shared.Brightness / Selection.BrightnessStep,
+                Sys.MidpointRounding.AwayFromZero
+              ) * Selection.BrightnessStep;
+            end with
+          else
+            State.Shared
+          end if;
           Code := if Value <> G.Page.Code then
             State.Code with
               Replay := -1;

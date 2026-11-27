@@ -1,11 +1,18 @@
 // [Documentation](../../../../docs/ui/gui/cui.md#data-and-marshalling)
 using Fpas.Ui.Gui.Cui.Interop;
+using System.Globalization;
 
 namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
     private static bool ValidAudioSize(float value) => float.IsFinite(value) && value >= 0;
+
+    private static string SliderNumberFormat(int decimalPlaces, bool showSign = false)
+    {
+        if (decimalPlaces is < 0 or > 6) throw new ArgumentOutOfRangeException(nameof(decimalPlaces));
+        return (showSign ? "%+." : "%.") + decimalPlaces.ToString(CultureInfo.InvariantCulture) + "f";
+    }
 
     private static void ValidateAudioDial(float step, float reset, string unit, float span)
     {

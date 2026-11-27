@@ -93,19 +93,28 @@ begin
   return Original;
 end function;
 
-// Sorts source indices using the native demo's column order and stable ties.
+// Sorts source indices by the native demo's column order.
 // ## Parameters
 // - `Sort`: Requested column and direction.
 // - `Edits`: Committed name overrides.
+// - `Previous`: Earlier display order, or null for the original source order.
 // ## Returns
 // Display positions mapped to source indices.
-public function Order(Sort: T.Sort; Edits: Lists.Dictionary of (int, string)): array of int;
+public function Order(
+  Sort: T.Sort;
+  Edits: Lists.Dictionary of (int, string);
+  Previous: (array of int)? := null
+): array of int;
   function Compare(A: int; B: int): int;
   begin
-    const Left: Person := At(A);
-    const Right: Person := At(B);
+    const LeftId: int := Source[A];
+    const RightId: int := Source[B];
+    const Left: Person := At(LeftId);
+    const Right: Person := At(RightId);
     const Result: int := case Sort.Column of
-      when 0: Sys.String.CompareOrdinal(Name(Edits, A, Left.Name), Name(Edits, B, Right.Name));
+      when 0: Sys.String.CompareOrdinal(
+        Name(Edits, LeftId, Left.Name), Name(Edits, RightId, Right.Name)
+      );
       when 2: Sys.String.CompareOrdinal(Left.Team, Right.Team);
       when 3: Left.Commits.CompareTo(Right.Commits);
       else Left.Score.CompareTo(Right.Score);
@@ -119,8 +128,15 @@ public function Order(Sort: T.Sort; Edits: Lists.Dictionary of (int, string)): a
     end if;
   end function;
 begin
-  const Items: Lists.List of int := new Lists.List of int(Count());
-  for Index: int := 0 to Count() - 1 do
+  const Source: array of int := Previous ?? new int[Count()];
+  if Previous = null then
+    for Index: int := 0 to Source.Length - 1 do
+      Source[Index] := Index;
+    end for;
+  end if;
+
+  const Items: Lists.List of int := new Lists.List of int(Source.Length);
+  for Index: int := 0 to Source.Length - 1 do
     Items.Add(Index);
   end for;
 
@@ -128,7 +144,12 @@ begin
     Items.Sort(Compare);
   end if;
 
-  return Items.ToArray();
+  const Result: array of int := Items.ToArray();
+  for Index: int := 0 to Result.Length - 1 do
+    Result[Index] := Source[Result[Index]];
+  end for;
+
+  return Result;
 end function;
 
 end unit;

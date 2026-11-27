@@ -9,11 +9,13 @@ public sealed partial class CuiWindow
     private const int ShortcutKeyCount = 68;
     private readonly byte[] shortcutHeld = new byte[ShortcutKeyCount];
     private int shortcutOwners;
+    private uint shortcutEditor;
     private bool shortcutsRead;
 
     private unsafe void SnapshotShortcutKeys()
     {
         fixed (byte* keys = shortcutHeld) NativeMethods.ShortcutKeys(context, keys, shortcutHeld.Length);
+        shortcutEditor = NativeMethods.ShortcutEditor(context);
     }
 
     /// <summary>Reads application bindings once after all widgets, with native input owners taking priority.</summary>
@@ -35,12 +37,12 @@ public sealed partial class CuiWindow
         shortcutsRead = true;
         int owners = shortcutOwners | NativeMethods.ShortcutOwners(context);
         List<int> triggered = [];
-        if ((owners & 2) != 0) return [];
         for (int index = 0; index < bindings.Length; index++)
         {
             var binding = bindings[index];
             if (!binding.Enabled || !binding.Repeat && shortcutHeld[binding.Key] != 0 ||
-                !binding.AllowWhileEditing && (owners & 1) != 0) continue;
+                !binding.AllowWhileEditing && (owners & 1) != 0 ||
+                !binding.AllowInOverlays && (owners & 2) != 0) continue;
             // Focused native widgets own editing/navigation and unmodified non-function keys.
             if ((owners & 4) != 0 && (binding.Key <= 14 ||
                 binding.Key < 56 && (binding.Modifiers & ~1) == 0)) continue;

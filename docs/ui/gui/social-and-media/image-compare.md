@@ -35,13 +35,16 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Width / Height / Aspect` | Content / 0 / 0. Zero Aspect uses the first image's width-to-height ratio. |
-| `BeforeLabel / AfterLabel / Enabled` | Before / After / true. |
+| `Width / Height` | Content / zero. CUI fills the available width and uses a height of 280 logical units. |
+| `Aspect` | Zero. CUI stretches each whole image to fill the panel. Set both images' shared width-to-height ratio to crop evenly and preserve proportions. |
+| `BeforeLabel / AfterLabel` | Before / After. Short captions over the two images. |
+| `Enabled` | True. Accept pointer and keyboard input. |
 
 ## Interaction
 
-Drag the divider or move it with the arrow keys. Store its proposed
-fraction to keep the selected comparison in the model.
+Drag the divider to change the visible parts of the two images. With the
+comparison focused, Left and Right move the divider by 0.05. Store the
+proposed fraction in the model.
 
 ## See also
 
@@ -61,3 +64,4 @@ fraction to keep the selected comparison in the model.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/media/`
   - [image_compare.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image_compare.c)
   - [image_compare.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image_compare.h)
+- [Native media tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/media.c)

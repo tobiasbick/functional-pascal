@@ -49,6 +49,46 @@ public sealed class CuiSkeletonTests
         }
     }
 
+    /// <summary>Groups allocate native widths and gaps with either animation style.</summary>
+    /// <param name="dither">Whether the groups draw ordered dots.</param>
+    [GuiTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void GroupsUseNativeWidthsAndGaps(bool dither)
+    {
+        using var window = new CuiWindow("Skeleton groups", 480, 240, CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        Assert.True(window.NextFrame());
+        window.BeginGroup(false, 12, 8, 4, false);
+        Draw("fill", 1, 0, 0);
+        Draw("fixed", 2, 140, 13);
+        Draw("percent", 3, 60, 5);
+        window.EndGroup();
+        window.Present();
+        float available = window.Size.Width - 24;
+        Check("fill", available, 8);
+        Check("fixed", 140, 13);
+        Check("percent", available * .6f, 5);
+
+        void Draw(string id, int widthKind, float width, float gap)
+        {
+            window.BeginSkeletonGroup(id, widthKind, width, gap, dither);
+            window.Skeleton(id + "/first", height: 10);
+            window.TrackLastControl(id + "/first");
+            window.Skeleton(id + "/second", height: 8);
+            window.TrackLastControl(id + "/second");
+            window.EndSkeletonGroup();
+        }
+
+        void Check(string id, float width, float gap)
+        {
+            var first = window.GetControlRectangle(id + "/first");
+            var second = window.GetControlRectangle(id + "/second");
+            Assert.Equal(width, first.Width, precision: 1);
+            Assert.Equal(gap, second.Y - first.Y - first.Height);
+        }
+    }
+
     /// <summary>General percentage sizes use the parent's inner extent and native bounds.</summary>
     /// <param name="renderer">Native renderer to exercise.</param>
     [GuiTheory]

@@ -32,12 +32,12 @@ begin
     R.Reject(At, 'A number field needs a finite value within finite ordered bounds.');
   end if;
 
-  if not Sys.Double.IsFinite(Settings.Step) or Settings.Step <= 0.0
-    or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 15
+  if not Sys.Double.IsFinite(Settings.Step) or Settings.Step < 0.0
+    or Settings.DecimalPlaces < 0 or Settings.DecimalPlaces > 61
   then
     R.Reject(
       At,
-      'A number field needs a finite positive step and zero through fifteen decimal places.'
+      'A number field needs a finite nonnegative step and zero through 61 decimal places.'
     );
   end if;
 
@@ -47,8 +47,9 @@ begin
     Format,
     Provider
   ).Length >= 64 or Maximum.ToString(Format, Provider).Length >= 64
+    or Value.ToString(Format, Provider).Length >= 64
   then
-    R.Reject(At, 'The number field bounds exceed its native display capacity.');
+    R.Reject(At, 'The number field value and bounds must fit its native display capacity.');
   end if;
 end procedure;
 

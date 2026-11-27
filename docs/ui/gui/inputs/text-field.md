@@ -46,6 +46,8 @@ end unit;
 | `Prefix / Suffix` | Empty. Affixes stay outside the editable value. |
 | `Password / Clearable / ReadOnly / Enabled` | false / false / false / true. |
 | `ControlSize / MaxUtf8Bytes` | Medium / 255. The password mode supports a limit of up to 341 bytes. |
+| `Width` | Null uses the native width. GUI accepts fill, fixed and percentage widths. |
+| `Autofocus` | False. An enabled GUI field can take focus on its first native frame. |
 
 ## Interaction
 
@@ -55,6 +57,10 @@ frame. Replacing the value from the model moves the caret to the end and
 clears undo history. A read-only field still allows selection. Password mode
 masks the value and supplies a reveal button. GUI snapshots omit the password
 value.
+
+The native width includes the field's label, hint and error. Use
+`Fpas.Ui.Mvu.Application.Focus` to request focus after the first frame.
+To choose which control a dialog focuses on opening, set the dialog's `InitialFocus`.
 
 For terminal editing and keyboard behavior, see the [TUI text field](../../tui/inputs/text-field.md).
 

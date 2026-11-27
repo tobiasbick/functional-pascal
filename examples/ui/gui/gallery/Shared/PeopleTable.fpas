@@ -129,10 +129,20 @@ public function Columns(
 ): array of T.Column;
 begin
   return [
-    new T.Column(Strings.Get('Text.Name'), Sortable := true),
-    new T.Column(Strings.Get('Text.Email'), Grow := 1.2F),
-    new T.Column(Strings.Get('Text.TableRole'), RoleWidth, Sortable := true),
-    new T.Column(Strings.Get('Text.TableStatus'), StatusWidth, Sortable := true),
+    new T.Column(Strings.Get('Text.Name'), Align := T.Alignment.Left, Sortable := true),
+    new T.Column(Strings.Get('Text.Email'), Grow := 1.2F, Align := T.Alignment.Left),
+    new T.Column(
+      Strings.Get('Text.TableRole'),
+      RoleWidth,
+      Align := T.Alignment.Left,
+      Sortable := true
+    ),
+    new T.Column(
+      Strings.Get('Text.TableStatus'),
+      StatusWidth,
+      Align := T.Alignment.Left,
+      Sortable := true
+    ),
     new T.Column(Strings.Get('Text.TableRevenue'), RevenueWidth, Align := T.Alignment.Right)
   ];
 end function;

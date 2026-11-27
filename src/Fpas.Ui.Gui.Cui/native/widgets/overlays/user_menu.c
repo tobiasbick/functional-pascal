@@ -27,7 +27,7 @@ static void fpas_user_menu_name(cui_ctx *ui, int row, const char *name, float si
 int fpas_cui_user_menu(cui_ctx *ui, const char *id, const char *name,
     const char *detail, const char *status, const char *avatar_path, const char *const *keys,
     const char *const *labels, const char *const *icons, const char *const *shortcuts,
-    const int *flags, int count, int placement, float width, int compact, int enabled,
+    const fpas_cui_menu_row *rows, int count, int placement, float width, int compact, int enabled,
     int focus, int *nodes, int *open, int *highlighted) {
     const bool allowed = enabled && !cui_is_disabled(ui);
     const char *caption = "account";
@@ -47,7 +47,7 @@ int fpas_cui_user_menu(cui_ctx *ui, const char *id, const char *name,
     fpas_user_menu_name(ui, row, name, compact ? 28 : 32, status, !compact, avatar);
     if (visible) fpas_user_menu_name(ui, ui->nodes[cui__current(ui)].first, name, 36, NULL, true, avatar);
     const int chosen = fpas_menu_rows(ui, popup, visible, keys, labels, icons, shortcuts,
-        flags, count, nodes, highlighted);
+        rows, count, nodes, highlighted);
     if (visible) cui_user_menu_end(ui);
     cui_pop_disabled(ui);
     cui_pop_id(ui);

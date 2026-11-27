@@ -11,8 +11,8 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial int RadioCards(nint context, string id,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] titles,
-        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] descriptions,
-        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] icons,
-        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] badges,
+        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string?[] descriptions,
+        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string?[] icons,
+        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string?[] badges,
         int count, int selected, int columns, int enabled, int focus, int* nodes);
 }

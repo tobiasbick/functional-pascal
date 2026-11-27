@@ -12,14 +12,15 @@
  * @param step Positive value between ticks.
  * @param major_every Number of ticks between labels.
  * @param spacing Logical points between ticks.
- * @param width Logical width, or zero to fill.
- * @param format Validated C numeric format.
- * @param unit Optional unit caption.
+ * @param width_kind Native extent. Content and fill both select CUI fill.
+ * @param width Logical fixed width or percentage.
+ * @param format Validated C numeric format, or null for the native default.
+ * @param unit Unit caption, or null to omit it.
  * @param enabled Whether the tape accepts input.
  * @param focus Whether to request tape focus.
  * @param track Receives the native tape node.
  * @return Whether the input proposed a change. */
 CUI_API int fpas_cui_ruler_slider(cui_ctx *ui, const char *id, const char *label, float *value,
-    float minimum, float maximum, float step, int major_every, float spacing, float width,
+    float minimum, float maximum, float step, int major_every, float spacing, int width_kind, float width,
     const char *format, const char *unit, int enabled, int focus, int *track);
 #endif

@@ -56,7 +56,7 @@ begin
           ' ' + Command.Title,
           'command',
           new Actions.Direct of TMsg(Command.Message),
-          Hint := Command.Shortcut
+          Hint := Command.Shortcut ?? ''
         )
       )
     );

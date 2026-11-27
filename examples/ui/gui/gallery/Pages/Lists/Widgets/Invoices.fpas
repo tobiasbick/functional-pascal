@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Lists.Widgets.Invoices;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Collections.VirtualLists as V;
@@ -16,6 +17,7 @@ uses System.Globalization as Culture;
 function Row(Index: int): E.Element of State.Msg;
 begin
   const Invariant: Culture.CultureInfo := Culture.CultureInfo.InvariantCulture;
+  const DefaultColor: Graphics.Color := new Graphics.Color(0, 0, 0, 0);
   const Hash: long := (cast (Index + 1) as long * 2654435761L) mod 4294967296L;
   const Dollars: long := 40L + (Hash div 256L) mod 2400L;
   const Cents: long := (Hash div 16L) mod 100L;
@@ -34,26 +36,20 @@ begin
       Clip := false
     ),
     E.Styled of State.Msg(E.Text of State.Msg(Sys.Char.ConvertFromUtf32($E0CC)), S.Role.MutedIcon),
-    E.Size of State.Msg(
-      E.Styled of State.Msg(
-        E.Styled of State.Msg(E.Text of State.Msg(Title), S.Role.SingleLine),
-        S.Role.Tabular
-      ),
-      new L.Flex(Basis := L.Extent.Fill)
+    E.FormattedText of State.Msg(
+      Title, Graphics.Font.Body, 0.0F, DefaultColor,
+      NoWrap := true, Width := L.Extent.Fill, Tabular := true
+    ),
+    E.FormattedText of State.Msg(
+      Amount, Graphics.Font.Body, 13.0F, DefaultColor,
+      NoWrap := true, Tabular := true
     ),
     E.Styled of State.Msg(
-      E.Styled of State.Msg(
-        E.Styled of State.Msg(E.Text of State.Msg(Amount), S.Role.SingleLine),
-        S.Role.SmallBody
+      E.FormattedText of State.Msg(
+        Status, Graphics.Font.Body, 12.0F, DefaultColor,
+        NoWrap := true, Width := L.Extent.Fixed(L.Measure.Logical(32))
       ),
-      S.Role.Tabular
-    ),
-    E.Size of State.Msg(
-      E.Styled of State.Msg(
-        E.Styled of State.Msg(E.Text of State.Msg(Status), S.Role.Caption),
-        S.Role.SingleLine
-      ),
-      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(32)))
+      S.Role.Caption
     )
   );
 end function;

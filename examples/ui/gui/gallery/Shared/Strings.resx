@@ -166,7 +166,7 @@
   <data name="Heading.ModelPicker" xml:space="preserve"><value>Model picker</value></data>
   <data name="Heading.ModelPickerHint" xml:space="preserve"><value>Choose a model using the same menu as the composer.</value></data>
   <data name="Heading.Money" xml:space="preserve"><value>Money</value></data>
-  <data name="Heading.MoneyHint" xml:space="preserve"><value>Exact decimal amounts with native text editing.</value></data>
+  <data name="Heading.MoneyHint" xml:space="preserve"><value>Grouped digits at rest, plain digits while typing.</value></data>
   <data name="Heading.MonthCalendar" xml:space="preserve"><value>Month calendar</value></data>
   <data name="Heading.MonthCalendarHint" xml:space="preserve"><value>Bars for days off and trips, timed events in time order, +N more when a day is full.</value></data>
   <data name="Heading.MorphingButtons" xml:space="preserve"><value>Morphing buttons</value></data>
@@ -234,7 +234,6 @@
   <data name="Heading.SignatureHint" xml:space="preserve"><value>Draw with the mouse or a pen. Faster strokes are thinner, like ink.</value></data>
   <data name="Heading.Sliders" xml:space="preserve"><value>Sliders</value></data>
   <data name="Heading.SlidersHint" xml:space="preserve"><value>Drag past either end: the track stretches like rubber.</value></data>
-  <data name="Heading.Sparkline" xml:space="preserve"><value>Sparkline</value></data>
   <data name="Heading.SpeedDial" xml:space="preserve"><value>Speed dial</value></data>
   <data name="Heading.SpeedDialHint" xml:space="preserve"><value>A floating action button that fans out related actions.</value></data>
   <data name="Heading.SplitBar" xml:space="preserve"><value>Split bar</value></data>

@@ -31,15 +31,19 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Items` | 1 to 16 captions with CUI glyphs |
-| `Icon / Tooltip` | Both empty by default |
-| `Position / Enabled` | BottomStart / true |
+| `Items` | One to sixteen actions. A null label omits the label bubble. A null icon omits the glyph. |
+| `Icon` | Null uses a plus sign on the closed trigger. An empty string leaves the closed trigger blank. |
+| `Tooltip` | Null omits the trigger tooltip. |
+| `Position` | `BottomStart` selects CUI's `TopEnd` default. |
+| `Enabled` | true. |
 
 ## Interaction
 
-Click or Enter opens the dial. Choosing a visible action sends its zero-
-based index. Escape closes the dial and restores focus to the trigger. Use
-ItemId to focus or inspect a visible action.
+Click or press Enter or Space on the trigger to open the dial. Choose a
+visible action by pointer or keyboard to send its zero-based index. Press
+Escape or click outside to dismiss the dial. Escape from a focused action
+returns focus to the trigger. Use `ItemId` to request focus on a visible
+action or read its control bounds.
 
 ## See also
 

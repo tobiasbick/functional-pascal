@@ -10,7 +10,7 @@ uses Fpas.Ui.Elements as E;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable control identity.
-// - `Steps`: Nonempty sequence of literal captions.
+// - `Steps`: Nonempty sequence of literal captions. Use an empty caption for an unlabeled step.
 // - `Current`: Zero-based step in progress, or the step count when all are complete.
 // ## Returns
 // A graphical progress display driven by the model.

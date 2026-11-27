@@ -30,7 +30,7 @@ begin
   end if;
 end procedure;
 
-// Checks a filter bar and reserves its derived terminal control identities.
+// Checks a filter bar and reserves its derived control identities.
 // ## Parameters
 // - `Id`: Stable control identity.
 // - `Fields`: Available fields in mask order.
@@ -58,38 +58,47 @@ begin
   const Search: string? := Current.Search;
   if Search <> null then
     TextBuffer(Search, Capacity, 65536, At + '/search');
-    if Terminal then
-      if Search.Contains(#10) or Search.Contains(#13) then
-        R.Reject(At, 'A filter search requires a single-line value.');
-      end if;
-
-      discard Identify(Id + '/search', At + '/search');
+    if Terminal and (Search.Contains(#10) or Search.Contains(#13)) then
+      R.Reject(At, 'A filter search requires a single-line value.');
     end if;
+
+    discard Identify(Id + '/search', At + '/search');
   end if;
   const Add: string := Id + '/add';
-  const HasFields: bool := Sys.Array.Exists of Filters.Field(
-    Fields, function(Field: Filters.Field): bool => Field.Values.Length > 0
-  );
-  if Terminal and HasFields then
+  const HasFields: bool := if Terminal then
+    Sys.Array.Exists of Filters.Field(
+      Fields, function(Field: Filters.Field): bool => Field.Values.Length > 0
+    )
+  else
+    Fields.Length > 0
+  end if;
+  if HasFields then
     discard Identify(Add, At + '/add');
   end if;
 
-  if Terminal and (HasFields or Search <> null) then
+  if HasFields or Search <> null then
     discard Identify(Id + '/clear', At + '/clear');
   end if;
 
   for Index: int := 0 to Fields.Length - 1 do
     const Field: Filters.Field := Fields[Index];
     R.CheckText(Field.Name, At + '/name');
-    R.CheckText(Field.Icon, At + '/icon');
+    R.CheckText(Field.Icon ?? '', At + '/icon');
     if Field.Values.Length > 32 or (Field.Values.Length < 32
       and cast Current.Selected[Index] as ulong >= (1UL shl Field.Values.Length))
     then
       R.Reject(At, 'A filter mask must name available values.');
     end if;
     const Path: string := Add + '/field/' + Index.ToString(Culture.CultureInfo.InvariantCulture);
-    if Terminal and Field.Values.Length > 0 then
-      discard Identify(Path, At + '/name');
+    if Terminal then
+      if Field.Values.Length > 0 then
+        discard Identify(Path, At + '/name');
+      end if;
+    else
+      discard Identify(
+        Id + '/chip/' + Index.ToString(Culture.CultureInfo.InvariantCulture),
+        At + '/chip'
+      );
     end if;
 
     for Option: int := 0 to Field.Values.Length - 1 do

@@ -34,6 +34,7 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
+| `Id` | Stable ID for one sidebar and its CUI selection group. |
 | `ActiveKey` | A destination key or null for no active destination. |
 | `Title / GapBefore` | Use an empty title to omit the heading. GapBefore defaults to 0. Positive spacing requires GUI. |
 | `Icon / Badge` | Both empty by default. GUI supports CUI icons. Both hosts show badges. |
@@ -45,11 +46,16 @@ Click a destination or activate it with Enter or Space while it has focus. The s
 within the sidebar. Page Up/Page Down move by a page and Home/End move to the
 first or last enabled destination. The scroll view reveals the focused row.
 
+Sections in one sidebar share the selection highlight. Use separate sidebars
+with distinct IDs and active keys for independent highlights.
+
 ## Appearance controls
 
 The gallery places a segmented Light and Dark control and eight canvas
 swatches under the destinations. The appearance and accent belong to
 the shared model and drive both the sidebar and the narrow drawer.
+The swatches read the active CUI palette when they paint. A ring marks
+the selected accent.
 
 ![Light appearance and neutral accent in the gallery sidebar](images/sidebar-appearance.png)
 

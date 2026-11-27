@@ -32,13 +32,21 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Value` | A System.DateOnly, or null for an empty field. |
-| `Label / Placeholder` | Empty. |
-| `Width` | 0 selects CUI's default width. |
+| `Label` | Empty omits the caption above the field. |
+| `Placeholder` | Null uses “Pick a date”. An empty string omits the placeholder. |
+| `Width` | Content uses CUI's default. Fill, Fixed, and Percent select the native width. |
 | `Enabled` | true. |
 
 ## Interaction
 
-Click the field or press Enter while it has focus. Choose a day to propose a date and close the popup. Escape dismisses the calendar and restores focus to the field. Browsing months or years keeps the selected date. The model can clear the field by passing null.
+Click the field or press Enter or Space while the field has focus.
+Choose a day to propose a date and close the popup. Escape dismisses the
+calendar and restores focus to the field. Browsing months or years keeps the
+selected date. Set the model value to null to clear the field.
+
+With Content width, a labeled date field fills its container. An unlabeled
+date field has a preferred width of 220 logical units. For weighted growth,
+use `Elements.Size` with `AxisSize.Grow`.
 
 ## See also
 
@@ -46,6 +54,7 @@ Click the field or press Enter while it has focus. Choose a day to propose a dat
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/DatePickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/PickerFields.fpas)
 - [Calendar](calendar.md)
+- [Sizing and units](../../layout/sizing.md)
 - [Inputs](README.md)
 
 ## Source files

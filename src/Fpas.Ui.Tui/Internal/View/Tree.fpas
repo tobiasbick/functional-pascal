@@ -102,8 +102,8 @@ public type ModalOptions = record
   public Title: string;
   // Text below the title.
   public Description: string;
-  // Preferred width or docked extent in logical points.
-  public Size: int;
+  // Preferred width or docked extent in logical units.
+  public Size: float;
   // Null centers the panel; otherwise it docks at the selected edge.
   public Edge: Sheets.Side?;
   // The control to focus on opening.
@@ -270,7 +270,7 @@ public type Element of TMsg = variant
   // Fill the allocated cell surface with an image and register its input mapper.
   CellGrid(Id: string; Content: Grids.Image?; Changed: function(Grids.Event): TMsg);
   // Animated cell glyph with resolved dimensions and colors.
-  Spinner(Frames: string; Ink: Color.Color; Inverse: bool);
+  Spinner(Frames: string; Ink: Color.Color);
   // Compact plot with one sample per cell at its natural width.
   Sparkline(Values: array of float; Width: int; Fill: bool; Ink: Color.Color);
   // Paint a determinate progress track and optional caption.

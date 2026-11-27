@@ -10,6 +10,7 @@ Use a ruler slider to move a measurement tape under a fixed marker. The gallery 
 unit Docs.Ui.Pickers.RulerSlider;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 uses Fpas.Ui.Widgets.Inputs.RulerSliders as W;
 
 // Builds the ruler slider example.
@@ -21,7 +22,8 @@ public function View(Temperature: float): E.Element of float;
 begin
   return W.RulerSlider of float('picker-temperature', 'Temperature', Temperature, 10.0F, 30.0F,
     function(Value: float): float => Value,
-    new W.Options(Step := 0.5F, MajorEvery := 4, Spacing := 14.0F, DecimalPlaces := 1, UnitLabel := '°C'));
+    new W.Options(Step := 0.5F, MajorEvery := 4, Spacing := 14.0F,
+      Format := new Charts.ValueFormat(DecimalPlaces := 1), UnitLabel := '°C'));
 end function;
 
 end unit;
@@ -33,13 +35,17 @@ end unit;
 | --- | --- |
 | `Value / Minimum / Maximum` | Finite value within increasing, inclusive bounds. |
 | `Step / MajorEvery` | 1 / 10. The step is the value per tick and MajorEvery counts ticks between labels. |
-| `Spacing / Width` | 9 / 0 logical points. Zero width fills available space. |
-| `DecimalPlaces / UnitLabel` | 0 / empty. Precision accepts 0 through 6. |
-| `Enabled` | true. |
+| `Spacing` | 9 logical units between ticks. Use at least one logical unit. |
+| `Width` | Fill. Content also fills the available width. Use fixed or percentage widths to size the tape. |
+| `Format` | `null` displays zero fractional digits. A [value format](../charts/README.md#value-format) applies to both the measurement and the tick labels. |
+| `UnitLabel` | `null` omits the caption. An empty string keeps the caption space. |
+| `Enabled` | `true`. |
 
 ## Interaction
 
-Drag the tape, scroll over it or use the arrow keys while it has focus. Shift with an arrow moves one major tick interval. Apply the proposed measurement in the model.
+Drag or scroll over the tape to move between ticks. Use the arrow keys
+while the tape has focus. Shift with an arrow moves one major tick
+interval. Apply the proposed measurement in the model.
 
 ## See also
 

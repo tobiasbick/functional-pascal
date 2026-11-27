@@ -31,12 +31,22 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Json` | Pass source text. CUI parses the document and displays errors in place. |
-| `ExpandDepth / MaxHeight` | Both zero. Zero uses the native initial expansion or leaves the height unlimited. |
+| `ExpandDepth` | Zero uses CUI's two-level default. One expands only the root container. |
+| `MaxHeight` | Zero leaves the height to the enclosing layout. A positive value caps the viewport in logical units. |
 
 ## Interaction
 
-Click an object or array brace to fold or unfold it. Folded containers show
-the number of items. CUI keeps that expansion state for the mounted widget.
+Click an object or array row to fold or unfold it. Folded objects show the
+number of keys. Folded arrays show the number of items. CUI applies the
+initial depth once and preserves folding by position for the mounted
+widget. Use a new ID to start with the initial depth for another document.
+
+Scroll vertically when the content exceeds the viewport height. If the
+document shrinks while scrolled, the host requests a frame to clamp the
+scroll position. [CUI-065](../../../future/cui-upstream-bugs.md#cui-065)
+
+The `json-view` snapshot reports `Value` as `True` for a parsed
+document or `False` for an error.
 
 ![JSON parse error in the FPAS gallery](images/json-viewer-error.png)
 

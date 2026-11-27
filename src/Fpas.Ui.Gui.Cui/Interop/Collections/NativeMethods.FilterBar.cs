@@ -11,7 +11,7 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial int FilterBar(nint context, string id,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] names,
-        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] icons,
+        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string?[] icons,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] values,
         int* counts, int count, uint* selected, byte* search, int capacity, int enabled, int focus, int* parts);
 }

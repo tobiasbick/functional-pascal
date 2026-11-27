@@ -9,12 +9,12 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 public type Options = record
   // Preferred position relative to the trigger. CUI flips it to fit.
   public Position: M.Placement := M.Placement.BottomStart;
-  // Width in logical points. Zero sizes to the content and anchor.
-  public Width: int := 0;
-  // Inset in logical points. Zero uses CUI's default of 16.
-  public Padding: int := 0;
-  // Space between children in logical points. Zero uses CUI's default of 10.
-  public Gap: int := 0;
+  // Width in logical units. Zero sizes to the content and anchor.
+  public Width: float := 0.0F;
+  // Inset in logical units. Zero uses CUI's default of 16.
+  public Padding: float := 0.0F;
+  // Space between children in logical units. Zero uses CUI's default of 10.
+  public Gap: float := 0.0F;
 end record;
 
 // Attaches a model-controlled, nonmodal panel to a button.
@@ -24,7 +24,7 @@ end record;
 // ## Parameters
 // - `Id`: Stable panel identity.
 // - `Trigger`: Button that anchors the panel. Its activation may toggle Open.
-// - `Content`: Panel contents, including any actions that close it.
+// - `Children`: Direct panel children in layout order, including any actions that close it.
 // - `Open`: Whether the model opens the panel.
 // - `OnDismiss`: Proposed message on Escape or a press outside.
 // - `Settings`: Optional placement and sizing.
@@ -33,7 +33,7 @@ end record;
 public function Popover of TMsg(
   Id: string;
   Trigger: E.Element of TMsg;
-  Content: E.Element of TMsg;
+  Children: array of E.Element of TMsg;
   Open: bool;
   OnDismiss: TMsg;
   Settings: Options? := null
@@ -43,7 +43,7 @@ begin
   return (E.Element of TMsg).Popover(
     Id,
     Trigger,
-    Content,
+    Children,
     Open,
     OnDismiss,
     Settings ?? new Options()

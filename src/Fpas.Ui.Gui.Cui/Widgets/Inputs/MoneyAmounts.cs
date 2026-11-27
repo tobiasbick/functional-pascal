@@ -16,7 +16,11 @@ internal static class MoneyAmounts
             throw new ArgumentException("The amount must fit the selected fractional precision without rounding.", nameof(value));
     }
 
-    internal static string Format(decimal value, int places) => value.ToString("N" + places.ToString(Culture), Culture);
+    internal static string Format(decimal value, int places, bool editing = false)
+    {
+        if (editing && value == 0) return "";
+        return value.ToString((editing ? "F" : "N") + places.ToString(Culture), Culture);
+    }
 
     internal static bool TryParse(string text, int places, out decimal value)
     {

@@ -2,10 +2,15 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Conversation.ChatMessage;
 
+uses Fpas.Ui.Gui.Cui.Widgets.Display as CuiDisplay;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Widgets.Display.Markdown as Markdown;
 uses Fpas.Ui.Widgets.Conversation.ChatMessages as W;
+uses Fpas.Ui.Widgets.Display.Markdowns as D;
+
+uses System as Sys;
 
 // Draws a native conversation bubble.
 // ## Type parameters
@@ -15,21 +20,38 @@ uses Fpas.Ui.Widgets.Conversation.ChatMessages as W;
 // - `Id`: Stable widget identity.
 // - `Text`: Message body.
 // - `Settings`: Native options.
+// - `OnMarkdown`: Optional mapper for Markdown messages.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
   Id: string;
   Text: string;
-  Settings: W.Options
+  Settings: W.Options;
+  OnMarkdown: Sys.Func of (D.Event, TMsg)?
 );
 begin
   const Role: string := 'chat-message';
   const Token: string := C.Token(Role, Id);
   const Flags: int := Enc.Bits(Settings.Mine, 1) + Enc.Bits(Settings.Grouped, 2) +
-    Enc.Bits(Settings.LastInGroup, 4) + Enc.Bits(Settings.Markdown, 8);
-  Frame.Window.ChatMessage(
+    Enc.Bits(
+    Settings.LastInGroup,
+    4
+  ) + Enc.Bits(Settings.Markdown, 8) + Enc.Bits(OnMarkdown <> null, 16);
+  const Result: CuiDisplay.CuiMarkdownEvent := Frame.Window.ChatMessage(
     Token, Text, Settings.Author, Settings.Time, Settings.Status,
     Settings.Avatar, Flags, Frame.AcceptInput
   );
+  if Frame.AcceptInput then
+    case OnMarkdown of
+      when is Sys.Func of (D.Event, TMsg) as Changed:
+        Markdown.Report of TMsg(
+          Frame,
+          Result,
+          function(Event: D.Event): TMsg => Changed.Invoke(Event)
+        );
+      else
+    end case;
+  end if;
+
   P.Root of TMsg(Frame, Id, Role, Text, false, '');
 end procedure;
 

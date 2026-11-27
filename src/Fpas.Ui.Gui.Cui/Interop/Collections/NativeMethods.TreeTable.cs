@@ -43,5 +43,5 @@ internal static partial class NativeMethods
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] labels,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] icons,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] shortcuts,
-        int* flags, int count, int* nodes, out int open, out int highlighted, out uint owner);
+        NativeMenuRow* rows, int count, int* nodes, out int open, out int highlighted, out uint owner);
 }

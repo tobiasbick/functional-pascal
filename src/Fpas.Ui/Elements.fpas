@@ -265,7 +265,10 @@ public type Element of TMsg = variant
   // Display text.
   Label(Text: string);
   // Static text with an explicit native typeface, size and color.
-  FormattedText(Text: string; Font: Motion.Font; Size: float; Color: G.Color; Settings: Texts.Options; NoWrap: bool);
+  FormattedText(
+    Text: string; Font: G.Font; Size: float; Color: G.Color; Settings: Texts.Options;
+    NoWrap: bool; Width: L.Extent; LineHeight: float; Tabular: bool
+  );
   // Separate adjacent content, with an optional caption.
   Separator(Title: string);
   // Activate a button with model-owned presentation and input settings.
@@ -302,11 +305,11 @@ public type Element of TMsg = variant
   // Foreground content with native swipe actions on either side.
   SwipeRow(Id: string; Content: Element of TMsg; Left: array of Swipe.Item; Right: array of Swipe.Item; OnChoose: function(Swipe.Side, int): TMsg; Settings: Swipe.Options);
   // Propose a changed model-owned checkbox value.
-  CheckboxAction(Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool; Indeterminate: bool; HideLabel: bool);
+  CheckboxAction(Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg; Description: string?; Enabled: bool; Indeterminate: bool; HideLabel: bool);
   // Propose a changed model-owned switch value.
-  SwitchAction(Id: string; Label: string; On: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool);
+  SwitchAction(Id: string; Label: string; On: bool; OnChange: function(bool): TMsg; Description: string?; Enabled: bool; HideLabel: bool);
   // Propose selecting one radio row.
-  RadioAction(Id: string; Label: string; Selected: bool; OnSelect: function(): TMsg; Description: string; Enabled: bool);
+  RadioAction(Id: string; Label: string; Selected: bool; OnSelect: function(): TMsg; Description: string?; Enabled: bool);
   // Select one radio row in positional order.
   Radios(Id: string; Items: array of RadioGroups.Item; Selected: int; OnChange: function(int): TMsg; Enabled: bool; Gap: L.Spacing);
   // Select one card through the native CUI grid.
@@ -330,7 +333,7 @@ public type Element of TMsg = variant
   // A native histogram with an adjustable range.
   HistogramSlider(Id: string; Label: string; Bins: array of float; Value: RangeSliders.Interval; Minimum: float; Maximum: float; OnChange: function(RangeSliders.Interval): TMsg; Settings: Histograms.Options);
   // Toggle an independent graphical selection.
-  ChipAction(Id: string; Label: string; Selected: bool; OnChange: function(bool): TMsg; Icon: string; Enabled: bool);
+  ChipAction(Id: string; Label: string; Selected: bool?; OnChange: function(bool?): TMsg; Icon: string?; Enabled: bool);
   // Select a graphical whole-star rating.
   RatingAction(Id: string; Label: string; Value: int; OnChange: function(int): TMsg; Maximum: int; Enabled: bool; StarSize: float);
   // Select a tab in a strip.
@@ -400,7 +403,7 @@ public type Element of TMsg = variant
   // Lay actions out in CUI's right-aligned footer.
   ActionFooter(Children: array of Element of TMsg);
   // Attach a model-controlled floating view to a button.
-  Popover(Id: string; Trigger: Element of TMsg; Content: Element of TMsg; Open: bool; OnDismiss: TMsg; Settings: Popovers.Options);
+  Popover(Id: string; Trigger: Element of TMsg; Children: array of Element of TMsg; Open: bool; OnDismiss: TMsg; Settings: Popovers.Options);
   // Ask for confirmation at an existing button.
   ConfirmPopover(Id: string; Trigger: Element of TMsg; Open: bool; Settings: ConfirmPopovers.Options; OnConfirm: TMsg; OnDismiss: TMsg);
   // Display grouped destinations with a single model-owned active key.
@@ -444,7 +447,7 @@ public type Element of TMsg = variant
   // Display a native responsive donut and its share legend.
   DonutChart(Id: string; Values: array of float; Labels: array of string; Settings: Donuts.Options);
   // Display a native animated fraction gauge.
-  Gauge(Id: string; Label: string; Value: float; Size: float);
+  Gauge(Id: string; Label: string?; Value: float; Size: float);
   // Display a native capacity bar with patterned segments and keyboard selection.
   PatternMeter(Id: string; Parts: array of Patterns.Part; Settings: Patterns.Options);
   // Display a native metric tile.
@@ -462,13 +465,13 @@ public type Element of TMsg = variant
   // Native search and multi-value filters.
   FilterBar(Id: string; Fields: array of Filters.Field; Current: Filters.Value; Change: function(Filters.Value): TMsg; Capacity: int; Enabled: bool);
   // Virtualized native grid with lazily built cells.
-  DataGrid(Id: string; Columns: array of DataGrids.Column; Count: int; Build: function(int): DataGrids.Row of TMsg; Current: DataGrids.Value; Change: function(DataGrids.Value): TMsg; Settings: DataGrids.Options; OnDoubleClick: Sys.Func of (int, TMsg)?);
+  DataGrid(Id: string; Columns: array of DataGrids.Column; Count: int; Build: function(int): DataGrids.Row of TMsg; Current: DataGrids.Value; Change: function(DataGrids.Value): TMsg; Settings: DataGrids.Options; OnDoubleClick: Sys.Func of (int, TMsg)?; OnRowClick: Sys.Func of (int, TMsg)?);
   // Indented tree content for an existing table cell.
   TreeCell(Id: string; Label: string; Depth: int; Open: bool?; Change: Sys.Func of (bool, TMsg)?; Icon: string);
   // Virtualized native tree table with model-owned nodes.
   TreeTable(Id: string; Columns: array of DataGrids.Column; Nodes: array of TreeTables.Node; Cursor: int; Order: Tables.Sort?; Change: function(TreeTables.Change): TMsg; Settings: TreeTables.Options; Menu: Sys.Func of (int, array of Menus.Entry of TMsg)?);
   // Native drag-to-reorder list.
-  ReorderableList(Id: string; Items: array of Element of TMsg; Order: array of int; Change: function(array of int): TMsg; Enabled: bool);
+  ReorderableList(Id: string; Items: array of array of Element of TMsg; Order: array of int; Change: function(array of int): TMsg; Enabled: bool);
   // Native viewport with lazily realized rows.
   VirtualList(Id: string; Count: int; RowHeight: float; Height: L.Extent; BuildRow: function(int): Element of TMsg; Offset: float?; OnScroll: Sys.Func of (float, TMsg)?);
   // Native code block.
@@ -496,11 +499,11 @@ public type Element of TMsg = variant
   // Native CUI Gantt chart.
   Gantt(Id: string; Current: Gantts.Value; Change: function(Gantts.Event): TMsg; Settings: Gantts.Options);
   // Draws a native conversation bubble.
-  ChatMessage(Id: string; Text: string; Settings: ChatMessages.Options);
+  ChatMessage(Id: string; Text: string; Settings: ChatMessages.Options; OnMarkdown: Sys.Func of (Markdowns.Event, TMsg)?);
   // Draws a native labeled conversation divider.
   ChatDivider(Id: string; Label: string);
   // Draws the native typing indicator.
-  TypingIndicator(Id: string; Name: string);
+  TypingIndicator(Id: string; Name: string?);
   // Draws a threaded comment and reports native actions.
   Comment(Id: string; Author: string; Text: string; Current: Comments.Value; Change: function(Comments.Event): TMsg; Settings: Comments.Options);
   // Draws an overlapping native group of active and away users.
@@ -798,19 +801,26 @@ end function;
 // - `Color`: Straight-alpha text color.
 // - `Settings`: Native reading direction and text alignment.
 // - `NoWrap`: Use one line and show the full text on hover if it is truncated.
+// - `Width`: Native width for layout and text alignment.
+// - `LineHeight`: Line height multiplier, or zero for the CUI default.
+// - `Tabular`: Give digits equal advances during measurement and drawing.
 // ## Returns
 // A label for the graphical profile.
 public function FormattedText of TMsg(
   Text: string;
-  Font: Motion.Font;
+  Font: G.Font;
   Size: float;
   Color: G.Color;
   Settings: Texts.Options? := null;
-  NoWrap: bool := false
+  NoWrap: bool := false;
+  Width: L.Extent? := null;
+  LineHeight: float := 0.0F;
+  Tabular: bool := false
 ): Element of TMsg;
 begin
   return (Element of TMsg).FormattedText(
-    Text, Font, Size, Color, Settings ?? new Texts.Options(), NoWrap
+    Text, Font, Size, Color, Settings ?? new Texts.Options(), NoWrap, Width ?? L.Extent.Content,
+    LineHeight, Tabular
   );
 end function;
 

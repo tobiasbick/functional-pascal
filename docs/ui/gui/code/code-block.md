@@ -31,15 +31,43 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Language / Title` | Both empty. Empty Language draws plain text. |
-| `LineNumbers / HighlightFrom / HighlightTo` | false / 0 / 0. Set HighlightFrom to a one-based line. Use zero HighlightTo to highlight just that line. |
-| `MaxHeight / Size` | Both zero. Zero means unlimited height or the native font size. |
-| `NoHeader` | false. Set true to hide the header and copy button. |
+| `Language` | Null. CUI uses generic highlighting for null and unrecognized values. |
+| `Title` | Null. CUI uses the language as the header caption if the title is null. |
+| `LineNumbers` | False. When true, CUI numbers lines from one. |
+| `HighlightFrom / HighlightTo` | Zero / zero. Set an inclusive range of one-based lines. A zero end highlights only the line at `HighlightFrom`. |
+| `MaxHeight` | Zero. Set a positive limit on the source viewport height in logical units. |
+| `Size` | Zero. CUI uses its default font size of 13 logical units. |
+| `NoHeader` | False. True hides the header and copy button. |
+
+## Syntax languages
+
+Language names are case-sensitive. The header displays the supplied name.
+
+| Language | Names |
+| --- | --- |
+| C and C++ | `c`, `cpp`, `c++`, `h` |
+| JavaScript and TypeScript | `js`, `javascript`, `ts`, `typescript` |
+| Python | `python`, `py` |
+| Rust | `rust`, `rs` |
+| Go | `go` |
+| JSON | `json` |
+| Shell | `shell`, `sh`, `bash` |
+| SQL | `sql` |
+| Plain text | `text`, `plain` |
 
 ## Interaction
 
-The header button copies the source text. CUI scrolls code that exceeds the
-available viewport.
+Set either `Title` or `Language` to show the header and copy button. An empty
+string supplies the corresponding caption or badge with blank text. If both
+values are null, the header is omitted.
+
+Click the copy button or activate it with Enter or Space. The button copies
+the complete source with its original whitespace. Use `CopyId(Id)` to
+address the button for focus or inspection.
+
+Long lines scroll horizontally. Code taller than `MaxHeight` scrolls
+vertically. When the source changes size, the viewport keeps the offset
+within the new content bounds. The display uses four spaces for each tab.
 
 ![Highlighted SQL code block in the FPAS gallery](images/code-block-sql.png)
 

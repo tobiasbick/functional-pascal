@@ -345,7 +345,7 @@ public function Arrange of TMsg(
       when E.Element.Label(const Value: string):
         Draw(Value, Area, Clip, Style, true);
       when E.Element.Spinner(
-        const Frames: string, const Ink: G.Color, const Inverse: bool
+        const Frames: string, const Ink: G.Color
       ):
         const Bounds: F.Rect := new F.Rect(
           Area.X,
@@ -365,7 +365,6 @@ public function Arrange of TMsg(
           Frames,
           AnimatedPhase,
           Ink,
-          Inverse,
           Style,
           Theme
         );

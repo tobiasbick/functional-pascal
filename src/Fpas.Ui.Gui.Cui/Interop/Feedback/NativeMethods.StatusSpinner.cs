@@ -8,5 +8,5 @@ internal static partial class NativeMethods
 {
     [LibraryImport(Library, EntryPoint = "fpas_cui_status_spinner", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int StatusSpinner(nint ui, string id, int status, float size, int palette, uint rgba, int keep);
+    internal static partial int StatusSpinner(nint ui, string id, int status, float size, int themeToken, uint rgba, int keep);
 }

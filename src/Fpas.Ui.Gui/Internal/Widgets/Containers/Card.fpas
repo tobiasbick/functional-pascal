@@ -49,7 +49,7 @@ begin
     Settings.PaddingX,
     Settings.PaddingY,
     Settings.Gap,
-    Settings.Horizontal,
+    cast Settings.Direction as int,
     cast Settings.Align as int,
     Settings.Wrap,
     Settings.Muted,
@@ -59,7 +59,7 @@ begin
     Focus
   );
   for Child: E.Element of TMsg in Children do
-    Visit(Child, Frame, Settings.Horizontal, Settings.Align);
+    Visit(Child, Frame, Settings.Direction = K.Arrangement.Row, Settings.Align);
   end for;
 
   Frame.Window.EndCard();

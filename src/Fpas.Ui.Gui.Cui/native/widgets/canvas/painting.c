@@ -3,6 +3,12 @@
 
 CUI_API float fpas_cui_canvas_font_scale(cui_ctx *ui) { return cui_theme_get(ui)->font_scale; }
 
+/** Resolves a color token against the native palette at paint time. */
+uint32_t fpas_cui_canvas_color(cui_ctx *ui, int token) {
+    const cui_color c = cui_token_color(ui, (cui_token)token);
+    return (uint32_t)c.r | ((uint32_t)c.g << 8) | ((uint32_t)c.b << 16) | ((uint32_t)c.a << 24);
+}
+
 typedef struct { fpas_media_image *items; int count, capacity; } fpas_canvas_images;
 
 static void fpas_canvas_images_free(cui_ctx *ui, void *data) {

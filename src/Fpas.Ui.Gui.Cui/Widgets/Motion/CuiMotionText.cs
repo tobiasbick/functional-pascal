@@ -12,7 +12,7 @@ public sealed partial class CuiWindow
         CheckFeedbackNumber(value.Size, nameof(value));
         CheckFeedbackNumber(value.Speed, nameof(value));
         CheckFeedbackNumber(value.Delay, nameof(value));
-        if (value.Font is < 0 or > 3 || value.Color.Palette is < -1 or > 6)
+        if (value.Font is < 0 or > 3 || !value.Color.IsValid)
             throw new ArgumentOutOfRangeException(nameof(value));
         return new() { Font = value.Font, WidthKind = value.WidthKind, Width = value.Width,
             Size = value.Size, Speed = value.Speed, Delay = value.Delay,

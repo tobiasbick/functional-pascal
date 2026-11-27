@@ -40,6 +40,8 @@ Supply one to 32 choices and a model-owned, zero-based selected index. Tab
 moves focus. Left and Right propose the adjacent choice without wrapping.
 Click, Enter or Space chooses the focused segment. Activating the selected
 segment leaves the model alone.
+Supply a nonempty label and glyph for an icon-only choice.
+Use `SegmentedControls.ItemId` to target a segment in a focus request.
 
 ## See also
 

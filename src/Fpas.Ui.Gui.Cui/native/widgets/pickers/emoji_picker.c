@@ -6,9 +6,11 @@ static int fpas_emoji_part(cui_ctx *ui, cui_id key, int first) {
     return node < first ? -1 : node;
 }
 
+/** Draws the picker and tracks its optional parts under stable identities. */
 const char *fpas_cui_emoji_picker(cui_ctx *ui, const char *id, char *recent, size_t capacity,
-    int *tone, float width, float height, float size, const char *placeholder, const char *empty_text,
-    const char *hint, int search, int preview, int tone_selector, int enabled, int focus, int *nodes) {
+    int *tone, int width_kind, float width, float height, float size, const char *placeholder,
+    const char *empty_text, const char *hint, const char *const *group_names,
+    int search, int preview, int tone_selector, int enabled, int focus, int *nodes) {
     const cui_id key = cui_make_id(ui, id);
     const bool allowed = enabled && !cui_is_disabled(ui);
     cui_push_id(ui, id);
@@ -26,11 +28,21 @@ const char *fpas_cui_emoji_picker(cui_ctx *ui, const char *id, char *recent, siz
         }
     }
 
+    const char **names = NULL;
+    if (group_names) {
+        names = cui__frame_alloc(ui, 10 * sizeof *names);
+        for (int i = 0; i < 10; ++i) names[i] = cui__frame_strdup(ui, group_names[i], -1);
+    }
+    /* CUI-037: when the emoji cannot fit, leave history unchanged and still return the selection.
+       See docs/future/cui-upstream-bugs.md#cui-037. */
+    char short_history[sizeof((cui__em_str){0}.s)];
+    const bool small = recent && capacity > 0 && capacity < sizeof short_history;
+    if (small) memcpy(short_history, recent, strlen(recent) + 1);
     const cui_emoji_picker_opts options = {
-        .width = width > 0 ? CUI_PX(width) : CUI_FIT, .height = height, .size = size,
-        .recent = recent, .recent_cap = capacity, .tone = tone,
+        .width = fpas_extent(width_kind, width), .height = height, .size = size,
+        .recent = small ? short_history : recent, .recent_cap = capacity, .tone = tone,
         .placeholder = placeholder, .empty_text = empty_text ? cui__frame_strdup(ui, empty_text, -1) : NULL,
-        .hint = hint, .no_search = !search, .no_preview = !preview, .no_tone = !tone_selector
+        .hint = hint, .group_names = names, .no_search = !search, .no_preview = !preview, .no_tone = !tone_selector
     };
     const int first = ui->node_count;
     const cui_id scroll = ui->scroll_target;
@@ -41,6 +53,8 @@ const char *fpas_cui_emoji_picker(cui_ctx *ui, const char *id, char *recent, siz
     cui_push_disabled(ui, !enabled);
     const char *picked = cui_emoji_picker_ex(ui, id, &options);
     cui_pop_disabled(ui);
+    if (small && picked && strlen(picked) < capacity)
+        memcpy(recent, short_history, strlen(short_history) + 1);
     if (!allowed) ui->scroll_target = scroll;
     if (allowed && !search && ui->focus == search_key) ui->focus = grid;
 

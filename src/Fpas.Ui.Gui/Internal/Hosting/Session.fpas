@@ -83,6 +83,7 @@ requires Capacity > 0;
       PendingToasts.Clear();
       ActiveToasts.Clear();
       PendingFrames.Clear();
+      ScrollTargets.Clear();
       Window.WakeWhenCompleted(Completion);
       discard Window.TryWake();
     end if;
@@ -186,7 +187,8 @@ requires Capacity > 0;
       ObserveTransitions := ObserveTransitions,
       CompletedAnimations := CompletedAnimations,
       PreviousFocus := PreviousFocus,
-      PreserveCanvasFocus := PreserveCanvasFocus
+      PreserveCanvasFocus := PreserveCanvasFocus,
+      ScrollTargets := ScrollTargets
     );
   end function;
 
@@ -220,6 +222,7 @@ requires Capacity > 0;
       Cleanup = null and not Accept
     );
     P.Draw of TMsg(State);
+    ScrollTargets.Clear();
     KeyBindings.Collect of TMsg(Window, Bindings, Accept, State.Messages);
     if Accept then
       Focus.Clear();
@@ -407,7 +410,7 @@ requires Capacity > 0;
         Bindings := KeyBindings.Prepare of (TModel, TMsg)(Model, BindingsFor);
         CurrentTheme := ThemeFor(Model, SystemAppearance);
 
-        ThemeApplication.Apply(Window, CurrentTheme);
+        ThemeApplication.Apply(Window, CurrentTheme, Prepared <> null);
         Candidate := V.Prepare of TMsg(
           View(Model, Sizing.Viewport(Size), CurrentTheme),
           V.Target.Graphical,
@@ -470,11 +473,15 @@ begin
   const Focus: Generic.Queue of string := new Generic.Queue of string();
   const PendingToasts: Generic.Queue of Toasts.Request of TMsg := new Generic.Queue of Toasts.Request of TMsg();
   const PendingFrames: Generic.Queue of float := new Generic.Queue of float();
+  const ScrollTargets: Generic.Dictionary of (string, float) := new Generic.Dictionary of (string, float)(
+    Sys.StringComparer.Ordinal
+  );
   const Services: Requests.State of TMsg := new Requests.State of TMsg(
     Window,
     Pending,
     PendingToasts,
-    PendingFrames
+    PendingFrames,
+    ScrollTargets
   );
   const ActiveToasts: Generic.Dictionary of (int, Toasts.Request of TMsg) := new Generic.Dictionary of (int, Toasts.Request of TMsg)();
   const Modals: Generic.Dictionary of (string, string) := new Generic.Dictionary of (string, string)();

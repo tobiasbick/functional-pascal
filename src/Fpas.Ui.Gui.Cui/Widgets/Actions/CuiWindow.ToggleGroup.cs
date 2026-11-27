@@ -36,7 +36,10 @@ public sealed partial class CuiWindow
         for (int index = 0; index < count; index++)
         {
             string label = labels[index];
-            Utf8.Validate(label, nameof(labels));
+            if (iconOnly && icons is not null && icons[index] is { Length: > 0 })
+                CheckTooltipText(label, "", nameof(labels));
+            else
+                Utf8.Validate(label, nameof(labels));
             if (label.Length == 0 || label.Contains('\n') || label.Contains('\r'))
                 throw new ArgumentException("Supply single-line accessible labels.", nameof(labels));
             if (selected[index]) mask |= 1u << index;

@@ -20,10 +20,6 @@ end record;
 
 // Messages handled by this gallery feature.
 public type Msg = variant
-  // Preview archiving a message and offer an Undo action.
-  ArchiveMessage;
-  // Handle the timed toast's Undo action.
-  UndoArchive;
   // Open or close the sheet preview.
   SetSheet(Open: bool);
   // Open or close the Edit profile dialog.

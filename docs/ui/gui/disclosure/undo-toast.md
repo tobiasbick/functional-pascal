@@ -29,7 +29,7 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `ActionLabel / OnAction` | Supply both. The caption limit is 47 UTF-8 bytes and the reserved delimiter is ##. |
+| `ActionLabel / OnAction` | Supply a caption and a message factory to implement Undo. The caption limit is 47 UTF-8 bytes. CUI reserves `##`. |
 | `ShowTimer` | false. Set true for the draining line. |
 | `Duration` | 0 uses CUI's six-second default with the timer. Set a positive value for another lifetime. |
 

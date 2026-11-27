@@ -3,13 +3,13 @@
 unit GuiGallery.Pages.Overview.Widgets.Team;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
 uses Fpas.Ui.Widgets.Media.Avatars as Avatars;
-uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses Gallery.Shared.Strings as Strings;
@@ -83,10 +83,10 @@ begin
           E.Column of State.Msg(
             new L.Flow(Gap := G.Points(1), Clip := false),
             E.FormattedText of State.Msg(
-              Item.Name, Motion.Font.Medium, 0.0F, Colors.Foreground, NoWrap := true
+              Item.Name, Graphics.Font.Medium, 0.0F, Colors.Foreground, NoWrap := true
             ),
             E.FormattedText of State.Msg(
-              Item.Email, Motion.Font.Body, 12.0F, Colors.TextSecondary, NoWrap := true
+              Item.Email, Graphics.Font.Body, 12.0F, Colors.TextSecondary, NoWrap := true
             )
           ),
           Fill

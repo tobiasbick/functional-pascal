@@ -4,23 +4,69 @@ unit Fpas.Ui.Widgets.Charts.Charts;
 
 uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
+// How CUI writes a floating-point value.
+public type ValueNotation = enum: byte
+  // Fixed decimal notation.
+  Fixed;
+  // Decimal notation with an exponent.
+  Scientific;
+  // Use fixed or scientific notation according to the value and precision.
+  General;
+  // Hexadecimal notation with a binary exponent.
+  Hexadecimal;
+end enum;
+
+// Sign for a nonnegative formatted value.
+public type ValueSign = enum: byte
+  // Omit the sign for nonnegative values.
+  NegativeOnly;
+  // Show a plus sign for nonnegative values.
+  Always;
+  // Reserve a space for the sign of a nonnegative value.
+  Space;
+end enum;
+
+// Padding for a fixed minimum number width.
+public type ValuePadding = enum: byte
+  // Add spaces before the value.
+  LeadingSpaces;
+  // Add spaces after the value.
+  TrailingSpaces;
+  // Add zeros after the sign and any numeric prefix.
+  LeadingZeros;
+end enum;
 
 // Safe native numeric formatting. Percent signs in literals remain literal.
 public type ValueFormat = record
-  // Decimal places, from zero through six.
-  public DecimalPlaces: int := 0;
+  // Precision from zero through 999. Null uses the notation's native precision.
+  // General notation uses significant digits. Other notations use fractional digits.
+  public DecimalPlaces: int? := 0;
   // Literal text before the number.
   public Prefix: string := '';
   // Literal text after the number.
   public Suffix: string := '';
+  // Native floating-point notation.
+  public Notation: ValueNotation := ValueNotation.Fixed;
+  // Minimum field width in characters, from zero through 999.
+  public FieldWidth: int := 0;
+  // How to fill unused field width.
+  public Padding: ValuePadding := ValuePadding.LeadingSpaces;
+  // Which sign to show for nonnegative numbers.
+  public Sign: ValueSign := ValueSign.NegativeOnly;
+  // Retain the decimal point, and retain trailing zeros in general notation.
+  public Alternate: bool := false;
+  // Use uppercase exponent and hexadecimal letters.
+  public Uppercase: bool := false;
 end record;
 
 // Chart colors resolve against the current native theme every frame.
 public type Color = variant
   // Select the series color by its position.
   Automatic;
-  // Select a native theme series color, numbered one through six.
-  Palette(Index: int);
+  // Select a semantic color from the active theme.
+  Theme(Token: Themes.ColorToken);
   // Use an explicit straight-alpha color.
   Rgba(Value: G.Color);
 end variant;
@@ -41,17 +87,17 @@ public type Item = record
   public Label: string;
   // Nonnegative finite amount.
   public Value: float;
-  // Native palette entry or explicit fill.
+  // Theme token or explicit fill.
   public Color: Color := Color.Automatic;
 end record;
 
 // Native reference-line and point kinds.
 public type AnnotationKind = enum: byte
-  // Vertical line at a sample-index coordinate.
+  // Vertical line at an X coordinate.
   X;
   // Horizontal line at a value coordinate.
   Y;
-  // Mark a sample-index/value pair.
+  // Mark an X coordinate and value.
   Point;
 end enum;
 
@@ -59,16 +105,18 @@ end enum;
 public type Annotation = record
   // Geometry kind.
   public Kind: AnnotationKind;
-  // Sample-index coordinate.
+  // Sample index or coordinate in the chosen X interval.
   public X: double := 0.0;
   // Value coordinate.
   public Y: double := 0.0;
-  // Literal caption.
-  public Label: string := '';
-  // Literal second line; empty omits it.
-  public Detail: string := '';
-  // Use the theme accent.
+  // Literal caption. Null omits this line.
+  public Label: string? := null;
+  // Muted second line for vertical lines and points. Null omits this line.
+  public Detail: string? := null;
+  // Use the theme accent when Color is automatic.
   public Accent: bool := false;
+  // Automatic color, a theme token or an explicit color for the shape and caption.
+  public Color: Color := Color.Automatic;
 end record;
 
 // Inclusive value-axis limits. Minimum must be less than Maximum.
@@ -85,7 +133,7 @@ public type Options = record
   public Width: L.Extent := L.Extent.Fill;
   // Plot height; zero selects the native default of 220.
   public Height: float := 0.0F;
-  // Optional sample captions. An empty array uses native index captions.
+  // Optional captions in sample order. An empty array omits X-axis captions.
   public Labels: array of string := [];
   // Null selects CUI's automatic numeric formatting.
   public Format: ValueFormat? := null;
@@ -105,6 +153,10 @@ public type Options = record
   public Range: ValueRange? := null;
   // Native axis lines and point annotations.
   public Annotations: array of Annotation := [];
+  // X coordinate of the first sample. Equal bounds select zero-based sample indices.
+  public XMinimum: double := 0.0;
+  // X coordinate of the last sample. Use equal bounds or an increasing interval.
+  public XMaximum: double := 0.0;
 end record;
 
 end unit;

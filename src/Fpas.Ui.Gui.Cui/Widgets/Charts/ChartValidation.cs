@@ -11,12 +11,14 @@ public sealed partial class CuiWindow
         if (format is null) return;
         Utf8.Validate(format.Prefix, nameof(format));
         Utf8.Validate(format.Suffix, nameof(format));
-        if (format.DecimalPlaces is < 0 or > 6) throw new ArgumentOutOfRangeException(nameof(format));
+        if (format.DecimalPlaces is < 0 or > 999 || format.FieldWidth is < 0 or > 999 ||
+            !Enum.IsDefined(format.Notation) || !Enum.IsDefined(format.Padding) || !Enum.IsDefined(format.Sign))
+            throw new ArgumentOutOfRangeException(nameof(format));
     }
 
     private static void CheckChartColor(CuiChartColor color)
     {
-        if (color.Palette is < -1 or > 6) throw new ArgumentOutOfRangeException(nameof(color));
+        if (!color.IsValid) throw new ArgumentOutOfRangeException(nameof(color));
     }
 
     private static void CheckChartOptions(CuiChartOptions options)
@@ -24,7 +26,8 @@ public sealed partial class CuiWindow
         CheckExtent(options.WidthKind, options.Width, nameof(options));
         if (!float.IsFinite(options.Height) || options.Height < 0 ||
             !float.IsFinite(options.Minimum) || !float.IsFinite(options.Maximum) ||
-            options.Minimum > options.Maximum)
+            options.Minimum > options.Maximum || !double.IsFinite(options.XMinimum) ||
+            !double.IsFinite(options.XMaximum - options.XMinimum) || options.XMaximum < options.XMinimum)
             throw new ArgumentOutOfRangeException(nameof(options));
         CheckChartFormat(options.Format);
         if (options.Labels is { } labels)
@@ -35,8 +38,9 @@ public sealed partial class CuiWindow
                 ArgumentNullException.ThrowIfNull(item);
                 if (item.Kind is < 0 or > 2 || !double.IsFinite(item.X) || !double.IsFinite(item.Y))
                     throw new ArgumentOutOfRangeException(nameof(options));
-                Utf8.Validate(item.Label, nameof(options));
-                Utf8.Validate(item.Detail, nameof(options));
+                if (item.Label is not null) Utf8.Validate(item.Label, nameof(options));
+                if (item.Detail is not null) Utf8.Validate(item.Detail, nameof(options));
+                CheckChartColor(item.Color);
             }
     }
 
@@ -56,6 +60,12 @@ public sealed partial class CuiWindow
             count = Math.Max(count, item.Values.Length);
         }
         if (count == 0) return;
+        if (bars && count > 1 && options.XMaximum > options.XMinimum)
+        {
+            double halfSlot = (options.XMaximum - options.XMinimum) / (count - 1) * 0.5;
+            if (!double.IsFinite((options.XMaximum + halfSlot) - (options.XMinimum - halfSlot)))
+                throw new ArgumentOutOfRangeException(nameof(options), "The X range cannot fit the bar slots.");
+        }
         float lo = float.PositiveInfinity, hi = float.NegativeInfinity;
         for (int i = 0; i < count; i++)
         {

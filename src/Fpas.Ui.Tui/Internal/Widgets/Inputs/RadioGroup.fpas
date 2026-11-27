@@ -130,7 +130,7 @@ begin
           Variant := S.ButtonVariant.Ghost,
           NavigationGroup := Id,
           TabTarget := Target,
-          Description := Item.Description,
+          Description := Item.Description ?? '',
           ArrowFocus := false,
           FillWidth := true,
           Padding := 0,

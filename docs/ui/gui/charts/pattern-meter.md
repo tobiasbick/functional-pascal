@@ -36,15 +36,26 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Parts` | Up to 32 named nonnegative amounts with a finite sum. Color defaults to Automatic. Density 0 uses CUI's sequence. |
-| `Total / FreeLabel` | 0 uses the sum. A positive capacity can show unused space. null uses CUI's free label and an empty string hides it in the legend. |
-| `Label / Unit / Format` | Empty / empty / null. A null format uses native numeric formatting. |
-| `Grayscale / Legend / Enabled` | false / true / true. Grayscale distinguishes the parts using dot density. |
-| `Width / Height` | Fill / 0. Zero uses the native 18-point bar height. |
+| `Parts` | Up to 32 parts with nonnegative amounts and a finite sum. Each name is literal text. |
+| `Part.Color` | Automatic uses the theme's series palette. An explicit color or palette slot overrides it. |
+| `Part.Density` | Zero uses CUI's sequence of 1, 0.66, 0.42, 0.24, 0.14 and 0.08. Later parts use 0.08. Pass a fraction greater than zero to set the density. |
+| `Total` | Zero uses the sum. A larger capacity leaves unused space in the track. If the sum exceeds capacity, the bar uses the sum as its scale. |
+| `Label` | Empty omits the title. A title is literal text. |
+| `Unit` | Empty omits the suffix. A unit follows the amount with a space. |
+| `Format` | Null uses native `%g` number formatting. Supply `Charts.ValueFormat` to set decimal places and literal prefix or suffix text. |
+| `FreeLabel` | Null uses Free. An empty string omits the free-space legend entry. |
+| `Grayscale` | False. True uses the foreground color for all parts. |
+| `Legend` | True. False hides all legend entries. |
+| `Width` | Fill. Fixed and Percent specify a width. Content also uses the native fill width. |
+| `Height` | Zero uses the native bar height of 18 logical units. |
+| `Enabled` | True. False disables pointer and keyboard inspection. |
 
 ## Interaction
 
-Hover a part or its legend entry to inspect it. Tab focuses the bar. Arrow keys, Home, End and Escape select or clear a part. CUI owns this inspection state. The GUI snapshot reports the selected index, or minus one.
+Hover a part or its legend entry to inspect it. Tab focuses the bar.
+Use Left or Right to move between parts. Home and End select the first and
+last part. Escape clears the keyboard selection. CUI owns the inspection
+state. The GUI snapshot reports the shown zero-based index, or minus one.
 
 ## See also
 

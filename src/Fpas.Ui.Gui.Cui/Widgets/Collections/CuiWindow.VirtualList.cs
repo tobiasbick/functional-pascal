@@ -9,7 +9,7 @@ public sealed partial class CuiWindow
     /// <summary>Opens CUI's virtual viewport and returns its half-open row range.</summary>
     /// <param name="id">Stable list identity.</param>
     /// <param name="count">Total number of rows.</param>
-    /// <param name="rowHeight">Fixed height of each row in logical points.</param>
+    /// <param name="rowHeight">Fixed height in logical units, or zero for the native 36-unit default.</param>
     /// <param name="heightKind">Encoded viewport extent kind.</param>
     /// <param name="height">Logical viewport extent or percentage.</param>
     /// <param name="enabled">Whether the viewport accepts wheel input.</param>
@@ -22,7 +22,9 @@ public sealed partial class CuiWindow
         CheckFrame();
         CheckExtent(heightKind, height, nameof(height));
         ArgumentOutOfRangeException.ThrowIfNegative(count);
-        if (!float.IsFinite(rowHeight) || rowHeight < 1 || (double)rowHeight * count >= int.MaxValue)
+        var effectiveRowHeight = rowHeight == 0 ? 36 : rowHeight;
+        if (!float.IsFinite(effectiveRowHeight) || effectiveRowHeight < 1 ||
+            (double)effectiveRowHeight * count >= int.MaxValue)
             throw new ArgumentOutOfRangeException(nameof(rowHeight));
         if (!float.IsFinite(restoreOffset) || (restoreOffset < 0 && restoreOffset != -1))
             throw new ArgumentOutOfRangeException(nameof(restoreOffset));

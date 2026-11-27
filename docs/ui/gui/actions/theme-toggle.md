@@ -31,14 +31,17 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Enabled` | true |
-| `Appearance` | Light or Dark from the model |
+| `Id` | Nonempty stable control ID. |
+| `Appearance` | Light or Dark from the model. Resolve System before passing the value. |
+| `OnChange` | Maps the proposed opposite appearance to a message. |
+| `Enabled` | True. False disables focus and input. |
 
 ## Interaction
 
 Click, Enter or Space proposes the opposite appearance. Pass the concrete
-value the user currently sees and apply the new palette through ThemeFor.
-CUI shows a sun or moon icon for the target appearance.
+value the user currently sees. Apply the accepted change through `ThemeFor`.
+CUI shows a sun or moon icon and a tooltip for the target appearance. The
+control keeps keyboard focus when the icon and tooltip change.
 
 ## See also
 

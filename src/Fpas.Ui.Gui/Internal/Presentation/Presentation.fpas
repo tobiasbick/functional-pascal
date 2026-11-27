@@ -273,6 +273,7 @@ uses Fpas.Ui.Widgets.Conversation.Reactions as Reactions;
 uses Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks;
 uses Fpas.Ui.Widgets.Developer.JsonViews as JsonViews;
 uses Fpas.Ui.Widgets.Display.DotDisplays as DotDisplays;
+uses Fpas.Ui.Widgets.Display.Markdowns as Markdowns;
 uses Fpas.Ui.Widgets.Display.Readouts as Readouts;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
@@ -356,6 +357,7 @@ uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System as Sys;
+uses System.Collections.Generic as Collections;
 
 // Draws a prepared tree and gathers messages without running Update or effects.
 //
@@ -386,15 +388,20 @@ public procedure Draw of TMsg(State: C.State of TMsg);
     case Node of
       when E.Element.FormattedText(
         const Value: string,
-        const Font: Motion.Font,
+        const Font: G.Font,
         const FontSize: float,
         const Tint: G.Color,
         const Settings: Texts.Options,
-        const NoWrap: bool
+        const NoWrap: bool,
+        const Width: L.Extent,
+        const LineHeight: float,
+        const Tabular: bool
       ):
+        const NativeWidth: Size.NativeExtent := Size.Extent(Width);
         Current.Window.FormattedText(
           Value, cast Font as int, FontSize, CreativeParts.Pack(Tint),
-          cast Settings.ReadingDirection as int, cast Settings.Align as int, NoWrap
+          cast Settings.ReadingDirection as int, cast Settings.Align as int,
+          NoWrap, NativeWidth.Kind, NativeWidth.Value, LineHeight, Tabular
         );
         Current.Labels.Add(Value);
       when E.Element.Label(const Value: string):
@@ -807,12 +814,13 @@ public procedure Draw of TMsg(State: C.State of TMsg);
       when E.Element.ChatMessage(
         const Id: string,
         const Text: string,
-        const Settings: ChatMessages.Options
+        const Settings: ChatMessages.Options,
+        const OnMarkdown: Sys.Func of (Markdowns.Event, TMsg)?
       ):
-        ChatMessageWidget.Draw of TMsg(Current, Id, Text, Settings);
+        ChatMessageWidget.Draw of TMsg(Current, Id, Text, Settings, OnMarkdown);
       when E.Element.ChatDivider(const Id: string, const Label: string):
         ChatDividerWidget.Draw of TMsg(Current, Id, Label);
-      when E.Element.TypingIndicator(const Id: string, const Name: string):
+      when E.Element.TypingIndicator(const Id: string, const Name: string?):
         TypingIndicatorWidget.Draw of TMsg(Current, Id, Name);
       when E.Element.Comment(
         const Id: string,
@@ -1084,7 +1092,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         const Label: string,
         const Checked: bool,
         const Change: function(bool): TMsg,
-        const Description: string,
+        const Description: string?,
         const Enabled: bool,
         const Indeterminate: bool, const HideLabel: bool
       ):
@@ -1101,12 +1109,12 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         );
       when E.Element.SwitchAction(
         const Id: string, const Label: string, const On: bool, const Change: function(bool): TMsg,
-        const Description: string, const Enabled: bool
+        const Description: string?, const Enabled: bool, const HideLabel: bool
       ):
-        Switch.Draw of TMsg(Current, Id, Label, On, Change, Description, Enabled);
+        Switch.Draw of TMsg(Current, Id, Label, On, Change, Description, Enabled, HideLabel);
       when E.Element.RadioAction(
         const Id: string, const Label: string, const Selected: bool, const Select: function(): TMsg,
-        const Description: string, const Enabled: bool
+        const Description: string?, const Enabled: bool
       ):
         RadioButton.Draw of TMsg(Current, Id, Label, Selected, Select, Description, Enabled);
       when E.Element.Radios(
@@ -1224,9 +1232,9 @@ public procedure Draw of TMsg(State: C.State of TMsg);
       when E.Element.ChipAction(
         const Id: string,
         const Label: string,
-        const Selected: bool,
-        const Change: function(bool): TMsg,
-        const Icon: string,
+        const Selected: bool?,
+        const Change: function(bool?): TMsg,
+        const Icon: string?,
         const Enabled: bool
       ):
         Chip.Draw of TMsg(Current, Id, Label, Selected, Change, Icon, Enabled);
@@ -1332,14 +1340,15 @@ public procedure Draw of TMsg(State: C.State of TMsg);
   begin
     case Node of
       when E.Element.Popover(
-        const Id: string, const Trigger: E.Element of TMsg, const Content: E.Element of TMsg,
+        const Id: string, const Trigger: E.Element of TMsg,
+        const Children: array of E.Element of TMsg,
         const Open: bool, const Dismiss: TMsg, const Settings: Popovers.Options
       ):
         PopoverWidget.Draw of TMsg(
           Current,
           Id,
           Trigger,
-          Content,
+          Children,
           Open,
           Dismiss,
           Settings,
@@ -1484,7 +1493,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         const Id: string, const Columns: array of DataGrids.Column, const Count: int,
         const Build: function(int): DataGrids.Row of TMsg, const Value: DataGrids.Value,
         const Change: function(DataGrids.Value): TMsg, const Settings: DataGrids.Options,
-        const DoubleClick: Sys.Func of (int, TMsg)?
+        const DoubleClick: Sys.Func of (int, TMsg)?, const RowClick: Sys.Func of (int, TMsg)?
       ):
         GridDataWidget.Draw of TMsg(
           Current,
@@ -1496,6 +1505,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
           Change,
           Settings,
           DoubleClick,
+          RowClick,
           Visit
         );
       when E.Element.TreeCell(
@@ -1521,8 +1531,11 @@ public procedure Draw of TMsg(State: C.State of TMsg);
           Menu
         );
       when E.Element.ReorderableList(
-        const Id: string, const Items: array of E.Element of TMsg, const Order: array of int,
-        const Change: function(array of int): TMsg, const Enabled: bool
+        const Id: string,
+        const Items: array of array of E.Element of TMsg,
+        const Order: array of int,
+        const Change: function(array of int): TMsg,
+        const Enabled: bool
       ):
         ReorderWidget.Draw of TMsg(Current, Id, Items, Order, Change, Enabled, Visit);
       when E.Element.CodeBlock(
@@ -1944,7 +1957,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         DonutChartWidget.Draw of TMsg(Current, Id, Values, Labels, Settings);
       when E.Element.Gauge(
         const Id: string,
-        const Label: string,
+        const Label: string?,
         const Value: float,
         const Diameter: float
       ):
@@ -2099,6 +2112,14 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         const Settings: L.ScrollOptions
       ):
         const Token: string := C.Token('scroll', Id);
+        if Position = null and Current.ObserveTransitions and not Current.PaintingClosed then
+          const Targets: Collections.Dictionary of (string, float)? := Current.ScrollTargets;
+          var Target: float := 0.0F;
+          if Targets <> null and Targets.Remove(Id, out Target) then
+            Current.Window.ScrollTo(Token, Target);
+          end if;
+        end if;
+
         var Before: float := 0;
         var Maximum: float := 0;
         var Mode: int := -1;

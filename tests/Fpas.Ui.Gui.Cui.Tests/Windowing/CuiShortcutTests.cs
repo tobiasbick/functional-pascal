@@ -111,14 +111,15 @@ public sealed class CuiShortcutTests
         window.SetReducedMotion(true);
         Assert.Empty(Draw(true)); Assert.Empty(Draw(false));
         Assert.Equal(new[] { 0 }, Draw(false));
+        Assert.Equal(new[] { 0 }, Draw(true, allowInOverlays: true));
 
-        int[] Draw(bool open)
+        int[] Draw(bool open, bool allowInOverlays = false)
         {
             Assert.True(window.NextFrame()); window.SetKey(56, true); window.SetKey(56, false);
             window.Text("Background");
             if ((window.BeginDialog("modal", "Dialog", "", 300, open, true, false, true, false, "close") & 1) != 0)
             { window.Text("Modal content"); window.EndDialog(); }
-            int[] result = window.ReadShortcuts([new(56, AllowWhileEditing: true)]);
+            int[] result = window.ReadShortcuts([new(56, AllowInOverlays: allowInOverlays)]);
             window.Present(); return result;
         }
     }

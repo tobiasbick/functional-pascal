@@ -37,7 +37,11 @@ begin
     ], Model.ToggleAlignment ?? [true, false, false], State.Msg.SetToggleAlignment,
     new T.Options(Exclusive := true)
   );
-  return E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true), Formats, Alignment);
+  return E.Row of State.Msg(
+    new L.Flow(Gap := G.Points(12), Wrap := true, Clip := false),
+    Formats,
+    Alignment
+  );
 end function;
 
 end unit;

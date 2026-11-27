@@ -30,13 +30,16 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Item.Value / Delta / LowerIsBetter` | Empty / 0 / false. Zero Delta hides the trend. LowerIsBetter gives decreases the success color. |
-| `Speed / Height` | Both zero. Positive Speed uses logical points per second. Zero Height uses native sizing. |
+| `Item.Value` | `null` omits the value position. An empty string keeps the position. |
+| `Item.Delta / LowerIsBetter` | 0 / false. Zero Delta hides the trend. LowerIsBetter gives decreases the success color. |
+| `Speed` | Zero uses 40 logical units per second. |
+| `Height` | Zero uses 40 logical units. |
 
 ## Interaction
 
-Hover over the ticker to pause it. Replace the list when your data changes.
-The ticker renders the supplied figures.
+Hover over the ticker to pause it. When the GUI uses reduced motion, the
+ticker stays still. Replace the list when your data changes. The ticker
+repeats the entries to fill the visible width. [CUI-073](../../../future/cui-upstream-bugs.md#cui-073)
 
 ## See also
 

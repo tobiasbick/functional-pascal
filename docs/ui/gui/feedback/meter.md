@@ -34,7 +34,10 @@ end unit;
 
 ## Interaction
 
-CUI formats the quantities and applies its warning and danger colors. A zero total shows an empty track. Usage above capacity fills the track while the displayed amounts remain accurate. The meter is read-only.
+CUI displays the used amount, total, and unit. It uses the warning color above
+75% and the danger color above 90%. A zero total shows an empty track. Usage
+above capacity fills the track and retains the reported amounts. The meter is
+read-only.
 
 ## See also
 

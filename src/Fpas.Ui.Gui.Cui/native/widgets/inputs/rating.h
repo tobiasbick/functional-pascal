@@ -6,7 +6,7 @@
  * @param ui Current UI-thread context.
  * @param id Stable rating identity.
  * @param value Current model-owned rating.
- * @param maximum Number of stars.
+ * @param maximum Native star count. Nonpositive selects five and sixteen is the limit.
  * @param enabled Whether the rating accepts pointer input.
  * @param star_size Logical edge length of each star's hit area.
  * @return Proposed rating, or minus one when unchanged. */

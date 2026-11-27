@@ -1,8 +1,8 @@
 # Breadcrumb
 
 Use `Fpas.Ui.Widgets.Navigation.Breadcrumbs.Breadcrumb` to show the current
-location and offer links to its ancestors. The original CUI gallery example
-under **Components → Navigation** shows **Home › Projects › FPas CUI › Settings**.
+location and offer links to its ancestors. See the example under **Components →
+Navigation** in the terminal gallery.
 
 ![Full breadcrumb path in the terminal gallery](../../../../examples/ui/tui/gallery/breadcrumb.png)
 

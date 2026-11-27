@@ -8,12 +8,12 @@ uses System as Sys;
 
 // Native empty-state settings.
 public type Options = record
-  // Optional CUI glyph.
-  public Icon: string := '';
-  // Optional supporting text.
-  public Description: string := '';
-  // Optional action caption. Supply a matching message factory.
-  public ActionLabel: string := '';
+  // CUI glyph. Null omits the icon area. Empty text reserves a blank icon area.
+  public Icon: string? := null;
+  // Supporting text. Null omits it. Empty text reserves a blank line.
+  public Description: string? := null;
+  // Action caption. Null omits the button. Empty text shows only its plus icon.
+  public ActionLabel: string? := null;
   // Whether the action accepts input.
   public Enabled: bool := true;
 end record;

@@ -18,7 +18,8 @@ begin
     Model.ActiveTab,
     Model.ActivePillTab,
     State.Msg.SetTab,
-    State.Msg.SetPillTab
+    State.Msg.SetPillTab,
+    Graphical := true
   );
 end function;
 

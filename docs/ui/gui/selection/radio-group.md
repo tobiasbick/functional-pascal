@@ -33,7 +33,8 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Items` | A nonempty array in display order. Each item has an optional description and is enabled by default. |
+| `Items` | A nonempty array in display order. Each item has a label and an optional description. |
+| `Item.Description / Item.Enabled` | null / true. GUI displays a blank description for an empty string. |
 | `Selected` | A zero-based index, or -1 for no selection. |
 | `Gap` | Ten logical points when omitted. |
 | `Enabled` | true for the group. |

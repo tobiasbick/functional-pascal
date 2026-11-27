@@ -6,7 +6,7 @@ namespace Fpas.Ui.Gui.Cui;
 public sealed partial class CuiWindow
 {
     /// <summary>Draws native progress through an ordered sequence of steps.</summary>
-    /// <param name="steps">Nonempty sequence of literal captions.</param>
+    /// <param name="steps">Nonempty sequence of literal captions. An empty caption leaves the step unlabeled.</param>
     /// <param name="current">Zero-based step in progress, or the count when complete.</param>
     public void Stepper(string[] steps, int current)
     {
@@ -18,7 +18,6 @@ public sealed partial class CuiWindow
         foreach (string step in steps)
         {
             Utf8.Validate(step, nameof(steps));
-            ArgumentException.ThrowIfNullOrWhiteSpace(step, nameof(steps));
         }
         NativeMethods.Stepper(context, steps, steps.Length, current);
     }

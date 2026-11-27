@@ -4,7 +4,7 @@ unit GuiGallery.Pages.Actions.View;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Actions.State as State;
@@ -20,26 +20,25 @@ uses GuiGallery.Pages.Actions.Widgets.UserMenu as UserMenu;
 uses GuiGallery.Shared.Sections as G;
 uses GuiGallery.Shared.State as Demo;
 
-// Composes the accepted examples from CUI's extended Actions page.
+// Composes the sections from CUI's extended Actions page.
 //
 // ## Parameters
 // - `Data`: Shared demo values owned by the application.
 // - `Model`: Current gallery state.
 // ## Returns
-// The implemented CUI Actions sections in their original order.
-public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
+// The direct children of the page in their original order.
+public function View(Model: State.Model; Data: Demo.Model): array of E.Element of State.Msg;
 begin
   const Delete: E.Element of State.Msg := Confirm.View();
   const Save: E.Element of State.Msg := Status.View(Model, Data);
   const Morphing: array of E.Element of State.Msg := if Model.ProjectDeleted then
     [
-      Delete, Save, E.Styled of State.Msg(E.Text of State.Msg('Project deleted'), S.Role.Muted)
+      Delete, Save, Texts.Text of State.Msg('Project deleted', Texts.Appearance.Muted)
     ]
   else
     [Delete, Save]
   end if;
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
+  return [
     G.Heading of State.Msg(
       Strings.Get('Heading.SplitButton'),
       Strings.Get('Heading.SplitButtonHint')
@@ -54,7 +53,7 @@ begin
       Strings.Get('Heading.MorphingButtons'),
       Strings.Get('Heading.MorphingButtonsHint')
     ),
-    E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true), Morphing),
+    E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true, Clip := false), Morphing),
     G.Heading of State.Msg(Strings.Get('Heading.Reactions'), Strings.Get('Heading.ReactionsHint')),
     Reactions.View(Model, Data),
     G.Heading of State.Msg(
@@ -71,7 +70,7 @@ begin
     SwipeActions.View(),
     G.Heading of State.Msg(Strings.Get('Heading.SpeedDial'), Strings.Get('Heading.SpeedDialHint')),
     SpeedDial.View(Model)
-  );
+  ];
 end function;
 
 end unit;

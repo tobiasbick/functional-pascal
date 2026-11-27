@@ -16,11 +16,22 @@ widgets require the GUI host.
 | [Ruler slider](ruler-slider.md) | Adjust a measurement against a graduated tape. |
 | [Histogram slider](histogram-slider.md) | Select a range over a distribution. |
 
+## Pickers gallery page
+
+The page puts the 320-unit language selector in a row. The two date fields
+wrap at their 300-unit widths. A separate card sizes to the inline calendar's
+two months. The Stay field and the calendar share one date range.
+
+The time fields wrap together. The date reel uses three joined wheels inside
+a card beside the time dial. The final row gives equal available width to the
+two rulers and the histogram card.
+
 ## See also
 
 - [UI handbook](../README.md)
 - [Inputs](../inputs/README.md)
 - [Pickers in the gallery](../../../../examples/ui/gui/gallery/Pages/Pickers/View.fpas)
+- [CUI gallery comparison](../../../future/cui-compare/README.md#pickers-evidence)
 
 ## Source files
 
@@ -30,7 +41,11 @@ widgets require the GUI host.
 - `examples/ui/gui/gallery/Pages/Pickers/Widgets/`
   - [DateRange.fpas](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/DateRange.fpas)
   - [RulerAndHistogram.fpas](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/RulerAndHistogram.fpas)
+  - [Time.fpas](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/Time.fpas)
   - [WheelsAndDial.fpas](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/WheelsAndDial.fpas)
 - `tests/Fixtures/gui-host/`
+  - [ActionsPickersContract.fpas](../../../../tests/Fixtures/gui-host/ActionsPickersContract.fpas)
+  - [DateRangeContract.fpas](../../../../tests/Fixtures/gui-host/DateRangeContract.fpas)
   - [PickerFieldsContract.fpas](../../../../tests/Fixtures/gui-host/PickerFieldsContract.fpas)
   - [RulerHistogramContract.fpas](../../../../tests/Fixtures/gui-host/RulerHistogramContract.fpas)
+  - [TimePickersContract.fpas](../../../../tests/Fixtures/gui-host/TimePickersContract.fpas)

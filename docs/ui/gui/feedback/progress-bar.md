@@ -33,14 +33,27 @@ end unit;
 | `Value` | A finite fraction from 0 through 1. |
 | `Label / ShowValue` | Empty / false. ShowValue displays a rounded percentage for determinate progress. |
 | `Indeterminate / Dither` | false / false. Indeterminate uses activity motion. Dither uses ordered dots for either mode. |
-| `Tone / Height` | Neutral / 0. Zero uses CUI's default track height. |
-| `Width` | Content uses CUI's full-width track. |
+| `Tone` | Neutral. CUI uses the control-on color for a solid fill and the emphasis color for dither. |
+| `Height` | 0 uses six logical units for a solid track and eight for dither. |
+| `Width` | Content uses CUI's default sizing. Fill, Fixed, and Percent set the bar and its caption row width. |
 
 ## Interaction
 
-Pass the fraction from the application model and update it when the work reports progress. Set Indeterminate when a total is unavailable. CUI paints and interpolates the bar. It has no activation action. The TUI displays a one-row track with the optional
-label and percentage above it. Fixed widths are clipped to the available cells.
+Pass the fraction from the model and update it when the work reports progress.
+Set `Indeterminate` when a total is unavailable. CUI uses a moving solid
+segment or band of dots and omits the percentage. Reduced motion holds the
+band of dots at the center. The solid segment keeps moving.
+
+CUI interpolates the determinate fill. With dither, the dots drift until the
+track is empty or full. Reduced motion holds the dots still. The GUI clips a
+solid fill to its track when the track is narrower than its height.
+
+Each bar is read-only. The TUI displays a one-row track with the optional label
+and percentage above it. Fixed widths are clipped to the available cells.
 Indeterminate mode, dither and custom track height require the GUI.
+
+Use `Elements.Size` with width growth weights to share space among widgets in a
+GUI row. [Sizing and units](../../layout/sizing.md#independent-gui-axes)
 
 ## See also
 

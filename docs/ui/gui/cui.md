@@ -52,8 +52,10 @@ frame's callbacks and surfaces deferred painting failures.
 separate X11 connection. The managed window serializes wake posting and target
 release before destroying the window. `DeferClose`, `TakeCloseRequest` and
 `WakeWhenCompleted` support close decisions and asynchronous cleanup.
-`SetTitle`, `Resize` and `RequestFrame` run on the owner thread. Frame
-requests use CUI's redraw and deadline APIs.
+`SetTitle`, `Resize` and `RequestFrame` run on the owner thread.
+`RequestFrame(0)` calls `cui_request_redraw` for the next frame. Pass a
+positive delay in seconds to call `cui_request_wakeup`. CUI uses the earliest
+pending deadline.
 
 `SetResizeRenderer` roots an owner-thread cached-view callback until
 detachment. Failures surface after the native pump returns. The callback draws
@@ -82,6 +84,9 @@ scroll viewport or scrolling box. `ScrollTo` requests an offset. `ScrollReveal`
 scrolls the least that shows a control tracked in an earlier frame. A wholly
 visible control stays in place. Header snapshots and outer layout nodes can be
 tracked separately.
+`LastRectangle` calls `cui_last_rect` during a frame. It reads the last emitted
+widget's bounds from the previous native layout. It returns a zero rectangle
+if that widget has no previous layout.
 `ForgetControl` releases retained state and owned popup or feedback state for
 disappearing controls. Private state keys stay in the native bridge. Stable
 identities are separate from literal labels, and the FPAS host maps native
@@ -134,8 +139,10 @@ and [clipboard commands](host.md#clipboard).
 
 `SetTheme` and `ReadTheme` transfer the shared semantic palette.
 `SetTheme` accepts optional metrics and `ReadThemeMetrics` returns a detached
-snapshot. `SystemDark` returns null when CUI cannot read the platform
-appearance. `FollowSystemTheme` enables native following. The FPAS host
+snapshot. Set `animate` to true to use CUI's transition when appearance or
+accent changes. `ReadTheme` returns the active palette, including colors
+between the start and target of a transition. `SystemDark` returns null when
+CUI cannot read the platform appearance. `FollowSystemTheme` enables native following. The FPAS host
 reapplies its resolved application palette after appearance changes. Reduced
 motion is controlled independently of palette changes.
 

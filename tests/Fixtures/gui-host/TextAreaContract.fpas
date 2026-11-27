@@ -57,7 +57,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
       'viewport', E.Column of Msg(
         A.TextArea of Msg(
           'area', Value, Msg.Edit,
-          new A.Options(Height := 72, Prefix := 'Body:', Suffix := 'Markdown'), Msg.Submit
+          new A.Options(
+            Height := 72.5F, Width := L.Extent.Fixed(L.Measure.Logical(300)),
+            Prefix := 'Body:', Suffix := 'Markdown', Autofocus := true
+          ),
+          Msg.Submit
         ),
         E.Size of Msg(
           E.Column of Msg(),
@@ -145,6 +149,10 @@ begin
   Step(Session);
   Step(Session);
   const Box: Cui.CuiRectangle := Control(Session, 'area').Bounds;
+  Check(
+    Control(Session, 'area').Focused and Box.Width = 300 and Box.Height = 72.5F,
+    'The text area must keep its native dimensions and initial autofocus.'
+  );
   const PageStart: string := Control(Session, 'viewport').Value;
   X := Box.X + 60;
   Y := Box.Y + 11;

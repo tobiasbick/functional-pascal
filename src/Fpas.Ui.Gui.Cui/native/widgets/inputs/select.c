@@ -3,7 +3,7 @@
 
 int fpas_cui_select(cui_ctx *ui, const char *id, const char *const *items, const char *const *icons,
     int count, int *selected, const char *label, const char *placeholder,
-    int searchable, int enabled, int focus, int *nodes) {
+    int searchable, int enabled, int focus, int width_kind, float width, int *nodes) {
     const cui_id key = cui_make_id(ui, id);
     const cui_id popup_id = key ^ 0x5E1Eu;
     cui_push_id_int(ui, (int)popup_id);
@@ -24,7 +24,7 @@ int fpas_cui_select(cui_ctx *ui, const char *id, const char *const *items, const
         nodes[i + 1] = -1;
     }
     const cui_select_opts options = { .label = label, .placeholder = placeholder, .icons = glyphs,
-        .searchable = searchable != 0, .disabled = !allowed };
+        .searchable = searchable != 0, .disabled = !allowed, .width = fpas_extent(width_kind, width) };
     const int first_node = ui->node_count;
     const int original = *selected;
     cui_select_ex(ui, id, items, count, selected, &options);

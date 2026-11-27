@@ -67,7 +67,7 @@ begin
   var Focus: string := '';
   var Output: string := '';
   var Source: string := '';
-  const Token: string := Context.Token('scroll', 'main-0');
+  const Token: string := Context.Token('scroll', State.MainScrollId);
   const Height: int := if Page = State.Page.Code then
     1700
   else

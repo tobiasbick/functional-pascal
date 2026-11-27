@@ -10,5 +10,5 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial int HistogramSlider(nint context, string id, string label, float* bins,
         int binCount, ref float lower, ref float upper, float minimum, float maximum, float height,
-        string format, int enabled, int focus, out int track);
+        string? format, int enabled, int focus, out int track);
 }

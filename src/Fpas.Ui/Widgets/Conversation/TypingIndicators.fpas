@@ -9,10 +9,10 @@ uses Fpas.Ui.Elements as E;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
-// - `Name`: Name shown as an avatar.
+// - `Name`: Participant name, or null for an anonymous avatar and no caption.
 // ## Returns
 // The graphical element.
-public function TypingIndicator of TMsg(Id: string; Name: string): E.Element of TMsg;
+public function TypingIndicator of TMsg(Id: string; Name: string? := null): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).TypingIndicator(Id, Name);

@@ -75,8 +75,12 @@ begin
 
   for Index: int := 0 to Items.Length - 1 do
     const Part: string := Identify(Tabs.ItemId(Id, Index), At + '/tab');
-    Caption(Items[Index].Label, Part + '/label');
-    R.CheckText(Items[Index].Icon, Part + '/icon');
+    const Item: Tabs.Item := Items[Index];
+    Caption(Item.Label, Part + '/label');
+    R.CheckText(Item.Icon, Part + '/icon');
+    if Item.IconOnly and Sys.String.IsNullOrWhiteSpace(Item.Icon) then
+      R.Reject(Part, 'An icon-only tab requires an icon.');
+    end if;
   end for;
 end procedure;
 
@@ -114,7 +118,7 @@ end procedure;
 // Validates a graphical stepper's captions and progress.
 //
 // ## Parameters
-// - `Steps`: Literal step captions in display order.
+// - `Steps`: Literal step captions in display order. Captions may be empty.
 // - `Current`: Current index, or the count when all steps are complete.
 // - `Profile`: Receiving host profile.
 // - `Location`: Control path for diagnostics.
@@ -134,7 +138,7 @@ begin
   end if;
 
   for Index: int := 0 to Steps.Length - 1 do
-    Caption(Steps[Index], Location + '/step/' + Index.ToString());
+    R.CheckText(Steps[Index], Location + '/step/' + Index.ToString());
   end for;
 end procedure;
 

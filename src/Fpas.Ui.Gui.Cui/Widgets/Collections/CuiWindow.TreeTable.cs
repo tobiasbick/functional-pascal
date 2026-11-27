@@ -8,13 +8,13 @@ public sealed partial class CuiWindow
 {
     private sealed record TreeOutput(nint Handle, uint[] Flags, int[] State);
 
-    /// <summary>Draws a native tree cell for composition inside a table.</summary>
+    /// <summary>Draws a native tree cell for composition inside a table or data grid cell.</summary>
     /// <param name="id">Stable cell and inspection identity.</param>
     /// <param name="label">Literal caption.</param>
     /// <param name="icon">Optional CUI glyph.</param>
     /// <param name="depth">Indentation level.</param>
-    /// <param name="open">Model expansion, or minus one for a leaf.</param>
-    /// <param name="enabled">Whether the chevron accepts input.</param>
+    /// <param name="open">Model expansion as zero or one, or minus one for a leaf.</param>
+    /// <param name="enabled">Whether the chevron accepts pointer input.</param>
     /// <param name="track">Whether to expose inspection geometry.</param>
     /// <returns>Whether expansion was toggled.</returns>
     public bool TreeCell(string id, string label, string icon, int depth, ref int open, bool enabled, bool track)

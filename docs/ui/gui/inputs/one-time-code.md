@@ -33,15 +33,19 @@ end unit;
 | `Value` | The current partial or complete code. |
 | `Length` | 6. Accepts 1 through 12. |
 | `Label / Enabled` | Empty / true. |
-| `OnComplete` | Optional callback for a newly entered complete code. |
+| `OnComplete` | Optional callback for native completion. |
 
 ## Interaction
 
-Typing appends a character, Backspace removes the last character and paste
-replaces the code. When an edit completes the code, the host sends the change
-before the completion message. Pasting a different complete code also sends
-completion. Repeating the same paste sends no second event. GUI snapshots
-expose only the entered length.
+Typing appends letters or digits. Backspace removes the last character.
+Paste replaces the code and ignores characters outside the ASCII letters and digits.
+Escape releases focus. CUI keeps the boxes in left-to-right order.
+
+When an edit completes the code, the host sends the change before the completion
+message. Pasting a different complete code also sends completion. Repeating the
+same paste sends no second message. If the control accepts input on its first
+presentation, a complete starting value sends completion. GUI snapshots expose
+only the entered length.
 
 ## See also
 

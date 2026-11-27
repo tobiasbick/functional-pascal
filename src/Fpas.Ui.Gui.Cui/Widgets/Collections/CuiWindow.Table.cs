@@ -13,7 +13,7 @@ public sealed partial class CuiWindow
     /// <param name="height">Logical viewport extent or percentage.</param>
     /// <param name="striped">Whether alternate rows are tinted.</param>
     /// <param name="compact">Whether to use smaller rows.</param>
-    /// <param name="selectable">Whether rows can be activated.</param>
+    /// <param name="selectable">Whether rows receive keyboard focus and show a hand cursor.</param>
     /// <param name="enabled">Whether headings accept input.</param>
     /// <param name="sort">Current zero-based column, minus one for unsorted or minus two to disable sorting.</param>
     /// <param name="descending">Whether the current order is descending.</param>

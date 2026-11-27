@@ -12,19 +12,19 @@ public type Step = record
   // Literal step title.
   public Title: string;
   // Optional supporting text shown for the first incomplete step.
-  public Description: string := '';
-  // Optional action caption shown for the first incomplete step.
-  public ActionLabel: string := '';
+  public Description: string? := null;
+  // Caption for the first incomplete step. Empty draws an arrow-only action.
+  public ActionLabel: string? := null;
   // Whether the step is complete.
   public Done: bool := false;
 end record;
 
 // Presentation and input settings for a native onboarding checklist.
 public type Options = record
-  // Card heading. Empty uses the native default.
-  public Title: string := '';
-  // Optional replacement for the native progress caption.
-  public Description: string := '';
+  // Card heading. Null uses the native default and empty hides the text.
+  public Title: string? := null;
+  // Progress caption. Null uses the native default and empty hides the text.
+  public Description: string? := null;
   // Whether step circles and actions accept input.
   public Enabled: bool := true;
 end record;

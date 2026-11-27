@@ -39,6 +39,10 @@ emits one leave. Removing it retires its state. `Clicked` remains activation;
 
 Painting is GUI-only. It adds no native resource dependency to the TUI host.
 
+Use `Surface.Color(Token)` to resolve a semantic color for the current frame.
+The returned color includes any active appearance or accent transition.
+Pass the color to drawing operations such as `Circle`.
+
 ## See also
 
 - [Canvas](../text-and-display/canvas.md)

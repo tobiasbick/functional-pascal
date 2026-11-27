@@ -282,8 +282,10 @@ begin
     'Native sections are missing.'
   );
   A.Check(
-    A.Control(Session, 'accordion/0').Value = 'true',
-    'The first accordion should start open.'
+    A.Control(Session, 'accordion/0').Value = 'true'
+    and A.Control(Session, 'accordion/1').Value = 'false'
+    and A.Control(Session, 'accordion/2').Value = 'false',
+    'Only the first accordion should start open.'
   );
   Session.CapturePng(Capture + '.accordion.png');
   Click(Session, 'accordion/0');
@@ -299,6 +301,13 @@ begin
   A.Check(
     A.Control(Session, 'accordion/0').Value = 'true',
     'Space did not reopen the focused accordion.'
+  );
+  Click(Session, 'accordion/1');
+  A.Check(
+    A.Control(Session, 'accordion/0').Value = 'true'
+    and A.Control(Session, 'accordion/1').Value = 'true'
+    and A.Control(Session, 'accordion/2').Value = 'false',
+    'Opening the second accordion must leave its neighbors unchanged.'
   );
   Window.Resize(1100, 1100);
   A.Send(Session, State.Msg.Show(State.Page.Disclosure));

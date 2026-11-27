@@ -172,8 +172,8 @@ end record;
 
 // Native recorder presentation.
 public type Options = record
-  // Literal placeholder; empty uses CUI's Click to record default.
-  public Placeholder: string := '';
+  // Literal placeholder; null uses CUI's Click to record default.
+  public Placeholder: string? := null;
   // Native content, fill, fixed or percentage width.
   public Width: L.Extent := L.Extent.Content;
   // Whether recording and clearing accept input.

@@ -8,18 +8,18 @@ public sealed partial class CuiWindow
 {
     /// <summary>Draws CUI's native onboarding checklist.</summary>
     /// <param name="id">Stable checklist identity.</param>
-    /// <param name="title">Optional card heading.</param>
-    /// <param name="description">Optional replacement for the native progress caption.</param>
+    /// <param name="title">Null selects the native card heading.</param>
+    /// <param name="description">Null selects the native progress caption.</param>
     /// <param name="titles">Ordered step captions.</param>
-    /// <param name="descriptions">Supporting text per step.</param>
-    /// <param name="actions">Action caption per step, empty when absent.</param>
+    /// <param name="descriptions">Supporting text per step, null when absent.</param>
+    /// <param name="actions">Action caption per step, null when absent.</param>
     /// <param name="completed">Model-owned flags, zero or one.</param>
     /// <param name="enabled">Whether to accept input.</param>
     /// <param name="focus">One plus the part index to focus, zero for neither.</param>
     /// <param name="trackPart">Maps a circle or action slot to its inspection identity, or null.</param>
     /// <returns>Completion changes and the activated action.</returns>
-    public unsafe CuiChecklistResult Checklist(string id, string title, string description, string[] titles,
-        string[] descriptions, string[] actions, int[] completed, bool enabled, int focus, Func<int, string>? trackPart)
+    public unsafe CuiChecklistResult Checklist(string id, string? title, string? description, string[] titles,
+        string?[] descriptions, string?[] actions, int[] completed, bool enabled, int focus, Func<int, string>? trackPart)
     {
         CheckFrame();
         ArgumentNullException.ThrowIfNull(titles);
@@ -30,13 +30,13 @@ public sealed partial class CuiWindow
         if (descriptions.Length != count || actions.Length != count || completed.Length != count)
             throw new ArgumentException("Checklist arrays must have the same number of steps.");
         if (focus < 0 || focus > slots) throw new ArgumentOutOfRangeException(nameof(focus));
-        Utf8.Validate(title, nameof(title));
-        Utf8.Validate(description, nameof(description));
+        if (title is not null) Utf8.Validate(title, nameof(title));
+        if (description is not null) Utf8.Validate(description, nameof(description));
         for (int index = 0; index < count; ++index)
         {
             Utf8.Validate(titles[index], nameof(titles));
-            Utf8.Validate(descriptions[index], nameof(descriptions));
-            Utf8.Validate(actions[index], nameof(actions));
+            if (descriptions[index] is { } support) Utf8.Validate(support, nameof(descriptions));
+            if (actions[index] is { } actionLabel) Utf8.Validate(actionLabel, nameof(actions));
             if (string.IsNullOrWhiteSpace(titles[index])) throw new ArgumentException("A step needs a title.", nameof(titles));
             if (completed[index] is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(completed));
         }
@@ -45,7 +45,7 @@ public sealed partial class CuiWindow
         var nodes = new int[slots];
         int action, node;
         fixed (int* flags = proposed, parts = nodes)
-            action = NativeMethods.Checklist(context, Stable(id), Optional(title), Optional(description),
+            action = NativeMethods.Checklist(context, Stable(id), title, description,
                 titles, descriptions, actions, flags, count, enabled ? 1 : 0, focus, out node, parts);
 
         if (trackPart is not null) TrackControl(id, node);

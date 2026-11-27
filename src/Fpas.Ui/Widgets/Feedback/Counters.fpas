@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Feedback.Counters;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // Native counter options.
@@ -15,6 +16,8 @@ public type Options = record
   public Color: Charts.Color := Charts.Color.Automatic;
   // Separate thousands with commas.
   public GroupThousands: bool := false;
+  // Native font role. CUI treats Body as Display for counters.
+  public Font: Graphics.Font := Graphics.Font.Display;
 end record;
 
 // Draws the native rolling numeric counter.

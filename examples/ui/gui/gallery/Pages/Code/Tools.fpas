@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Code.Tools;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
@@ -14,7 +15,6 @@ uses Fpas.Ui.Widgets.Developer.LogConsoles as Log;
 uses Fpas.Ui.Widgets.Display.Markdowns as Markdown;
 uses Fpas.Ui.Widgets.Editors.CodeEditors as Editor;
 uses Fpas.Ui.Widgets.Inputs.TextFields as Field;
-uses Fpas.Ui.Widgets.Motion.Motion as F;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
 
 uses Gallery.Shared.Strings as Strings;
@@ -68,7 +68,7 @@ begin
           else
             Model.NotesStatus
           end if,
-          F.Font.Body, 12.5F, Colors.TextSecondary
+          Graphics.Font.Body, 12.5F, Colors.TextSecondary
         )
       )
     ),
@@ -82,10 +82,10 @@ begin
     new L.Flow(Gap := G.Points(16), Align := L.Alignment.Center, Wrap := true, Clip := false),
     E.Text of M.Msg('Ln ' + Model.Line.ToString() + ', Col ' + Model.Column.ToString()),
     E.Text of M.Msg(Model.Lines.ToString() + ' lines'),
-    E.FormattedText of M.Msg('Spaces: 4', F.Font.Body, 12.5F, Colors.TextMuted)
+    E.FormattedText of M.Msg('Spaces: 4', Graphics.Font.Body, 12.5F, Colors.TextMuted)
   );
   const Warnings: array of E.Element of M.Msg := if Model.Full then
-    [E.FormattedText of M.Msg('Buffer full', F.Font.Body, 12.5F, Colors.Danger)]
+    [E.FormattedText of M.Msg('Buffer full', Graphics.Font.Body, 12.5F, Colors.Danger)]
   else
     []
   end if;
@@ -123,7 +123,12 @@ begin
   const Parts: array of E.Element of M.Msg := if Model.ActualInline and not Model.Inline then
     [
       Mode,
-      E.FormattedText of M.Msg('Inline on narrow screens', F.Font.Body, 12.5F, Colors.TextMuted)
+      E.FormattedText of M.Msg(
+        'Inline on narrow screens',
+        Graphics.Font.Body,
+        12.5F,
+        Colors.TextMuted
+      )
     ]
   else
     [Mode]
@@ -136,7 +141,7 @@ begin
         E.Row of M.Msg(
           new L.Flow(Gap := G.Points(4), Align := L.Alignment.Center, Clip := false),
           E.Styled of M.Msg(
-            E.FormattedText of M.Msg(Caption, F.Font.Body, 12.5F, Colors.TextSecondary),
+            E.FormattedText of M.Msg(Caption, Graphics.Font.Body, 12.5F, Colors.TextSecondary),
             S.Role.Tabular
           ),
           E.Gap of M.Msg(L.Measure.Logical(4)),
@@ -207,7 +212,7 @@ begin
   else
     [
       E.Styled of M.Msg(
-        E.FormattedText of M.Msg(Model.Edited, F.Font.Body, 12.5F, Colors.TextMuted),
+        E.FormattedText of M.Msg(Model.Edited, Graphics.Font.Body, 12.5F, Colors.TextMuted),
         S.Role.Tabular
       )
     ]
@@ -230,7 +235,7 @@ begin
         [
           Offset,
           E.Styled of M.Msg(
-            E.FormattedText of M.Msg(Status, F.Font.Body, 12.5F, Colors.TextSecondary),
+            E.FormattedText of M.Msg(Status, Graphics.Font.Body, 12.5F, Colors.TextSecondary),
             S.Role.Tabular
           )
         ],

@@ -30,15 +30,22 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Label / Placeholder / Icon` | Empty. CUI supplies the default search icon. |
+| `Label / Icon` | Empty. CUI supplies the default search icon. |
+| `Placeholder` | Null uses Search. An empty string suppresses the placeholder. |
 | `Hint / Error / Prefix / Suffix` | Empty. Error replaces Hint. Affixes stay outside the query. |
 | `ReadOnly / Enabled` | false / true. |
 | `ControlSize / MaxUtf8Bytes` | Medium / 255. |
+| `Width / Autofocus` | Null / false. See the [GUI text field options](text-field.md#options-and-defaults). |
+| `Password` | False. GUI masks the query and shows a reveal button. The byte limit is 341 or less. |
 | `OnSubmit` | Optional callback receiving the current query on Enter. |
 
 ## Interaction
 
 Edit the query as a single line. The clear button proposes an empty string and returns focus to the field. Use `ClearId(Id)` to address that button in a GUI snapshot. Keep the query in the model and apply it to the results in your update.
+
+The search control shows its built-in clear button when the query has text and
+the field accepts edits. To address the password reveal button, use
+`RevealId(Id)`. GUI snapshots omit the value of a password field.
 
 ## See also
 

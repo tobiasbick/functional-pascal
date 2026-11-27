@@ -42,10 +42,13 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Columns` | Provide a heading per column. `Width` defaults to `Fill`, `Grow` to 1, `Align` to `Start`, and `Sortable` to false. |
-| `Rows` | Pass the rows in display order with stable IDs and one cell per column. Cell.Text is plain text. Cell.Content holds graphical children. |
+| `Rows` | Pass the rows in display order with stable IDs and one cell per column. `Cell.Text` draws literal text. `Cell.Content` holds graphical children. |
 | `Order / OnSort` | Both default to null. Pair the current Sort with a callback when using sortable headings. Column -1 means unsorted. |
 | `OnSelect` | Optional callback receiving the row ID. The model sets each row's Selected flag. |
-| `Height / Striped / Compact / Enabled` | Content / false / false / true. Content fits all rows. |
+| `Height` | Content fits all rows. Fill, Fixed, or Percent set a scroll viewport with a fixed header. |
+| `Striped` | false. Enable to tint alternate rows. |
+| `Compact` | false. Enable to reduce the minimum row height from 44 to 36 logical units. |
+| `Enabled` | true. Set to false to suppress header and row input. |
 
 ## Column layout
 
@@ -63,6 +66,7 @@ rows vertically while keeping the heading row visible.
 Column `Start` and `End` follow the surrounding reading direction. `Left`
 and `Right` select physical edges. `Right` also enables tabular digits in
 plain text cells. A cell with graphical children uses a row to lay them out.
+Use the built-in string formatting functions before passing a value to `Cell.Text`.
 
 ## Interaction
 
@@ -71,6 +75,9 @@ in the update and pass them back with the new sort. Keep each row ID stable
 across sorting so focus follows the row. Store selection by row ID in the model
 to preserve the selected record. Use `HeaderId(Id, Index)` to address a heading
 for focus.
+
+Tab reaches sortable headings and selectable rows. Enter and Space activate
+the focused control. Rows still show native hover when `OnSelect` is absent.
 
 Use a data grid to build rows of a large collection on demand. The row
 factory maps each display position to its record and returns a stable row ID.

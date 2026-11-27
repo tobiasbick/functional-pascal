@@ -86,7 +86,7 @@ end record;
 public type Pointer = record
   // Whether CUI hovers this enabled canvas.
   public Hovered: bool;
-  // Whether a native press starts in this frame.
+  // Whether CUI reports an active pointer press.
   public Pressed: bool;
   // Canvas-local horizontal pointer coordinate.
   public X: float;

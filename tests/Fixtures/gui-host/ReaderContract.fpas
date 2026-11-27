@@ -2,9 +2,14 @@
 
 unit GalleryReaderContract;
 
+uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Containers.Grids as Grids;
+uses Fpas.Ui.Widgets.Navigation.ScrollAnchors as Anchors;
 uses Fpas.Ui.Widgets.Navigation.TableOfContents as T;
 
 uses GalleryHostAssertions as A;
@@ -12,6 +17,47 @@ uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as G;
 uses GuiGallery.App.View as View;
 uses System as Sys;
+
+procedure VerifyAnchorScopes();
+  procedure RejectAnchor(Tree: E.Element of int; Reason: string);
+  begin
+    try
+      discard V.Prepare of int(Tree, V.Target.Graphical);
+    catch Error: Sys.ArgumentException do
+      A.Check(Error.Message.Contains(Reason), Error.Message);
+      return;
+    end try;
+
+    raise new Sys.InvalidOperationException(
+      'Expected scroll anchor validation to reject the view.'
+    );
+  end procedure;
+begin
+  const Marker: E.Element of int := Anchors.ScrollAnchor of int('chapter');
+  const Scrolling: L.Flow := new L.Flow(Scrolling := L.ScrollMode.Vertical);
+  const Outline: E.Element of int := T.TableOfContents of int(
+    'outline', 'article', [new T.Item('Chapter', 'chapter')]
+  );
+  RejectAnchor(Marker, 'enclosing scroll viewport');
+  for Child: E.Element of int in [
+    E.Row of int(Scrolling, Marker),
+    E.Column of int(Scrolling, Marker),
+    (E.Element of int).Layered([Marker], Scrolling),
+    Grids.Grid of int(new Grids.Options(Flow := Scrolling), Marker)
+  ] do
+    RejectAnchor(E.ScrollView of int('article', Child), 'intervening scroller');
+  end for;
+
+  const Article: E.Element of int := E.ScrollView of int('article', E.Column of int(Marker));
+  discard V.Prepare of int(
+    E.Row of int(E.Column of int(Scrolling, Article), Outline),
+    V.Target.Graphical
+  );
+  RejectAnchor(
+    E.Row of int(E.ScrollView of int('article', E.ScrollView of int('nested', Marker)), Outline),
+    'inside viewport article'
+  );
+end procedure;
 
 // Drives the original Reader example with native pointer, wheel and keyboard input.
 // ## Parameters
@@ -73,11 +119,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Destination.Y.ToString()
     );
     A.Check(
-      A.Control(Session, 'main-0').Value = '0',
+      A.Control(Session, State.MainScrollId).Value = '0',
       'The surrounding page should stay in place.'
     );
   end procedure;
 begin
+  VerifyAnchorScopes();
   const Outline: string := 'reader-outline';
   var X: float := -1.0F;
   var Y: float := -1.0F;
@@ -100,6 +147,12 @@ begin
   CheckActive(Session, 0, 'intro');
   const Viewport: Cui.CuiRectangle := A.Control(Session, 'reader').Bounds;
   A.Check(Viewport.Height = 560.0F, 'The original reader needs a 560-point viewport.');
+  const Intro: Gui.Control := A.Control(Session, 'intro');
+  A.Check(
+    Intro.Bounds.Height = 0.0F and Intro.Bounds.Width = Viewport.Width
+    and Intro.Bounds.Y = Viewport.Y and not Intro.Enabled,
+    'The first article anchor must be an invisible zero-height, full-width destination.'
+  );
   Window.CapturePng(Capture + '.reader.png');
 
   const Install: Cui.CuiRectangle := A.Control(Session, T.ItemId(Outline, 1)).Bounds;
@@ -133,7 +186,7 @@ begin
     'Wheel input must move the inner article.'
   );
   A.Check(
-    A.Control(Session, 'main-0').Value = '0',
+    A.Control(Session, State.MainScrollId).Value = '0',
     'Wheel input moved the surrounding page.'
   );
   Window.CapturePng(Capture + '.reader-scrolled.png');

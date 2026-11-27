@@ -1,5 +1,4 @@
 // [Documentation](../../../../docs/ui/gui/native-build.md#feedback-adapters)
-using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;
@@ -9,21 +8,21 @@ public sealed partial class CuiWindow
     /// <summary>Draws a CUI-owned inline alert and tracks its optional dismiss action.</summary>
     /// <param name="id">Stable alert identity, retained while a dismissed alert remains in the tree.</param>
     /// <param name="title">Literal heading.</param>
-    /// <param name="description">Optional supporting text.</param>
-    /// <param name="icon">Optional icon glyph; empty uses the tone icon.</param>
+    /// <param name="description">Supporting text. Null omits it and an empty string reserves a blank line.</param>
+    /// <param name="icon">Icon glyph. Null uses the tone icon and an empty string draws no glyph.</param>
     /// <param name="tone">Native tone from zero through eight.</param>
     /// <param name="dismissible">Whether to provide the native dismiss action.</param>
     /// <param name="enabled">Whether that action accepts input.</param>
     /// <param name="focus">Whether to request action focus.</param>
     /// <param name="dismissId">Inspection identity of the dismiss action.</param>
     /// <returns>Visible bit 1 and newly-dismissed bit 2.</returns>
-    public int Alert(string id, string title, string description, string icon, int tone,
+    public int Alert(string id, string title, string? description, string? icon, int tone,
         bool dismissible, bool enabled, bool focus, string dismissId)
     {
         CheckFrame();
         Utf8.Validate(title, nameof(title));
-        Utf8.Validate(description, nameof(description));
-        Utf8.Validate(icon, nameof(icon));
+        if (description is not null) Utf8.Validate(description, nameof(description));
+        if (icon is not null) Utf8.Validate(icon, nameof(icon));
         if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("An alert needs a title.", nameof(title));
         ArgumentException.ThrowIfNullOrEmpty(dismissId);
         CheckTone(tone);
@@ -61,19 +60,29 @@ public sealed partial class CuiWindow
 
     /// <summary>Draws CUI's native activity spinner.</summary>
     /// <param name="id">Stable inspection identity.</param>
-    /// <param name="size">Logical diameter; zero uses the native default.</param>
+    /// <param name="size">Logical height; zero uses the native default.</param>
     /// <param name="style">Native animation style.</param>
-    /// <param name="color">Optional ink color.</param>
-    /// <param name="track">Optional track color.</param>
-    /// <param name="inverse">Use the current theme background as ink.</param>
-    public void Spinner(string id, float size = 0, int style = 0, CuiChartColor color = default, CuiChartColor track = default, bool inverse = false)
+    /// <param name="color">Optional packed straight-alpha ink color.</param>
+    /// <param name="themeColor">Optional one-based theme ink token. Use zero for the default.</param>
+    /// <param name="track">Optional packed straight-alpha track color.</param>
+    /// <param name="themeTrack">Optional one-based theme track token. Use zero for the default.</param>
+    public void Spinner(string id, float size = 0, int style = 0, uint? color = null, int themeColor = 0,
+        uint? track = null, int themeTrack = 0)
     {
         CheckFrame();
         CheckFeedbackNumber(size, nameof(size));
         if (style is < 0 or > 14) throw new ArgumentOutOfRangeException(nameof(style));
-        CheckChartColor(color);
-        CheckChartColor(track);
-        NativeMethods.Spinner(context, Stable(id), size, style, inverse ? -2 : color.Palette, color.Rgba, track.Palette, track.Rgba);
+        NativeMethods.Spinner(context, Stable(id), size, style,
+            SpinnerColor(color, themeColor, nameof(themeColor)), color.GetValueOrDefault(),
+            SpinnerColor(track, themeTrack, nameof(themeTrack)), track.GetValueOrDefault());
+    }
+
+    private static int SpinnerColor(uint? color, int token, string name)
+    {
+        if (token is < 0 or > ThemeColorCount) throw new ArgumentOutOfRangeException(name);
+        if (color.HasValue && token != 0)
+            throw new ArgumentException("Choose an explicit spinner color or a theme token.", name);
+        return color.HasValue ? -1 : token;
     }
 
     /// <summary>Draws CUI's usage meter with native formatting and threshold colors.</summary>

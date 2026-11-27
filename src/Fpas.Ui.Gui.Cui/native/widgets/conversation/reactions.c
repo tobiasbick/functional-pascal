@@ -1,11 +1,11 @@
 // [Documentation](../../../../../docs/ui/gui/actions/reactions.md)
 #include "../../fpas_cui.h"
 
+/** Draws the native group and copies only the selected reaction back. */
 int fpas_cui_reactions(cui_ctx *ui, const char *id, const char *const *icons,
     int *counts, int *active, int count, int enabled, int focus, int *nodes) {
-    if (count < 1) return -1;
     const cui_id group = cui_make_id(ui, id);
-    cui_reaction *items = cui__frame_alloc(ui, (size_t)count * sizeof *items);
+    cui_reaction *items = count ? cui__frame_alloc(ui, (size_t)count * sizeof *items) : NULL;
     for (int i = 0; i < count; ++i)
         items[i] = (cui_reaction){ icons[i], counts[i], active[i] != 0 };
 

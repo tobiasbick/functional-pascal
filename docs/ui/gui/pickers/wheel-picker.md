@@ -10,6 +10,7 @@ Use a wheel to pick one caption at the center of a scrolling list. The gallery j
 unit Docs.Ui.Pickers.WheelPicker;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Pickers.WheelPickers as W;
 
 // Builds the wheel picker example.
@@ -22,7 +23,7 @@ begin
   return W.WheelPicker of int('picker-wheel-month', ['January', 'February', 'March', 'April', 'May',
     'June', 'July', 'August', 'September', 'October', 'November', 'December'],
     Selected, function(Index: int): int => Index,
-    new W.Options(Width := 128.0F, Loop := true));
+    new W.Options(Width := L.Extent.Fixed(L.Measure.Logical(128)), Loop := true));
 end function;
 
 end unit;
@@ -32,15 +33,17 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Items / Selected` | Nonempty captions and a zero-based model index. |
-| `Width` | 0 selects CUI's default width. |
-| `Rows` | 5. CUI rounds even counts up to an odd count. |
-| `Loop / JoinLeft / JoinRight` | false / false / false. Join flags connect the selection band to a neighboring wheel. |
+| `Id` | Stable wheel ID. |
+| `Items / Selected` | Nonempty captions and a zero-based model index. CUI displays the part of a caption before `##`. |
+| `Width` | `Content` uses 84 logical units. Also accepts `Fill`, a fixed logical width, or a percentage. |
+| `Rows` | 5. Nonpositive uses 5. CUI rounds positive even counts up. |
+| `Loop` | false. Continues from one end at the other when enabled. |
+| `JoinLeft / JoinRight` | Both false. Each flag squares off that edge of the selection band. |
 | `Enabled` | true. |
 
 ## Interaction
 
-Drag the list, use the mouse wheel or move with the arrow keys. The callback receives the proposed index. When Loop is enabled, passing an end continues at the other end. If several wheels form one date, resolve combinations such as February 31 in the application.
+Drag the list or scroll over the wheel. Press Up or Down when the wheel has focus. The callback receives the proposed index. If several wheels form one date, resolve combinations such as February 31 in the application.
 
 ## See also
 

@@ -29,8 +29,8 @@ public sealed class CuiVeilScopeTests
                 Assert.True(window.NextFrame());
                 window.BeginGroup(false, 0, 8, 0, false);
                 // Covered chrome may coexist with independently admitted modal content.
-                int outer = window.VeilBegin("outer", outerShown, null, null, 0, 0, 0, 0, 0);
-                int inner = window.VeilBegin("inner", innerShown, null, null, 0, 0, 0, 0, 0);
+                int outer = window.VeilBegin("outer", outerShown, null, null, 0, default, 0, 0, 0);
+                int inner = window.VeilBegin("inner", innerShown, null, null, 0, default, 0, 0, 0);
                 Assert.Equal(outerShown, (outer & 1) != 0);
                 Assert.Equal(innerShown, (inner & 1) != 0);
                 Assert.False(window.Button("child", "Child", 0, 0, true, false, false,

@@ -2,23 +2,13 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Media.Image;
 
-uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
-uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as ChartData;
 uses Fpas.Ui.Gui.Internal.Data.MediaData as MediaData;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Media.Images as D;
 uses Fpas.Ui.Widgets.Media.MediaImages as Media;
-
-function OptionalColor(Color: G.Color?): uint;
-begin
-  return if Color = null then
-    0U
-  else
-    Enc.Pack(Color)
-  end if;
-end function;
 
 // Draws the native CUI image.
 // ## Type parameters
@@ -40,7 +30,7 @@ begin
   const Height: S.NativeExtent := S.Extent(Settings.Height);
   Frame.Window.DisplayImage(
     C.Token(Role, Id), MediaData.Convert(Source), Width.Kind, Width.Value,
-    Height.Kind, Height.Value, Settings.Radius, OptionalColor(Settings.Tint)
+    Height.Kind, Height.Value, Settings.Radius, ChartData.Color(Settings.Tint)
   );
   P.Root of TMsg(Frame, Id, Role, '', false, '');
 end procedure;

@@ -3,19 +3,23 @@
 unit Fpas.Ui.Widgets.Inputs.TagInputs;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // Presentation and bounds for a graphical tag input.
 public type Options = record
   // Caption above the tags.
   public Label: string := '';
-  // Text displayed when the tag list is empty.
-  public Placeholder: string := '';
+  // Empty-list hint. Null uses CUI's default and an empty string hides the hint.
+  public Placeholder: string? := null;
   // Maximum number of tags from 1 to 64.
+  // Keep the limit within CUI's visible slots. See [CUI-020](../../../../docs/future/cui-upstream-bugs.md#cui-020).
   public MaxTags: int := 64;
   // Maximum UTF-8 bytes in the tag list, including separators, from 1 to 2047.
   public MaxUtf8Bytes: int := 2047;
   // Whether the control accepts input.
   public Enabled: bool := true;
+  // Native width for the tag field and any label above it.
+  public Width: L.Extent := L.Extent.Fill;
 end record;
 
 // Builds CUI's graphical tag editor.

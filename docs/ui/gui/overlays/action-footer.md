@@ -32,11 +32,13 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Children` | Pass the buttons in display order. |
-| `Alignment / spacing` | The native row aligns right, with an eight-point top inset and an eight-point gap. |
+| `Alignment / spacing` | CUI aligns the row to the trailing edge. The top inset and gap are 8 logical units. |
 
 ## Interaction
 
-The buttons retain their own activation messages and keyboard behavior. Apply the message in your update function to save or cancel and close the dialog.
+The buttons retain their activation messages and keyboard behavior. Apply the
+message in your update function to save or cancel and close the dialog. If the
+user resizes the dialog, the native footer stays at the bottom.
 
 ## See also
 

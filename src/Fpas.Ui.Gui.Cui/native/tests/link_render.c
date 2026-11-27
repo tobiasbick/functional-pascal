@@ -115,6 +115,7 @@ static bool check_copy_retirement(cui_ctx *ui) {
 }
 
 static cui_id split_owner;
+static bool split_key_available;
 
 static int split_frame(cui_ctx *ui, int focus, int key, bool enabled, int *open, int *highlighted) {
     const char *labels[] = { "Save ## draft", "Save and publish", "Schedule..." };
@@ -126,6 +127,7 @@ static int split_frame(cui_ctx *ui, int focus, int key, bool enabled, int *open,
         labels, icons, 3, 1, 0, enabled, focus, nodes, open, highlighted);
     const bool tracked = nodes[0] >= 0 && nodes[1] >= 0 && (!*open || nodes[2] >= 0);
     split_owner = fpas_cui_node_key(ui, nodes[0]);
+    split_key_available = key >= 0 && cui_key_pressed(ui, (cui_key)key);
     cui_end_frame(ui);
     if (key >= 0) cui_input_key(ui, (cui_key)key, false, 0);
     return tracked ? choice : -99;
@@ -175,6 +177,21 @@ static bool check_split_button(cui_ctx *ui) {
             SPLIT_FAIL_IF(split_frame(ui, 2, -1, true, &open, &highlighted) != -1 || open);
         }
     }
+
+    const cui_rect group = cui_get_rect(ui, cui_last_id(ui));
+    cui_input_mouse_move(ui, group.x + group.w - 12, group.y + group.h * 0.5f);
+    for (int click = 0; click < 3; ++click) {
+        cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+        SPLIT_FAIL_IF(split_frame(ui, 0, -1, true, &open, &highlighted) != -1);
+        cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+        SPLIT_FAIL_IF(split_frame(ui, 0, -1, true, &open, &highlighted) != -1 ||
+            (open != 0) != (click != 1));
+    }
+    cui_input_mouse_leave(ui);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_DOWN, true, &open, &highlighted) != -1 || !open || highlighted < 0);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_ENTER, false, &open, &highlighted) != -1 || open || !split_key_available);
+    SPLIT_FAIL_IF(split_frame(ui, 1, -1, true, &open, &highlighted) != -1 || open);
+    SPLIT_FAIL_IF(split_frame(ui, 0, CUI_KEY_ENTER, true, &open, &highlighted) != 0 || open);
     return true;
 }
 

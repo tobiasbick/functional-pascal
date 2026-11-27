@@ -10,7 +10,7 @@
  * @param minimum Inclusive lower bound.
  * @param maximum Inclusive upper bound greater than minimum.
  * @param step Native increment, zero for the range-derived default.
- * @param format Validated floating-point display format.
+ * @param format Validated floating-point format or NULL for the native default.
  * @param suffix Optional literal unit suffix.
  * @param icon Optional native glyph replacing the caption.
  * @param width_kind Content zero, fill one, fixed two or percentage three.

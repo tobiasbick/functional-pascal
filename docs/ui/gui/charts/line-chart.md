@@ -36,15 +36,27 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Series / Labels` | Supply finite values in sample order. Labels optionally name the sample positions. |
-| `Width / Height` | Fill / 0. Zero uses CUI's default height. |
-| `Area / Smooth / Dither / Stacked` | All false. Dither gives the area a dot pattern. Stacked combines the series in display order. |
-| `Grid / Legend` | true / true. |
-| `Range / Format / Annotations` | null / null / empty. The range and number format default to native automatic values. |
+| `Series` | Supply a name and finite samples for each series. The default color follows series order. Choose a theme color or an explicit color to override it. |
+| `Labels` | Empty. Add x-axis labels in sample order. The hover readout uses a one-based sample number when a label is absent. |
+| `Width / Height` | Fill / 0. Zero sets a 220-unit plot height. |
+| `Area` | false. Fill under the first series with a solid tint. |
+| `Smooth` | false. Draw curves through series with at least three samples. |
+| `Dither` | false. Fill under every series with dots that thin out toward the bottom of its band. |
+| `Stacked` | false. Draw each series on top of the preceding series. |
+| `Grid / Legend` | true / true. Grid controls the lines behind the data. A legend appears when there is more than one series. |
+| `Range / Format` | null / null. CUI chooses the value-axis bounds and number format. `Format` applies to the value axis and the hover readout. |
+| `Annotations` | Empty. Supply reference lines or points with optional labels, detail text and color. |
+| `XMinimum / XMaximum` | 0 / 0. Equal bounds use zero-based sample indices. Increasing bounds set the coordinates of the first and last samples for the annotations. |
 
 ## Interaction
 
-Move the pointer across the chart to inspect values using its native crosshair. The chart does not send a selection message. Annotations can mark a threshold or a point with labels and detail text. X positions use zero-based sample indices.
+Move the pointer over the plot to inspect the nearest sample. The native
+crosshair glides between samples. The GUI inspection snapshot reports hover
+over the plot. The chart is read-only.
+
+Annotations can use the theme accent or an explicit color. The explicit color
+takes precedence. Set `XMinimum` and `XMaximum` to position vertical lines and
+points using your own units. Samples stay evenly spaced.
 
 ## See also
 

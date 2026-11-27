@@ -14,9 +14,12 @@
  * @param loading Whether the button is busy.
  * @param selected Whether the button shows the selected style.
  * @param focus Whether to request focus.
+ * @param width_kind Content, fill, fixed or percentage in that order.
+ * @param width Fixed logical width or percentage, when selected.
+ * @param rgba Packed RGBA foreground override, or zero for the default.
  * @return Nonzero on activation. */
 CUI_API int fpas_cui_icon_button(cui_ctx *ui, const char *id, const char *icon, const char *tooltip,
                                 const char *shortcut, int variant, int size, int enabled,
-                                int loading, int selected, int focus);
+                                int loading, int selected, int focus, int width_kind, float width, uint32_t rgba);
 
 #endif

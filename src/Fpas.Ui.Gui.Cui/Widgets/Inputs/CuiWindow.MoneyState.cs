@@ -14,10 +14,10 @@ public sealed partial class CuiWindow
         internal bool Focused, Invalid;
         internal uint Key;
 
-        internal void Reset(decimal amount, int precision)
+        internal void Reset(decimal amount, int precision, bool editing)
         {
             Expected = amount; Places = precision;
-            Draft = MoneyAmounts.Format(amount, precision);
+            Draft = MoneyAmounts.Format(amount, precision, editing);
             Invalid = false;
         }
     }

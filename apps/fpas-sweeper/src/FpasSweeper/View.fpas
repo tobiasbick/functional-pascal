@@ -63,7 +63,8 @@ function Dimension(
 begin
   const Field: E.Element of S.Msg := Numbers.NumberField of S.Msg(
     Id, cast Value as double,
-    cast Game.MinimumSide as double, cast Game.MaximumSide as double, Change
+    cast Game.MinimumSide as double, cast Game.MaximumSide as double, Change,
+    new Numbers.Options(Width := L.Extent.Fill)
   );
   return E.Size of S.Msg(
     E.Column of S.Msg(

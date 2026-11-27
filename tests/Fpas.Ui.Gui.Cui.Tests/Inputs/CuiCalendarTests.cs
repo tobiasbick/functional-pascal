@@ -1,4 +1,5 @@
 // [Documentation](../../../docs/ui/gui/inputs/calendar.md)
+using Fpas.Tests.Support;
 using Fpas.Ui.Gui.Cui.Widgets.Pickers;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Inputs;
@@ -54,6 +55,39 @@ public sealed class CuiCalendarTests
         Assert.Contains(start, result.VisibleParts);
     }
 
+    /// <summary>Checks native widths and distinguishes empty picker text from omission.</summary>
+    [GuiFact]
+    public void RangePickerPreservesLayoutAndOptionalText()
+    {
+        const int width = 640, height = 420;
+        using var window = new CuiWindow("Range picker sizing", width, height, CuiRenderer.Software, continuous: true);
+        using var directory = new TemporaryDirectory();
+        window.SetReducedMotion(true);
+        uint[] omitted = Draw(null, null, 0, 0);
+        Assert.Equal(280.0f, window.GetControlRectangle("range").Width);
+        Assert.False(omitted.SequenceEqual(Draw(null, "", 0, 0)));
+        Draw("", null, 0, 0);
+        Assert.Equal(width, window.GetControlRectangle("range").Width);
+        Draw(null, null, 1, 0);
+        Assert.Equal(width, window.GetControlRectangle("range").Width);
+        Draw("Dates", null, 3, 50);
+        Assert.Equal(width / 2.0f, window.GetControlRectangle("range").Width);
+        Draw(null, null, 2, 300);
+        Assert.Equal(300.0f, window.GetControlRectangle("range").Width);
+
+        uint[] Draw(string? label, string? placeholder, int kind, float logicalWidth)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(-1, -1);
+            window.RangePicker("range", -1, -1, label, placeholder, kind, logicalWidth,
+                presets: true, enabled: true, focus: false, trackPart: part => "part/" + part);
+            window.Present();
+            string capture = directory.File("range.png");
+            window.CapturePng(capture);
+            return PngAssertions.ReadPixels(capture, width, height);
+        }
+    }
+
     /// <summary>Reports visible controls only while the single-date or date-range popup is open.</summary>
     [GuiTheory]
     [InlineData(false)]
@@ -71,9 +105,9 @@ public sealed class CuiCalendarTests
             Assert.True(window.NextFrame());
             if (enter) { window.SetKey(2, true); window.SetKey(2, false); }
             var parts = range
-                ? window.RangePicker("date", date.DayNumber, date.DayNumber + 3, "", "", 0,
+                ? window.RangePicker("date", date.DayNumber, date.DayNumber + 3, null, null, 0, 0,
                     false, true, focus, trackPart: null).VisibleParts
-                : window.DatePicker("date", date, "", "", 0, true, focus, trackPart: null).VisibleParts;
+                : window.DatePicker("date", date, "", null, 0, 0, true, focus, trackPart: null).VisibleParts;
             window.Present();
             return parts;
         }

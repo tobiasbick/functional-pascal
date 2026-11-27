@@ -318,8 +318,8 @@ begin
         return First of TMsg(Base, Prepared, Preferred);
       end if;
     when E.Element.CodeBlock(const Id: string, _, const Settings: CodeBlocks.Options):
-      const Copy: string := Id + '/copy';
-      if not Settings.NoHeader and (Settings.Title <> '' or Settings.Language <> '')
+      const Copy: string := CodeBlocks.CopyId(Id);
+      if CodeBlocks.HasHeader(Settings)
         and (Preferred = null or Preferred = Id or Preferred = Copy)
       then
         return Copy;
@@ -336,7 +336,17 @@ begin
       if Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
-    when E.Element.DataGrid(const Id: string, _, _, _, _, _, const Settings: DataGrid.Options, _):
+    when E.Element.DataGrid(
+      const Id: string,
+      _,
+      _,
+      _,
+      _,
+      _,
+      const Settings: DataGrid.Options,
+      _,
+      _
+    ):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
@@ -394,13 +404,13 @@ begin
       end for;
     when E.Element.ReorderableList(
       _,
-      const Items: array of E.Element of TMsg,
+      const Items: array of array of E.Element of TMsg,
       const Order: array of int,
       _,
       _
     ):
       for Index: int in Order do
-        const Found: string? := First of TMsg(Items[Index], Prepared, Preferred);
+        const Found: string? := FirstInChildren of TMsg(Items[Index], Prepared, Preferred);
         if Found <> null then
           return Found;
         end if;
@@ -654,7 +664,8 @@ begin
       _,
       _,
       _,
-      const Enabled: bool
+      const Enabled: bool,
+      _
     ), E.Element.RadioAction(
       const Id: string,
       _,
@@ -741,7 +752,7 @@ begin
         if FirstPending and not Steps[Index].Done then
           FirstPending := false;
           const Action: string := Checklists.ActionId(Id, Index);
-          if Steps[Index].ActionLabel <> '' and Preferred = Action then
+          if Steps[Index].ActionLabel <> null and Preferred = Action then
             return Action;
           end if;
         end if;
@@ -1090,7 +1101,7 @@ begin
     when E.Element.Popover(
       _,
       const Trigger: E.Element of TMsg,
-      const Content: E.Element of TMsg,
+      const Children: array of E.Element of TMsg,
       const Open: bool,
       _,
       _
@@ -1100,7 +1111,7 @@ begin
         return Found;
       end if;
 
-      return First of TMsg(Content, Prepared, Preferred);
+      return FirstInChildren of TMsg(Children, Prepared, Preferred);
     when E.Element.Dialog(
       const Id: string, const Base: E.Element of TMsg, const Content: E.Element of TMsg,
       const Open: bool, const Settings: Dialogs.Options, _

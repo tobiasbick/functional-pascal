@@ -47,6 +47,7 @@ Text and display clicks the blue swatch. Reader jumps to Install. App
 chrome opens the View menu after capturing the editor and workspace, then
 scrolls to the window actions.
 Smart inputs captures the message field before and after opening the emoji palette.
+Charts captures the standalone sparkline sample in a separate window.
 Overview captures the workspace and metrics as well as the sidebar in both
 appearances. Layout captures the divider in the Notifications sheet.
 Files creates a separate sample directory within the capture output and

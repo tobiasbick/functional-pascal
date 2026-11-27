@@ -31,11 +31,12 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Value / Minimum / Maximum` | Finite doubles. The value must fall within the inclusive bounds. At the chosen precision, each formatted bound can use up to 63 characters. |
+| `Value / Minimum / Maximum` | Finite doubles. The value must fall within the inclusive bounds. At the chosen precision, each formatted number can use up to 63 characters. |
 | `Label / Suffix` | Empty. The suffix displays units beside the editor. |
-| `Step` | 1.0. Supply a finite positive increment. |
-| `DecimalPlaces` | 0. Accepts 0 through 15. |
+| `Step` | 1.0. Supply a finite nonnegative increment. Zero uses one. |
+| `DecimalPlaces` | 0. Choose 0 through 61 within the display buffer limit. |
 | `Enabled` | true. |
+| `Width` | Null uses CUI's preferred width of 160 logical units. Set `Fill`, `Fixed`, or `Percent` to override the width. |
 
 ## Interaction
 

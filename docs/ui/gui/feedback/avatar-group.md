@@ -30,7 +30,8 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Names` | At least one name, in display order. |
-| `MaximumVisible / Size` | 4 / 32 logical points. The visible limit excludes the overflow count. |
+| `MaximumVisible` | 4. Nonpositive values use 4. The limit excludes the overflow marker. |
+| `Size` | 32 logical units. Nonpositive values use 32. Pass a finite size. |
 
 ## Interaction
 
@@ -41,6 +42,7 @@ CUI draws the visible initials as overlapping avatars and shows the number of re
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_avatar_group)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/AvatarGroups.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/BadgesAndAvatars.fpas)
+- [Avatar group geometry test](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Media/CuiAvatarTests.cs)
 - [Avatar](../disclosure/avatar.md)
 - [Feedback](README.md)
 

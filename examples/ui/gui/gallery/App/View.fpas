@@ -201,7 +201,9 @@ begin
       return Parts.ToArray();
     when State.Page.DataGrid:
       const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
-      for Item: E.Element of GridState.Msg in GridView.View(Model.DataGrid) do
+      for Item: E.Element of GridState.Msg in GridView.View(
+        Model.DataGrid, AppUpdate.ThemeFor(Model).Colors
+      ) do
         Parts.Add(U.Map of (GridState.Msg, State.Msg)(Item, State.Msg.DataGrid));
       end for;
 
@@ -244,17 +246,16 @@ begin
     when State.Page.Layout:
       return [LayoutDemo.View of State.Msg(State.Msg.Preview)];
     when State.Page.Feedback:
-      return [
-        Feedback.View of State.Msg(
-          State.Msg.Shared(
-            Demo.Msg.Notify(
-              Strings.Get('Text.ProjectCreated'),
-              new Toasts.Options(Appearance := Toasts.Tone.Success)
-            )
-          ),
-          Model.Feedback, State.Msg.Feedback(FeedbackState.Msg.Upload)
-        )
-      ];
+      return Feedback.View of State.Msg(
+        State.Msg.Shared(
+          Demo.Msg.Notify(
+            Strings.Get('Text.ProjectCreated'),
+            new Toasts.Options(Appearance := Toasts.Tone.Success)
+          )
+        ),
+        Model.Feedback, State.Msg.Feedback(FeedbackState.Msg.Upload),
+        State.Msg.Feedback(FeedbackState.Msg.DismissStorage)
+      );
     when State.Page.Overview:
       return [
         Overview.View of State.Msg(
@@ -284,19 +285,21 @@ begin
 
       return Parts.ToArray();
     when State.Page.Selection:
-      return [
-        U.Map of (SelectionState.Msg, State.Msg)(
-          Selection.View(Model.Selection, Model.Shared, Model.Overview.WeeklySummary, Width >= 536),
-          State.Msg.Selection
-        )
-      ];
+      const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
+      for Part: E.Element of SelectionState.Msg in Selection.View(
+        Model.Selection, Model.Shared, Model.Overview.WeeklySummary
+      ) do
+        Parts.Add(U.Map of (SelectionState.Msg, State.Msg)(Part, State.Msg.Selection));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Navigation:
-      return [
-        U.Map of (NavigationState.Msg, State.Msg)(
-          Navigation.View(Model.Navigation),
-          State.Msg.Navigation
-        )
-      ];
+      const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
+      for Part: E.Element of NavigationState.Msg in Navigation.View(Model.Navigation) do
+        Parts.Add(U.Map of (NavigationState.Msg, State.Msg)(Part, State.Msg.Navigation));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Lists:
       const Sections: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
       for Part: E.Element of ListsState.Msg in Lists.View(Model.Lists) do
@@ -305,19 +308,19 @@ begin
 
       return Sections.ToArray();
     when State.Page.Overlays:
-      return [
-        U.Map of (OverlaysState.Msg, State.Msg)(
-          Overlays.View(Model.Overlays, Model.Shared),
-          State.Msg.Overlays
-        )
-      ];
+      const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
+      for Part: E.Element of OverlaysState.Msg in Overlays.View(Model.Overlays, Model.Shared) do
+        Parts.Add(U.Map of (OverlaysState.Msg, State.Msg)(Part, State.Msg.Overlays));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Actions:
-      return [
-        U.Map of (ActionsState.Msg, State.Msg)(
-          Actions.View(Model.Actions, Model.Shared),
-          State.Msg.Actions
-        )
-      ];
+      const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
+      for Part: E.Element of ActionsState.Msg in Actions.View(Model.Actions, Model.Shared) do
+        Parts.Add(U.Map of (ActionsState.Msg, State.Msg)(Part, State.Msg.Actions));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.SmartInputs:
       const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
       for Part: E.Element of SmartInputsState.Msg in SmartInputs.View(Model.SmartInputs) do
@@ -326,24 +329,32 @@ begin
 
       return Parts.ToArray();
     when State.Page.Capture:
-      return [
-        U.Map of (CaptureState.Msg, State.Msg)(Capture.View(Model.Capture), State.Msg.Capture)
-      ];
+      const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
+      for Part: E.Element of CaptureState.Msg in Capture.View(Model.Capture) do
+        Parts.Add(U.Map of (CaptureState.Msg, State.Msg)(Part, State.Msg.Capture));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Audio:
       return [U.Map of (AudioState.Msg, State.Msg)(Audio.View(Model.Audio), State.Msg.Audio)];
     when State.Page.Pickers:
-      return [
-        U.Map of (PickersState.Msg, State.Msg)(Pickers.View(Model.Pickers), State.Msg.Pickers)
-      ];
+      const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
+      for Part: E.Element of PickersState.Msg in Pickers.View(Model.Pickers) do
+        Parts.Add(U.Map of (PickersState.Msg, State.Msg)(Part, State.Msg.Pickers));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Reader:
-      return [Reader.View of State.Msg()];
+      return [Reader.View of State.Msg(AppUpdate.ThemeFor(Model).Colors)];
     when State.Page.Disclosure:
-      return [
-        U.Map of (DisclosureState.Msg, State.Msg)(
-          Disclosure.View(Model.Disclosure, AppUpdate.ThemeFor(Model).Colors),
-          State.Msg.Disclosure
-        )
-      ];
+      const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
+      for Part: E.Element of DisclosureState.Msg in Disclosure.View(
+        Model.Disclosure, AppUpdate.ThemeFor(Model).Colors
+      ) do
+        Parts.Add(U.Map of (DisclosureState.Msg, State.Msg)(Part, State.Msg.Disclosure));
+      end for;
+
+      return Parts.ToArray();
     else
       raise new Sys.InvalidOperationException('Unknown gallery page.');
   end case;
@@ -355,7 +366,7 @@ begin
   if Compact then
     Parts.Add(
       E.Row of State.Msg(
-        new L.Flow(Gap := Gap(8), Align := L.Alignment.Center),
+        new L.Flow(Gap := Gap(8), Align := L.Alignment.Center, Clip := false),
         Icons.IconButton of State.Msg(
           'drawer-open',
           Sys.Char.ConvertFromUtf32($E115),
@@ -381,7 +392,7 @@ begin
 
   Parts.AddRange(Preview(Model, Width));
   return E.ScrollView of State.Msg(
-    'main-' + Model.NavigationRevision.ToString(),
+    State.MainScrollId,
     E.Row of State.Msg(
       new L.Flow(Align := L.Alignment.Start, Justify := L.Justification.Center, Clip := false),
       E.Size of State.Msg(
@@ -451,12 +462,9 @@ begin
   else
     E.Size of State.Msg(
       E.Row of State.Msg(
-        new L.Flow(Align := L.Alignment.Stretch),
+        new L.Flow(Align := L.Alignment.Stretch, Clip := false),
         E.Size of State.Msg(Sidebar.Build(Model), Fixed(Sidebar.Width)),
-        E.Size of State.Msg(
-          E.Styled of State.Msg(E.Column of State.Msg(), S.Role.Divider),
-          Fixed(1)
-        ),
+        E.Divider of State.Msg(),
         E.Size of State.Msg(Main, Fill)
       ),
       Fill

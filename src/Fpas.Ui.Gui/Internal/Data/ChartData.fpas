@@ -6,6 +6,7 @@ uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Charts.Charts as C;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System.Collections.Generic as Lists;
 
@@ -18,7 +19,9 @@ public function Color(Value: C.Color): CuiCharts.CuiChartColor;
 begin
   return case Value of
     when C.Color.Automatic: new CuiCharts.CuiChartColor();
-    when C.Color.Palette(const Index: int): new CuiCharts.CuiChartColor(Index);
+    when C.Color.Theme(
+      const Token: Themes.ColorToken
+    ): CuiCharts.CuiChartColor.Theme(cast Token as int);
     when C.Color.Rgba(const Rgba: G.Color): new CuiCharts.CuiChartColor(
       -1,
       cast Rgba.Red as uint or (cast Rgba.Green as uint shl 8) or (cast Rgba.Blue as uint shl 16)
@@ -37,7 +40,13 @@ begin
   return if Value = null then
     null
   else
-    new CuiCharts.CuiChartFormat(Value.DecimalPlaces, Value.Prefix, Value.Suffix)
+    new CuiCharts.CuiChartFormat(
+      Value.DecimalPlaces, Value.Prefix, Value.Suffix,
+      cast cast Value.Notation as int as CuiCharts.CuiValueNotation, Value.FieldWidth,
+      cast cast Value.Padding as int as CuiCharts.CuiValuePadding,
+      cast cast Value.Sign as int as CuiCharts.CuiValueSign,
+      Value.Alternate, Value.Uppercase
+    )
   end if;
 end function;
 
@@ -88,7 +97,8 @@ begin
         Item.Y,
         Item.Label,
         Item.Detail,
-        Item.Accent
+        Item.Accent,
+        Color(Item.Color)
       )
     );
   end for;
@@ -105,7 +115,7 @@ begin
       0.0F
     else
       Range.Maximum
-    end if, Items.ToArray()
+    end if, Items.ToArray(), Value.XMinimum, Value.XMaximum
   );
 end function;
 

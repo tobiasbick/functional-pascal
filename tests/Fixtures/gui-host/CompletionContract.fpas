@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses GalleryHostAssertions as A;
@@ -76,13 +77,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 
   function MainOffset(Session: Gui.Session of State.Msg): string;
   begin
-    for Item: Gui.Control in Session.Snapshot().Controls do
-      if Item.Role = 'scroll' and Item.Id.StartsWith('main-', Sys.StringComparison.Ordinal) then
-        return Item.Value;
-      end if;
-    end for;
-
-    raise new Sys.InvalidOperationException('The gallery main viewport is missing.');
+    return A.Control(Session, State.MainScrollId).Value;
   end function;
 
   procedure VerifyPageNavigation(Session: Gui.Session of State.Msg);
@@ -90,6 +85,29 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Window.Resize(500, 480);
     Step(Session);
     Step(Session);
+    Click(Session, 'drawer-open');
+    A.Check(A.Control(Session, 'drawer/close').Enabled, 'The compact drawer must open.');
+    const Close: Cui.CuiRectangle := A.Control(Session, 'drawer/close').Bounds;
+    X := Close.X + Close.Width / 2.0F;
+    Y := Close.Y + Close.Height / 2.0F;
+    Left := 1;
+    Step(Session);
+    Left := 0;
+    Press(Session, Keys.Key.K, Primary);
+    X := -1.0F;
+    Y := -1.0F;
+    A.Check(
+      A.Control(Session, 'gallery-palette/query').Enabled
+      and not A.Control(Session, 'drawer/close').Enabled,
+      'Primary+K must open the palette above the drawer and give it input.'
+    );
+    Press(Session, Keys.Key.Escape);
+    A.Check(
+      A.Control(Session, 'drawer/close').Enabled,
+      'Palette dismissal must leave the drawer open.'
+    );
+    Press(Session, Keys.Key.Escape);
+    A.Check(A.Control(Session, 'drawer-open').Enabled, 'The drawer must still dismiss normally.');
     X := 250.0F;
     Y := 275.0F;
     Wheel := -1.0F;
@@ -122,10 +140,23 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       MainOffset(Session) <> '0',
       'The wide Overview must be scrolled before sidebar activation.'
     );
+    const ScrolledY: float := A.Control(Session, 'overview-components').Bounds.Y;
+    // Leave enough motion to observe the old offset even on a slow renderer.
+    Window.SetTheme(
+      false,
+      0,
+      Window.ReadTheme(),
+      Metrics.Native(new Metrics.Options(Motion := 32.0F))
+    );
     Click(Session, 'navigation', 'overview');
+    A.Check(MainOffset(Session) = '0', 'Sidebar reselection must target the start.');
+    const MovingY: float := A.Control(Session, 'overview-components').Bounds.Y;
+    Window.SetReducedMotion(true);
+    Step(Session);
+    const TopY: float := A.Control(Session, 'overview-components').Bounds.Y;
     A.Check(
-      MainOffset(Session) = '0',
-      'Reselecting Overview in the sidebar must reset the scroll position.'
+      MovingY >= ScrolledY and MovingY < TopY,
+      'The original scroll offset must remain visible while CUI moves the same viewport.'
     );
     Window.Resize(1100, 1700);
     Step(Session);
@@ -256,6 +287,8 @@ begin
     'The form must update the weekly summary.'
   );
   Click(Session, 'workspace-name');
+  Press(Session, Keys.Key.K, Primary);
+  A.Check(A.Control(Session, 'workspace-name').Focused, 'Editing must retain primary+K.');
   Press(Session, Keys.Key.J, Primary);
   A.Check(
     Session.Snapshot().Theme.Appearance = Themes.Mode.Light,

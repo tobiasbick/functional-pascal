@@ -1,6 +1,7 @@
 # Switch
 
 Use a switch for an on/off setting such as Wi-Fi. Available in **GUI and TUI**.
+Use a [checkbox](checkbox.md) for a mixed state.
 
 ![Switch in the FPAS gallery](images/switch.png)
 
@@ -30,8 +31,9 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `On` | Pass the Boolean from the model. |
-| `Description` | Empty. Adds a second line beneath the label. |
+| `Description` | Null omits the second line. An empty string reserves that line in the GUI. |
 | `Enabled` | true. |
+| `HideLabel` | False. Set true to draw only the switch and retain the accessible label. |
 
 ## Interaction
 

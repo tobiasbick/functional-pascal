@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Pickers.DatePickers;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 uses System as Sys;
 
@@ -10,10 +11,10 @@ uses System as Sys;
 public type Options = record
   // Optional caption above the field.
   public Label: string := '';
-  // Caption for an empty selection. Empty selects CUI's default.
-  public Placeholder: string := '';
-  // Logical width. Zero selects CUI's default.
-  public Width: float := 0.0F;
+  // Caption for an empty selection. Null uses CUI's default.
+  public Placeholder: string? := null;
+  // Native width. Content uses CUI's default width policy.
+  public Width: L.Extent := L.Extent.Content;
   // Whether the picker accepts input.
   public Enabled: bool := true;
 end record;

@@ -26,8 +26,8 @@ uses System as Sys;
 public procedure Code(Text: string; Settings: CodeBlocks.Options; At: string);
 begin
   R.CheckText(Text, At);
-  R.CheckText(Settings.Title, At + '/title');
-  R.CheckText(Settings.Language, At + '/language');
+  R.CheckText(Settings.Title ?? '', At + '/title');
+  R.CheckText(Settings.Language ?? '', At + '/language');
   Feedback.Nonnegative(Settings.MaxHeight, At + '/height');
   Feedback.Nonnegative(Settings.Size, At + '/size');
   if Settings.HighlightFrom < 0 or Settings.HighlightTo < 0
@@ -149,13 +149,7 @@ begin
   end for;
 
   for Item: Charts.Annotation in Settings.Annotations do
-    R.CheckText(Item.Label, At);
-    R.CheckText(Item.Detail, At);
-    if not Sys.Enum.IsDefined of Charts.AnnotationKind(Item.Kind)
-      or not Sys.Double.IsFinite(Item.X) or not Sys.Double.IsFinite(Item.Y)
-    then
-      R.Reject(At, 'Chart annotations need finite coordinates and a known kind.');
-    end if;
+    ChartRules.Annotation(Item, At);
   end for;
 end procedure;
 

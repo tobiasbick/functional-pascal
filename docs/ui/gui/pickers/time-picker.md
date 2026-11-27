@@ -33,15 +33,25 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Value` | System.TimeOnly at minute precision. |
-| `Label / Width` | Empty / 0, which uses CUI's default width. |
-| `TwelveHour` | false. Enable it to show the AM/PM column. |
-| `MinuteStep` | 5. Accepts 1 through 60. |
-| `Enabled` | true. |
+| `Id` | Nonempty stable control ID. |
+| `Value` | `System.TimeOnly` at minute precision. |
+| `OnChange` | Maps a proposed time to a message. |
+| `Label` | Null omits the label wrapper. An empty string keeps the wrapper without a caption. |
+| `Width` | `Layout.Extent.Content`. A labeled field fills the available width. An unlabeled field prefers 150 logical units. Set Fill, Fixed or Percent to choose a width explicitly. |
+| `TwelveHour` | `false`. Set to `true` for a 12-hour display and an AM/PM column. |
+| `MinuteStep` | 5. Use 1 through 60 to space the minute choices. |
+| `Enabled` | `true`. Setting `false` closes the popup and releases focus. |
 
 ## Interaction
 
-Click the field or press Enter while it has focus. Choose an hour, a minute or an AM/PM period to propose a time. CUI scrolls the columns to make other choices available. Escape closes the popup and restores focus to the field.
+Click the field or press Enter while it has focus. Select an hour, a minute
+or a period in the open popup. A different choice proposes a new time.
+The popup stays open. Scroll a column to reach more choices. Escape closes
+the popup and returns focus to the field.
+
+`MinuteStep` controls the choices in the popup. The field retains the model's
+exact minute until the user chooses a new one. In 12-hour mode, choosing AM
+or PM changes the period and keeps the hour and minute.
 
 ## See also
 
@@ -65,3 +75,5 @@ Click the field or press Enter while it has focus. Choose an hour, a minute or a
   - [time_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/time_picker.h)
 - `tests/Fixtures/gui-host/`
   - [TimePickersContract.fpas](../../../../tests/Fixtures/gui-host/TimePickersContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiTimePickerTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiTimePickerTests.cs)

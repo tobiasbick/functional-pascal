@@ -280,6 +280,9 @@ begin
   else
     const Request: Chapters.Request := Chapters.ReadRequest(Arguments);
     Run(Request.Destination, Request.Chapter);
+    if Request.Chapter = 'charts' then
+      Charts.CaptureSparkline(IO.Path.GetFullPath(Request.Destination));
+    end if;
   end if;
 end;
 

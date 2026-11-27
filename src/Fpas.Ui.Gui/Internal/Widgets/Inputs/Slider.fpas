@@ -5,6 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Inputs.Slider;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing;
 uses Fpas.Ui.Widgets.Inputs.Sliders as S;
 
 uses System.Globalization as Culture;
@@ -35,6 +36,7 @@ public procedure Draw of TMsg(
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
   const Token: string := C.Token('slider', Id);
+  const Width: Sizing.NativeExtent := Sizing.Extent(Settings.Width);
   var Proposed: float := Value;
   if Frame.Window.Slider(
     Token,
@@ -44,8 +46,9 @@ begin
     Maximum,
     Settings.Step,
     Settings.ShowValue,
-    Settings.DecimalPlaces,
-    Settings.Percent,
+    Settings.Format,
+    Width.Kind,
+    Width.Value,
     Enabled,
     C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     if Frame.PaintingClosed then

@@ -33,12 +33,19 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Commands` | Each entry has a title and a message. Icon, group and shortcut hint default to empty. |
-| `UseShortcut` | true. Enables the native primary-modifier+K shortcut. |
+| `Commands` | Each entry has a searchable `Title` and a `Message` sent on selection. `Icon`, `Group` and `Shortcut` default to null. |
+| `Icon` | CUI glyph preceding the command title. |
+| `Group` | Heading for consecutive commands in the unfiltered list. A blank string displays an empty heading. |
+| `Shortcut` | Display-only keycap hint. Supply space-separated keys such as `Ctrl J`. |
+| `UseShortcut` | true. Enables the native primary-modifier+K shortcut when no editor owns keyboard input. |
 
 ## Interaction
 
-Type to filter commands, use Up or Down to move the highlight and press Enter to select. Escape dismisses the palette. Selection sends both a close proposal and the command message. The application owns visibility. The host restores focus after dismissal.
+Type to filter commands by title, use Up or Down to move the highlight and press Enter to select. Escape or a backdrop click dismisses the palette. Each opening starts with an empty search. Selection sends both a close proposal and the command message. The application owns visibility. The host restores focus after dismissal.
+
+The GUI shortcut can open a palette above an active modal in its base view.
+The palette owns input until it closes. An active modal that covers the palette
+keeps input ownership.
 
 ## See also
 
@@ -49,6 +56,7 @@ Type to filter commands, use Up or Down to move the highlight and press Enter to
 
 ## Source files
 
+- [Native palette option test](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiPaletteTests.cs)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Overlays/`
   - [CommandPalette.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/CommandPalette.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Overlays/`

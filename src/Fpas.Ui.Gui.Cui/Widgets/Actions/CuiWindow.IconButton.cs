@@ -16,19 +16,22 @@ public sealed partial class CuiWindow
     /// <param name="loading">Whether activation is suspended while busy.</param>
     /// <param name="selected">Whether to paint the button as selected.</param>
     /// <param name="focus">Whether to request keyboard focus.</param>
+    /// <param name="widthKind">Content, fill, fixed or percentage in that order.</param>
+    /// <param name="width">Fixed logical width or percentage, when selected.</param>
+    /// <param name="rgba">Packed RGBA foreground override, or zero for the default.</param>
     /// <returns>Whether the button activated.</returns>
     public bool IconButton(string id, string icon, string tooltip, string shortcut, int variant, int size,
-        bool enabled, bool loading, bool selected, bool focus)
+        bool enabled, bool loading, bool selected, bool focus, int widthKind = 0, float width = 0, uint rgba = 0)
     {
         CheckFrame();
         Utf8.Validate(icon, nameof(icon));
-        Utf8.Validate(tooltip, nameof(tooltip));
-        Utf8.Validate(shortcut, nameof(shortcut));
+        CheckTooltipText(tooltip, shortcut, nameof(tooltip));
         ArgumentException.ThrowIfNullOrWhiteSpace(icon);
-        ArgumentException.ThrowIfNullOrWhiteSpace(tooltip);
         if (variant is < 0 or > 7) throw new ArgumentOutOfRangeException(nameof(variant));
         if (size is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(size));
+        CheckExtent(widthKind, width, nameof(width));
         return NativeMethods.IconButton(context, Stable(id), icon, tooltip, Optional(shortcut),
-            variant, size, enabled ? 1 : 0, loading ? 1 : 0, selected ? 1 : 0, focus ? 1 : 0) != 0;
+            variant, size, enabled ? 1 : 0, loading ? 1 : 0, selected ? 1 : 0, focus ? 1 : 0,
+            widthKind, width, rgba) != 0;
     }
 }

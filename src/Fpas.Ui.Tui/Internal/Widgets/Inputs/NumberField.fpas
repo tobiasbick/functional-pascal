@@ -136,9 +136,9 @@ public function Lower of TMsg(
       end if;
       case Pressed of
         when K.Key.Up:
-          return Step(Settings.Step, Scale);
+          return Step(Increment, Scale);
         when K.Key.Down:
-          return Step(-Settings.Step, Scale);
+          return Step(-Increment, Scale);
         else
       end case;
     end if;
@@ -162,6 +162,11 @@ public function Lower of TMsg(
     return (E.Element of TMsg).DisclosureBody(Id, Action, true);
   end function;
 begin
+  const Increment: double := if Settings.Step = 0.0 then
+    1.0
+  else
+    Settings.Step
+  end if;
   const Provider: Global.CultureInfo := Global.CultureInfo.InvariantCulture;
   const Format: string := 'F' + Settings.DecimalPlaces.ToString(Provider);
   var Text: string := Value.ToString(Format, Provider);
@@ -180,8 +185,8 @@ begin
     null, Role := 'number-field', KeyAction := Key
   );
   const Controls: array of E.Element of TMsg := [
-    Button(N.DecreaseId(Id), '−', 'Decrease', -Settings.Step, Value > Minimum),
-    Button(N.IncreaseId(Id), '+', 'Increase', Settings.Step, Value < Maximum)
+    Button(N.DecreaseId(Id), '−', 'Decrease', -Increment, Value > Minimum),
+    Button(N.IncreaseId(Id), '+', 'Increase', Increment, Value < Maximum)
   ];
   return TextField.WithLabels of TMsg(
     TextField.WithAdornments of TMsg(Field, '', Settings.Suffix, Controls, Colors, Theme),

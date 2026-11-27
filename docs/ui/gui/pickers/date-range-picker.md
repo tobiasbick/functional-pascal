@@ -10,6 +10,7 @@ Use a date range picker for a start date and an end date. The first gallery fiel
 unit Docs.Ui.Pickers.DateRangePicker;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Pickers.DateRangePickers as W;
 uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 
@@ -21,7 +22,8 @@ uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 public function View(Period: R.Value): E.Element of R.Value;
 begin
   return W.DateRangePicker of R.Value('picker-date-range', Period,
-    function(Value: R.Value): R.Value => Value, new W.Options(Width := 300.0F));
+    function(Value: R.Value): R.Value => Value,
+    new W.Options(Width := L.Extent.Fixed(L.Measure.Logical(300))));
 end function;
 
 end unit;
@@ -32,13 +34,23 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Value` | DateRanges.Value.Empty, Started(Start) or Complete(Start, Finish). Complete endpoints are inclusive and chronological. |
-| `Label / Placeholder` | Empty. |
-| `Width` | 0 selects CUI's default width. |
-| `Presets / Enabled` | true / true. |
+| `Label` | Null omits the label wrapper. An empty string keeps the wrapper without a caption. |
+| `Placeholder` | Null shows `Pick a date range`. An empty string hides the prompt. |
+| `Width` | Content. CUI prefers 280 logical units without a label. A label wrapper fills the available width by default. Fill, fixed width and percentage also use the native layout. |
+| `Presets` | True. False omits the list of relative dates. |
+| `Enabled` | True. False prevents input. |
 
 ## Interaction
 
-Choose the first day to propose `Started` and leave the popup open for the second choice. Choose the other endpoint to propose a complete range. A preset such as Today proposes both endpoints at once. CUI fits the month panels to the available width. Escape dismisses the picker and restores trigger focus.
+Click the field or activate it with Enter or Space. Choose the first day to
+propose `Started` and keep the popup open. Choose the other endpoint in either
+order to propose a complete range and close the popup. Escape closes the popup
+and restores trigger focus.
+
+Tab moves through the available presets and days. Enter activates the focused
+control. Presets such as Today and Last 7 days propose both endpoints at once.
+CUI fits one or two months to the available width. In a narrow viewport the
+presets move above the calendar.
 
 ## See also
 

@@ -1,6 +1,28 @@
 // [Documentation](../../../../../docs/ui/gui/social-and-media/carousel.md)
 #include "../../fpas_cui.h"
 
+/** Detects pointer presence across the clipped viewport, including its interactive children. */
+static bool fpas_carousel_pointer_over(cui_ctx *ui, cui_id viewport) {
+    if (!ui->mouse_inside) return false;
+    for (int i = ui->prev_hit_count - 1; i >= 0; --i) {
+        const cui_hit *hit = &ui->prev_hits[i];
+        if (hit->id == viewport)
+            return hit->layer == ui->hot_layer && cui__rect_contains(hit->rect, ui->mx, ui->my);
+    }
+    return false;
+}
+
+/** Refreshes a carousel after its enclosing layout changes the viewport width. */
+static void fpas_carousel_track_layout(cui_ctx *ui, cui_node *track, void *data) {
+    (void)data;
+    /* CUI-074 (docs/future/cui-upstream-bugs.md#cui-074): native slide sizes
+       use the viewport's width from the previous layout. */
+    if (track->first >= 0 && fabsf(ui->nodes[track->parent].rect.w
+        - ui->nodes[track->first].rect.w) > 0.5f)
+        cui_request_redraw(ui);
+}
+
+/** Opens the original carousel with FPAS input admission and native layout. */
 int fpas_cui_carousel_begin(cui_ctx *ui, const char *id, int count, int index,
     float height, float gap, float advance, int flags, int focus) {
     const int root = ui->node_count;
@@ -12,14 +34,18 @@ int fpas_cui_carousel_begin(cui_ctx *ui, const char *id, int count, int index,
         cui__car_state *state = cui__state_lazy(ui, key, sizeof *state, false);
         if (state) { state->dragging = false; state->last_change = ui->time; }
     }
+    /* CUI-075 (docs/future/cui-upstream-bugs.md#cui-075): a button inside a
+       slide receives the hit without leaving the carousel viewport. */
+    const bool advance_allowed = enabled && advance > 0 && !fpas_carousel_pointer_over(ui, view);
     const cui_carousel_opts options = { .height = height, .gap = gap,
-        .auto_advance = enabled ? advance : 0, .no_arrows = (flags & 2) != 0,
+        .auto_advance = advance_allowed ? advance : 0, .no_arrows = (flags & 2) != 0,
         .no_dots = (flags & 4) != 0, .loop = (flags & 8) != 0 };
     int *selected = cui__frame_alloc(ui, sizeof *selected);
     *selected = index;
     cui_push_disabled(ui, !enabled);
     cui_carousel_begin(ui, id, count, selected, &options);
     cui_pop_disabled(ui);
+    ui->nodes[cui__car_top(ui)->row].paint = fpas_carousel_track_layout;
     return root;
 }
 

@@ -7,10 +7,10 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // Captions and placement of a native confirmation popover.
 public type Options = record
-  // Question shown above the actions.
-  public Title: string;
-  // Optional text explaining what the action does.
-  public Description: string := '';
+  // Question shown above the actions. Null omits the question.
+  public Title: string? := null;
+  // Text explaining what the action does. Null omits the description.
+  public Description: string? := null;
   // Caption of the affirmative action.
   public ConfirmLabel: string := 'Confirm';
   // Caption of the cancel action.
@@ -28,10 +28,10 @@ end record;
 // ## Parameters
 // - `Id`: Stable panel identity.
 // - `Trigger`: Button whose activation opens the panel.
-// - `Open`: Whether the model opens the question.
+// - `Open`: Model-owned visibility. Set true in the update for the trigger.
 // - `Settings`: Captions and appearance.
 // - `OnConfirm`: Proposed affirmative action. The update also closes the panel.
-// - `OnDismiss`: Proposed cancellation on Cancel, Escape or a press outside.
+// - `OnDismiss`: Proposed cancellation on Cancel, Escape or a press outside. The update closes the panel.
 // ## Returns
 // A graphical view with the trigger's original layout.
 public function ConfirmPopover of TMsg(

@@ -27,7 +27,7 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `DurationMilliseconds` | 1200 |
+| `DurationMilliseconds` | 1200. Set a positive duration in milliseconds. |
 | `Variant` | Destructive |
 | `Icon` | Empty |
 | `Enabled` | true |
@@ -35,7 +35,8 @@ end unit;
 ## Interaction
 
 GUI sends the message once as soon as a pointer, Enter or Space hold
-completes.
+completes. Release the button to start a new hold. An early release makes
+the fill retract.
 
 ## See also
 

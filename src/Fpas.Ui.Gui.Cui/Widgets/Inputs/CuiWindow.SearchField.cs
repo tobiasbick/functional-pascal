@@ -13,9 +13,11 @@ public sealed partial class CuiWindow
     /// <param name="focus">Whether to request editor focus.</param>
     /// <param name="track">Whether to track the controls in this frame.</param>
     /// <param name="clearControl">Snapshot identity of the clear button when visible.</param>
-    /// <returns>The resulting value, submission and clear-button state.</returns>
+    /// <param name="password">Mask the query with a native reveal button.</param>
+    /// <param name="revealControl">Snapshot identity of the reveal button when visible.</param>
+    /// <returns>The resulting value, submission and affordance state.</returns>
     public CuiTextFieldResult SearchField(string id, string value, CuiEditorOptions options,
-        bool enabled, bool focus, bool track, string clearControl)
-        => DrawEditor(EditorKind.SearchField, id, value, options, 0, false, true,
-            enabled, focus, track, clearControl, null);
+        bool enabled, bool focus, bool track, string clearControl, bool password = false, string? revealControl = null)
+        => DrawEditor(EditorKind.SearchField, id, value, options, 0, password, true,
+            enabled, focus, track, clearControl, revealControl);
 }

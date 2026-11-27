@@ -33,13 +33,26 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Title / Description` | Title is required. Description defaults to empty. |
-| `ConfirmLabel / CancelLabel` | Confirm / Cancel. |
-| `Danger / Position` | false / BottomStart. Set Danger for destructive intent. |
+| `Title` | null. A question above the actions. |
+| `Description` | null. More information below the question. |
+| `ConfirmLabel` | Confirm. Supply a nonblank caption. |
+| `CancelLabel` | Cancel. Supply a nonblank caption. |
+| `Danger` | false. Use the native danger style for the confirm action. |
+| `Position` | BottomStart. Set the preferred placement relative to the trigger. |
 
 ## Interaction
 
-The trigger opens the question in the model. The confirm action receives focus and requires a separate activation. Cancel, Escape or a press outside sends the dismiss message. Close the question in your update for either outcome. Use `ConfirmId` and `CancelId` to inspect the built-in buttons.
+Set `Open` in the model when the trigger opens the question. CUI wraps the
+text in a panel with a preferred width of 290 logical units. It fits the
+panel to the viewport using `Position`.
+
+The confirm action receives focus and requires a separate activation. When
+focus moves outside the panel, Enter stays with the focused control. Cancel,
+Escape or a press outside proposes `OnDismiss`. Close the question in
+`Update` after `OnConfirm` or `OnDismiss`.
+
+If focus is inside the panel when it closes, the trigger receives focus.
+Use `ConfirmId` and `CancelId` to inspect the two buttons.
 
 ## See also
 
@@ -61,3 +74,4 @@ The trigger opens the question in the model. The confirm action receives focus a
 - `src/Fpas.Ui.Gui.Cui/native/widgets/overlays/`
   - [confirm_popover.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/confirm_popover.c)
   - [confirm_popover.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/confirm_popover.h)
+- [Native disclosure tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/disclosure.c)

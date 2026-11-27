@@ -14,10 +14,12 @@
  * @param searchable Whether the popup includes a filter.
  * @param enabled Whether the select accepts input.
  * @param focus Whether to request trigger focus.
+ * @param width_kind Native width kind, or zero for the upstream default.
+ * @param width Native fixed-width or percentage value.
  * @param nodes Receives the trigger and one node per option, or minus one if hidden.
  * @return Nonzero when the popup is open. */
 CUI_API int fpas_cui_select(cui_ctx *ui, const char *id, const char *const *items, const char *const *icons,
     int count, int *selected, const char *label, const char *placeholder,
-    int searchable, int enabled, int focus, int *nodes);
+    int searchable, int enabled, int focus, int width_kind, float width, int *nodes);
 
 #endif

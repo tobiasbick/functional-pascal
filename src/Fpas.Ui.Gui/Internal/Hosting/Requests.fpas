@@ -13,6 +13,7 @@ uses Fpas.Ui.Gui.Frames as Frames;
 uses Fpas.Ui.Gui.Internal.Core.Context as Context;
 uses Fpas.Ui.Gui.Internal.Hosting.FontRequests as FontRequests;
 uses Fpas.Ui.Gui.Localization as Localization;
+uses Fpas.Ui.Gui.Scrolls as Scrolls;
 uses Fpas.Ui.Gui.Toasts as Toasts;
 uses Fpas.Ui.Gui.TraceGeometry as Trace;
 uses Fpas.Ui.Gui.Windows as Windows;
@@ -33,6 +34,8 @@ public type State of TMsg = record
   public Toasts: Generic.Queue of Toasts.Request of TMsg;
   // Native frame deadlines to apply after constructing that view.
   public Frames: Generic.Queue of float;
+  // Native scroll targets for the next host-owned view.
+  public ScrollTargets: Generic.Dictionary of (string, float);
   // Whether a native close is awaiting the application's decision.
   public ClosePending: Cells.StrongBox of bool := new Cells.StrongBox of bool(false);
 end record;
@@ -97,6 +100,16 @@ begin
       end if;
 
       Services.Frames.Enqueue(Frame.DelaySeconds);
+    when is Scrolls.Request of TMsg as Target:
+      if Target.Id = '' then
+        raise new Sys.ArgumentException('A scroll view ID is required.', 'Id');
+      end if;
+
+      if not Sys.Single.IsFinite(Target.Offset) or Target.Offset < 0.0F then
+        raise new Sys.ArgumentOutOfRangeException('Offset');
+      end if;
+
+      Services.ScrollTargets[Target.Id] := Target.Offset;
     when is Windows.MoveRequest of TMsg as Move:
       Window.MoveTo(Move.X, Move.Y);
     when is Windows.PlacementRequest of TMsg as Placement:

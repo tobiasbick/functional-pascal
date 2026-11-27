@@ -12,5 +12,6 @@ internal static partial class NativeMethods
     internal static unsafe partial int Select(nint context, string id,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] items,
         [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] icons,
-        int count, ref int selected, string? label, string? placeholder, int searchable, int enabled, int focus, int* nodes);
+        int count, ref int selected, string? label, string? placeholder, int searchable, int enabled,
+        int focus, int widthKind, float width, int* nodes);
 }

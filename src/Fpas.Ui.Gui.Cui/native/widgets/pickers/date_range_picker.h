@@ -9,7 +9,8 @@
  * @param end End day number, or -1. Receives the proposed end.
  * @param label Optional field caption.
  * @param placeholder Optional empty-value caption.
- * @param width Logical field width, or zero for the native default.
+ * @param width_kind Content, fill, fixed or percentage in that order.
+ * @param width Fixed logical width or percentage, when selected.
  * @param presets Whether to show CUI's relative date presets.
  * @param enabled Whether the picker accepts input.
  * @param focus Whether to request trigger focus.
@@ -20,6 +21,7 @@
  * @param open Whether the popup accepts input.
  * @return Whether CUI proposed a representable selection. */
 CUI_API int fpas_cui_range_picker(cui_ctx *ui, const char *id, int *start, int *end,
-    const char *label, const char *placeholder, float width, int presets, int enabled, int focus,
+    const char *label, const char *placeholder, int width_kind, float width,
+    int presets, int enabled, int focus,
     int *trigger, int *parts, int *nodes, int *count, int *open);
 #endif

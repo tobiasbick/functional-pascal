@@ -2,6 +2,12 @@
 #ifndef FPAS_MENU_H
 #define FPAS_MENU_H
 
+typedef struct fpas_cui_menu_row {
+    int flags; /* action=0, label=1, separator=2, disabled=4, danger=8, checked=16 */
+    cui_font font;
+    float text_size;
+} fpas_cui_menu_row;
+
 /** Draws a native menu with literal captions and stable keyed commands.
  * @param ui Current UI-thread context.
  * @param id Stable trigger identity.
@@ -11,7 +17,7 @@
  * @param labels Literal row captions.
  * @param icons Row glyphs, empty when absent.
  * @param shortcuts Display-only row hints, empty when absent.
- * @param flags Row kind (action=0, label=1, separator=2), disabled=4, danger=8, checked=16.
+ * @param rows Row kind, state and caption typography.
  * @param count Number of rows.
  * @param variant Shared button variant ordinal.
  * @param placement Native placement ordinal.
@@ -27,7 +33,7 @@
  * @return Chosen entry index, or -1. */
 CUI_API int fpas_cui_menu(cui_ctx *ui, const char *id, const char *label, const char *icon,
     const char *const *keys, const char *const *labels, const char *const *icons,
-    const char *const *shortcuts, const int *flags, int count, int variant, int placement,
+    const char *const *shortcuts, const fpas_cui_menu_row *rows, int count, int variant, int placement,
     float width, int icon_only, int enabled, int focus, int context_menu, int *nodes,
     int *open, int *highlighted, unsigned int *owner);
 #endif

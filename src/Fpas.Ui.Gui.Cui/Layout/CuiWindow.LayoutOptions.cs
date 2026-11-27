@@ -56,22 +56,29 @@ public sealed partial class CuiWindow
 
     /// <summary>Draws static text with an explicit typeface, size and color.</summary>
     /// <param name="text">Text to draw.</param>
-    /// <param name="font">Native body, medium, display or mono face.</param>
+    /// <param name="font">Native body, medium, display, mono or icon face.</param>
     /// <param name="size">Logical size or zero for the theme default.</param>
     /// <param name="rgba">Straight-alpha RGBA channels packed low to high.</param>
     /// <param name="direction">Inherit, left-to-right, right-to-left, or automatic, in native order.</param>
     /// <param name="alignment">Start, center, right, left, or end, in native order.</param>
     /// <param name="noWrap">Truncate to a single line and show the full text on hover.</param>
+    /// <param name="widthKind">Native content, fill, fixed or percentage width.</param>
+    /// <param name="width">Width in logical units or a percentage.</param>
+    /// <param name="lineHeight">Line height multiplier, or zero for the native default.</param>
+    /// <param name="tabular">Use equal advances for digits.</param>
     public void FormattedText(string text, int font, float size, uint rgba, int direction = 0, int alignment = 0,
-        bool noWrap = false)
+        bool noWrap = false, int widthKind = 0, float width = 0, float lineHeight = 0, bool tabular = false)
     {
         CheckFrame();
         Utf8.Validate(text, nameof(text));
-        if (font is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(font));
+        if (font is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(font));
+        CheckExtent(widthKind, width, nameof(width));
+        ValidateDistance(lineHeight, nameof(lineHeight));
         if (!float.IsFinite(size) || size < 0) throw new ArgumentOutOfRangeException(nameof(size));
         if (direction is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(direction));
         if (alignment is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(alignment));
-        NativeMethods.FormattedText(context, text, font, size, rgba, direction, alignment, noWrap ? 1 : 0);
+        NativeMethods.FormattedText(context, text, font, size, rgba, direction, alignment, noWrap ? 1 : 0,
+            widthKind, width, lineHeight, tabular ? 1 : 0);
     }
 
     /// <summary>Opens a native stack whose children paint over one another.</summary>

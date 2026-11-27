@@ -257,7 +257,7 @@ begin
   Exercise(Session);
 end procedure;
 
-procedure VerifyPersistent(Renderer: Cui.CuiRenderer);
+procedure VerifyPersistent(Renderer: Cui.CuiRenderer; Width: float);
   function Update(Open: bool; Message: bool): App.Transition of (bool, bool);
   begin
     return new App.Transition of (bool, bool)(Message, []);
@@ -269,7 +269,13 @@ procedure VerifyPersistent(Renderer: Cui.CuiRenderer);
       E.Text of bool('Base'),
       F.ActionFooter of bool(B.Button of bool('done', 'Done', false)),
       Open,
-      new D.Options('Persistent', Persistent := true, CloseButton := false, InitialFocus := 'done'),
+      new D.Options(
+        'Persistent',
+        Width := Width,
+        Persistent := true,
+        CloseButton := false,
+        InitialFocus := 'done'
+      ),
       false
     );
   end function;
@@ -311,8 +317,13 @@ begin
   );
   Step(Session);
   const Panel: Cui.CuiRectangle := RequireControl of bool(Session, 'persistent').Bounds;
+  const Expected: float := if Width = 0.0F then
+    328.0F
+  else
+    Width
+  end if;
   Check(
-    Panel.Width = 328 and Find of bool(Session, 'persistent/close') = null
+    Panel.Width = Expected and Find of bool(Session, 'persistent/close') = null
     and RequireControl of bool(Session, 'done').Focused,
     'The dialog must fit a narrow window and honor its focus and close options.'
   );
@@ -421,7 +432,8 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 begin
   Validate();
   VerifyProfile(Renderer, Capture);
-  VerifyPersistent(Renderer);
+  VerifyPersistent(Renderer, 0.0F);
+  VerifyPersistent(Renderer, 280.5F);
   VerifyGeometry(Renderer);
 end procedure;
 

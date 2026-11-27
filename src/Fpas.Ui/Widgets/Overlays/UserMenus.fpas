@@ -7,15 +7,15 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 
 // Options for the native account trigger and its popup.
 public type Options = record
-  // Optional detail below the name, also shown in the popup header.
-  public Detail: string := '';
-  // Optional avatar status, such as online, busy or away.
-  public Status: string := '';
+  // Detail below the name and in the popup header. Null omits the line.
+  public Detail: string? := null;
+  // Avatar status such as online, busy or away. Null omits the status dot.
+  public Status: string? := null;
   // Optional native avatar image file; null uses initials.
   public AvatarPath: string? := null;
   // Show only the avatar in the trigger.
   public Compact: bool := false;
-  // Native placement. BottomStart uses CUI's default for the trigger style.
+  // Native placement. BottomStart uses TopStart or BottomEnd for a compact trigger.
   public Position: M.Placement := M.Placement.BottomStart;
   // Popup width in logical points, or zero for CUI's default.
   public Width: float := 0.0F;

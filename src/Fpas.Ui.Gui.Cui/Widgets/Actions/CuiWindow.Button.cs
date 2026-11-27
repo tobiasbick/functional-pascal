@@ -43,8 +43,7 @@ public sealed partial class CuiWindow
         Utf8.Validate(label, nameof(label));
         Utf8.Validate(icon, nameof(icon));
         Utf8.Validate(iconRight, nameof(iconRight));
-        Utf8.Validate(tooltip, nameof(tooltip));
-        Utf8.Validate(shortcut, nameof(shortcut));
+        CheckTooltipText(tooltip, shortcut, nameof(tooltip), allowEmpty: true);
         if (variant is < 0 or > 7) throw new ArgumentOutOfRangeException(nameof(variant));
         if (size is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(size));
         if (!float.IsFinite(width) || (width < 0 && width != -1)) throw new ArgumentOutOfRangeException(nameof(width));

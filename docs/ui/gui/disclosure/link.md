@@ -33,7 +33,11 @@ end unit;
 
 ## Interaction
 
-Click the link or focus it and press Enter or Space. Handle the destination in your update function. In the gallery the link also anchors a hover card.
+Click the link or focus it and press Enter or Space. Handle the destination
+in your update function. In the gallery the link also anchors a hover card.
+
+FPAS draws a focus ring when the link receives keyboard focus.
+[CUI-050](../../../future/cui-upstream-bugs.md#cui-050)
 
 ## See also
 

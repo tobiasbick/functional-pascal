@@ -6,13 +6,13 @@ uses Fpas.Ui.Elements as E;
 
 // Native JSON viewer options.
 public type Options = record
-  // Initially expanded depth, or zero for the native default.
+  // Initially expanded depth, or zero for CUI's default of two levels.
   public ExpandDepth: int := 0;
-  // Maximum viewport height, or zero for no limit.
+  // Maximum viewport height in logical units, or zero for no widget limit.
   public MaxHeight: float := 0.0F;
 end record;
 
-// Draws the native CUI json view.
+// Draws the native CUI JSON viewer.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters

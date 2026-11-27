@@ -6,7 +6,7 @@ int fpas_cui_dialog_begin(cui_ctx *ui, const char *id, const char *title, const 
     int *panel) {
     const cui_id key = cui_make_id(ui, id) ^ 0xD1A106u;
     const int grip = (draggable ? CUI__GRIP_DRAG : 0) | (resizable ? CUI__GRIP_RESIZE : 0);
-    return fpas_modal_begin(ui, key, title, description, width, 0, CUI_SIDE_RIGHT,
+    return fpas_modal_begin(ui, key, title, description, width > 0 ? width : 440, 0, CUI_SIDE_RIGHT,
         open != 0, enabled != 0, persistent != 0, close_button != 0, focus != 0, grip, panel);
 }
 

@@ -69,6 +69,10 @@ begin
     Frame.Messages.Add(Change(new B.Value(Selected, Result.Search)));
   end if;
 
+  if Frame.PaintingClosed then
+    return;
+  end if;
+
   C.Track of TMsg(Frame, new App.Control(Id, '', 'filter-bar', new Cui.CuiRectangle(), Accept));
 
   for Index: int := 0 to Result.Parts.Length - 1 do

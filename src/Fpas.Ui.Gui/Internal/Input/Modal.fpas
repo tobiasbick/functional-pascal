@@ -38,7 +38,7 @@ public procedure Draw of TMsg(
   Content: E.Element of TMsg;
   Open: bool;
   Title: string;
-  Description: string;
+  Description: string?;
   Initial: string?;
   Close: string?;
   Dismiss: TMsg;
@@ -88,7 +88,7 @@ begin
 
   if Open then
     Frame.Labels.Add(Title);
-    if Description <> '' then
+    if Description <> null and Description <> '' then
       Frame.Labels.Add(Description);
     end if;
 

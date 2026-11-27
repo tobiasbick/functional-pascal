@@ -154,6 +154,37 @@ public sealed class CuiCaptureTests
         Assert.True(window.GetControlRectangle("clear").Width > 0);
     }
 
+    /// <summary>Clears and cancels the current stroke even while the pointer is held.</summary>
+    [GuiFact]
+    public void ClearingSignatureCancelsHeldStroke()
+    {
+        using var window = new CuiWindow("Signature reset", 380, 240, CuiRenderer.Software, continuous: true);
+        Draw(-1, -1, false);
+        var pad = window.GetControlRectangle("signature");
+        float x = pad.X + 32, y = pad.Y + 64;
+        Assert.Equal(new[] { 1 }, Draw(x, y, true).StrokeEnds);
+        Assert.Empty(Draw(x + 20, y + 4, true, clear: true).Coordinates);
+        Assert.Empty(Draw(x + 40, y + 8, true).StrokeEnds);
+        Assert.Empty(Draw(x + 40, y + 8, false).Coordinates);
+        Assert.Equal(new[] { 1 }, Draw(x + 40, y + 8, true).StrokeEnds);
+
+        CuiSignature Draw(float px, float py, bool pressed, bool clear = false)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(px, py);
+            window.SetLeftButton(pressed);
+            window.BeginColumn(12);
+            if (clear) window.ClearSignature("signature");
+            window.SignaturePad("signature", null, 1, 0, 180, default, enabled: true, focusClear: false,
+                track: true, readChanges: false, clearId: null, out bool clearVisible);
+            var snapshot = window.ReadSignature("signature");
+            Assert.Equal(snapshot.Coordinates.Length > 0, clearVisible);
+            window.EndColumn();
+            window.Present();
+            return snapshot;
+        }
+    }
+
     /// <summary>Resolves native percentage width and distinguishes a blank hint from the default.</summary>
     [GuiFact]
     public void SignatureUsesNativeWidthAndOptionalPlaceholder()

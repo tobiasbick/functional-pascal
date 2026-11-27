@@ -17,11 +17,15 @@ internal static partial class NativeMethods
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_node_begin", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void NodeBegin(nint ui, int id, ref float x, ref float y, string title, float width, string? icon);
+    internal static unsafe partial int NodeBegin(nint ui, int id, ref float x, ref float y, string title, float width, string? icon);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_node_pin", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void NodePin(nint ui, int id, string label, int output, int type);
+    internal static unsafe partial int NodePin(nint ui, int id, string label, int output, int type);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_node_selected")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static unsafe partial int NodeSelected(nint ui, int id);
 
     [LibraryImport(Library, EntryPoint = "cui_node_end", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

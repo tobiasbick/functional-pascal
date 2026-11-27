@@ -29,16 +29,24 @@ CUI_API void fpas_cui_node_editor_end(cui_ctx *ui, cui_node_view *result);
  * @param title Optional literal title, copied into frame storage.
  * @param width Logical node width.
  * @param icon Optional glyph, copied into frame storage.
+ * @return Nonzero when the node is selected. Always close the node.
  */
-CUI_API void fpas_cui_node_begin(cui_ctx *ui, int id, float *x, float *y, const char *title, float width, const char *icon);
+CUI_API int fpas_cui_node_begin(cui_ctx *ui, int id, float *x, float *y, const char *title, float width, const char *icon);
 /** Draws a pin inside the current node.
  * @param ui Current UI-thread frame context.
  * @param id Application pin integer identity.
  * @param label Optional literal caption, copied into frame storage.
  * @param output Nonzero for an output pin; zero for an input pin.
  * @param type Native pin compatibility type.
+ * @return Nonzero when the pin has a link.
  */
-CUI_API void fpas_cui_node_pin(cui_ctx *ui, int id, const char *label, int output, int type);
+CUI_API int fpas_cui_node_pin(cui_ctx *ui, int id, const char *label, int output, int type);
+/** Reports selection after all nodes are submitted and before the editor closes.
+ * @param ui Current UI-thread frame context.
+ * @param id Application node integer identity.
+ * @return Nonzero when the node belongs to the current selection.
+ */
+CUI_API int fpas_cui_node_selected(cui_ctx *ui, int id);
 /** Reads a native node-editor proposal.
  * @param ui Current UI-thread frame context.
  * @param kind Zero for link creation, one for link removal, two for node deletion.

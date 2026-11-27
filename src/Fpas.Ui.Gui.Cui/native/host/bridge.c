@@ -4,6 +4,11 @@
 #include <math.h>
 #include <stdlib.h>
 
+/** Adds or removes one application disabled scope without using a widget stack slot. */
+CUI_API void fpas_cui_disabled_scope(cui_ctx *ui, int entering) {
+    ui->disabled_depth += entering ? 1 : -1;
+}
+
 /** Creates a native application with scalar options, copying its title.
  * @param title Borrowed UTF-8 title, valid for this call.
  * @param width Logical window width, also the normal width of a placement.

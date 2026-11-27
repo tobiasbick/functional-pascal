@@ -18,7 +18,7 @@ public sealed partial class CuiWindow
     /// <param name="flags">Native appearance and input bits.</param>
     /// <param name="focus">Native focus part, or minus one.</param>
     /// <param name="part">Maps native parts to tracking identities.</param>
-    /// <returns>The native change and action flags.</returns>
+    /// <returns>One when input changes the selected choice, or zero.</returns>
     public unsafe int AspectPicker(string id, string label, ref int value, int[] widths, int[] heights, string[] labels, string custom, int sizeBase, string display,
         int flags, int focus, Func<int, string>? part)
     {

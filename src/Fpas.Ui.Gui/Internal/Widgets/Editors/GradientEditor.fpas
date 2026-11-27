@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Data.GradientData as Gradient;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Editors.GradientEditors as D;
 
@@ -34,15 +35,8 @@ begin
   const Token: string := C.Token(Role, Id);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Enabled: bool := Frame.AcceptInput;
-  const Native: array of CuiEditors.CuiGradientStop := new CuiEditors.CuiGradientStop[Stops.Length];
-  for Index: int := 0 to Stops.Length - 1 do
-    Native[Index] := new CuiEditors.CuiGradientStop(
-      Stops[Index].Position,
-      Enc.Pack(Stops[Index].Tint)
-    );
-  end for;
   const Result: CuiEditors.CuiGradientEdit? := Frame.Window.GradientEditor(
-    Token, Native, Settings.Capacity, Selected,
+    Token, Gradient.Pack(Stops), Settings.Capacity, Selected,
     Width.Kind, Width.Value, Settings.Height, Enabled
   );
   case Result of
@@ -53,7 +47,7 @@ begin
       end for;
 
       Frame.Messages.Add(
-        Changed(new D.Event(Ramp.ToArray(), Edit.Selected, Edit.Added, Edit.Removed))
+        Changed(new D.Event(Ramp.ToArray(), Edit.Selected, Edit.Added, Edit.Removed, Edit.Changed))
       );
     else
   end case;

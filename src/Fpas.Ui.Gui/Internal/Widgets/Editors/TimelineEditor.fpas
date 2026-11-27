@@ -120,6 +120,7 @@ begin
         NewTracks.Add(Read(Track));
       end for;
       const State: CuiEditors.CuiTimelineRange := Edit.View;
+      const Details: CuiEditors.CuiTimelineActivity := Edit.Activity;
       const Range: D.PlayRange? := if State.HasRange then
         new D.PlayRange(State.In, State.Out)
       else
@@ -130,7 +131,12 @@ begin
           new D.Event(
             NewTracks.ToArray(), new D.View(
               State.Time, State.Start, State.End, State.Scroll, State.Track, State.Key, Range
-            ), Edit.Play
+            ), Edit.Play, new D.Activity(
+              Details.Changed, Details.TimeChanged, Details.Scrubbing, Details.SelectionChanged,
+              Details.ViewChanged, Details.KeysMoved, Details.AddedTrack, Details.AddedKey,
+              Details.RemovedKeys, Details.RemovedClips, Details.ClipTrack, Details.Clip,
+              Details.Toggled, Details.HoveredTrack, Details.HoveredKey
+            )
           )
         )
       );

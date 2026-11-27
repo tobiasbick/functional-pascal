@@ -320,6 +320,10 @@ begin
       end if;
     when E.Element.Styled(const Child: E.Element of TMsg, _):
       return TopModal of TMsg(Child, Prepared, Previous);
+    when E.Element.DisabledScope(const Child: E.Element of TMsg, const Disabled: bool):
+      if not Disabled then
+        return TopModal of TMsg(Child, Prepared, Previous);
+      end if;
     when E.Element.SwipeRow(
       _,
       const Child: E.Element of TMsg,

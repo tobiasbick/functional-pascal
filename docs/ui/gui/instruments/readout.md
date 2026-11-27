@@ -34,11 +34,15 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Label / Value` | Pass strings. Format numbers and precision in your view. |
-| `Unit / Detail` | Empty. The unit sits beside the value and the detail sits below it. |
-| `Size` | Medium. Small, Medium and Large use 17, 28 and 44 logical points. |
-| `Tone / Accent` | Neutral / false. Use Accent to draw the value with the theme accent. |
-| `Align / Width` | Start / Content. CUI aligns the readout column using logical Start, Center or End. |
+| `Label` | Text above the value. Pass an empty string to omit the label. |
+| `Value` | Literal text in a monospaced font with tabular digits. Format the value in your view. |
+| `Unit` | Empty. The unit follows the value in the reading direction and uses the same baseline. |
+| `Detail` | Empty. The detail wraps below the value. |
+| `Size` | `Medium`. `Small`, `Medium` and `Large` use 17, 28 and 44 logical points for the value. |
+| `Tone` | `Neutral`. The neutral tone uses the theme foreground for the value. |
+| `Accent` | `false`. If enabled, the theme accent takes precedence over `Tone`. |
+| `Align` | `Start`. `Start` and `End` follow the reading direction. `Left` and `Right` use physical edges. `Center` centers each line. |
+| `Width` | `Content`. Use `Fill`, `Fixed` or `Percent` to control the space for alignment. |
 
 ## Interaction
 

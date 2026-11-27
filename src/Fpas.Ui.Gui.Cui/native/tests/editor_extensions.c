@@ -57,13 +57,13 @@ static bool retire_focused_inspector(bool hex) {
     const int focus_enabled = 16 | 1;
     uint8_t data[] = {0, 1, 2, 3, 4, 5};
     if (hex) {
-        int start = 0, length = 0, cursor = 0, edit_at, edit_length;
+        int start = 0, length = 0, cursor = 0, edit_at, edit_length, hovered;
         fpas_cui_hex_view(ui, "inspector", data, sizeof data, &start, &length, &cursor,
-            NULL, 0, 0, -1, 16, 1, 0, 220, 0, focus_enabled, &edit_at, &edit_length);
+            NULL, 0, 0, -1, 16, 1, 0, 220, 0, focus_enabled, &edit_at, &edit_length, &hovered);
     } else {
-        int selected, count, inline_mode;
+        fpas_diff_observation observation;
         fpas_cui_diff_view(ui, "inspector", "one\ntwo\n", "one\nthree\n", -1,
-            "text", NULL, NULL, 3, 1, 0, 220, 0, focus_enabled, &selected, &count, &inline_mode);
+            "text", NULL, NULL, 3, 1, 0, 220, 0, 0, focus_enabled, &observation);
     }
     cui_end_frame(ui);
     const bool focused = fpas_cui_focus_key(ui, key) != 0;

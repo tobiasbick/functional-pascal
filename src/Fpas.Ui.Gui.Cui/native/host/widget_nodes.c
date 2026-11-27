@@ -51,6 +51,37 @@ static bool fpas_drag_release(cui_ctx *ui, cui_id key, bool dragging, float *fra
     return true;
 }
 
+typedef struct {
+    bool queued;
+    float x, y;
+    cui_id hot;
+} fpas_slider_release;
+
+/** Presents a coalesced release to a native slider as its final drag position. */
+static fpas_slider_release fpas_slider_release_begin(cui_ctx *ui, cui_id track, bool enabled) {
+    const bool dragging = ui->active == track && !ui->mpressed[CUI_MOUSE_LEFT];
+    const fpas_slider_release saved = {
+        enabled && fpas_drag_release(ui, track, dragging, NULL), ui->mx, ui->my, ui->hot
+    };
+    if (saved.queued) {
+        ui->mx = ui->release_x;
+        ui->my = ui->release_y;
+        ui->mdown[CUI_MOUSE_LEFT] = true;
+        if (!dragging) ui->hot = track;
+    }
+    return saved;
+}
+
+/** Restores physical pointer input before drawing another widget. */
+static void fpas_slider_release_end(cui_ctx *ui, fpas_slider_release saved) {
+    if (saved.queued) {
+        ui->mx = saved.x;
+        ui->my = saved.y;
+        ui->hot = saved.hot;
+        ui->mdown[CUI_MOUSE_LEFT] = false;
+    }
+}
+
 /** Reads CUI drag input without taking focus or consuming the interaction. */
 static cui_interact fpas_probe_drag_interaction(cui_ctx *ui, cui_id key) {
     const int count = ui->focus_count;

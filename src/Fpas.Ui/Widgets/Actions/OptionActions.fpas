@@ -13,8 +13,8 @@ public type Value = record
   public Items: array of string;
   // Zero-based selected option.
   public Index: int;
-  // Action for the selected option.
-  public Tool: W.Tool;
+  // Optional action button for the selected option.
+  public Tool: W.Tool? := null;
 end record;
 
 // Native widget settings.
@@ -45,7 +45,7 @@ end record;
 // ## Parameters
 // - `Id`: Stable widget identity.
 // - `Current`: Current model value.
-// - `Change`: Maps a native proposal to an application message.
+// - `Change`: Maps a selection change or action activation to an application message.
 // - `Settings`: Optional native appearance and input settings.
 // ## Returns
 // The graphical widget.

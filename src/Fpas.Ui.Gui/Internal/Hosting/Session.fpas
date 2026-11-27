@@ -133,7 +133,7 @@ requires Capacity > 0;
   function Inspect(): Windows.Info;
   begin
     CheckOwner();
-    return new Windows.Info(Window.Size, Window.State, Window.Backend, Window.NativeWindow);
+    return Requests.InspectWindow(Window);
   end function;
 
   function Placement(): Cui.CuiWindowPlacement;

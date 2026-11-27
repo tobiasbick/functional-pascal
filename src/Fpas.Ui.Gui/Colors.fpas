@@ -27,11 +27,11 @@ end function;
 // ## Parameters
 // - `Left`: Start color.
 // - `Right`: End color.
-// - `Amount`: Interpolation from zero through one.
+// - `Amount`: Finite interpolation amount. CUI clamps it to zero through one.
 // ## Returns
 // Native mixed color.
 public function Mix(Left: G.Color; Right: G.Color; Amount: float): G.Color;
-requires Amount >= 0.0F and Amount <= 1.0F;
+requires Amount >= -float.MaxValue and Amount <= float.MaxValue;
 begin
   return C.Unpack(Native.CuiColors.Mix(C.Pack(Left), C.Pack(Right), Amount));
 end function;
@@ -39,11 +39,11 @@ end function;
 // Multiplies alpha using CUI and clamps it to the byte range.
 // ## Parameters
 // - `Color`: Straight-alpha source.
-// - `Multiplier`: Finite nonnegative opacity multiplier.
+// - `Multiplier`: Finite opacity multiplier.
 // ## Returns
 // Color with the native multiplied alpha.
 public function Alpha(Color: G.Color; Multiplier: float): G.Color;
-requires Multiplier >= 0.0F and Multiplier <= float.MaxValue;
+requires Multiplier >= -float.MaxValue and Multiplier <= float.MaxValue;
 begin
   return C.Unpack(Native.CuiColors.Alpha(C.Pack(Color), Multiplier));
 end function;

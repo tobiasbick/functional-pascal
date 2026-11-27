@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Canvas.Painting;
 
 uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
 uses Fpas.Ui.Widgets.Media.MediaImages as Images;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
@@ -12,6 +13,30 @@ public type Point = record
   public X: float;
   // Vertical coordinate.
   public Y: float;
+end record;
+
+// Nonnegative corner radii in logical units.
+public type Corners = record
+  // Top-left radius.
+  public TopLeft: float;
+  // Top-right radius.
+  public TopRight: float;
+  // Bottom-right radius.
+  public BottomRight: float;
+  // Bottom-left radius.
+  public BottomLeft: float;
+end record;
+
+// Texture coordinates for an image region. Zero through one spans each axis.
+public type ImageRegion = record
+  // Horizontal texture coordinate at the left of the destination.
+  public U: float;
+  // Vertical texture coordinate at the top of the destination.
+  public V: float;
+  // Signed horizontal span. A negative span reverses this axis.
+  public Width: float;
+  // Signed vertical span. A negative span reverses this axis.
+  public Height: float;
 end record;
 
 // Native text measurements at the requested logical size.
@@ -42,12 +67,21 @@ public type Surface = protocol
   function Focused(): bool;
   // Returns whether the canvas should draw its keyboard focus indicator.
   function FocusVisible(): bool;
+  // Requests the window cursor. The last cursor request in the frame takes priority.
+  procedure SetCursor(Cursor: Canvas.Cursor);
+  // Adds a local rectangle to OnWheel and replaces the default full-canvas region.
+  // Width and Height must be nonnegative. The active drawing clip limits the region.
+  procedure AddWheelRegion(X: float; Y: float; Width: float; Height: float);
   // Returns CUI's user font multiplier; apply it to explicit text sizes when desired.
   function FontScale(): float;
   // Returns CUI's monotonic frame time in seconds.
   function Time(): double;
   // Returns the native frame duration in seconds.
   function DeltaTime(): float;
+  // Moves a finite target value with the standard spring. Sample each stable Id once per frame.
+  function Animate(Id: string; Target: float): float;
+  // Moves a finite target value with a positive duration in seconds and bounce from zero to one.
+  function AnimateSpring(Id: string; Target: float; Duration: float; Bounce: float): float;
   // Resolves Token from the current CUI palette, including any active transition.
   function Color(Token: Themes.ColorToken): G.Color;
   // Fills a rectangle. X/Y are its origin, Width/Height its nonnegative size,
@@ -58,6 +92,15 @@ public type Surface = protocol
     Width: float;
     Height: float;
     Radius: float;
+    Color: G.Color
+  );
+  // Fills the rectangle with independent corner radii.
+  procedure Rectangle(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radii: Corners;
     Color: G.Color
   );
   // Fills a circle at X/Y with nonnegative Radius and the given Color.
@@ -76,6 +119,17 @@ public type Surface = protocol
     Border: G.Color;
     Thickness: float
   );
+  // Fills and outlines the rectangle with independent corner radii.
+  procedure Border(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radii: Corners;
+    Fill: G.Color;
+    Border: G.Color;
+    Thickness: float
+  );
   // Fills the X/Y/Width/Height rounded rectangle from Top to Bottom color.
   procedure Gradient(
     X: float;
@@ -83,6 +137,16 @@ public type Surface = protocol
     Width: float;
     Height: float;
     Radius: float;
+    Top: G.Color;
+    Bottom: G.Color
+  );
+  // Fills the rectangle with a vertical gradient and independent corner radii.
+  procedure Gradient(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radii: Corners;
     Top: G.Color;
     Bottom: G.Color
   );
@@ -94,6 +158,19 @@ public type Surface = protocol
     Width: float;
     Height: float;
     Radius: float;
+    Blur: float;
+    Spread: float;
+    OffsetX: float;
+    OffsetY: float;
+    Color: G.Color
+  );
+  // Draws the rectangle's shadow with independent corner radii.
+  procedure Shadow(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radii: Corners;
     Blur: float;
     Spread: float;
     OffsetX: float;
@@ -139,7 +216,19 @@ public type Surface = protocol
     Width: float;
     Height: float;
     Radius: float;
-    Tint: G.Color
+    Tint: G.Color;
+    Region: ImageRegion? := null
+  );
+  // Draws Source with independent corner radii. Null Region uses the whole image.
+  procedure Image(
+    Source: Images.Source;
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radii: Corners;
+    Tint: G.Color;
+    Region: ImageRegion? := null
   );
   // Intersects the current clip with X/Y/Width/Height; must stay inside this callback.
   procedure PushClip(X: float; Y: float; Width: float; Height: float);

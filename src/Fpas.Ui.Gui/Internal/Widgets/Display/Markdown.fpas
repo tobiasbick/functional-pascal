@@ -59,7 +59,8 @@ begin
   const Enabled: bool := Frame.AcceptInput;
   const Result: CuiDisplay.CuiMarkdownEvent := Frame.Window.Markdown(
     Token, Text, Width.Kind, Width.Value, Settings.Size,
-    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Compact, 2) or Enc.Bits(Settings.Streaming, 4)
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Compact, 2) or Enc.Bits(Settings.Streaming, 4),
+    Enc.PackOptional(Settings.Color) ?? 0U
   );
   if Enabled then
     Report of TMsg(Frame, Result, Changed);

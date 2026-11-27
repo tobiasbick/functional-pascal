@@ -183,7 +183,10 @@ public procedure Check of TMsg(Prepared: V.Prepared of TMsg);
         end for;
       when E.Element.ConfirmPopover(_, const Trigger: E.Element of TMsg, _, _, _, _):
         Visit(Trigger);
-      when E.Element.Styled(const Child: E.Element of TMsg, _):
+      when E.Element.Styled(
+        const Child: E.Element of TMsg,
+        _
+      ), E.Element.DisabledScope(const Child: E.Element of TMsg, _):
         Visit(Child);
       when E.Element.Framed(const Child: E.Element of TMsg, _):
         Visit(Child);

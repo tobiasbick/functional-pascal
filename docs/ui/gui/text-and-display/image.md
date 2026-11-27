@@ -42,6 +42,10 @@ end unit;
 
 ## Usage
 
+Use `MediaImages.Source.File(Path)` for a PNG or JPEG file. The GUI host
+decodes the file with CUI and caches the texture by source path. An image
+with an unreadable file shows no picture.
+
 For generated pixels, use `MediaImages.Source.Rgba` with four bytes per
 pixel. Keep the array unchanged while the view uses it and pass a new
 array when replacing the entire image.

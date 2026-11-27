@@ -30,17 +30,24 @@ end unit;
 
 ## Options and defaults
 
-| Option | Default or requirement |
+| Option | Default and behavior |
 | --- | --- |
-| `Ratios` | Empty uses 1:1, 4:5, 3:2, 16:9, 9:16 and 21:9. |
-| `Custom / CustomLabel` | false / empty. Custom adds a final choice. |
-| `Base / Display` | 0 / empty. Zero uses 1080 pixels for the short side. A negative Base hides the size. |
-| `Plain / Enabled` | false / true. |
+| `Ratios` | An empty array uses 1:1, 4:5, 3:2, 16:9, 9:16 and 21:9. Supply up to 32 ratios with positive dimensions. An empty ratio label shows its proportions. |
+| `Custom` | False. Set true to add a final choice at the index after the last ratio. |
+| `CustomLabel` | An empty value displays Custom. |
+| `Base` | Zero uses 1080 pixels for the short side. A negative value hides the size. |
+| `Display` | An empty value shows the size or the selected Custom caption. Supply text to override it. |
+| `Plain` | False. Set true to omit the well background and border. |
+| `Enabled` | True. Set false to disable input. |
 
 ## Interaction
 
-Click a shape or move with the arrow keys. Store the proposed index.
-Handle the Custom selection in your application to offer custom dimensions.
+Click a shape to select it. Press Tab to focus a choice. Press Left or Right to
+move the selection, or press Enter or Space to select the focused choice.
+
+The change callback receives a zero-based index when the selection changes.
+Store the proposed index in the model. Handle the Custom choice in your
+application to offer custom dimensions.
 
 ## See also
 

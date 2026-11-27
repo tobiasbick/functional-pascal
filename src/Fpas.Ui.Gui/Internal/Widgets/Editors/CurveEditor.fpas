@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as ChartData;
 uses Fpas.Ui.Gui.Internal.Data.CurveData as KeyData;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Editors.CurveEditors as D;
@@ -35,14 +36,10 @@ begin
   const Token: string := C.Token(Role, Id);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Enabled: bool := Frame.AcceptInput;
-  const Native: array of CuiEditors.CuiCurveKey := new CuiEditors.CuiCurveKey[Keys.Length];
-  for Index: int := 0 to Keys.Length - 1 do
-    Native[Index] := KeyData.Pack(Keys[Index]);
-  end for;
   const Marker: float? := Settings.Playhead;
   const Result: CuiEditors.CuiCurveEdit? := Frame.Window.CurveEditor(
     Token,
-    Native,
+    KeyData.PackKeys(Keys),
     Settings.Capacity,
     Selected,
     Settings.XMinimum,
@@ -56,7 +53,8 @@ begin
     Width.Value,
     Marker ??
     0.0F,
-    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Snap, 2) or Enc.Bits(Marker <> null, 4)
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Snap, 2) or Enc.Bits(Marker <> null, 4),
+    ChartData.Format(Settings.XFormat), ChartData.Format(Settings.YFormat)
   );
   case Result of
     when is CuiEditors.CuiCurveEdit as Edit:
@@ -66,7 +64,12 @@ begin
       end for;
 
       Frame.Messages.Add(
-        Changed(new D.Event(NewKeys.ToArray(), Edit.Selected, Edit.Added, Edit.Removed))
+        Changed(
+          new D.Event(
+            NewKeys.ToArray(), Edit.Selected, Edit.Added, Edit.Removed,
+            Edit.Changed, Edit.Hovered, Edit.HoverX, Edit.HoverY
+          )
+        )
       );
     else
   end case;

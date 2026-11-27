@@ -14,10 +14,32 @@ uses GuiGallery.App.State as G;
 uses GuiGallery.App.Update as U;
 uses GuiGallery.App.View as V;
 uses GuiGallery.Pages.Ai.State as AiPage;
+uses GuiGallery.Pages.Voice.Script as VoiceScript;
 uses GuiGallery.Pages.Voice.State as VoicePage;
 uses GuiGallery.Pages.Voice.Update as VoiceUpdate;
 uses System as Sys;
 uses System.IO as IO;
+
+procedure CheckRecordingLimit();
+begin
+  const Recording: VoicePage.Model := VoiceUpdate.Update(
+    new VoicePage.Model(), VoicePage.Msg.Editor(Composer.Event.Record)
+  ).Model;
+  const Advanced: VoicePage.Model := VoiceUpdate.Update(
+    Recording, VoicePage.Msg.Tick(33.0F)
+  ).Model;
+  const Take: Composer.Recording? := Advanced.Editor.Take;
+  A.Check(
+    Take <> null and Take.Levels.Length = 600 and Take.Seconds = 30.0F
+    and Take.Levels[0] = VoiceScript.Recording(0.0F)
+    and Take.Levels[599] = VoiceScript.Recording(599.0F / 20.0F),
+    'The recorder must retain its first thirty seconds after a long clock step.'
+  );
+  A.Check(
+    Advanced.Timeline.Levels.Length = 240,
+    'The call timeline must keep only its latest twelve seconds.'
+  );
+end procedure;
 
 procedure Run(Page: G.Page; Renderer: Cui.CuiRenderer; Capture: string);
   function Update(Model: G.Model; Message: G.Msg): Mvu.Transition of (G.Model, G.Msg);
@@ -221,6 +243,7 @@ end procedure;
 // - `Suffix`: Backend identifier in the filename.
 public procedure Verify(Renderer: Cui.CuiRenderer; Directory: string; Suffix: string);
 begin
+  CheckRecordingLimit();
   Run(G.Page.Voice, Renderer, IO.Path.Combine(Directory, 'voice-' + Suffix + '.png'));
   Run(G.Page.AI, Renderer, IO.Path.Combine(Directory, 'ai-' + Suffix + '.png'));
 end procedure;

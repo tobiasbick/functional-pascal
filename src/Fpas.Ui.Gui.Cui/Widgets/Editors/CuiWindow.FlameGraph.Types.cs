@@ -18,7 +18,11 @@ public sealed record CuiFlameSpan(string Name, double Start, double End, int Dep
 /// <param name="Scroll">Vertical offset.</param>
 /// <param name="Selected">Selected index.</param>
 /// <param name="Zoomed">Zoom target.</param>
-public sealed record CuiFlameRange(double Start, double End, float Scroll, int Selected, int Zoomed = -1);
+/// <param name="Hovered">Pointer span, or minus one.</param>
+/// <param name="ViewChanged">Whether the visible range or scroll changed.</param>
+/// <param name="SelectionChanged">Whether the selected span changed.</param>
+public sealed record CuiFlameRange(double Start, double End, float Scroll, int Selected, int Zoomed = -1,
+    int Hovered = -1, bool ViewChanged = false, bool SelectionChanged = false);
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeFlameSpan
@@ -35,4 +39,5 @@ internal struct NativeFlameRange
     internal double Start, End;
     internal float Scroll;
     internal int Selected, Zoomed;
+    internal int Hovered, ViewChanged, SelectionChanged;
 }

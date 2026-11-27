@@ -194,7 +194,7 @@ public sealed class CuiHostLifecycleReviewTests
         string Draw()
         {
             Assert.True(window.NextFrame());
-            window.RestoreDockLayout("workspace", 7, saved);
+            Assert.True(window.RestoreDockLayout("workspace", 7, saved));
             window.BeginDockspace("workspace", new CuiDockspaceOptions(1, 0, 2, 200,
                 20, 20, false, "dock1 v0.5([*right],[*left])"), true);
             foreach (string key in new[] { "left", "right" })

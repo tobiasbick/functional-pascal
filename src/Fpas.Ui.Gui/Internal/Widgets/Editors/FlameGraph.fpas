@@ -60,7 +60,7 @@ begin
         Changed(
           new D.Event(
             new D.View(Range.Start, Range.End, Range.Scroll, Range.Selected),
-            Range.Zoomed
+            Range.Zoomed, Range.Hovered, Range.ViewChanged, Range.SelectionChanged
           )
         )
       );

@@ -37,6 +37,12 @@ public type Event = record
   public Current: View;
   // Span zoomed to by activation, or minus one.
   public Zoomed: int;
+  // Span under the pointer, or minus one.
+  public Hovered: int := -1;
+  // Whether the visible range or scroll changed.
+  public ViewChanged: bool := false;
+  // Whether the selection changed.
+  public SelectionChanged: bool := false;
 end record;
 
 // Native FlameGraph settings.

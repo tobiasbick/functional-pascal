@@ -9,12 +9,14 @@
  * @param width Logical fixed width or percentage, according to width_kind.
  * @param size Logical text size, or zero for the native default.
  * @param flags Enabled bit one, compact bit two, streaming bit four.
+ * @param color Packed RGBA text color, or zero for the theme.
  * @param offset Receives the UTF-8 task byte offset, or minus one.
  * @param line Receives the one-based task line.
  * @param checked Receives the proposed task checked state.
  * @param hovered Receives the hovered URL, or NULL; copy before the frame is released.
  * @param hover_changed Receives whether the hovered URL changed from the previous draw.
+ * @param height Receives the height from the latest layout.
  * @return Activated URL, or NULL; copy before the frame is released.
  */
-CUI_API const char *fpas_cui_markdown(cui_ctx *ui, const char *id, const char *text, int width_kind, float width, float size, int flags, int *offset, int *line, int *checked, const char **hovered, int *hover_changed);
+CUI_API const char *fpas_cui_markdown(cui_ctx *ui, const char *id, const char *text, int width_kind, float width, float size, int flags, uint32_t color, int *offset, int *line, int *checked, const char **hovered, int *hover_changed, float *height);
 #endif

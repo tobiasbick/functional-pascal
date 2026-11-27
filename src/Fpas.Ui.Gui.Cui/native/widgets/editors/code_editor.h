@@ -11,6 +11,9 @@ typedef struct {
     int matches;     /**< Find result count. */
     int match_index; /**< One-based current match, or zero. */
     int focused;     /**< Editor or find field owns input. */
+    int length;      /**< UTF-8 source length excluding the terminator. */
+    int bracket;     /**< UTF-8 offset of the bracket beside the caret, or minus one. */
+    int bracket_match; /**< UTF-8 offset of the paired bracket, or minus one. */
 } fpas_code_editor_observation;
 
 /** Builds the native editor, which copies visible highlights, and reports changes.
@@ -25,7 +28,7 @@ typedef struct {
  * @param height Logical height, zero for default or minus one to fill.
  * @param size Logical font size, zero for default.
  * @param tab_size Visual columns per indentation level.
- * @param flags Enabled/read-only/tabs/no-gutter/focus bits.
+ * @param flags Enabled/read-only/tabs/no-gutter/focus/autofocus bits.
  * @param marks Sorted borrowed UTF-8 highlight ranges, used during this call.
  * @param mark_count Number of ranges.
  * @param observation Detached caret, selection, focus and find result.

@@ -24,7 +24,7 @@ public sealed partial class CuiWindow
     /// <param name="flags">Native appearance and input bits.</param>
     /// <param name="focus">Native focus part, or minus one.</param>
     /// <param name="part">Maps native parts to tracking identities.</param>
-    /// <param name="sample">The packed color under the thumb.</param>
+    /// <param name="sample">The packed RGBA sample at the proposed value on every draw.</param>
     /// <returns>The native change and action flags.</returns>
     public unsafe int GradientSlider(string id, string label, ref float value, float minimum, float maximum, int track, float[] positions, uint[] colors, CuiChartColor color, float step, CuiChartFormat? format, string display, string tool, string tooltip,
         int flags, int focus, Func<int, string>? part, out uint sample)

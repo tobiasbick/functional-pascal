@@ -95,7 +95,7 @@ begin
       return true;
     when E.Element.DotChart(
       const Id: string, const Bands: array of DotCharts.Series, const Count: int,
-      _, const Settings: DotCharts.Options
+      _, const Settings: DotCharts.Options, _
     ):
       const At: string := Identify(Id, Location + '/dotChart');
       R.RequireProfile(Current, R.Profile.Graphical, At);

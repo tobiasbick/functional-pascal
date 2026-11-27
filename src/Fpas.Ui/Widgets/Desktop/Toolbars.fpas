@@ -15,11 +15,25 @@ public type Button = record
   public Tooltip: string? := null;
   // Optional key hint.
   public Shortcut: string? := null;
-  // Pressed state, or null for a momentary action.
+  // Pressed state for an ordinary button, or null for a momentary action.
   public Toggle: bool? := null;
   // Whether this action is unavailable.
   public Disabled: bool := false;
-  // Semantic color.
+  // Semantic color for an ordinary button.
+  public Tone: S.Tone := S.Tone.Neutral;
+  // Draws the native flyout marker.
+  public Flyout: bool := false;
+end record;
+
+// Appearance and interaction settings for a cycling choice.
+public type CycleOptions = record
+  // Hover caption and prefix for the choice in the overflow menu.
+  public Tooltip: string? := null;
+  // Optional key hint in the tooltip.
+  public Shortcut: string? := null;
+  // Whether this choice is unavailable.
+  public Disabled: bool := false;
+  // Semantic color of the visible caption.
   public Tone: S.Tone := S.Tone.Neutral;
   // Draws the native flyout marker.
   public Flyout: bool := false;
@@ -39,7 +53,7 @@ end record;
 public type Event = record
   // Zero-based actionable item in traversal order.
   public Index: int;
-  // Proposed index for choices or 0/1 for toggles.
+  // Proposed index for choices, 0/1 for toggles or 0 for momentary actions.
   public Value: int;
 end record;
 
@@ -49,11 +63,11 @@ public type Item = variant
   Button(Value: Button);
   // A larger filled action.
   Primary(Value: Button);
-  // An inset set of mutually exclusive icons.
-  Radio(Icons: array of string; Labels: array of string; Selected: int);
+  // An inset set of mutually exclusive icons. Labels name the icons in the overflow menu.
+  Radio(Icons: array of string; Labels: (array of string)?; Selected: int);
   // A button that advances through the available options.
-  Cycle(Labels: array of string; Selected: int; Tooltip: string);
-  // Opens a raised group or inserts a separator in a plain bar.
+  Cycle(Labels: array of string; Selected: int; Settings: CycleOptions?);
+  // Opens a raised group or separates groups in a plain or floating bar.
   Group(Items: array of Item);
   // Draws a separator.
   Separator;

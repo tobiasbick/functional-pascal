@@ -13,16 +13,18 @@ CUI_API void fpas_cui_toolbar_end(cui_ctx *ui);
 /** Adds an ordinary or primary tool. icon/label/tooltip/shortcut are optional strings.
  * toggle is -1 for an action or an input boolean for a toggle; tone is the native ordinal.
  * flags: 1 disabled, 2 flyout marker, 4 primary. Returns -1 when idle, otherwise the
- * proposed toggle boolean (zero for an ordinary action). The icon is copied for this frame. */
+ * proposed ordinary toggle boolean (zero for a momentary or primary action).
+ * The icon is copied for this frame. */
 CUI_API int fpas_cui_toolbar_button(cui_ctx *ui, const char *icon, const char *label, const char *tooltip,
     const char *shortcut, int toggle, int tone, int flags);
-/** Adds a native exclusive tool group. icons and labels have count entries; icons are
- * copied for this frame. Supports up to 32 entries (larger counts are truncated).
+/** Adds a native exclusive tool group. icons and optional labels have count entries;
+ * icons are copied for this frame. Supports up to 32 entries (larger counts are truncated).
  * value is the current index; returns proposed index or -1 when unchanged. */
 CUI_API int fpas_cui_toolbar_radio(cui_ctx *ui, const char *id, const char *const *icons,
     const char *const *labels, int count, int value);
-/** Adds a native cycling choice. labels has count entries, value is the current index,
- * tooltip is optional; returns proposed index or -1 when unchanged. */
+/** Adds a native cycling choice. labels has count entries; value is the current index.
+ * tooltip and shortcut are optional strings; tone is the native ordinal.
+ * flags: 1 disabled, 2 flyout marker. Returns proposed index or -1 when unchanged. */
 CUI_API int fpas_cui_toolbar_cycle(cui_ctx *ui, const char *id, const char *const *labels,
-    int count, int value, const char *tooltip);
+    int count, int value, const char *tooltip, const char *shortcut, int tone, int flags);
 #endif

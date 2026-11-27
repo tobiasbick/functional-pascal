@@ -9,5 +9,7 @@ internal static partial class NativeMethods
 {
     [LibraryImport(Library, EntryPoint = "fpas_cui_selection_bar", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial int SelectionBar(nint ui, string id, byte* selected, int itemCount, int count, NativeSelectionAction* actions, int actionCount, int enabled, int noEscape, string? countFormat);
+    internal static unsafe partial int SelectionBar(nint ui, string id, byte* selected, int itemCount, int count,
+        NativeSelectionAction* actions, int actionCount, int enabled, int noEscape, string? countFormat,
+        string? anchor);
 }

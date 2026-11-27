@@ -43,17 +43,33 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Group.Open / Collapsible` | Both true. |
+| `Group.Open` | True. Sets the current expansion of a collapsible group. |
+| `Group.Collapsible` | True. Set to false for a section that stays open. |
 | `Property.Current` | Supply Number, Integer, Text, Boolean, Choice, Color or Vector. Vectors have two to four components. |
-| `Minimum / Maximum / Step / Digits` | 0 / 0 / 0 / minus one. Two zero bounds use the native unbounded range. Minus one derives precision from the step. |
-| `Capacity / Enabled / Checkbox` | 256 UTF-8 bytes including the terminator / true / false. |
-| `Width / LabelWidth` | Fill / 0. Zero uses the native label proportion. |
+| `Minimum / Maximum / Step` | Zero for each. Set an increasing pair of bounds to limit the value. A zero step uses one hundredth of the bounded range. |
+| `Digits` | Minus one uses native precision. Set zero to nine for fixed decimal places. |
+| `Format` | Null. Supply a [numeric format](../charts/README.md#value-format) to override `Digits` for numeric rows. |
+| `Suffix` | Empty. Adds literal text after a numeric or text value. |
+| `Placeholder` | Empty. Sets the hint for empty text or a choice with selected index minus one. |
+| `Tooltip` | Empty. Supplies a tooltip on the property label. |
+| `Capacity` | 256 UTF-8 bytes for text, including the terminator. |
+| `Enabled` | True. Set to false to disable input for the property. |
+| `Checkbox` | False draws Boolean values as switches. Set to true for checkboxes. |
+| `Width / LabelWidth` | Fill / 0. Zero starts the label column at 38 percent of the available width. |
 
 ## Interaction
 
 CUI chooses the editor from the value type. Store an `Expansion` proposal
 on the corresponding group. Store the typed value from `Edit` at its group
 and row indices, and render the resulting groups.
+
+Drag a numeric field sideways to adjust the value. For a Number or Integer,
+you can also drag the label. Hold Shift for finer steps. Click a numeric
+field to type the value, or use the arrow keys to step it.
+An unbounded Number or Vector uses a default step of 0.1. An unbounded Integer
+uses a default step of one. Integer steps round to a whole number of at least one.
+Drag the divider to resize the label column.
+CUI stacks the label over the editor below 380 logical units.
 
 Replacing a text value or changing its capacity resets that row's selection
 and undo history. Ordinary edits retain undo/redo; rejecting an edit restores

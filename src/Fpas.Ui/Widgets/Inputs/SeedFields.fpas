@@ -34,7 +34,7 @@ public type Event = record
   public Seed: uint;
   // Proposed lock state.
   public Locked: bool?;
-  // The seed or lock changed.
+  // The dice rolled or the lock toggled.
   public Changed: bool;
   // The dice was activated.
   public Rolled: bool;

@@ -53,9 +53,12 @@ separate X11 connection. The managed window serializes wake posting and target
 release before destroying the window. `DeferClose`, `TakeCloseRequest` and
 `WakeWhenCompleted` support close decisions and asynchronous cleanup.
 `SetTitle`, `Resize` and `RequestFrame` run on the owner thread.
-`RequestFrame(0)` calls `cui_request_redraw` for the next frame. Pass a
+`RequestFrame(0)` calls `cui_request_redraw` for the next frame. Pass a finite
 positive delay in seconds to call `cui_request_wakeup`. CUI uses the earliest
-pending deadline.
+pending deadline and can start a frame sooner for input or animation. The next
+frame clears the deadline. Call `RequestFrame` from each frame for a recurring
+wakeup in an owner-managed window loop. From an MVU `Update` function, return a
+[frame request](host.md#invalidation-and-inspection) for a single repaint.
 
 `SetResizeRenderer` roots an owner-thread cached-view callback until
 detachment. Failures surface after the native pump returns. The callback draws
@@ -78,6 +81,12 @@ native CUI nodes. Dockspace, dock-panel, menu-bar and status-bar
 scopes require callers to balance native begin and end operations within the
 same frame. Managed layout-stack checks cover split views and other managed layout scopes.
 
+Call `DisabledScope(Disabled, Draw)` with a synchronous drawing callback.
+A true flag disables its subtree. A false flag inherits the surrounding
+input state. The scope ends when the callback returns or raises.
+Complete presentation, capture or disposal after the callback returns.
+[Disabled subtrees](layout/container-options.md#disabled-subtrees)
+
 `TrackLastControl` and composite tracking register nodes for geometry, focus
 and hover. `ScrollMetrics` reads the vertical offset and range of a tracked
 scroll viewport or scrolling box. `ScrollTo` requests an offset. `ScrollReveal`
@@ -87,6 +96,8 @@ tracked separately.
 `LastRectangle` calls `cui_last_rect` during a frame. It reads the last emitted
 widget's bounds from the previous native layout. It returns a zero rectangle
 if that widget has no previous layout.
+`ReadDiffRows` and `FlameSpanRectangle` read native data between frames.
+After discarding a frame, present another frame before querying them.
 `ForgetControl` releases retained state and owned popup or feedback state for
 disappearing controls. Private state keys stay in the native bridge. Stable
 identities are separate from literal labels, and the FPAS host maps native
@@ -101,6 +112,8 @@ input can be injected during an active frame through the managed binding. These
 methods forward to CUI, which routes input according to its current layout and
 ownership. Tests using injection exercise the CUI path. Operating-system
 keyboard and pointer delivery require platform input tests.
+`KeyPressed` reads native frame presses, including repeats. `Modifiers` reads
+the native modifier mask. CUI can consume a press before the application reads it.
 
 ## Touch input
 
@@ -108,8 +121,8 @@ keyboard and pointer delivery require platform input tests.
 to `TouchSlots` fingers during a frame. `TouchCount` and `ReadTouch` return the
 frame's state; finger minus one reads the touch that landed first, and a lifted
 finger keeps its position for that frame. CUI's Windows and Linux desktop
-backends do not report touch yet, so the binding exposes it for injection and
-for drawing code that reads it.
+backends do not report touch yet. Read injected touch state during widget
+submission. Capture that state in the paint closure if painting uses it.
 [CuiWindow.Touch.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Touch.cs) ·
 [NativeMethods.Touch.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Hosting/NativeMethods.Touch.cs) ·
 [CuiTouchTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiTouchTests.cs)
@@ -279,6 +292,8 @@ Native AOT must run without CUI imports or extraction. The suite runs on Windows
 x64 and Ubuntu x64 under WSL 2 with Xvfb.
 
 ## Source files
+
+- [Presented geometry tests](../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiPresentedGeometryTests.cs)
 
 <details>
 <summary>Browse 56 source files</summary>

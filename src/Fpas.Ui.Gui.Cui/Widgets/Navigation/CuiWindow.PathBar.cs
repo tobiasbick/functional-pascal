@@ -39,7 +39,7 @@ public sealed partial class CuiWindow
         int* nodes = stackalloc int[count];
         int segmentIndex = NativeMethods.PathBar(context, stable, segments, segments.Length, Optional(text),
             Optional(icon), Optional(placeholder), size, widthKind, width, flags, focus,
-            out nint submitted, nodes, out int root, out uint retainedKey);
+            out nint submitted, out int editing, nodes, out int root, out uint retainedKey);
         if (part is not null) TrackControl(id, root, retainedKey);
         var path = Marshal.PtrToStringUTF8(submitted);
         var parts = new bool[count];
@@ -60,6 +60,6 @@ public sealed partial class CuiWindow
             }
             finally { NativeMethods.PathMenuEnd(context); }
         }
-        return new(segmentIndex, path, chosen >= 0 ? parent : -1, chosen, parts);
+        return new(segmentIndex, path, chosen >= 0 ? parent : -1, chosen, editing != 0, parts);
     }
 }

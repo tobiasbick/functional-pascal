@@ -19,4 +19,9 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial nuint DescribeQuery(NativeDevField* fields, int fieldCount, NativeDevRule* rules, int count,
         byte* text, nuint capacity);
+
+    [LibraryImport(Library, EntryPoint = "cui_query_match")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static unsafe partial byte MatchQuery(NativeDevField* fields, int fieldCount, NativeDevRule* rules, int count,
+        byte** values);
 }

@@ -1,11 +1,15 @@
 // [Documentation](../../../../../docs/ui/gui/editing-tools/flame-graph.md)
 #ifndef FPAS_CUI_FLAME_GRAPH_H
 #define FPAS_CUI_FLAME_GRAPH_H
+/** Returns logical span bounds, or an empty rectangle for an absent or invisible span. */
+CUI_API cui_rect fpas_cui_flame_span_rect(cui_ctx *ui, const char *id, double start, double end, int depth);
+
 /** Detached flame-graph view and interaction results. */
 typedef struct {
     double start, end; /**< Visible time bounds. */
     float scroll; /**< Vertical scroll offset. */
     int selected, zoomed; /**< Selected span and double-click/Enter zoom target, minus one when absent. */
+    int hovered, view_changed, selection_changed; /**< Pointer span and change flags. */
 } fpas_flame_view;
 /** Draws a flame graph and updates its detached view.
  * @param ui Current UI-thread frame context.

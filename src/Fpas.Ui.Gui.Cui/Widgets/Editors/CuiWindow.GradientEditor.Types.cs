@@ -15,4 +15,5 @@ public readonly record struct CuiGradientStop(float Position, uint Rgba);
 /// <param name="Selected">Selected index.</param>
 /// <param name="Added">Inserted index.</param>
 /// <param name="Removed">Removed index.</param>
-public sealed record CuiGradientEdit(CuiGradientStop[] Stops, int Selected, int Added, int Removed);
+/// <param name="Changed">Whether a stop moved, changed color, was added, or was removed.</param>
+public sealed record CuiGradientEdit(CuiGradientStop[] Stops, int Selected, int Added, int Removed, bool Changed);

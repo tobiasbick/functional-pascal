@@ -4,6 +4,7 @@ unit Fpas.Ui.Widgets.Editors.CurveEditors;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // Interpolation of the outgoing curve segment.
 public type Mode = enum: byte
@@ -45,6 +46,14 @@ public type Event = record
   public Added: int;
   // Removed index in the previous curve, or minus one.
   public Removed: int;
+  // Whether an edit changed a key.
+  public Changed: bool := false;
+  // Whether the pointer is over the plot.
+  public Hovered: bool := false;
+  // Horizontal axis coordinate under the pointer.
+  public HoverX: float := 0.0F;
+  // Curve value at the horizontal coordinate.
+  public HoverY: float := 0.0F;
 end record;
 
 // Native CurveEditor settings.
@@ -67,6 +76,10 @@ public type Options = record
   public XLabel: string := '';
   // Vertical readout label.
   public YLabel: string := '';
+  // Horizontal axis and readout format. Null uses the grid spacing.
+  public XFormat: Charts.ValueFormat? := null;
+  // Vertical axis and readout format. Null uses the grid spacing.
+  public YFormat: Charts.ValueFormat? := null;
   // Always snap dragging to the grid.
   public Snap: bool := false;
   // Optional horizontal playhead position.

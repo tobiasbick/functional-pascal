@@ -47,6 +47,9 @@ Store `Event.Selected` to accept a new range or caret. Offsets index the
 buffer from zero. When `Event.Data` contains replacement bytes, store that
 buffer and use `EditOffset` and `EditLength` to identify the overwrite.
 Reset a GoTo request to minus one after handling its proposal.
+`SelectionChanged` reports a moved caret or changed range. `Hovered` gives
+the byte under the pointer, or minus one. `Copied` reports a copy shortcut.
+Ctrl+C copies as hexadecimal. Ctrl+Shift+C copies as ASCII.
 
 ## See also
 

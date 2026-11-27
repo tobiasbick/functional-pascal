@@ -107,6 +107,7 @@ begin
       const Path: string := Identify(Id, Location + '/DiffView');
       LR.CheckExtent(Settings.Width, Profile, Path);
       C.Distance(Settings.Size, Path);
+      C.Distance(Settings.SplitMinimumWidth, Path);
       Height(Settings.Height, Path);
       R.CheckText(Before, Path);
       R.CheckText(After, Path);

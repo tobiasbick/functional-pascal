@@ -39,7 +39,7 @@ begin
   const Height: Size.NativeExtent := Size.Extent(Settings.Height);
   const Restore: D.Restore? := Settings.Load;
   if Restore <> null and Frame.AcceptInput then
-    Frame.Window.RestoreDockLayout(Token, Restore.Revision, Restore.Layout);
+    discard Frame.Window.RestoreDockLayout(Token, Restore.Revision, Restore.Layout);
   end if;
 
   Frame.Window.BeginDockspace(

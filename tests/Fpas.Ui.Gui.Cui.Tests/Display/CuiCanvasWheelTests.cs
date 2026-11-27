@@ -34,6 +34,43 @@ public sealed class CuiCanvasWheelTests
         }
     }
 
+    /// <summary>Uses the paint callback's clipped regions instead of the canvas bounds.</summary>
+    [GuiFact]
+    public void PaintedRegionsConstrainWheelOwnership()
+    {
+        using var window = new CuiWindow("Canvas wheel regions", 400, 200, CuiRenderer.Software,
+            continuous: true);
+        window.SetReducedMotion(true);
+        Draw(30);
+        Draw(30);
+        Assert.Equal((2f, -3f), Draw(30, 2, -3));
+        Assert.Equal((1f, -2f), Draw(170, 1, -2));
+        Assert.Equal((0f, 0f), Draw(95, 0, -2));
+        window.ScrollState("page", -1, 0, out float offset, out _);
+        Assert.True(offset > 0);
+
+        (float, float) Draw(float x, float dx = 0, float dy = 0)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(x, 40);
+            if (dx != 0 || dy != 0) window.Wheel(dx, dy);
+            window.BeginScroll("page", 120);
+            window.DrawingCanvas("canvas", 1, 0, 2, 300, [], true,
+                out _, out _, out _, out _, true, out float horizontal, out float vertical,
+                paint: painter =>
+                {
+                    painter.PushClip(0, 0, 60, 100);
+                    painter.AddWheelRegion(20, 0, 80, 100);
+                    painter.PopClip();
+                    painter.AddWheelRegion(160, 0, 40, 100);
+                    painter.SetCursor(5);
+                });
+            window.EndScroll();
+            window.Present();
+            return (horizontal, vertical);
+        }
+    }
+
     /// <summary>Lets CUI route scrolling to the enclosing page when there is no active handler.</summary>
     /// <param name="enabled">Whether the canvas accepts interaction.</param>
     /// <param name="wheel">Whether a wheel handler is registered.</param>

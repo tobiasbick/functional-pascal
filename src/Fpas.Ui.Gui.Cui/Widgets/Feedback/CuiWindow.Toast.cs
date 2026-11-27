@@ -42,6 +42,16 @@ public sealed partial class CuiWindow
         return new((flags & 1) != 0, (flags & 2) != 0, ToastPart(card), ToastPart(action), ToastPart(dismiss));
     }
 
+    /// <summary>Dismisses a queued toast during the current frame.</summary>
+    /// <param name="handle">Native handle returned when queuing the toast in this window.</param>
+    /// <remarks>Already dismissed or expired handles have no effect.</remarks>
+    public void DismissToast(int handle)
+    {
+        CheckFrame();
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(handle);
+        NativeMethods.ToastDismiss(context, handle);
+    }
+
     private CuiToastPart? ToastPart(int node) => node < 0 ? null : new(
         NativeMethods.NodeRectangle(context, node),
         NativeMethods.Focused(context, node) != 0,

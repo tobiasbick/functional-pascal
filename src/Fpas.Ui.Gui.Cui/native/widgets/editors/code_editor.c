@@ -44,6 +44,7 @@ int fpas_cui_code_editor(cui_ctx *ui, const char *id, char *text, size_t capacit
         .placeholder = placeholder ? cui__frame_strdup(ui, placeholder, -1) : NULL,
         .width = fpas_extent(width_kind, width), .height = height, .size = size, .tab_size = tab_size,
         .read_only = !enabled || (flags & 2), .use_tabs = (flags & 4) != 0, .no_line_numbers = (flags & 8) != 0,
+        .autofocus = enabled && (flags & 32),
         .marks = marks, .mark_count = mark_count };
     cui_push_disabled(ui, !enabled);
     const cui_code_editor_result event = cui_code_editor_ex(ui, id, text, capacity, &options);
@@ -51,7 +52,8 @@ int fpas_cui_code_editor(cui_ctx *ui, const char *id, char *text, size_t capacit
     fpas_creative_node(ui, root, key);
     fpas_text_store(ui, prior, text, strlen(text), capacity);
     *observation = (fpas_code_editor_observation){ event.line, event.column, event.line_count,
-        event.cursor, event.anchor, event.find_matches, event.find_index, event.focused };
+        event.cursor, event.anchor, event.find_matches, event.find_index, event.focused,
+        event.length, event.bracket, event.bracket_match };
     const bool moved = enabled && memcmp(&state->observation, observation, sizeof *observation) != 0;
     if (enabled) state->observation = *observation;
     const bool refusal_changed = state->refused != event.refused;

@@ -117,7 +117,7 @@ begin
       );
     when E.Element.ResultCard(
       const Id: string,
-      const Image: Media.Source,
+      const Image: Media.Source?,
       const Title: string,
       const Activate: TChild,
       const Settings: ResultCards.Options

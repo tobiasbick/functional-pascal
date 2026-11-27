@@ -43,18 +43,19 @@ begin
     Settings.Add,
     Settings.Remove,
     Settings.Axis,
-    Settings.Label
+    Settings.Label,
+    Settings.NativeSelection
   );
   const Result: CuiCharts.CuiEventResult := Frame.Window.EventTrack(
     Token, Current.Times, Current.Selected, Native,
     Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   );
-  if Enabled and (Result.Changed or Result.Selected <> Current.Selected) then
+  if Enabled and (Result.Changed or Result.SelectionChanged or Result.DragChanged) then
     Frame.Messages.Add(
       Change(
         new W.Change(
           new W.Value(Result.Times, Result.Selected),
-          Result.Added, Result.Removed, Result.Dragging
+          Result.Added, Result.Removed, Result.Dragging, Result.Changed
         )
       )
     );

@@ -40,6 +40,12 @@ internal static partial class NativeMethods
     internal static partial void PushFocusScope(nint ui, uint id, byte active);
     [LibraryImport(Library, EntryPoint = "cui_pop_focus_scope")]
     internal static partial void PopFocusScope(nint ui);
+    [LibraryImport(Library, EntryPoint = "cui_set_cursor")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void CanvasCursor(nint ui, int cursor);
+    [LibraryImport(Library, EntryPoint = "cui_wheel_region")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void CanvasWheelRegion(nint ui, uint id, CuiRectangle bounds);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_drawing_canvas", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

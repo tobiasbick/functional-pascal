@@ -6,13 +6,13 @@
  * @param id Stable widget identity.
  * @param label Literal well caption.
  * @param colors One to sixteen packed RGBA colors, red in the low byte; updated in place.
- * @param locked Matching lock flags, updated in place.
+ * @param locked Matching lock flags, updated in place when locking is available.
  * @param count Number of colors and locks.
  * @param seed Optional model-owned shuffle seed, updated in place.
  * @param display Optional value caption.
  * @param height Logical swatch height, or zero for the native default.
- * @param flags Bit 0 enables input, bit 1 hides Shuffle, bit 3 selects plain styling.
- * @param focus Requested swatch index, or minus one.
+ * @param flags Bit 0 enables input, bit 1 hides Shuffle, bit 2 hides locks, bit 3 selects plain styling.
+ * @param focus Requested swatch index, count for Shuffle, or minus one.
  * @param parts Receives count swatch nodes and one Shuffle node; absent nodes are minus one.
  * @return Native action flags when enabled, otherwise zero. */
 CUI_API int fpas_cui_palette_strip(cui_ctx *ui, const char *id,

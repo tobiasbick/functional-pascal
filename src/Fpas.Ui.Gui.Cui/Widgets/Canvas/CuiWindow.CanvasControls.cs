@@ -18,6 +18,7 @@ public sealed partial class CuiWindow
     /// <param name="states">Current and proposed toggle values, one per toggle.</param>
     /// <param name="flags">Bits: 1 accepts input, 2 hides fit, 4 places the rail at the reading-direction start edge.</param>
     /// <returns>Bits: 1 zoom changed, 2 fit requested, 4 a toggle changed; zero when idle or disabled.</returns>
+    /// <remarks>The view can advance toward a previous zoom target even when this call returns zero.</remarks>
     public unsafe int CanvasControls(string id, ref CuiNodeView view, CuiRectangle content, float[] steps, CuiCanvasToggle[] toggles, bool[] states, int flags)
     {
         CheckFrame();

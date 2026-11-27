@@ -24,6 +24,8 @@ public type Event = record
   public Added: int;
   // Removed index in the previous ramp, or minus one.
   public Removed: int;
+  // Whether a stop moved, changed color, was added, or was removed.
+  public Changed: bool := false;
 end record;
 
 // Native GradientEditor settings.

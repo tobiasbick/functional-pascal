@@ -44,7 +44,7 @@ begin
   const Flags: int := Enc.Bits(Enabled, 1) + Enc.Bits(
     Settings.NoShuffle,
     2
-  ) + Enc.Bits(Settings.Plain, 8);
+  ) + Enc.Bits(Settings.NoLocks, 4) + Enc.Bits(Settings.Plain, 8);
   const Result: int := Frame.Window.PaletteStrip(
     Token, Current.Label, Colors, Locks, ref Seed,
     Current.Seed <> null, Settings.Display, Settings.Height, Flags,
@@ -71,7 +71,12 @@ begin
     const Caption: string := '#' + Color.Red.ToString(
       'X2'
     ) + Color.Green.ToString('X2') + Color.Blue.ToString('X2');
-    W.Part of TMsg(Frame, Id, Role, Parts[Index], Caption, Enabled, (Locks[Index] <> 0).ToString());
+    const LockValue: string := if Settings.NoLocks then
+      ''
+    else
+      (Locks[Index] <> 0).ToString()
+    end if;
+    W.Part of TMsg(Frame, Id, Role, Parts[Index], Caption, Enabled, LockValue);
   end for;
 
   if not Settings.NoShuffle then

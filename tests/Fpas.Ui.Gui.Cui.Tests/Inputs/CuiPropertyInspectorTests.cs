@@ -1,5 +1,7 @@
 // [Documentation](../../../docs/ui/gui/editing-tools/property-inspector.md)
 using Fpas.Ui.Gui.Cui.Widgets.Editors;
+using Fpas.Ui.Gui.Cui.Widgets.Charts;
+using Fpas.Tests.Support;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Inputs;
 
@@ -38,5 +40,34 @@ public sealed class CuiPropertyInspectorTests
 
         void Draw(CuiProperty row) =>
             window.PropertyInspector("properties", [new("Details", [row], true, false)], 0, 1, 0, true);
+    }
+
+    /// <summary>A custom number format takes precedence over the fixed digit count.</summary>
+    [GuiFact]
+    public void DrawsCustomNumericFormats()
+    {
+        using var directory = new TemporaryDirectory();
+        using var window = new CuiWindow("Property formats", 420, 240, CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        var property = new CuiProperty("Number", 0, 0, [12.5f], null, 0, [], 0, 0, 0, 0, "", "", "", 256, 1);
+        uint[] standard = Draw("standard.png", property);
+        uint[] custom = Draw("custom.png", property with { Format = new CuiChartFormat(2, "USD ") });
+        uint[] differentDigits = Draw("digits.png", property with { Digits = 7, Format = new CuiChartFormat(2, "USD ") });
+
+        Assert.False(standard.SequenceEqual(custom));
+        Assert.Equal(custom, differentDigits);
+
+        uint[] Draw(string name, CuiProperty row)
+        {
+            for (int frame = 0; frame < 2; frame++)
+            {
+                Assert.True(window.NextFrame());
+                window.PropertyInspector("properties", [new("Details", [row], true, false)], 0, 1, 0, true);
+                window.Present();
+            }
+            string path = directory.File(name);
+            window.CapturePng(path);
+            return PngAssertions.ReadPixels(path, 420, 240);
+        }
     }
 }

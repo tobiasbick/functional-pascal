@@ -17,6 +17,14 @@ public type Info = record
   public Backend: string;
   // Borrowed handle whose type depends on Backend. Valid while the session owns the window.
   public NativeWindow: Sys.IntPtr;
+  // Drawable pixels per logical unit at the last viewport update.
+  public DpiScale: float;
+  // Whether the window has native focus.
+  public Focused: bool;
+  // Whether the platform reports a file drag over the window.
+  public FileDragActive: bool;
+  // Number of files in the last frame's unclaimed drop.
+  public DroppedFileCount: int;
 end record;
 
 // Changes how the owner window is shown.
@@ -206,7 +214,7 @@ end function;
 
 // Reads the window's normal size and place and whether it is or comes back
 // maximized, for an application that saves them and passes them to
-// `Application.Options.Placement` at its next start.
+// `Desktop.Options.Placement` at its next start.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -219,6 +227,41 @@ public function ReadPlacement of TMsg(
 begin
   return (Mvu.Command of TMsg).Host(
     Mvu.HostRequest.Extension(new PlacementRequest of TMsg(OnRead))
+  );
+end function;
+
+// Maps a native window observation into an application message.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type InfoRequest of TMsg = record implements Mvu.HostExtension of TMsg
+  // Maps the latest window information to a message.
+  public OnRead: function(Info): TMsg;
+
+  // Maps the result to a parent application message.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Maps child messages.
+  // ## Returns
+  // The same request with the parent message type.
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
+  begin
+    const Read: function(Info): TMsg := self.OnRead;
+    return new InfoRequest of TNext(function(State: Info): TNext => Messages(Read(State)));
+  end function;
+end record;
+
+// Reads the window state on the GUI owner thread between frames.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `OnRead`: Maps live state and the most recent unclaimed drop count to a message.
+// ## Returns
+// The graphical window command.
+public function ReadInfo of TMsg(OnRead: function(Info): TMsg): Mvu.Command of TMsg;
+begin
+  return (Mvu.Command of TMsg).Host(
+    Mvu.HostRequest.Extension(new InfoRequest of TMsg(OnRead))
   );
 end function;
 

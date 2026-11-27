@@ -56,6 +56,9 @@ The first column contains the label, chevron, and indentation for each node.
 `Guides` draws lines that show the depth. CUI derives the visible rows from
 the open branches. Each visible row uses `RowHeight`.
 
+When drawing a tree table directly with `CuiWindow`, call `TreeTableDepth()`
+after `NextTreeTableRow` to read that row's depth. A root has depth zero.
+
 Columns use the data grid's initial widths, resizing, priority hiding, and
 direction-aware alignment. See [data grid layout](data-grid.md#column-and-viewport-layout).
 

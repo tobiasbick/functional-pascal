@@ -9,5 +9,6 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Navigation;
 /// <param name="Text">Submitted path, or null.</param>
 /// <param name="MenuSegment">Menu parent segment, or minus one.</param>
 /// <param name="Child">Activated menu item, or minus one.</param>
+/// <param name="Editing">Whether native text editing is active.</param>
 /// <param name="Parts">Availability of native parts.</param>
-public readonly record struct CuiPathResult(int Segment, string? Text, int MenuSegment, int Child, bool[] Parts);
+public readonly record struct CuiPathResult(int Segment, string? Text, int MenuSegment, int Child, bool Editing, bool[] Parts);

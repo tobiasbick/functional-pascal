@@ -6,8 +6,10 @@ uses Fpas.Ui.Gui.Clipboard as Clipboard;
 uses Fpas.Ui.Gui.Closing as Closing;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Developer as Developer;
+uses Fpas.Ui.Gui.DiffGeometry as Diff;
 uses Fpas.Ui.Gui.EditorCommands as Editors;
 uses Fpas.Ui.Gui.FileDialogs as Files;
+uses Fpas.Ui.Gui.FlameGeometry as Flame;
 uses Fpas.Ui.Gui.Fonts as Fonts;
 uses Fpas.Ui.Gui.Frames as Frames;
 uses Fpas.Ui.Gui.Internal.Core.Context as Context;
@@ -39,6 +41,19 @@ public type State of TMsg = record
   // Whether a native close is awaiting the application's decision.
   public ClosePending: Cells.StrongBox of bool := new Cells.StrongBox of bool(false);
 end record;
+
+// Reads the window observation fields for sessions and owner commands.
+// ## Parameters
+// - `Window`: Live window on its owner thread.
+// ## Returns
+// Size, state, DPI, focus and file drop state.
+public function InspectWindow(Window: Cui.CuiWindow): Windows.Info;
+begin
+  return new Windows.Info(
+    Window.Size, Window.State, Window.Backend, Window.NativeWindow,
+    Window.DpiScale, Window.IsFocused, Window.FileDragActive, Window.DroppedFileCount
+  );
+end function;
 
 function Choose of TMsg(Window: Cui.CuiWindow; Dialog: Files.Request of TMsg): string?;
 begin
@@ -114,6 +129,20 @@ begin
       Window.MoveTo(Move.X, Move.Y);
     when is Windows.PlacementRequest of TMsg as Placement:
       Pending.Enqueue(Placement.OnRead(Window.Placement));
+    when is Windows.InfoRequest of TMsg as Info:
+      Pending.Enqueue(Info.OnRead(InspectWindow(Window)));
+    when is Diff.Request of TMsg as Rows:
+      Pending.Enqueue(
+        Rows.OnRead(
+          Window.ReadDiffRows(Context.Token('diff-view', Rows.Id), Rows.First, Rows.Capacity)
+        )
+      );
+    when is Flame.Request of TMsg as Bounds:
+      Pending.Enqueue(
+        Bounds.OnRead(
+          Window.FlameSpanRectangle(Context.Token('flame-graph', Bounds.Id), Bounds.Span)
+        )
+      );
     when is Trace.SpanRequest of TMsg as Geometry:
       const Span: Developer.CuiDevSpan := new Developer.CuiDevSpan(
         Geometry.Span.Name, Geometry.Span.Start, Geometry.Span.End,

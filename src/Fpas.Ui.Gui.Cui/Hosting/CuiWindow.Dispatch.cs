@@ -42,6 +42,8 @@ public sealed partial class CuiWindow
     {
         if (renderingResize)
             throw new InvalidOperationException("A live-resize renderer cannot change the window or frame lifecycle.");
+        if (disabledScopeDepth != 0)
+            throw new InvalidOperationException("Finish the disabled drawing scope before changing the frame lifecycle.");
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
@@ -62,6 +64,8 @@ public sealed partial class CuiWindow
             window.resizeRenderer?.Invoke();
             if (window.layouts.Count != 0) throw new InvalidOperationException("Unbalanced live-resize view.");
             window.ResolveHostLayout();
+            window.lastDroppedFileCount = NativeMethods.DroppedFileCount(window.context);
+            window.discardedGeometry = false;
         }
         catch (Exception error)
         {

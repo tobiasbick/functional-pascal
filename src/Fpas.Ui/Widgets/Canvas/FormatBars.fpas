@@ -3,8 +3,8 @@
 unit Fpas.Ui.Widgets.Canvas.FormatBars;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Styles as S;
-uses Fpas.Ui.Widgets.Motion.Motion as M;
 
 // Current text formatting.
 public type Value = record
@@ -18,11 +18,11 @@ public type Value = record
   public Link: bool;
   // Zero-based text style.
   public Style: int;
-  // Size displayed in the readout.
+  // Document size displayed in the readout.
   public Size: float;
-  // Native alignment from left (0) to justify (3).
+  // Alignment: left (0), center (1), right (2), or justify (3).
   public Alignment: int;
-  // Native list style from none (0) to checklist (3).
+  // List style: none (0), bullets (1), numbers (2), or checklist (3).
   public List: int;
 end record;
 
@@ -32,21 +32,21 @@ public type Style = record
   public Name: string;
   // Size applied to the selection.
   public Size: float;
-  // Size of the menu preview.
+  // Size of the menu preview, or zero for the theme body size.
   public PreviewSize: float;
-  // Font used in the preview.
-  public Font: M.Font;
+  // Native font role used in the preview.
+  public Font: G.Font;
 end record;
 
 // Format-bar settings.
 public type Options = record
   // Custom styles, or empty for the defaults.
   public Styles: array of Style := [];
-  // Custom tone grid, or empty for the defaults.
+  // Up to 32 tones for the color grid, or empty for the defaults.
   public Colors: array of S.Tone := [];
-  // Footer override, or null for the native default.
+  // Menu footer, empty to hide the caption or null for the native default.
   public Footer: string? := null;
-  // Footer keycaps, or null for the native default.
+  // Footer keycaps, empty to hide them or null for the native default.
   public FooterKeys: string? := null;
   // Confirmation caption, or null for the native default.
   public DeleteQuestion: string? := null;
@@ -60,8 +60,10 @@ end record;
 
 // A native format-bar proposal.
 public type Event = record
-  // Proposed format.
+  // Proposed format, or the current format when only an action occurred.
   public Format: Value;
+  // Whether any format field changed.
+  public Changed: bool;
   // The link action was activated.
   public ToggleLink: bool;
   // Deletion was confirmed.

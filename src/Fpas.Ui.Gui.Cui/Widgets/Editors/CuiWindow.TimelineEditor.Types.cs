@@ -46,7 +46,28 @@ public sealed record CuiTimelineRange(float Time, float Start, float End, float 
 /// <param name="Tracks">Updated tracks.</param>
 /// <param name="View">Updated view.</param>
 /// <param name="Play">Whether Space requested playback.</param>
-public sealed record CuiTimelineEdit(CuiTimelineTrack[] Tracks, CuiTimelineRange View, bool Play);
+/// <param name="Activity">Changes and pointer state reported by the native editor.</param>
+public sealed record CuiTimelineEdit(CuiTimelineTrack[] Tracks, CuiTimelineRange View, bool Play, CuiTimelineActivity Activity);
+
+/// <summary>Native timeline action and pointer information.</summary>
+/// <param name="Changed">Whether keys, clips or track flags changed.</param>
+/// <param name="TimeChanged">Whether the playhead moved.</param>
+/// <param name="Scrubbing">Whether the pointer is dragging the playhead.</param>
+/// <param name="SelectionChanged">Whether the key or clip selection changed.</param>
+/// <param name="ViewChanged">Whether the viewport moved or zoomed.</param>
+/// <param name="KeysMoved">Whether selected keys moved.</param>
+/// <param name="AddedTrack">Track where a key was added, or minus one.</param>
+/// <param name="AddedKey">Index of the new key, or minus one.</param>
+/// <param name="RemovedKeys">Number of removed keys.</param>
+/// <param name="RemovedClips">Number of removed clips.</param>
+/// <param name="ClipTrack">Track of the edited clip, or minus one.</param>
+/// <param name="Clip">Index of the edited clip, or minus one.</param>
+/// <param name="Toggled">Track whose flag changed, or minus one.</param>
+/// <param name="HoveredTrack">Track of the hovered key, or minus one.</param>
+/// <param name="HoveredKey">Index of the hovered key, or minus one.</param>
+public sealed record CuiTimelineActivity(bool Changed, bool TimeChanged, bool Scrubbing, bool SelectionChanged,
+    bool ViewChanged, bool KeysMoved, int AddedTrack, int AddedKey, int RemovedKeys, int RemovedClips,
+    int ClipTrack, int Clip, int Toggled, int HoveredTrack, int HoveredKey);
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeTimelineTrack
@@ -74,6 +95,8 @@ internal struct NativeTimelineView
 {
     internal float Time, Start, End, Scroll, In, Out;
     internal int Track, Key, Range;
+    internal int Activity, AddedTrack, AddedKey, RemovedKeys, RemovedClips;
+    internal int ClipTrack, Clip, Toggled, HoveredTrack, HoveredKey;
 }
 
 [StructLayout(LayoutKind.Sequential)]

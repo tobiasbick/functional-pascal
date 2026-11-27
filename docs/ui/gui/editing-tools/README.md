@@ -23,6 +23,9 @@ track's keys in a separate curve editor while sharing its playhead.
 
 ## Source files
 
+- [Native curve and gradient sampling](../../../../src/Fpas.Ui.Gui.Cui/Interop/NativeMethods.EditorEvaluation.cs)
+- [Sampling and query tests](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiEditorEvaluationTests.cs)
+
 - [Samples.fpas](../../../../examples/ui/gui/gallery/Pages/EditingTools/Samples.fpas)
 - [State.fpas](../../../../examples/ui/gui/gallery/Pages/EditingTools/State.fpas)
 - [editing_tools.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/editing_tools.c)

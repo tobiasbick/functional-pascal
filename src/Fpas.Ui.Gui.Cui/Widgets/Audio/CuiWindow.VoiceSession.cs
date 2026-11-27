@@ -9,16 +9,17 @@ public sealed partial class CuiWindow
 {
     /// <summary>Draws a native call and returns any mute or end action.</summary>
     /// <param name="id">Stable widget identity.</param>
-    /// <param name="activity">Native voice activity.</param>
-    /// <param name="levels">Measured levels, newest last.</param>
-    /// <param name="owners">Optional speaker tags.</param>
+    /// <param name="activity">Native voice activity from idle (0) through muted (4).</param>
+    /// <param name="levels">Measured levels, oldest first. Negative values display silence.</param>
+    /// <param name="owners">Speaker tags, one per level. Null uses the caller color.</param>
     /// <param name="text">Transcript and labels.</param>
     /// <param name="muted">Mute state, or null to omit the button.</param>
     /// <param name="widthKind">Native width kind.</param>
     /// <param name="width">Logical width or percentage.</param>
-    /// <param name="flags">Native input and appearance flags.</param>
-    /// <param name="focus">Requested native part index or minus one.</param>
-    /// <param name="track">Optional part tracking callback.</param>
+    /// <param name="flags">Bit 1 enables input. Bit 2 hides End.</param>
+    /// <param name="focus">Request focus for Mute (0) or End (1). Use minus one for no request.</param>
+    /// <param name="track">Optional tracking callback for the visible Mute and End parts.</param>
+    /// <returns>The action flags, proposed mute state and presence of each button.</returns>
     public unsafe CuiVoiceSessionResult VoiceSession(string id, int activity, float[] levels, byte[]? owners,
         CuiVoiceSessionText text, bool? muted, int widthKind, float width, int flags, int focus, Func<int, string>? track)
     {

@@ -32,13 +32,18 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `People` | Reuse the same collaborator data as the cursor overlay. |
-| `Size / MaxVisible` | Both zero. Zero uses native avatar diameter or the default visible avatar cap. |
+| `People` | Reuse the collaborator data from the [cursor overlay](live-cursors.md). |
+| `Person.Avatar` | Empty. Supply a PNG or JPEG path for a picture. The pill uses initials if the path is empty or the picture fails to load. |
+| `Person.Away` | `false`. Set to `true` to dim the avatar. |
+| `Person.Speaking` | `false`. The first speaking person who is present gets level bars and a name. A visible avatar also gets a ring. |
+| `Size` | `0` uses a diameter of 26 logical units. |
+| `MaxVisible` | `0` shows up to five avatars. The pill counts the remaining people in a `+n` marker. |
 
 ## Interaction
 
-Update the collaborator array as people join, leave or speak. The pill
-is passive.
+Update the collaborator array as people join, leave or speak. Hover over an
+avatar to see the person's name and away status. The pill takes no keyboard
+focus and emits no message. With reduced motion, the level bars stay still.
 
 ## See also
 

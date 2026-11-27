@@ -252,8 +252,9 @@ public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? :
       60.0F,
       20.0F,
       20.0F,
-      2.0F,
-      new G.Color(255, 255, 255)
+      new Painting.Corners(2.0F, 5.0F, 3.0F, 0.0F),
+      new G.Color(255, 255, 255),
+      Region := new Painting.ImageRegion(1.0F, 0.0F, -1.0F, 1.0F)
     );
     Surface.PushClip(0.0F, 0.0F, 40.0F, 40.0F);
     Surface.Line(0.0F, 0.0F, 50.0F, 50.0F, 2.0F, Color);

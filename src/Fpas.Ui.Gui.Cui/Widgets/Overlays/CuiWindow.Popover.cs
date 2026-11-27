@@ -40,6 +40,15 @@ public sealed partial class CuiWindow
         layouts.RemoveAt(layouts.Count - 1);
     }
 
+    /// <summary>Reports whether the native popover is open.</summary>
+    /// <param name="id">Popover identity in the same CUI identity scope used by BeginPopover.</param>
+    /// <returns>True while the popover is open, including its opening transition.</returns>
+    public bool IsPopoverOpen(string id)
+    {
+        CheckFrame();
+        return NativeMethods.PopoverIsOpen(context, Stable(id));
+    }
+
     private void CheckPopupDepth()
     {
         if (layouts.Count(static scope => scope.Kind is Layout.Popover or Layout.HoverCard) >= 15)

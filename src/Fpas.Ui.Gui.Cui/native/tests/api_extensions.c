@@ -109,7 +109,60 @@ static bool wheel(bool adapter) {
     return ok;
 }
 
+static void paint_wheel_regions(cui_ctx *ui, cui_rect area, cui_id key) {
+    cui_push_clip(ui, (cui_rect){area.x, area.y, 60, 100});
+    cui_wheel_region(ui, key, (cui_rect){area.x + 20, area.y, 80, 100});
+    cui_pop_clip(ui);
+    cui_wheel_region(ui, key, (cui_rect){area.x + 160, area.y, 40, 100});
+    cui_set_cursor(ui, CUI_CURSOR_MOVE);
+}
+
+static void direct_regions(cui_ctx *ui, cui_rect area, void *user) {
+    paint_wheel_regions(ui, area, *(const cui_id *)user);
+}
+
+static int adapter_regions(void *user, cui_ctx *ui, cui_rect area, cui_id images, int state, cui_id wheel) {
+    (void)user;
+    (void)images;
+    (void)state;
+    paint_wheel_regions(ui, area, wheel);
+    return 1;
+}
+
+/** Checks multiple painted wheel regions, clipping, and cursor precedence. */
+static bool wheel_regions(bool adapter) {
+    cui_ctx *ui = cui_create(NULL);
+    cui_set_viewport(ui, 400, 200, 1);
+    cui_push_id(ui, "canvas");
+    cui_id key = cui_make_id(ui, "wheel");
+    cui_pop_id(ui);
+    const float points[] = {30, 30, 95, 170, 230};
+    bool ok = true;
+    for (int frame = 0; frame < 5; ++frame) {
+        cui_input_mouse_move(ui, points[frame], 40);
+        if (frame) cui_input_scroll(ui, 2, -3);
+        cui_begin_frame(ui, .016f);
+        cui_set_cursor(ui, CUI_CURSOR_HAND);
+        cui_vec2 delta = {0};
+        if (adapter) {
+            float x, y, w, h;
+            fpas_cui_drawing_canvas(ui, "canvas", 1, 0, 2, 140, NULL, 0, 1,
+                &x, &y, &w, &h, 1, &delta.x, &delta.y, adapter_regions, NULL, 0, 0, 0, 0, -1);
+        } else {
+            cui_wheel_take(ui, key, &delta);
+            cui_canvas(ui, "canvas", CUI_FILL, CUI_PX(140), direct_regions, &key, sizeof key);
+        }
+        cui_end_frame(ui);
+        const bool inside = frame == 1 || frame == 3;
+        ok &= cui_get_cursor(ui) == CUI_CURSOR_MOVE &&
+            delta.x == (inside ? 2 : 0) && delta.y == (inside ? -3 : 0);
+    }
+    cui_destroy(ui);
+    if (!ok) fprintf(stderr, "Canvas wheel bounds or paint cursor differ. Adapter=%d.\n", adapter);
+    return ok;
+}
+
 int main(void) {
     return pixels(false, false) && pixels(false, true) && pixels(true, false) && pixels(true, true)
-        && wheel(false) && wheel(true) ? 0 : 1;
+        && wheel(false) && wheel(true) && wheel_regions(false) && wheel_regions(true) ? 0 : 1;
 }

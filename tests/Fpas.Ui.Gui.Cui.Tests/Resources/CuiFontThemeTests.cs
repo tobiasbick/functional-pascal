@@ -49,6 +49,11 @@ public sealed class CuiFontThemeTests
         window.DiscardFrame();
         Assert.False(window.LoadEmojiFont([]));
         Assert.True(window.LoadEmojiFont(FontFixture.Read()));
+        using var fonts = new TemporaryDirectory();
+        string fontPath = fonts.File("emoji.ttf");
+        File.WriteAllBytes(fontPath, FontFixture.Read());
+        Assert.False(window.LoadEmojiFontFile(fonts.File("missing.ttf")));
+        Assert.True(window.LoadEmojiFontFile(fontPath));
         _ = window.LoadSystemEmojiFont();
         _ = window.SupportsEmoji("👩‍💻");
         Assert.Throws<ArgumentException>(() => window.SupportsEmoji("bad\0text"));
@@ -154,8 +159,12 @@ public sealed class CuiFontThemeTests
         Assert.Equal(0xff000000u, CuiColors.Oklch(0, 0, 0));
         Assert.Equal(0xffffffffu, CuiColors.Oklch(1, 0, 0));
         Assert.Equal(0x80123456u, CuiColors.Alpha(0xff123456, .5f));
+        Assert.Equal(0x00123456u, CuiColors.Alpha(0xff123456, -1));
+        Assert.Equal(0xff123456u, CuiColors.Alpha(0x80123456, 2));
         Assert.Equal(0xff123456u, CuiColors.Mix(0xff123456, 0xff123456, .5f));
+        Assert.Equal(0xff123456u, CuiColors.Mix(0xff123456, 0xffffffff, -1));
+        Assert.Equal(0xffffffffu, CuiColors.Mix(0xff123456, 0xffffffff, 2));
         Assert.Throws<ArgumentOutOfRangeException>(() => CuiColors.Oklch(1, float.NaN, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => CuiColors.Mix(0, 0, 2));
+        Assert.Throws<ArgumentOutOfRangeException>(() => CuiColors.Mix(0, 0, float.NaN));
     }
 }

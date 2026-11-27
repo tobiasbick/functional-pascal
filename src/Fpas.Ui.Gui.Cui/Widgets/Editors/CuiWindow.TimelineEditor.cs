@@ -45,7 +45,11 @@ public sealed partial class CuiWindow
         for (int i = 0; i < updated.Length; i++)
             updated[i] = ReadTimelineTrack(native[i], tracks[i]);
         return new(updated, new(range.Time, range.Start, range.End, range.Scroll, range.Track, range.Key,
-            range.Range != 0, range.In, range.Out), (result & 2) != 0);
+            range.Range != 0, range.In, range.Out), (result & 2) != 0,
+            new((range.Activity & 1) != 0, (range.Activity & 2) != 0, (range.Activity & 4) != 0,
+                (range.Activity & 8) != 0, (range.Activity & 16) != 0, (range.Activity & 32) != 0,
+                range.AddedTrack, range.AddedKey, range.RemovedKeys, range.RemovedClips,
+                range.ClipTrack, range.Clip, range.Toggled, range.HoveredTrack, range.HoveredKey));
     }
 
     private static unsafe NativeTimelineTrack PackTimelineTrack(CuiTimelineTrack track, ChartMemory memory)

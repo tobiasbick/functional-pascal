@@ -62,6 +62,16 @@ public type Link = record
   public ToPin: int;
 end record;
 
+// Selection and connections reported while CUI draws the graph.
+public type Status = record
+  // Selected node IDs in drawing order.
+  public SelectedNodes: array of int := [];
+  // Connected input and output pin IDs in drawing order.
+  public ConnectedPins: array of int := [];
+  // Selected link IDs in drawing order.
+  public SelectedLinks: array of int := [];
+end record;
+
 // Node editor settings.
 public type Options = record
   // Preferred width.
@@ -78,6 +88,8 @@ public type Options = record
   public Minimap: bool := false;
   // Whether the editor accepts input.
   public Enabled: bool := true;
+  // Last reported status. Supply an empty status to start observing changes.
+  public ObservedStatus: Status? := null;
 end record;
 
 // Changes proposed by the native node editor.
@@ -92,6 +104,8 @@ public type Event = variant
   Unlink(Id: int);
   // A node was deleted.
   Delete(Id: int);
+  // The native selection or connected pin IDs changed.
+  StatusChanged(Value: Status);
 end variant;
 
 // Builds the native NodeEditor element.

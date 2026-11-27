@@ -14,7 +14,7 @@ static void fpas_path_close_menu(cui_ctx *ui, cui_id key) {
 
 int fpas_cui_path_bar(cui_ctx *ui, const char *id, const char *const *segments, int count,
     const char *text, const char *icon, const char *placeholder, int size, int width_kind, float width,
-    int flags, int focus, const char **submitted, int *parts, int *root, uint32_t *retained_key) {
+    int flags, int focus, const char **submitted, int *editing, int *parts, int *root, uint32_t *retained_key) {
     const int first = ui->node_count;
     const cui_id key = cui_make_id(ui, id);
     const bool enabled = (flags & 1) && !cui_is_disabled(ui);
@@ -29,6 +29,7 @@ int fpas_cui_path_bar(cui_ctx *ui, const char *id, const char *const *segments, 
     const cui_path_bar_result result = cui_path_bar_ex(ui, id, segments, count, &options);
     cui_pop_disabled(ui);
     *submitted = enabled ? result.submitted : NULL;
+    *editing = result.editing;
     for (int i = 0; i < count; ++i) {
         parts[i * 2] = fpas_find(ui, cui__pb_item_id(ui, id, i, "seg"));
         parts[i * 2 + 1] = options.menus ? fpas_find(ui, cui__pb_item_id(ui, id, i, "sep")) : -1;

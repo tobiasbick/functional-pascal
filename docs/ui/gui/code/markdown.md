@@ -33,6 +33,7 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Width / Size` | Fill / 0. Zero uses the theme body size. |
+| `Color` | Null uses theme colors. An RGBA color with nonzero alpha applies to body text and links. |
 | `Compact / Streaming` | Both false. Compact reduces heading sizes and spacing. Set Streaming while supplying incomplete text. |
 
 ## Interaction
@@ -41,6 +42,9 @@ end unit;
 when the pointer leaves the link. `Event.Task` reports the new checked state,
 a one-based line and a UTF-8 byte offset. Convert that offset before indexing
 a CLR string by UTF-16 position, then render the updated Markdown source.
+Read the Markdown control bounds in a GUI snapshot to get its height.
+`CuiWindow.Markdown` also returns the height from the latest layout.
+Pass the desired source prefix to render part of a document.
 
 ## See also
 

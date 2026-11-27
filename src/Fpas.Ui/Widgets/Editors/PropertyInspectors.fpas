@@ -5,6 +5,7 @@ unit Fpas.Ui.Widgets.Editors.PropertyInspectors;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Charts.Charts as Charts;
 
 // Typed value supported by CUI's inspector.
 public type Value = variant
@@ -16,7 +17,7 @@ public type Value = variant
   Text(Content: string);
   // Switch or checkbox.
   Boolean(Checked: bool);
-  // Dropdown choices and selected index.
+  // Dropdown choices and selected index. Minus one shows the placeholder.
   Choice(Items: array of string; Selected: int);
   // RGBA swatch.
   Color(Tint: G.Color);
@@ -50,6 +51,8 @@ public type Property = record
   public Enabled: bool := true;
   // Draw booleans as checkboxes.
   public Checkbox: bool := false;
+  // Optional custom numeric format. When supplied, it sets the precision and notation.
+  public Format: Charts.ValueFormat? := null;
 end record;
 
 // A native group of property rows.

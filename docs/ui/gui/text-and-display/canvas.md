@@ -65,7 +65,7 @@ the active pane.
 ## Interaction
 
 The click message carries local coordinates and the preceding canvas size in
-logical units. Use the control bounds from the frame snapshot for window
+logical units. Use the preceding frame's canvas origin to recover window
 coordinates. The paint callback receives the final size from the current layout.
 Capture callback data in the view's paint closure.
 
@@ -73,7 +73,8 @@ In the gallery, each swatch maps its click to an accent. The update stores the
 accent and the next view draws its ring.
 
 Use [custom canvas painting](../canvas-and-bars/painting.md) for text,
-images and other drawing primitives, or to observe pointer and wheel input.
+images and other drawing primitives. The paint callback can request a cursor
+and register local rectangles for the existing wheel callback.
 
 ![Canvas swatches after selecting blue](images/canvas-selected.png)
 

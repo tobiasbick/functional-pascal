@@ -65,7 +65,15 @@ begin
       Value.Link <> 0, Value.Style, Value.Size, Value.Alignment, Value.List
     );
     Frame.Messages.Add(
-      Changed(new D.Event(Next, (Event and 2) <> 0, (Event and 4) <> 0, (Event and 8) <> 0))
+      Changed(
+        new D.Event(
+          Next,
+          (Event and 1) <> 0,
+          (Event and 2) <> 0,
+          (Event and 4) <> 0,
+          (Event and 8) <> 0
+        )
+      )
     );
   end if;
 end procedure;

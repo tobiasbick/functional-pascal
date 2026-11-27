@@ -22,13 +22,15 @@ public type Series = record
   public Values: array of float;
   // Highlight this series.
   public Accent: bool := false;
+  // Optional native series name. An empty string omits the name.
+  public Name: string := '';
 end record;
 
-// Activation of a native dot chart.
+// Sample readout or activation of a native dot chart.
 public type Hit = record
-  // X coordinate at activation.
+  // Sample X coordinate, or the exact X coordinate of a pointer activation.
   public X: double;
-  // Closest sample index, or minus one outside the plot.
+  // Closest sample index, or minus one when the readout has no sample.
   public Index: int;
   // Stacked value at the sample.
   public Value: float;
@@ -72,6 +74,8 @@ public type Options = record
   public Annotations: array of C.Annotation := [];
   // Accept pointer and keyboard input.
   public Enabled: bool := true;
+  // Last readout reported to the model. Null omits readout messages.
+  public Observed: Hit? := null;
 end record;
 
 // Draws the native CUI dot chart.
@@ -83,6 +87,7 @@ end record;
 // - `Count`: Sample count of each series, retained for an empty chart.
 // - `OnActivate`: Maps native activation to an application message.
 // - `Settings`: Optional native settings.
+// - `OnReadout`: Maps a changed pointer or keyboard sample to an application message.
 // ## Returns
 // The graphical element.
 public function DotChart of TMsg(
@@ -90,11 +95,19 @@ public function DotChart of TMsg(
   Bands: array of Series;
   Count: int;
   OnActivate: Sys.Func of (Hit, TMsg)? := null;
-  Settings: Options? := null
+  Settings: Options? := null;
+  OnReadout: Sys.Func of (Hit, TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin
-  return (E.Element of TMsg).DotChart(Id, Bands, Count, OnActivate, Settings ?? new Options());
+  return (E.Element of TMsg).DotChart(
+    Id,
+    Bands,
+    Count,
+    OnActivate,
+    Settings ?? new Options(),
+    OnReadout
+  );
 end function;
 
 end unit;

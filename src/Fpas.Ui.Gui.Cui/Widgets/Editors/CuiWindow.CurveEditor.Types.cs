@@ -20,7 +20,12 @@ public readonly record struct CuiCurveKey(float X, float Y, float InX, float InY
 /// <param name="Selected">Selected index.</param>
 /// <param name="Added">Inserted index.</param>
 /// <param name="Removed">Removed index.</param>
-public sealed record CuiCurveEdit(CuiCurveKey[] Keys, int Selected, int Added, int Removed);
+/// <param name="Changed">Whether an edit changed a key.</param>
+/// <param name="Hovered">Whether the pointer is over the plot.</param>
+/// <param name="HoverX">Horizontal axis coordinate under the pointer.</param>
+/// <param name="HoverY">Curve value at that horizontal coordinate.</param>
+public sealed record CuiCurveEdit(CuiCurveKey[] Keys, int Selected, int Added, int Removed,
+    bool Changed, bool Hovered, float HoverX, float HoverY);
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeCurveOptions
@@ -28,4 +33,12 @@ internal unsafe struct NativeCurveOptions
     internal byte* XLabel, YLabel;
     internal float XMin, XMax, YMin, YMax, Height, Width, Playhead;
     internal int WidthKind, Flags;
+    internal byte* XFormat, YFormat;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct NativeCurveObservation
+{
+    internal int Added, Removed, Changed, Hovered;
+    internal float X, Y;
 }

@@ -27,6 +27,8 @@ public type Change = record
   public Removed: int;
   // Whether an event is being dragged.
   public Dragging: bool;
+  // Whether the track moved, added or removed an event in this frame.
+  public Changed: bool := false;
 end record;
 
 // Native event track settings.
@@ -57,6 +59,8 @@ public type Options = record
   public Axis: bool := true;
   // Accept user input.
   public Enabled: bool := true;
+  // Keep selection in the native track instead of reading Value.Selected.
+  public NativeSelection: bool := false;
 end record;
 
 // Draws the native CUI event track.

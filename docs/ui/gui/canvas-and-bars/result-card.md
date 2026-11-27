@@ -33,14 +33,23 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Caption / Badge / BadgeTone` | null / null / Neutral. Neutral uses the native status tone. |
-| `Width / Aspect / Enabled` | Fill / 0 / true. Aspect is height divided by width. Zero uses native sizing. |
+| `Image` | Supply a file or RGBA picture. Pass `null` to draw a muted surface. |
+| `Title` | Pass an empty string to omit the title. |
+| `Caption` | `null` omits the caption. A caption wraps below the title. |
+| `Badge` | `null` omits the status chip. The chip appears at the top of the card. |
+| `BadgeTone` | `Neutral` uses the native success color for the chip dot. |
+| `Width` | `Content` fills the available width up to 320 logical units. `Fill`, `Fixed`, and `Percent` set an explicit extent. |
+| `Aspect` | Card height divided by width. Zero uses 1.25. |
+| `StretchImage` | `false` centers and crops the image to fill the card. Set `true` to stretch the image. |
+| `Enabled` | `true` lets the card receive focus and activate. |
 
 ## Interaction
 
-Handle the supplied message when the card is activated. Place any
-export tools alongside the card, as the gallery does with a floating
-toolbar.
+Click the card or focus it with Tab and press Enter or Space. The GUI host sends
+the supplied `Activate` message. A disabled card stays visible and ignores these
+inputs. Place export tools in a separate floating toolbar below the card.
+
+The title and caption stay light over the dark fade in both themes.
 
 ## See also
 
@@ -61,3 +70,5 @@ toolbar.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/canvas/`
   - [result_card.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/result_card.c)
   - [result_card.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/result_card.h)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [canvas_cards.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/canvas_cards.c)

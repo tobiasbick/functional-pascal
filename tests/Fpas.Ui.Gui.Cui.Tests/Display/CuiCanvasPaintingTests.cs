@@ -8,6 +8,48 @@ namespace Fpas.Ui.Gui.Cui.Tests.Display;
 /// <summary>Checks scoped native drawing, callback failures and pointer proposals.</summary>
 public sealed class CuiCanvasPaintingTests
 {
+    /// <summary>Applies inherited disabled state and isolates animation IDs by canvas.</summary>
+    [GuiFact]
+    public void ScopedDrawingAndAnimations()
+    {
+        using var window = new CuiWindow("Canvas scopes", continuous: true, renderer: CuiRenderer.Software);
+        window.SetReducedMotion(true);
+        Assert.True(window.NextFrame());
+        var failure = new FormatException("scope");
+        Assert.Same(failure, Assert.Throws<FormatException>(() => window.DisabledScope(true, () =>
+        {
+            Assert.Throws<InvalidOperationException>(window.Present);
+            Assert.Throws<InvalidOperationException>(window.DiscardFrame);
+            Assert.Throws<InvalidOperationException>(window.Dispose);
+            throw failure;
+        })));
+
+        window.BeginColumn();
+        window.DisabledScope(true, () => window.DisabledScope(false, () => Draw("disabled", true, 1)));
+        Draw("enabled", false, 2);
+        window.EndColumn();
+        window.Present();
+
+        Assert.True(window.NextFrame());
+        window.BeginColumn();
+        Draw("disabled", false, 3);
+        Draw("enabled", false, 4);
+        window.EndColumn();
+        window.Present();
+
+        void Draw(string id, bool disabled, float destination) =>
+            window.DrawingCanvas(id, 1, 0, 2, 60, [], true, out _, out _, out _, out _, false,
+                out _, out _, painter =>
+                {
+                    Assert.Equal(disabled, painter.Disabled);
+                    Assert.Equal(destination, painter.Animate("shared", destination));
+                    Assert.Equal(destination, painter.AnimateSpring("spring", destination, .25f, .8f));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => painter.AnimateSpring("duration", 1, 0, 0));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => painter.AnimateSpring("bounce", 1, 1, 2));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => painter.Animate("target", float.NaN));
+                });
+    }
+
     /// <summary>Draws after layout, preserves captured data through GC and invalidates the painter on return.</summary>
     /// <param name="renderer">Native renderer.</param>
     [GuiTheory]
@@ -85,6 +127,11 @@ public sealed class CuiCanvasPaintingTests
         Canvas(p => p.Text(0, 0, "invalid\0text", 0, 13, uint.MaxValue));
         Assert.Throws<ArgumentException>(window.Present);
         Canvas(p => p.PopClip());
+        Assert.Throws<InvalidOperationException>(window.Present);
+        Canvas(p =>
+        {
+            for (int depth = 0; depth < 64; depth++) p.PushClip(0, 0, 20, 20);
+        });
         Assert.Throws<InvalidOperationException>(window.Present);
         Canvas(p => p.Circle(float.NaN, 0, 1, uint.MaxValue));
         Assert.Throws<ArgumentException>(window.Present);

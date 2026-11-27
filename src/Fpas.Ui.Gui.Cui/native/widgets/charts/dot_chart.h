@@ -17,6 +17,7 @@ typedef struct {
     void *x_label_user;
     cui_axis_label_fn value_label;
     void *value_label_user;
+    const char *const *names; /* Optional call-scoped names, one per band. */
 } fpas_dot_options;
 /** Draws up to sixteen dot-chart bands.
  * @param ui Current frame context.

@@ -1,0 +1,61 @@
+// [Documentation](../../docs/ui/gui/code/diff-viewer.md)
+
+unit Fpas.Ui.Gui.DiffGeometry;
+
+uses Fpas.Ui.Gui.Cui.Widgets.Developer as Native;
+uses Fpas.Ui.Mvu.Application as Mvu;
+
+// Requests a page from the last presented native diff view.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Request of TMsg = record implements Mvu.HostExtension of TMsg
+  // Widget identity.
+  public Id: string;
+  // Zero-based starting row.
+  public First: int;
+  // Maximum rows to copy.
+  public Capacity: int;
+  // Maps the detached page and total count to a message.
+  public OnRead: function(Native.CuiDiffRows): TMsg;
+
+  // Maps the resulting message into the parent view.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Maps child messages.
+  // ## Returns
+  // The same request in the parent message space.
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
+  begin
+    const Read: function(Native.CuiDiffRows): TMsg := self.OnRead;
+    return new Request of TNext(
+      self.Id, self.First, self.Capacity,
+      function(Page: Native.CuiDiffRows): TNext => Messages(Read(Page))
+    );
+  end function;
+end record;
+
+// Requests the rows that CUI displays after layout and folding.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity of the diff viewer.
+// - `First`: First zero-based row to read.
+// - `Capacity`: Maximum rows. Zero reads the total alone.
+// - `OnRead`: Maps the detached page to an application message.
+// ## Returns
+// An owner-thread command to use after the first presentation.
+public function ReadRows of TMsg(
+  Id: string;
+  First: int;
+  Capacity: int;
+  OnRead: function(Native.CuiDiffRows): TMsg
+): Mvu.Command of TMsg;
+requires Id <> '' and First >= 0 and Capacity >= 0;
+begin
+  return (Mvu.Command of TMsg).Host(
+    Mvu.HostRequest.Extension(new Request of TMsg(Id, First, Capacity, OnRead))
+  );
+end function;
+
+end unit;

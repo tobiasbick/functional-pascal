@@ -5,6 +5,25 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
+    private int disabledScopeDepth;
+
+    /// <summary>Draws a subtree inside an inherited native input scope.</summary>
+    /// <param name="disabled">True to disable the subtree. False inherits the enclosing state.</param>
+    /// <param name="draw">Synchronous drawing callback for the current frame.</param>
+    public void DisabledScope(bool disabled, Action draw)
+    {
+        CheckFrame();
+        ArgumentNullException.ThrowIfNull(draw);
+        disabledScopeDepth++;
+        if (disabled) NativeMethods.DisabledScope(context, 1);
+        try { draw(); }
+        finally
+        {
+            if (disabled) NativeMethods.DisabledScope(context, 0);
+            disabledScopeDepth--;
+        }
+    }
+
     // Composed bodies carry their own input permission. Restrict only the
     // container's native chrome so an admitted nested modal can receive input.
     private bool ContainerInput(Layout kind)

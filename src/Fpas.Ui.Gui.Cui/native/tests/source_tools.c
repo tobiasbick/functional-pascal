@@ -32,8 +32,11 @@ static void markdown(void) {
         if (frame == 3 || frame == 6) press(ui, CUI_KEY_ENTER, 0);
         cui_begin_frame(ui, .016f);
         int offset, line, checked, hover_changed;
+        float height;
         const char *hovered;
-        const char *link = fpas_cui_markdown(ui, "notes", source, 1, 0, 0, 1, &offset, &line, &checked, &hovered, &hover_changed);
+        const char *link = fpas_cui_markdown(ui, "notes", source, 1, 0, 0, 1, 0xff2414ecu,
+            &offset, &line, &checked, &hovered, &hover_changed, &height);
+        if (frame > 0) check(height > 0, "Markdown must report its previously laid-out height.");
         if (offset >= 0) {
             check(offset == 7 && line == 3 && checked, "Markdown must report the UTF-8 task offset and its proposed state.");
             ++toggles;
@@ -62,9 +65,11 @@ static void editor(void) {
         cui_begin_frame(ui, .016f);
         fpas_code_editor_observation observation;
         int result = fpas_cui_code_editor(ui,"sql", source,sizeof source,"sql",NULL,1,0,250,0,4,
-            frame == 0 ? 17 : 1, NULL, 0, &observation);
+            frame == 0 ? 33 : 1, NULL, 0, &observation);
+        if (frame == 0) check(observation.focused, "The editor must honor initial autofocus.");
         if (result & 1) ++changes;
-        if (frame == 3) check(!strcmp(source, "SELECT \xc3\xa9") && (result & 1) && observation.line == 1 && observation.lines == 1,
+        if (frame == 3) check(!strcmp(source, "SELECT \xc3\xa9") && (result & 1) &&
+            observation.line == 1 && observation.lines == 1 && observation.length == 9,
             "The SQL editor must propose one complete UTF-8 insertion.");
         if (frame == 6) check(!strcmp(source, "FROM"), "Undo must not resurrect source replaced by the application.");
         if (frame == 7) check((result & 2) && !strcmp(source, "FROM"), "An oversized insertion must be refused whole.");
@@ -76,18 +81,22 @@ static void editor(void) {
 
 static void diff(void) {
     cui_ctx *ui = context();
-    int selected = -1, count = -1, is_inline = -1;
+    fpas_diff_observation result = { .current = -1 };
     for (int frame = 0; frame < 7; ++frame) {
         if (frame == 2) press(ui, CUI_KEY_N, 0);
-        if (frame == 4) cui_set_viewport(ui, 430, 450, 1);
+        if (frame == 4) cui_set_viewport(ui, 620, 450, 1);
         cui_begin_frame(ui, .016f);
-        fpas_cui_diff_view(ui,"diff","one\ntwo\n","one\nthree\n",selected,"text",NULL,NULL,3,1,0,250,0,
-            frame == 0 ? 17 : 1,&selected,&count,&is_inline);
-        if (frame == 3) check(count == 1 && selected == 0 && !is_inline,
+        fpas_cui_diff_view(ui, "diff", "one\ntwo\n", "one\nthree\n", result.current, "text", NULL, NULL, 3,
+            1, 0, 250, 0, 700, frame == 0 ? 17 : 1, &result);
+        if (frame == 0) check(result.recomputed && result.added == 1 && result.removed == 1 && !result.approximate,
+            "The diff must report line totals and a recomputation for new text.");
+        if (frame == 2) check(result.current_changed, "Changing the selected hunk must report its change flag.");
+        if (frame == 3) check(result.count == 1 && result.current == 0 && !result.inline_mode,
             "The split diff must report its change and respond to Next.");
         cui_end_frame(ui);
     }
-    check(is_inline == 1 && selected == 0, "The narrow diff must switch to inline while keeping the selected change.");
+    check(result.inline_mode && result.current == 0,
+        "Below the configured split width, the diff must become inline and keep the selected hunk.");
     cui_destroy(ui);
 }
 
@@ -99,9 +108,9 @@ static void hex(void) {
     for (int frame = 0; frame < 7; ++frame) {
         if (frame == 3) cui_input_text(ui, "ab");
         cui_begin_frame(ui, .016f);
-        int edited_at, edited_size;
+        int edited_at, edited_size, hovered;
         int result = fpas_cui_hex_view(ui,"hex",data,6,&start,&length,&cursor,NULL,0,0,
-            frame == 1 ? 3 : -1,16,1,0,220,0,frame == 0 ? 19 : 3,&edited_at,&edited_size);
+            frame == 1 ? 3 : -1,16,1,0,220,0,frame == 0 ? 19 : 3,&edited_at,&edited_size,&hovered);
         if (frame == 1) check((result & 1) && start == 3 && length == 1 && cursor == 3,
             "Hex goto must select the requested byte.");
         if (result & 2) {
@@ -368,13 +377,13 @@ static void render_path_menu(const char *label, unsigned char *pixels, bool disa
             fpas_cui_move_pointer(ui, separator.x + separator.w / 2, separator.y + separator.h / 2);
             cui_input_mouse_button(ui, CUI_MOUSE_LEFT, frame == 2);
         }
-        int parts[5], root;
+        int parts[5], root, editing;
         uint32_t owner;
         const char *submitted;
         cui_column(ui, .width = CUI_FILL, .pad = 24) {
             cui_push_disabled(ui, disable && frame == 5);
             fpas_cui_path_bar(ui, "###location", segments, 2, NULL, NULL, NULL, 1, 1, 0,
-                7, -1, &submitted, parts, &root, &owner);
+                7, -1, &submitted, &editing, parts, &root, &owner);
             const int parent = fpas_cui_path_menu_begin(ui, "###location");
             if (parent >= 0) {
                 fpas_cui_path_menu_item(ui, label, 0);
@@ -406,6 +415,32 @@ static void path_bar(void) {
     free(literal);
 }
 
+static void path_editing(void) {
+    const char *segments[] = { "project", "source" };
+    cui_ctx *ui = cui_create(NULL);
+    cui_set_viewport(ui, PATH_WIDTH, PATH_HEIGHT, 1);
+    cui_set_reduced_motion(ui, true);
+    for (int frame = 0; frame < 4; ++frame) {
+        cui_begin_frame(ui, .016f);
+        const cui_key pressed = frame == 1 || frame == 3 ? CUI_KEY_L : frame == 2 ? CUI_KEY_ENTER : CUI_KEY_NONE;
+        const int mods = pressed == CUI_KEY_L ? CUI_MOD_PRIMARY : 0;
+        if (pressed) {
+            cui_input_key(ui, pressed, true, mods);
+            cui_input_key(ui, pressed, false, mods);
+        }
+        int root, editing, parts[5];
+        uint32_t owner;
+        const char *submitted;
+        const int clicked = fpas_cui_path_bar(ui, "path", segments, 2, NULL, NULL, NULL, 1, 1, 0,
+            frame == 3 ? 1 : 3, -1, &submitted, &editing, parts, &root, &owner);
+        check(clicked == -1 && editing == (frame == 1), "Path bar must report active editing only while it accepts text.");
+        check(frame == 2 ? submitted && strcmp(submitted, "project/source") == 0 : submitted == NULL,
+            "Path bar must report submitted text when Enter ends editing.");
+        cui_end_frame(ui);
+    }
+    cui_destroy(ui);
+}
+
 int main(void) {
     markdown();
     editor();
@@ -417,5 +452,6 @@ int main(void) {
     log_console();
     source_transitions();
     path_bar();
+    path_editing();
     return failures ? 1 : 0;
 }

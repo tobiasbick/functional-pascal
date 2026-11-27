@@ -6,6 +6,7 @@ uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Gui.Cui.Widgets.Canvas as Native;
 uses Fpas.Ui.Gui.Internal.Core.Values as Colors;
 uses Fpas.Ui.Gui.Internal.Data.MediaData as Media;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
 uses Fpas.Ui.Widgets.Canvas.Painting as D;
 uses Fpas.Ui.Widgets.Media.MediaImages as Images;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
@@ -20,10 +21,36 @@ begin
   return Result;
 end function;
 
+function Corners(Value: D.Corners): Native.CuiCorners;
+begin
+  return new Native.CuiCorners(Value.TopLeft, Value.TopRight, Value.BottomRight, Value.BottomLeft);
+end function;
+
+function TextureRegion(Value: D.ImageRegion?): Native.CuiImageRegion?;
+begin
+  if Value <> null then
+    return new Native.CuiImageRegion(Value.U, Value.V, Value.Width, Value.Height);
+  end if;
+
+  return null;
+end function;
+
 // Forwards a shared drawing capability to a callback-scoped native CUI painter.
 public type Adapter = record implements D.Surface
   // Active owner-thread painter; it invalidates itself when the callback ends.
   public Native: Native.CuiCanvasPainter;
+
+  // Returns the current value of the standard spring for this canvas-local ID and finite target.
+  public function Animate(Id: string; Target: float): float;
+  begin
+    return self.Native.Animate(Id, Target);
+  end function;
+
+  // Returns the current spring value for this ID, duration in seconds, and bounce from zero to one.
+  public function AnimateSpring(Id: string; Target: float; Duration: float; Bounce: float): float;
+  begin
+    return self.Native.AnimateSpring(Id, Target, Duration, Bounce);
+  end function;
 
   // Returns the final logical canvas width.
   public function Width(): float;
@@ -54,6 +81,18 @@ public type Adapter = record implements D.Surface
   begin
     return self.Native.FocusVisible;
   end function;
+
+  // Requests the window cursor for the current frame.
+  public procedure SetCursor(Cursor: Canvas.Cursor);
+  begin
+    self.Native.SetCursor(cast Cursor as int);
+  end procedure;
+
+  // Adds the canvas-local rectangle to its wheel callback region.
+  public procedure AddWheelRegion(X: float; Y: float; Width: float; Height: float);
+  begin
+    self.Native.AddWheelRegion(X, Y, Width, Height);
+  end procedure;
 
   // Returns the native user font multiplier.
   public function FontScale(): float;
@@ -90,6 +129,19 @@ public type Adapter = record implements D.Surface
   );
   begin
     self.Native.Rectangle(X, Y, Width, Height, Radius, Colors.Pack(Color));
+  end procedure;
+
+  // Fills the rectangle with independent corner radii.
+  public procedure Rectangle(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radii: D.Corners;
+    Color: G.Color
+  );
+  begin
+    self.Native.Rectangle(X, Y, Width, Height, Corners(Radii), Colors.Pack(Color));
   end procedure;
 
   // Forwards X/Y/Radius and Color to CUI's circle.
@@ -135,6 +187,24 @@ public type Adapter = record implements D.Surface
     );
   end procedure;
 
+  // Fills and outlines the rectangle with independent corner radii.
+  public procedure Border(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radii: D.Corners;
+    Fill: G.Color;
+    Border: G.Color;
+    Thickness: float
+  );
+  begin
+    self.Native.Border(
+      X, Y, Width, Height, Corners(Radii), Colors.Pack(Fill), Colors.Pack(Border),
+      Thickness
+    );
+  end procedure;
+
   // Forwards the rounded rectangle and Top/Bottom gradient colors to CUI.
   public procedure Gradient(
     X: float;
@@ -147,6 +217,28 @@ public type Adapter = record implements D.Surface
   );
   begin
     self.Native.Gradient(X, Y, Width, Height, Radius, Colors.Pack(Top), Colors.Pack(Bottom));
+  end procedure;
+
+  // Fills the rectangle from top to bottom with independent corner radii.
+  public procedure Gradient(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radii: D.Corners;
+    Top: G.Color;
+    Bottom: G.Color
+  );
+  begin
+    self.Native.Gradient(
+      X,
+      Y,
+      Width,
+      Height,
+      Corners(Radii),
+      Colors.Pack(Top),
+      Colors.Pack(Bottom)
+    );
   end procedure;
 
   // Forwards the rectangle, Radius, Blur, Spread, offsets and Color to CUI.
@@ -173,6 +265,26 @@ public type Adapter = record implements D.Surface
       Spread,
       OffsetX,
       OffsetY,
+      Colors.Pack(Color)
+    );
+  end procedure;
+
+  // Draws the rectangle's shadow with independent corner radii.
+  public procedure Shadow(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radii: D.Corners;
+    Blur: float;
+    Spread: float;
+    OffsetX: float;
+    OffsetY: float;
+    Color: G.Color
+  );
+  begin
+    self.Native.Shadow(
+      X, Y, Width, Height, Corners(Radii), Blur, Spread, OffsetX, OffsetY,
       Colors.Pack(Color)
     );
   end procedure;
@@ -256,10 +368,32 @@ public type Adapter = record implements D.Surface
     Width: float;
     Height: float;
     Radius: float;
-    Tint: G.Color
+    Tint: G.Color;
+    Region: D.ImageRegion?
   );
   begin
-    self.Native.Image(Media.Convert(Source), X, Y, Width, Height, Radius, Colors.Pack(Tint));
+    self.Native.Image(
+      Media.Convert(Source), X, Y, Width, Height, Radius, Colors.Pack(Tint),
+      TextureRegion(Region)
+    );
+  end procedure;
+
+  // Draws the source with independent corner radii. Null Region uses the whole image.
+  public procedure Image(
+    Source: Images.Source;
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radii: D.Corners;
+    Tint: G.Color;
+    Region: D.ImageRegion?
+  );
+  begin
+    self.Native.Image(
+      Media.Convert(Source), X, Y, Width, Height, Corners(Radii), Colors.Pack(Tint),
+      TextureRegion(Region)
+    );
   end procedure;
 
   // Pushes a callback-local clip from X/Y/Width/Height.

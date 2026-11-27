@@ -67,6 +67,7 @@ begin
   Finite(Row.Minimum, Path);
   Finite(Row.Maximum, Path);
   C.Distance(Row.Step, Path);
+  C.Format(Row.Format, Path);
   if Row.Digits < -1 or Row.Digits > 9 or Row.Capacity < 1 or Row.Capacity > 1048576 then
     R.Reject(Path, 'Invalid property precision or capacity.');
   end if;
@@ -80,7 +81,7 @@ begin
         R.Reject(Path, 'Property text exceeds its capacity.');
       end if;
     when PropertyInspectors.Value.Choice(const Items: array of string, const Selected: int):
-      if Items.Length = 0 or Selected < 0 or Selected >= Items.Length then
+      if Items.Length = 0 or Selected < -1 or Selected >= Items.Length then
         R.Reject(Path, 'Invalid property choice.');
       end if;
 
@@ -194,6 +195,8 @@ begin
 
       R.CheckText(Settings.XLabel, Path);
       R.CheckText(Settings.YLabel, Path);
+      C.Format(Settings.XFormat, Path);
+      C.Format(Settings.YFormat, Path);
     when E.Element.GradientEditor(
       const Id: string,
       const Stops: array of GradientEditors.Stop,

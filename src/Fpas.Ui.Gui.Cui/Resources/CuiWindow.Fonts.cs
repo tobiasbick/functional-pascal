@@ -76,6 +76,17 @@ public sealed partial class CuiWindow
         fixed (byte* bytes = data) return NativeMethods.EmojiLoad(context, bytes, (nuint)data.Length) != 0;
     }
 
+    /// <summary>Loads an emoji font from a file so CUI can read bitmap tables on demand.</summary>
+    /// <param name="path">Path to a trusted emoji font file.</param>
+    /// <returns>Whether CUI opened and accepted the font. A parse failure can clear the previous font.</returns>
+    public bool LoadEmojiFontFile(string path)
+    {
+        CheckResourceChange();
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        Utf8.Validate(path, nameof(path));
+        return NativeMethods.EmojiFile(context, path);
+    }
+
     /// <summary>Asks CUI to load the platform's standard color-emoji font.</summary>
     /// <returns>Whether CUI found and loaded a supported system font.</returns>
     public bool LoadSystemEmojiFont()

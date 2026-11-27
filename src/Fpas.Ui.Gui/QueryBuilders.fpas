@@ -17,4 +17,20 @@ begin
   return Cui.CuiWindow.DescribeQuery(Data.Fields(Fields), Data.Rules(RulesData));
 end function;
 
+// Tests one record with the query builder's field types and operators.
+// ## Parameters
+// - `Fields`: Field schema in record order.
+// - `RulesData`: Conditions and groups in display order.
+// - `Values`: One textual value for each field, in schema order.
+// ## Returns
+// Whether the record matches. An empty query accepts every record.
+public function Matches(
+  Fields: array of W.Field;
+  RulesData: array of W.Rule;
+  Values: array of string
+): bool;
+begin
+  return Cui.CuiWindow.MatchQuery(Data.Fields(Fields), Data.Rules(RulesData), Values);
+end function;
+
 end unit;

@@ -7,7 +7,7 @@ uses Fpas.Ui.Styles as S;
 
 // An action offered for selected items.
 public type Action = record
-  // Native CUI icon glyph.
+  // Native CUI icon glyph, or an empty string for a text-only action.
   public Icon: string;
   // Visible action caption.
   public Label: string;
@@ -37,7 +37,7 @@ end record;
 public type Event = record
   // Zero-based action index, or minus one when clearing.
   public Index: int;
-  // Whether the bar cleared the selection.
+  // Whether the bar requests clearing the selection.
   public Clear: bool;
 end record;
 

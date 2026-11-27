@@ -30,30 +30,59 @@ end unit;
 
 ## Options and defaults
 
-| Option | Default or requirement |
+| Value field | Default and behavior |
 | --- | --- |
-| `Value.Draft / Attachments / Models` | Empty text and empty arrays. Attachments show removable file names. A nonempty Models array shows a picker. |
-| `Selected / Busy / Take` | 0 / false / null. Selected is a zero-based model index. Busy replaces Send with Stop. Set Take to show recording controls. |
-| `Width / Placeholder` | Fill / null. Null shows the native “Ask anything” prompt. An empty string hides the prompt. |
-| `MaxLines / MaxUtf8Bytes` | 0 / 511. Zero uses eight visible lines. The byte limit excludes the terminator. Use LF for line breaks. |
-| `Microphone / Enabled` | false / true. Microphone adds the record action in text mode. |
+| `Draft` | Empty text. Use LF for line breaks. |
+| `Attachments` | Empty array. Supply file names in display order. Each chip has a Remove action in both modes. |
+| `Models` | Empty array. Supply model items to show a picker in text mode. |
+| `Selected` | Zero. Supply the zero-based index of the current model, or zero when there are no models. |
+| `Busy` | `false`. Set to `true` to replace Send with Stop in text mode. The draft remains editable. |
+| `Take` | Null shows the text editor. Set a `Recording` to show Cancel, a recording indicator, elapsed time, a waveform, and Send. |
+
+| Option | Default and behavior |
+| --- | --- |
+| `Width` | `Fill`. Use `Content` to fit the controls. Use `Fixed` or `Percent` to set an explicit width. |
+| `Placeholder` | Null shows `Ask anything`. An empty string hides the placeholder. |
+| `MaxLines` | Zero uses eight visible lines. The editor scrolls when the draft exceeds the visible line limit. |
+| `MaxUtf8Bytes` | 511. Set a positive limit up to 1,048,576 UTF-8 bytes, excluding the terminator. |
+| `Microphone` | `false`. Set to `true` to show the Record action in text mode. |
+| `Enabled` | `true`. Set to `false` to disable editing and actions. |
+
+Pass `Recording.Levels` in chronological order with the newest sample last.
+Levels range from zero to one. Negative levels down to `Voice.Silent` (-1)
+show silence. Pass finite, nonnegative elapsed seconds in `Recording.Seconds`.
+
+## Proposals
+
+The application owns the draft, attachments, model, and recording.
+Apply or handle each proposal in the application.
+
+| Proposal | Result |
+| --- | --- |
+| `Edit(Draft)` | The editor changed the draft. |
+| `Send(Draft)` | Submit the edited draft. The composer emits `Edit` first if the draft also changed in the same frame. |
+| `Stop` | Stop generation. |
+| `Attach` | Choose a file to attach. |
+| `Remove(Index)` | Remove the attachment at the zero-based index. |
+| `Select(Index)` | Use the model at the zero-based index. |
+| `Record` | Start a take and supply its recording preview. |
+| `Cancel` | Discard the take and clear `Take`. Cancel takes precedence if Send activates in the same frame. |
+| `SendVoice` | Submit the take and clear `Take`. The draft stays in the model. |
 
 ## Interaction
 
-Press Enter in the editor to submit. Use Shift+Enter to add a line. The
-composer sends `Edit` before `Send` when both occur in one frame. While busy,
-the Stop button sends `Stop` and Enter in the editor leaves the draft open.
+Press Enter in the editor to submit. Use Shift+Enter to add a line.
+Send requires content beyond spaces, tabs, and line breaks. While busy,
+activate Stop to request cancellation. Enter in the editor keeps the draft open.
+Use the arrow keys to navigate the model menu, Enter to choose, and Escape to close.
 
-Handle `Attach`, `Remove` and `Select` in the application. `Remove` and
-`Select` report zero-based indices into their input arrays. To direct
-focus, use `/editor`, `/send`, `/record`, `/cancel`, `/attach`, `/model`
-or `/remove/<index>` after the composer ID. Availability follows the current
-mode and model list. `/send` identifies the Stop button while busy.
+To direct focus, use `/editor`, `/send`, `/record`, `/cancel`, `/attach`,
+`/model`, or `/remove/<index>` after the composer ID. Availability follows
+the current mode and options. `/send` identifies the Stop button while busy.
 
-On `Record`, create a take with levels in chronological order and elapsed
-seconds. When Cancel or Send has focus, Escape cancels the take. Handle
-`Cancel` by discarding the take and `SendVoice` by submitting it. The
-gallery supplies synthetic recorder levels.
+Activate Record to request a take. When Cancel or Send has focus, Escape
+cancels the take. The application handles microphone capture and supplies
+recording levels. The gallery supplies synthetic recorder levels.
 
 ![Composer showing a simulated voice recording in the FPAS gallery](images/composer-recording.png)
 
@@ -85,3 +114,5 @@ The AI page supplies a model menu and attached file names in the same composer.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
   - [composer.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/composer.c)
   - [composer.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/composer.h)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [voice_composer.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/voice_composer.c)

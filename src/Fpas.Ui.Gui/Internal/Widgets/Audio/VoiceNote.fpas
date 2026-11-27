@@ -33,7 +33,8 @@ begin
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Keys: array of string := ['play', 'seek', 'speed'];
-  const Focus: int := P.Focus of TMsg(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0);
+  const Accept: array of bool := [Enabled, Enabled and Playback.Duration > 0.0F, Enabled];
+  const Focus: int := P.Focus of TMsg(Frame, Id, Role, Keys, Accept, 0);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Result: CuiAudio.CuiVoiceNoteResult := Frame.Window.VoiceNote(
     Token,

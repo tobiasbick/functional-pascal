@@ -14,6 +14,15 @@ uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Canvas.SelectionRings as Ring;
 uses Fpas.Ui.Widgets.Editors.NodeEditors as D;
 
+uses System.Collections.Generic as Lists;
+uses System.Linq.Enumerable as Linq;
+
+type NativeStatus = record
+  public Nodes: Lists.List of int := new Lists.List of int();
+  public Pins: Lists.List of int := new Lists.List of int();
+  public Links: Lists.List of int := new Lists.List of int();
+end record;
+
 // Presents CUI's native NodeEditor widget.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -61,12 +70,32 @@ begin
     Interactive := Frame.Interactive and Settings.Enabled;
     PaintingClosed := Frame.PaintingClosed or not Settings.Enabled;
   end with;
+  const Expected: D.Status? := if Enabled then
+    Settings.ObservedStatus
+  else
+    null
+  end if;
+  const Status: NativeStatus? := if Expected <> null then
+    new NativeStatus()
+  else
+    null
+  end if;
   for Item: D.Node of TMsg in Nodes do
     var X: float := Item.X;
     var Y: float := Item.Y;
-    Frame.Window.BeginNode(Item.Id, ref X, ref Y, Item.Title, Item.Width, Item.Icon);
+    discard Frame.Window.BeginNode(
+      Item.Id,
+      ref X,
+      ref Y,
+      Item.Title,
+      Item.Width,
+      Item.Icon
+    );
     for Pin: D.Pin in Item.Pins do
-      Frame.Window.NodePin(Pin.Id, Pin.Label, Pin.Output, Pin.Kind);
+      const Connected: bool := Frame.Window.NodePin(Pin.Id, Pin.Label, Pin.Output, Pin.Kind);
+      if Connected and Status <> null then
+        Status.Pins.Add(Pin.Id);
+      end if;
     end for;
 
     case Item.Body of
@@ -90,8 +119,19 @@ begin
   end for;
 
   for Link: D.Link in Links do
-    Frame.Window.NodeLink(Link.Id, Link.FromPin, Link.ToPin);
+    const Selected: bool := Frame.Window.NodeLink(Link.Id, Link.FromPin, Link.ToPin);
+    if Selected and Status <> null then
+      Status.Links.Add(Link.Id);
+    end if;
   end for;
+
+  if Status <> null then
+    for Item: D.Node of TMsg in Nodes do
+      if Frame.Window.IsNodeSelected(Item.Id) then
+        Status.Nodes.Add(Item.Id);
+      end if;
+    end for;
+  end if;
   const Next: CuiEditors.CuiNodeView := Frame.Window.EndNodeEditor();
   P.Root of TMsg(Frame, Id, Role, '', Enabled, Next.Zoom.ToString());
   if Enabled then
@@ -111,6 +151,22 @@ begin
     while Frame.Window.NodeEvent(2, out First, out Second) do
       Frame.Messages.Add(Changed(D.Event.Delete(First)));
     end while;
+
+    if Status <> null and Expected <> null and (not Linq.SequenceEqual of int(
+      Status.Nodes,
+      Expected.SelectedNodes
+    )
+      or not Linq.SequenceEqual of int(Status.Pins, Expected.ConnectedPins)
+      or not Linq.SequenceEqual of int(Status.Links, Expected.SelectedLinks))
+    then
+      Frame.Messages.Add(
+        Changed(
+          D.Event.StatusChanged(
+            new D.Status(Status.Nodes.ToArray(), Status.Pins.ToArray(), Status.Links.ToArray())
+          )
+        )
+      );
+    end if;
   end if;
 end procedure;
 

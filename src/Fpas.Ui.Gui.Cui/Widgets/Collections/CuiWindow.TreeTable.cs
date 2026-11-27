@@ -87,6 +87,14 @@ public sealed partial class CuiWindow
         return index;
     }
 
+    /// <summary>Reads the depth of the current visible row in an open tree table.</summary>
+    /// <returns>Zero for a root or when there is no current row.</returns>
+    public int TreeTableDepth()
+    {
+        RequireLayout(Layout.TreeTable);
+        return NativeMethods.TreeTableDepth(context);
+    }
+
     /// <summary>Draws the first cell of the current native row.</summary>
     /// <param name="label">Literal node name.</param>
     /// <param name="icon">Optional CUI glyph.</param>

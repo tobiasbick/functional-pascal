@@ -40,8 +40,10 @@ public sealed partial class CuiWindow
         fixed (NativeHexMark* nativeMarks = ranges)
         {
             int changed = NativeMethods.HexView(context, Stable(id), source, bytes.Length, ref start, ref length, ref cursor,
-                nativeMarks, ranges.Length, address, goTo, bytesPerRow, widthKind, width, height, size, flags, out int offset, out int editLength);
-            return changed == 0 ? null : new(start, length, cursor, (changed & 2) != 0 ? bytes : null, offset, editLength);
+                nativeMarks, ranges.Length, address, goTo, bytesPerRow, widthKind, width, height, size, flags,
+                out int offset, out int editLength, out int hovered);
+            return changed == 0 ? null : new(start, length, cursor, (changed & 2) != 0 ? bytes : null,
+                offset, editLength, (changed & 1) != 0, hovered, (changed & 4) != 0);
         }
     }
 }

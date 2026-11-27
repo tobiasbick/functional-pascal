@@ -78,10 +78,14 @@ void fpas_cui_property_inspector(cui_ctx *ui, const char *id, fpas_property_grou
             if (!visible) continue;
             for (int j = 0; j < group->count; ++j) {
                 fpas_property *row = &group->properties[j];
-                char format[8];
-                if (row->digits >= 0 && row->digits <= 9) snprintf(format, sizeof format, "%%.%df", row->digits);
+                char precision[8];
+                const char *format = row->format;
+                if (!format && row->digits >= 0 && row->digits <= 9) {
+                    snprintf(precision, sizeof precision, "%%.%df", row->digits);
+                    format = precision;
+                }
                 const cui_prop_opts options = { .min = row->minimum, .max = row->maximum, .step = row->step,
-                    .format = row->digits >= 0 && row->digits <= 9 ? format : NULL, .suffix = row->suffix,
+                    .format = format, .suffix = row->suffix,
                     .placeholder = row->placeholder, .tooltip = row->tooltip,
                     .disabled = !(row->flags & 1), .checkbox = (row->flags & 2) != 0 };
                 switch (row->kind) {

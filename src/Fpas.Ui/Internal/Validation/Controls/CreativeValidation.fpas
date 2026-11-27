@@ -128,8 +128,7 @@ begin
   end if;
 
   Texts(Settings.Labels, At);
-  R.CheckText(Settings.Prefix, At);
-  R.CheckText(Settings.Suffix, At);
+  R.CheckCountFormat(Settings.Format, 1, At + '/format');
 end procedure;
 
 procedure PaletteStrip(Current: PaletteStrips.Value; Settings: PaletteStrips.Options; At: string);

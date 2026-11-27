@@ -32,6 +32,10 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int TreeTableRow(nint context, out int part);
 
+    [LibraryImport(Library, EntryPoint = "cui_tree_table_depth")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial int TreeTableDepth(nint context);
+
     [LibraryImport(Library, EntryPoint = "fpas_cui_tree_table_name", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int TreeTableName(nint context, string label, string? icon);

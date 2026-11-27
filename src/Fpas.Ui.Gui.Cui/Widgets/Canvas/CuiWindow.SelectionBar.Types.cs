@@ -1,10 +1,8 @@
 // [Documentation](../../../../docs/ui/gui/canvas-and-bars/selection-bar.md)
-using Fpas.Ui.Gui.Cui.Interop;
-
 namespace Fpas.Ui.Gui.Cui.Widgets.Canvas;
 
-/// <summary>Native data for SelectionBar.</summary>
-/// <param name="Icon">Icon supplied to CUI.</param>
-/// <param name="Label">Label supplied to CUI.</param>
-/// <param name="Tone">Tone supplied to CUI.</param>
+/// <summary>An action offered for selected items.</summary>
+/// <param name="Icon">CUI icon glyph, or an empty string for a text-only action.</param>
+/// <param name="Label">Visible action caption.</param>
+/// <param name="Tone">Native semantic tone ordinal.</param>
 public sealed record CuiSelectionAction(string Icon, string Label, int Tone);

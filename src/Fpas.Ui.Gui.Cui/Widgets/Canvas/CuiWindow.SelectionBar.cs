@@ -8,17 +8,18 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    /// <summary>Invokes the native SelectionBar operation.</summary>
-    /// <param name="id">id supplied to the native operation.</param>
-    /// <param name="selected">selected supplied to the native operation.</param>
-    /// <param name="actions">actions supplied to the native operation.</param>
-    /// <param name="enabled">enabled supplied to the native operation.</param>
-    /// <param name="noEscape">noEscape supplied to the native operation.</param>
+    /// <summary>Draws a floating bar for bulk actions beneath a widget.</summary>
+    /// <param name="id">Stable identity for the selection bar.</param>
+    /// <param name="selected">Item flags. The caller applies a clear proposal.</param>
+    /// <param name="actions">Actions in display order.</param>
+    /// <param name="enabled">Whether the bar accepts input.</param>
+    /// <param name="noEscape">Whether Escape leaves the selection intact.</param>
     /// <param name="count">Aggregate nonnegative count when selected is null.</param>
     /// <param name="countFormat">At most one %d slot, %% for a percent; empty uses CUI's default.</param>
-    /// <returns>The native result.</returns>
+    /// <param name="anchor">The native anchor ID in the current scope, or null for the previous widget.</param>
+    /// <returns>The zero-based action index, -2 for a clear proposal, or -1 when idle.</returns>
     public unsafe int SelectionBar(string id, bool[]? selected, CuiSelectionAction[] actions, bool enabled, bool noEscape,
-        int count = 0, string countFormat = "")
+        int count = 0, string countFormat = "", string? anchor = null)
     {
         CheckFrame();
         ArgumentOutOfRangeException.ThrowIfNegative(count);
@@ -27,11 +28,14 @@ public sealed partial class CuiWindow
         using var memory = new ChartMemory();
         var native = Array.ConvertAll(actions, action => new NativeSelectionAction
         {
-            Icon = memory.Text(action.Icon), Label = memory.Text(action.Label), Tone = action.Tone
+            Icon = string.IsNullOrEmpty(action.Icon) ? null : memory.Text(action.Icon),
+            Label = memory.Text(action.Label),
+            Tone = action.Tone
         });
         byte[] values = selected is null ? [] : Array.ConvertAll(selected, value => value ? (byte)1 : (byte)0);
         fixed (byte* rows = values)
             return NativeMethods.SelectionBar(context, Stable(id), rows, values.Length,
-                count, memory.Copy<NativeSelectionAction>(native), actions.Length, enabled ? 1 : 0, noEscape ? 1 : 0, format);
+                count, memory.Copy<NativeSelectionAction>(native), actions.Length, enabled ? 1 : 0, noEscape ? 1 : 0,
+                format, anchor is null ? null : Stable(anchor));
     }
 }

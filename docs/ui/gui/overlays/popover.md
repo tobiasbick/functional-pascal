@@ -48,6 +48,10 @@ to toggle `Open`. Press Escape or press outside the panel and trigger to
 send `OnDismiss`. Clear `Open` in the update for `OnDismiss`. Actions in the
 panel can also clear it. The panel is nonmodal.
 
+When drawing directly with `CuiWindow`, `IsPopoverOpen(Id)` reads CUI's open
+state in the current frame. Use the same ID scope as `BeginPopover`.
+A closing animation can still draw after the open state clears.
+
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_popover)

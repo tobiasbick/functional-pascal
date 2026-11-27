@@ -53,6 +53,14 @@ Corner positions stay physical when the reading direction changes.
 Use `Elements.Border(Child, Title)` for a framed section with an optional
 caption. In GUI, this creates a vertical container around the child.
 
+## Disabled subtrees
+
+Wrap any graphical element with `Elements.DisabledScope of TMsg(Child, Disabled)`.
+The default is true. The child keeps its layout and uses native disabled input.
+A false flag inherits the enclosing state, so it cannot enable a control
+inside a disabled scope. Adjacent elements keep their own input state.
+The scope also applies to children created by cached subviews and mapped views.
+
 ## See also
 
 - [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)

@@ -11,6 +11,27 @@ uses Fpas.Ui.Widgets.Charts.Charts as Data;
 uses Fpas.Ui.Widgets.Charts.DotCharts as W;
 
 uses System as Sys;
+uses System.Collections.Generic as G;
+
+function SampleX(Index: int; Count: int; Settings: W.Options): double;
+begin
+  const IndexAxis: bool := Settings.XMinimum = Settings.XMaximum;
+  const Lo: double := if IndexAxis then
+    0.0
+  else
+    Settings.XMinimum
+  end if;
+  const Hi: double := if IndexAxis then
+    cast Sys.Math.Max(1, Count - 1) as double
+  else
+    Settings.XMaximum
+  end if;
+  if Count <= 1 then
+    return Lo;
+  end if;
+
+  return Lo + (Hi - Lo) * Index / (Count - 1);
+end function;
 
 // Presents the native CUI widget.
 // ## Type parameters
@@ -22,21 +43,25 @@ uses System as Sys;
 // - `Count`: Samples per series.
 // - `Activate`: Optional activation mapper.
 // - `Settings`: Native presentation options.
+// - `Readout`: Optional mapper for readout changes.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
   Id: string;
   Bands: array of W.Series;
   Count: int;
   Activate: Sys.Func of (W.Hit, TMsg)?;
-  Settings: W.Options
+  Settings: W.Options;
+  Readout: Sys.Func of (W.Hit, TMsg)?
 );
 begin
   const Token: string := C.Token('dot-chart', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Samples: array of float := new float[Bands.Length * Count];
   const Accent: array of int := new int[Bands.Length];
+  const Names: G.List of string := new G.List of string(Bands.Length);
   for Index: int := 0 to Bands.Length - 1 do
     Sys.Array.Copy(Bands[Index].Values, 0, Samples, Index * Count, Count);
+    Names.Add(Bands[Index].Name);
     Accent[Index] := if Bands[Index].Accent then
       1
     else
@@ -57,14 +82,32 @@ begin
   );
   const Hit: CuiCharts.CuiDotHit := Frame.Window.DotChart(
     Token, Samples, Accent, Count, Native,
-    Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
+    Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled), Names.ToArray()
   );
-  if Hit.Clicked and Enabled then
-    case Activate of
-      when is Sys.Func of (W.Hit, TMsg) as Notify:
-        Frame.Messages.Add(Notify.Invoke(new W.Hit(Hit.X, Hit.Index, Hit.Value)));
-      else
-    end case;
+  if Enabled then
+    if Hit.Clicked then
+      case Activate of
+        when is Sys.Func of (W.Hit, TMsg) as Notify:
+          Frame.Messages.Add(Notify.Invoke(new W.Hit(Hit.X, Hit.Index, Hit.Value)));
+        else
+      end case;
+    end if;
+
+    const Observed: W.Hit? := Settings.Observed;
+    if Observed <> null then
+      case Readout of
+        when is Sys.Func of (W.Hit, TMsg) as Notify:
+          const X: double := if Hit.Clicked and Hit.Index >= 0 then
+            SampleX(Hit.Index, Count, Settings)
+          else
+            Hit.X
+          end if;
+          if Observed.Index <> Hit.Index or Observed.X <> X or Observed.Value <> Hit.Value then
+            Frame.Messages.Add(Notify.Invoke(new W.Hit(X, Hit.Index, Hit.Value)));
+          end if;
+        else
+      end case;
+    end if;
   end if;
 
   C.Track of TMsg(

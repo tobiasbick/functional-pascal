@@ -1,6 +1,7 @@
 // [Documentation](../../../../docs/ui/gui/editing-tools/property-inspector.md)
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;
+using Fpas.Ui.Gui.Cui.Widgets.Charts;
 
 namespace Fpas.Ui.Gui.Cui.Widgets.Editors;
 
@@ -21,7 +22,8 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Editors;
 /// <param name="Tooltip">Row tooltip.</param>
 /// <param name="Capacity">Text capacity.</param>
 /// <param name="Flags">Input and checkbox flags.</param>
-public sealed record CuiProperty(string Label, int Kind, int Integer, float[] Values, string? Text, uint Color, string[] Choices, float Minimum, float Maximum, float Step, int Digits, string Suffix, string Placeholder, string Tooltip, int Capacity, int Flags);
+/// <param name="Format">Optional numeric format that takes precedence over Digits.</param>
+public sealed record CuiProperty(string Label, int Kind, int Integer, float[] Values, string? Text, uint Color, string[] Choices, float Minimum, float Maximum, float Step, int Digits, string Suffix, string Placeholder, string Tooltip, int Capacity, int Flags, CuiChartFormat? Format = null);
 
 /// <summary>One labeled group in the native inspector.</summary>
 /// <param name="Title">Group title.</param>
@@ -45,7 +47,7 @@ internal unsafe struct NativeProperty
 {
     internal const int MaxComponents = 4;
 
-    internal byte* Label, Suffix, Placeholder, Tooltip, Text;
+    internal byte* Label, Suffix, Placeholder, Tooltip, Text, Format;
     internal byte** Choices;
     internal int Kind, Integer, Count, Capacity, Digits, Flags, Changed;
     internal float Minimum, Maximum, Step;

@@ -103,7 +103,7 @@ public type Session of TMsg = record implements Sys.IDisposable
   // Reads the live native window on the owner thread.
   //
   // ## Returns
-  // Current size, state, backend and borrowed native handle. Throws after the window is released.
+  // Window placement state, DPI, focus, file drag state, and backend identity. Throws after release.
   public function InspectWindow(): Windows.Info;
   begin
     return self.Inspect();

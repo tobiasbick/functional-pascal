@@ -14,7 +14,7 @@ public type Options = record
   public Color: G.Color? := null;
   // Optional collaborator label.
   public Name: string? := null;
-  // Corner radius, or zero to follow the child.
+  // Corner radius, or zero to use the child's top-left corner radius.
   public Radius: float := 0.0F;
 end record;
 

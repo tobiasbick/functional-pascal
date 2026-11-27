@@ -12,8 +12,12 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Editors;
 /// <param name="Matches">Number of native find matches.</param>
 /// <param name="MatchIndex">One-based selected find match, or zero.</param>
 /// <param name="Focused">Whether the editor or its find bar owns the keyboard.</param>
+/// <param name="ByteLength">Source size in UTF-8 bytes excluding the terminator.</param>
+/// <param name="Bracket">UTF-16 offset of the bracket beside the caret, or minus one.</param>
+/// <param name="BracketMatch">UTF-16 offset of its partner, or minus one.</param>
 public sealed record CuiCodeEditorEvent(string? Text, int Line, int Column, int Lines, bool Refused,
-    int Cursor = 0, int Anchor = 0, int Matches = 0, int MatchIndex = 0, bool Focused = false);
+    int Cursor = 0, int Anchor = 0, int Matches = 0, int MatchIndex = 0, bool Focused = false,
+    int ByteLength = 0, int Bracket = -1, int BracketMatch = -1);
 
 /// <summary>A highlight range at UTF-16 scalar boundaries in the model text.</summary>
 /// <param name="Start">Inclusive start offset.</param>

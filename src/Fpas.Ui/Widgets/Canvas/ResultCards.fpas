@@ -15,12 +15,14 @@ public type Options = record
   public Badge: string? := null;
   // Status badge tone, or neutral for the native default.
   public BadgeTone: S.Tone := S.Tone.Neutral;
-  // Preferred width. Fill uses the native maximum.
-  public Width: L.Extent := L.Extent.Fill;
+  // Preferred width. Content fills the available width up to 320 logical units.
+  public Width: L.Extent := L.Extent.Content;
   // Height divided by width, or zero for the default.
   public Aspect: float := 0.0F;
   // Whether the card accepts activation.
   public Enabled: bool := true;
+  // Whether to stretch the picture to the card instead of cropping it.
+  public StretchImage: bool := false;
 end record;
 
 // Builds the native ResultCard element.
@@ -28,15 +30,15 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
-// - `Image`: Picture displayed in the card.
-// - `Title`: Caption title.
+// - `Image`: Picture displayed in the card, or null for a muted surface.
+// - `Title`: Caption title, or an empty string to omit it.
 // - `Activate`: Message on card activation.
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
 public function ResultCard of TMsg(
   Id: string;
-  Image: Media.Source;
+  Image: Media.Source?;
   Title: string;
   Activate: TMsg;
   Settings: Options? := null

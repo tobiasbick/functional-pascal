@@ -32,12 +32,13 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Values` | Finite samples in display order. |
-| `Width / Height` | Content / 0. Zero uses CUI's default height. |
-| `Color` | Automatic. Use a theme color token or explicit RGBA color to customize the stroke. |
+| `Width / Height` | Content / 0. CUI uses 120 logical units for content width and 32 logical units for zero height. |
+| `Color` | Automatic uses the first series color. Use a theme color token or explicit RGBA color to customize the stroke. |
 
 ## Interaction
 
-CUI draws the line and its endpoint without axes or a legend. The sparkline is passive. Use a line chart when the user needs labels and inspection.
+With two or more samples, CUI draws the line and its endpoint. The sparkline
+is passive and has no axes or legend. Use a line chart for labels and inspection.
 
 ## See also
 

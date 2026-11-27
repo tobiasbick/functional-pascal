@@ -5,6 +5,11 @@ recording modes. All levels, transcript text and playback positions come
 from the application. The gallery simulates its audio and transcript.
 These widgets require the GUI host.
 
+The gallery measures 20 synthetic levels per second. The call waveform
+keeps the latest 12 seconds. Each recording keeps up to 30 seconds and
+stores 64 waveform peaks when sent. The page also shows a standalone
+voice orb after the three original CUI sections.
+
 | Widget | When to use it |
 | --- | --- |
 | [Voice note](voice-note.md) | Present a recorded message with playback and speed controls. |
@@ -19,6 +24,7 @@ These widgets require the GUI host.
 - [Shared voice types](../../../../src/Fpas.Ui/Widgets/Audio/Voice.fpas)
 - [Social and media](../social-and-media/README.md)
 - [Voice in the gallery](../../../../examples/ui/gui/gallery/Pages/Voice/View.fpas)
+- [Comparison with the CUI gallery](../../../future/cui-compare/README.md#voice-evidence)
 
 ## Source files
 

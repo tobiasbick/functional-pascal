@@ -52,21 +52,26 @@ end function;
 end unit;
 ```
 
-Pass the saved placement as `Options.Placement`, for example
-`new Gui.Options(Title := 'Notes', Placement := Saved)`. The window opens with
-the saved size and place, and maximized if it was. Closing the window does not
-pass through the update. To save at the end, drive the session with `Step`
-and read `Session.Placement()` after the last step and before `Dispose`.
+Pass the saved placement to `Desktop.Options.Placement`. The window opens
+with the saved size, place and maximized state. Drive the session with
+`Step` to save the final placement. Read `Session.Placement()` after
+`Step` returns `false` and before `Dispose`.
+
+Supply `OnCloseRequested` to receive a message when the user asks to close
+the window. [Native close decisions](../host.md#application-lifecycle)
 
 ## Commands
 
 | Command in `Fpas.Ui.Gui.Windows` | Effect |
 | --- | --- |
+| `SetTitle of TMsg(Title)` | Sets the title shown by the system. |
+| `Resize of TMsg(Width, Height)` | Requests positive dimensions in logical units. |
 | `Maximize of TMsg()` | Maximizes the window on its display. |
 | `Minimize of TMsg()` | Minimizes it to the taskbar or dock. |
 | `Restore of TMsg()` | Undoes a maximize or a minimize. A window minimized from maximized comes back maximized. |
 | `MoveTo of TMsg(X, Y)` | Places the top-left corner of the content. |
 | `ReadPlacement of TMsg(OnRead)` | Sends the window's `Cui.CuiWindowPlacement` to the update. |
+| `ReadInfo of TMsg(OnRead)` | Sends the current `Windows.Info` to the update. |
 
 ## Placement
 
@@ -77,11 +82,35 @@ and read `Session.Placement()` after the last step and before `Dispose`.
 | `HasPosition` | false where the system reports no place (Wayland). The system then places the window. |
 | `State` | Normal or Maximized. A minimized window reports the state it comes back in. |
 
+Use `Session.Placement()` for the normal size and the state to restore.
+
+## Window observation
+
+Use `Windows.ReadInfo` from `Update` to read `Windows.Info`.
+A manually driven session can call `Session.InspectWindow()` on the window owner.
+
+| Field | Meaning |
+| --- | --- |
+| `Size / State` | Logical dimensions and current native state, including minimized. |
+| `Backend / NativeWindow` | Platform name and borrowed platform handle. |
+| `DpiScale` | Drawable pixels per logical unit. Updated when CUI refreshes the viewport. |
+| `Focused` | Whether the window has native focus. |
+| `FileDragActive` | Whether the platform reports files being dragged over the window. |
+| `DroppedFileCount` | Number of files left unclaimed in the most recently presented frame. |
+
+CUI reports drag hover where the platform supplies it. A dropzone that
+claims a drop receives its paths and leaves the window count at zero.
+Direct `CuiWindow` drawing can read `DroppedFileCount` while constructing
+a frame. Read it after the dropzones to give them first access.
+Between frames it reads the last presented count. Each presented frame
+updates that count.
+
 ## Platform behavior
 
 Keep the position only to pass it back. A place on a monitor that is no longer
 there is left to the system, and the size is clamped to CUI's minimum window
-size. On X11 the window manager carries out state changes in its own time, so
+size. A fixed-size window ignores maximize requests.
+On X11 the window manager carries out state changes in its own time, so
 a new state can take a few frames to show. A window manager without EWMH
 support ignores them. Wayland lets a window neither read nor choose its place.
 
@@ -94,6 +123,8 @@ support ignores them. Wayland lets a window neither read nor choose its place.
 - [Chapter index](README.md)
 
 ## Source files
+
+- [Window observation tests](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiWindowObservationTests.cs)
 
 - `src/Fpas.Ui.Gui.Cui/Hosting/`
   - [CuiWindow.Placement.cs](../../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Placement.cs)

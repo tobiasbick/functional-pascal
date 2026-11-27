@@ -32,14 +32,24 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Pitch / Color / Accent` | 0 / Automatic / false. Zero uses the native spacing. Accent selects the theme accent. |
-| `Dim / Marquee` | true / false. Dim shows unlit dots. Marquee scrolls a line wider than the viewport. |
-| `Align / Width` | Start / Content. Start and End follow the reading direction. Give a marquee a constrained width. |
+| `Pitch` | `0` uses the native spacing of 4 logical points between dot centers. CUI clamps positive values to 1.5–40 logical points. |
+| `Color` | `Automatic` uses the theme foreground for lit dots. Use `Theme` or `Rgba` to set the color. |
+| `Accent` | `false`. If enabled, the theme accent takes precedence over `Color`. |
+| `Dim` | `true`. Draws dim dots for unlit positions, including the space between glyphs. |
+| `Marquee` | `false`. Scrolls a line wider than its layout width when motion is enabled. |
+| `Align` | `Start`. `Start` and `End` follow the reading direction. `Left` and `Right` use physical edges. `Center` centers the line. |
+| `Width` | `Content`. Use `Fill`, `Fixed` or `Percent` to constrain the line. |
 
 ## Interaction
 
 The display is passive. Change the text in the view when the model changes.
-CUI performs the marquee animation when enabled.
+The glyphs run from left to right. CUI draws printable ASCII, degree signs and
+middle dots. CUI uses the middle-dot glyph for bullets. Other characters
+appear as boxes.
+
+If `Marquee` is enabled and the host allows motion, a line wider than the
+display scrolls at full pitch. Static displays and displays with reduced
+motion shrink the dots to fit.
 
 ## See also
 

@@ -16,14 +16,12 @@ uses Fpas.Ui.Widgets.Canvas.SelectionRings as D;
 // - `Settings`: Ring color, name and corners.
 public procedure Apply(Window: Cui.CuiWindow; Settings: D.Options);
 begin
-  var Color: uint := 0U;
   case Settings.Color of
     when is G.Color as Value:
-      Color := P.Pack(Value);
+      Window.SelectionRing(0, P.Pack(Value), Settings.Name, Settings.Radius);
     else
+      Window.SelectionRing(cast Settings.Tone as int, 0U, Settings.Name, Settings.Radius);
   end case;
-
-  Window.SelectionRing(cast Settings.Tone as int, Color, Settings.Name, Settings.Radius);
 end procedure;
 
 // Presents CUI's native SelectionRing widget.

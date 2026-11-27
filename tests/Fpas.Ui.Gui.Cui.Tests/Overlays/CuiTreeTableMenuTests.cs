@@ -68,7 +68,11 @@ public sealed class CuiTreeTableMenuTests
             window.BeginTreeTable("tree", [new CuiGridColumn("Name", 300, 0, false, false, 0)], labels, parents,
                 flags, state, 0, 0, 32, enabled ? 1 : 0);
             for (int index; (index = window.NextTreeTableRow(i => $"row/{i}")) >= 0;)
+            {
+                Assert.Equal(index == 1 ? 1 : 0, window.TreeTableDepth());
                 window.TreeTableName(labels[index], "", null);
+            }
+            Assert.Equal(0, window.TreeTableDepth());
             activated = window.EndTreeTable().Activated;
             bool open = window.BeginTreeTableMenu("tree", enabled && menuEnabled, out menuNode);
             CuiMenuEntry[] entries = open ? [new(CuiMenuEntryKind.Action, "copy", "Copy name")] : [];

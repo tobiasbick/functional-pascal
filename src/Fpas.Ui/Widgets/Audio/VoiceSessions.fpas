@@ -16,7 +16,7 @@ end variant;
 
 // Native presentation and interaction options.
 public type Options = record
-  // Preferred native width.
+  // Preferred native width. The Content extent uses the available width.
   public Width: L.Extent := L.Extent.Fill;
   // Override the native activity label.
   public Label: string := '';

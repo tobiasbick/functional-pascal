@@ -16,6 +16,15 @@ public sealed partial class CuiWindow
             throw new ArgumentOutOfRangeException(nameof(format));
     }
 
+    private static bool InstrumentLabelStepAdvances(double minimum, double maximum, double step)
+    {
+        // CUI-155 (docs/future/cui-upstream-bugs.md#cui-155): verify that native ticks advance.
+        if (step == 0) return true;
+        double first = Math.Ceiling(minimum / step - 1e-9) * step;
+        double last = maximum + step * 1e-6;
+        return double.IsFinite(first) && double.IsFinite(last) && first + step > first && last + step > last;
+    }
+
     private static void CheckChartColor(CuiChartColor color)
     {
         if (!color.IsValid) throw new ArgumentOutOfRangeException(nameof(color));

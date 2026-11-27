@@ -1,6 +1,17 @@
 // [Documentation](../../../../../docs/ui/gui/capture/signature-pad.md)
 #include "../../fpas_cui.h"
 
+void fpas_cui_signature_clear(cui_ctx *ui, const char *id) {
+    const cui_id key = cui_make_id(ui, id);
+    cui__sig_state *state = cui__state_lazy(ui, key, sizeof *state, false);
+    if (!state) return;
+
+    /* Clearing the points also ends any stroke still held by the pointer. */
+    state->drawing = false;
+    if (ui->active == (key ^ 0x5161u)) ui->active = 0;
+    cui_signature_clear(ui, id);
+}
+
 /** Draws native ink and exposes the active pad and clear button nodes. */
 int fpas_cui_signature_pad(cui_ctx *ui, const char *id, const char *placeholder, int width_kind,
     float width, float height, int ink_palette, uint32_t rgba, int enabled, int focus_clear,

@@ -71,6 +71,7 @@ public sealed partial class CuiWindow
         Utf8.Validate(property.Suffix, parameter);
         Utf8.Validate(property.Placeholder, parameter);
         Utf8.Validate(property.Tooltip, parameter);
+        CheckChartFormat(property.Format);
         ArgumentNullException.ThrowIfNull(property.Values, parameter);
         ArgumentNullException.ThrowIfNull(property.Choices, parameter);
         if (property.Kind is < 0 or > 6 || property.Values.Length > NativeProperty.MaxComponents ||
@@ -100,6 +101,7 @@ public sealed partial class CuiWindow
         {
             Label = memory.Text(value.Label), Suffix = memory.Text(OptionalAi(value.Suffix)),
             Placeholder = memory.Text(OptionalAi(value.Placeholder)), Tooltip = memory.Text(OptionalAi(value.Tooltip)),
+            Format = memory.Format(value.Format),
             Choices = memory.Labels(value.Choices), Kind = value.Kind, Integer = value.Integer,
             Count = value.Kind == 4 ? value.Choices.Length : value.Values.Length, Capacity = value.Capacity,
             Digits = value.Digits, Flags = value.Flags, Minimum = value.Minimum, Maximum = value.Maximum,

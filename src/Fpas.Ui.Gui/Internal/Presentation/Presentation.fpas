@@ -1579,9 +1579,10 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         DotDisplayWidget.Draw of TMsg(Current, Id, Text, Settings);
       when E.Element.DotChart(
         const Id: string, const Bands: array of DotCharts.Series, const Count: int,
-        const Activate: Sys.Func of (DotCharts.Hit, TMsg)?, const Settings: DotCharts.Options
+        const Activate: Sys.Func of (DotCharts.Hit, TMsg)?, const Settings: DotCharts.Options,
+        const Readout: Sys.Func of (DotCharts.Hit, TMsg)?
       ):
-        DotChartWidget.Draw of TMsg(Current, Id, Bands, Count, Activate, Settings);
+        DotChartWidget.Draw of TMsg(Current, Id, Bands, Count, Activate, Settings, Readout);
       when E.Element.EventTrack(
         const Id: string, const Value: EventTracks.Value,
         const Change: function(EventTracks.Change): TMsg, const Settings: EventTracks.Options
@@ -2084,6 +2085,22 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         Visit(Child, Current, Horizontal, Align);
         // CUI owns default sizing and alignment. Apply only explicit constraints.
         Size.Apply(Current.Window, Settings, Horizontal, L.Alignment.Default);
+        return;
+      when E.Element.DisabledScope(const Child: E.Element of TMsg, const Disabled: bool):
+        if Disabled then
+          const Scope: C.State of TMsg := Current with
+            AcceptInput := false;
+            Interactive := false;
+          end with;
+          Current.Window.DisabledScope(
+            true, procedure() begin
+              Visit(Child, Scope, Horizontal, Align);
+            end procedure
+          );
+        else
+          Visit(Child, Current, Horizontal, Align);
+        end if;
+
         return;
       when E.Element.Styled(const Child: E.Element of TMsg, const Role: S.Role):
         Visit(Child, Current, Horizontal, Align);

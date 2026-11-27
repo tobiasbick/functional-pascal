@@ -27,6 +27,12 @@ public type Event = record
   public MatchIndex: int := 0;
   // Whether the editor or its native find bar owns keyboard input.
   public Focused: bool := false;
+  // UTF-8 source size excluding the terminator.
+  public ByteLength: int := 0;
+  // UTF-16 offset of the bracket beside the caret, or minus one.
+  public Bracket: int := -1;
+  // UTF-16 offset of the paired bracket, or minus one.
+  public BracketMatch: int := -1;
 end record;
 
 // A highlight range at UTF-16 scalar boundaries in the model text.
@@ -61,6 +67,8 @@ public type Options = record
   public LineNumbers: bool := true;
   // Allow selection and find while preventing edits.
   public ReadOnly: bool := false;
+  // Focus the editor when it first appears.
+  public Autofocus: bool := false;
   // Immutable highlight ranges, sorted by Start and bounded by the model text.
   public Marks: array of Mark := [];
 end record;

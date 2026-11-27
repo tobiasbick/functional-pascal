@@ -19,8 +19,8 @@ uses System as Sys;
 // - `Frame`: Current presentation context.
 // - `Id`: Stable waveform identity.
 // - `Signal`: Ordered levels and optional speaker tags.
-// - `Progress`: Current played fraction, or null for passive rendering.
-// - `Changed`: Maps a seek proposal.
+// - `Progress`: Current played fraction, or null to omit the playhead.
+// - `Changed`: Maps a seek proposal, or null for read-only rendering.
 // - `Settings`: Native options.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
@@ -33,7 +33,8 @@ public procedure Draw of TMsg(
 begin
   const Role: string := 'voice-wave';
   const Token: string := C.Token(Role, Id);
-  const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Changed <> null;
+  const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Progress <> null and Changed <>
+    null;
   const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Next: float := Frame.Window.VoiceWave(

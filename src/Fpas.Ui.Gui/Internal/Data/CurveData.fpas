@@ -23,6 +23,21 @@ begin
   );
 end function;
 
+// Packs the entire curve in its original order.
+// ## Parameters
+// - `Keys`: Model keys.
+// ## Returns
+// The native representation of each key.
+public function PackKeys(Keys: array of W.Key): array of CuiEditors.CuiCurveKey;
+begin
+  const Result: array of CuiEditors.CuiCurveKey := new CuiEditors.CuiCurveKey[Keys.Length];
+  for Index: int := 0 to Keys.Length - 1 do
+    Result[Index] := Pack(Keys[Index]);
+  end for;
+
+  return Result;
+end function;
+
 // Converts one edited key to FPAS.
 // ## Parameters
 // - `Value`: Native key.

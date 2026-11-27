@@ -36,12 +36,14 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Glyph` | A Unicode emoji sequence. |
-| `Size` | 0 uses the native size in logical points. |
+| `Size` | 0 uses the native size of 20 logical units. |
 
 ## Usage
 
 Use Emoji to display a glyph. The model supplies any count or label beside
 it. Use Emoji picker when the user should choose a glyph.
+Load a window emoji font from bytes, a file, or the system with `Fonts.Apply`.
+Use `SupportsEmoji` to check coverage for a sequence.
 
 ## See also
 
@@ -49,6 +51,7 @@ it. Use Emoji picker when the user should choose a glyph.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/Emojis.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Emoji picker](../smart-inputs/emoji-picker.md)
+- [Fonts and native captions](../host.md#fonts-and-native-captions)
 - [Chapter index](README.md)
 
 ## Source files

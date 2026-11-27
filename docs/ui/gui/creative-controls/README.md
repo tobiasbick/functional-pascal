@@ -14,6 +14,10 @@ selections live in the application model. These widgets require the GUI host.
 | [Option field with action](option-action.md) | Choose an option and act on it. |
 | [Seed field](seed-field.md) | Roll a seed and optionally lock it. |
 
+The gallery uses wrapping rows for the status tags and responsive grids for
+the slider and option examples. See the
+[CUI gallery comparison](../../../future/cui-compare/README.md#creative-controls-evidence).
+
 ## See also
 
 - [UI handbook](../README.md)
@@ -25,3 +29,4 @@ selections live in the application model. These widgets require the GUI host.
 - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Creative/State.fpas)
 - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Creative/Update.fpas)
 - [creative.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/creative.c)
+- [creative_choices.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/creative_choices.c)

@@ -62,16 +62,18 @@ static void flame(void) {
 static void curve(void) {
     cui_ctx *ui = context();
     cui_curve_key keys[6] = {{0,.2f},{.50f,.5f},{1,.8f}};
-    int count = 3, selected = -1, added, removed = -1, erased = -1;
+    int count = 3, selected = -1, erased = -1;
     fpas_curve_options options = {.x_max = 1, .y_max = 1, .width_kind = 1, .flags = 1};
     for (int frame = 0; frame < 9; ++frame) {
         if (frame == 2 || frame == 4) press(ui, CUI_KEY_TAB, 0);
         if (frame == 5) press(ui, CUI_KEY_UP, 0);
         if (frame == 7) press(ui, CUI_KEY_DELETE, 0);
         cui_begin_frame(ui, .016f);
-        fpas_cui_curve_editor(ui, "curve", keys, &count, 6, &selected, &added, &removed, &options);
-        if (frame == 5) check(selected == 1 && keys[1].y > .5f, "Arrow must nudge the selected curve key.");
-        if (removed >= 0) erased = removed;
+        fpas_curve_observation observation;
+        fpas_cui_curve_editor(ui, "curve", keys, &count, 6, &selected, &observation, &options);
+        if (frame == 5) check(observation.changed && selected == 1 && keys[1].y > .5f,
+            "Arrow must nudge the selected curve key and report the edit.");
+        if (observation.removed >= 0) erased = observation.removed;
         cui_end_frame(ui);
     }
     check(count == 2 && erased == 1 && keys[1].x == 1, "Delete must remove only the selected curve key.");
@@ -113,8 +115,12 @@ static void timeline(void) {
         cui_begin_frame(ui, .016f);
         int result = fpas_cui_timeline_editor(ui, "shot", &track, 1, &range, &options);
         options.flags = 3;
-        if (frame == 2) check((result & 1) && fabsf(range.time - 25.0f/24.0f) < .001f, "Timeline must advance exactly one frame.");
-        if (frame == 4) check((result & 1) && fabsf(keys[1].x - 25.0f/24.0f) < .001f, "Alt+Right must move the selected key one frame.");
+        if (frame == 2) check((result & 1) && (range.activity & 2) && fabsf(range.time - 25.0f/24.0f) < .001f,
+            "Timeline must report advancing the playhead by one frame.");
+        if (frame == 4) check((result & 1) && (range.activity & 32) && fabsf(keys[1].x - 25.0f/24.0f) < .001f,
+            "Alt+Right must report moving the selected key by one frame.");
+        if (frame == 8) check(range.removed_keys == 1 && range.removed_clips == 0,
+            "Delete must report the key and clip deletion counts.");
         plays += (result & 2) != 0;
         cui_end_frame(ui);
     }

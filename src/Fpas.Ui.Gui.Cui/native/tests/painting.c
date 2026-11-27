@@ -8,56 +8,61 @@
 typedef struct { bool adapter; cui_texture image; } scene;
 static const uint8_t rgba[] = { 255,0,0,255, 0,255,0,255, 0,0,255,255, 255,255,0,255 };
 
-static void paint(void *user, cui_ctx *ui, cui_rect r, cui_id images, int disabled) {
+static int paint(void *user, cui_ctx *ui, cui_rect r, cui_id images, int disabled, cui_id wheel) {
     const scene *s = user;
     (void)disabled;
+    (void)wheel;
     const cui_color ink = {24,32,48,255}, fill = {220,230,240,255};
     const uint32_t packed = 0xff302018u, other = 0xfff0e6dcu;
-    const float rect[] = {10,10,100,60,8,2};
+    const float rect[] = {10,10,100,60,2};
     const float circle[] = {145,40,18};
     const float line[] = {10,90,180,90,2};
-    const float shadow[] = {210,20,50,50,5,8,-2,0,3};
+    const float shadow[] = {210,20,50,50,8,-2,0,3};
     const float arc[] = {290,40,20,0,2.5f,2};
     const float text[] = {10,110,CUI_FONT_BODY,17};
     const float icon[] = {320,20,24,24,20};
     const float clip[] = {5,5,360,180};
+    const cui_corners radii = {2, 8, 20, 4};
+    const cui_rect reversed = {.75f, .25f, -.5f, .75f};
+    const float gradient[] = {290,80,65,55};
     const cui_vec2 points[] = {{180,20},{200,65},{165,70}};
     if (s->adapter) {
-        fpas_cui_canvas_primitive(ui,10,r.x,r.y,clip,0,0,NULL);
-        fpas_cui_canvas_primitive(ui,3,r.x,r.y,rect,other,packed,NULL);
-        fpas_cui_canvas_primitive(ui,1,r.x,r.y,circle,fpas_cui_canvas_color(ui,CUI_TOKEN_ACCENT),0,NULL);
-        fpas_cui_canvas_primitive(ui,2,r.x,r.y,line,packed,0,NULL);
-        fpas_cui_canvas_primitive(ui,5,r.x,r.y,shadow,packed,0,NULL);
-        fpas_cui_canvas_primitive(ui,0,r.x,r.y,rect,other,0,NULL);
-        fpas_cui_canvas_primitive(ui,4,r.x,r.y,rect,other,packed,NULL);
-        fpas_cui_canvas_primitive(ui,6,r.x,r.y,arc,packed,0,NULL);
-        fpas_cui_canvas_primitive(ui,7,r.x,r.y,text,packed,0,"Gr\xc3\xbc\xc3\x9f" "e \xe6\x97\xa5\xe6\x9c\xac \xf0\x9f\x8e\xb5");
-        fpas_cui_canvas_primitive(ui,8,r.x,r.y,icon,packed,0,CUI_ICON_CHECK);
+        fpas_cui_canvas_push_clip(ui,r.x+clip[0],r.y+clip[1],clip[2],clip[3]);
+        fpas_cui_canvas_primitive(ui,3,r.x,r.y,rect,other,packed,NULL,radii);
+        fpas_cui_canvas_primitive(ui,1,r.x,r.y,circle,fpas_cui_canvas_color(ui,CUI_TOKEN_ACCENT),0,NULL,CUI_CORNERS(0));
+        fpas_cui_canvas_primitive(ui,2,r.x,r.y,line,packed,0,NULL,CUI_CORNERS(0));
+        fpas_cui_canvas_primitive(ui,5,r.x,r.y,shadow,packed,0,NULL,radii);
+        fpas_cui_canvas_primitive(ui,0,r.x,r.y,rect,other,0,NULL,radii);
+        fpas_cui_canvas_primitive(ui,4,r.x,r.y,gradient,other,packed,NULL,radii);
+        fpas_cui_canvas_primitive(ui,6,r.x,r.y,arc,packed,0,NULL,CUI_CORNERS(0));
+        fpas_cui_canvas_primitive(ui,7,r.x,r.y,text,packed,0,"Gr\xc3\xbc\xc3\x9f" "e \xe6\x97\xa5\xe6\x9c\xac \xf0\x9f\x8e\xb5",CUI_CORNERS(0));
+        fpas_cui_canvas_primitive(ui,8,r.x,r.y,icon,packed,0,CUI_ICON_CHECK,CUI_CORNERS(0));
         fpas_cui_canvas_points(ui,r.x,r.y,points,3,0,packed,2);
         fpas_cui_canvas_points(ui,r.x,r.y,points,3,2,other,1);
         const fpas_media_source source = {.pixels=rgba,.width=2,.height=2,.version=1};
-        fpas_cui_canvas_image(ui,images,0,&source,r.x+240,r.y+120,60,50,4,0xffffffffu);
+        fpas_cui_canvas_image(ui,images,0,&source,r.x+240,r.y+120,60,50,radii,reversed,0xffffffffu);
         fpas_cui_canvas_images_finish(ui,images,1);
     } else {
         cui_push_clip(ui,(cui_rect){r.x+5,r.y+5,360,180});
-        cui_draw_rect_border(ui,(cui_rect){r.x+10,r.y+10,100,60},CUI_CORNERS(8),fill,ink,2);
+        cui_draw_rect_border(ui,(cui_rect){r.x+10,r.y+10,100,60},radii,fill,ink,2);
         cui_draw_circle(ui,(cui_vec2){r.x+145,r.y+40},18,CUI_COLOR_ACCENT);
         cui_draw_line(ui,(cui_vec2){r.x+10,r.y+90},(cui_vec2){r.x+180,r.y+90},2,ink);
-        cui_draw_shadow(ui,(cui_rect){r.x+210,r.y+20,50,50},CUI_CORNERS(5),8,-2,(cui_vec2){0,3},ink);
-        cui_draw_rect(ui,(cui_rect){r.x+10,r.y+10,100,60},CUI_CORNERS(8),fill);
-        cui_draw_rect_gradient(ui,(cui_rect){r.x+10,r.y+10,100,60},CUI_CORNERS(8),fill,ink);
+        cui_draw_shadow(ui,(cui_rect){r.x+210,r.y+20,50,50},radii,8,-2,(cui_vec2){0,3},ink);
+        cui_draw_rect(ui,(cui_rect){r.x+10,r.y+10,100,60},radii,fill);
+        cui_draw_rect_gradient(ui,(cui_rect){r.x+290,r.y+80,65,55},radii,fill,ink);
         cui_draw_arc(ui,(cui_vec2){r.x+290,r.y+40},20,0,2.5f,2,ink);
         cui_draw_text(ui,CUI_FONT_BODY,17,(cui_vec2){r.x+10,r.y+110},ink,"Gr\xc3\xbc\xc3\x9f" "e \xe6\x97\xa5\xe6\x9c\xac \xf0\x9f\x8e\xb5",-1);
         cui_draw_icon(ui,CUI_ICON_CHECK,(cui_rect){r.x+320,r.y+20,24,24},20,ink);
         cui_vec2 shifted[3]; for (int i=0;i<3;i++) shifted[i]=(cui_vec2){r.x+points[i].x,r.y+points[i].y};
         cui_draw_polygon(ui,shifted,3,ink);
         cui_draw_polyline(ui,shifted,3,2,fill,true);
-        cui_draw_image(ui,s->image,(cui_rect){r.x+240,r.y+120,60,50},(cui_rect){0,0,1,1},CUI_CORNERS(4),(cui_color){255,255,255,255});
+        cui_draw_image(ui,s->image,(cui_rect){r.x+240,r.y+120,60,50},reversed,radii,(cui_color){255,255,255,255});
     }
     cui_pop_clip(ui);
+    return 0;
 }
 
-static void direct(cui_ctx *ui, cui_rect area, void *user) { paint(user,ui,area,0,0); }
+static void direct(cui_ctx *ui, cui_rect area, void *user) { paint(user,ui,area,0,0,0); }
 
 static bool parity(bool dark, int scale) {
     const int width=400*scale, height=220*scale;
@@ -113,14 +118,16 @@ static void texture_destroy(void *user,cui_texture id) {
     if (t->rgba[id]) { t->rgba[id]=false;t->live--; }
 }
 typedef struct { bool visible; int version; } image_scene;
-static void image_paint(void *user,cui_ctx *ui,cui_rect r,cui_id images,int disabled) {
+static int image_paint(void *user,cui_ctx *ui,cui_rect r,cui_id images,int disabled,cui_id wheel) {
     const image_scene *s=user;
     (void)disabled;
+    (void)wheel;
     if (s->visible) {
         const fpas_media_source source={.pixels=rgba,.width=2,.height=2,.version=s->version};
-        fpas_cui_canvas_image(ui,images,0,&source,r.x,r.y,30,30,0,0xffffffffu);
+        fpas_cui_canvas_image(ui,images,0,&source,r.x,r.y,30,30,CUI_CORNERS(0),(cui_rect){0,0,1,1},0xffffffffu);
     }
     fpas_cui_canvas_images_finish(ui,images,s->visible?1:0);
+    return 0;
 }
 
 static bool image_lifetime(void) {
@@ -218,6 +225,44 @@ static bool theme_transition(void) {
     return ok;
 }
 
+/** Steps standard and configurable canvas springs on a deterministic clock. */
+static bool animated_values(void) {
+    cui_ctx *ui = cui_create(NULL), *reference = cui_create(NULL);
+    if (!ui || !reference) { cui_destroy(ui); cui_destroy(reference); return false; }
+    const cui_id scope = cui_make_id(ui, "canvas"), other = cui_make_id(ui, "other canvas");
+    const cui_id key = cui_make_id(reference, "native standard");
+    const cui_id spring = cui_make_id(reference, "native spring");
+    bool ok = true, overshot = false, moved = false, redraw = false;
+    for (int frame = 0; frame < 120; frame++) {
+        const float target = frame == 0 ? 0.0f : 1.0f;
+        cui_begin_frame(ui, .016f);
+        cui_begin_frame(reference, .016f);
+        const float standard = fpas_cui_canvas_animate(ui, scope, "standard", target, 0, 0);
+        const float custom = fpas_cui_canvas_animate(ui, scope, "custom", target, .4f, .7f);
+        ok = ok && standard == cui_animate(reference, key, target) &&
+            custom == cui_animate_spring(reference, spring, target, .4f, .7f);
+        ok = ok && fpas_cui_canvas_animate(ui, other, "standard", 8, 0, 0) == 8;
+        const float fast = fpas_cui_canvas_animate(ui, scope, "fast", target, .005f, 0);
+        ok = ok && fast >= 0.0f && fast <= 1.0f;
+        if (standard > 0 && standard < target) moved = true;
+        if (custom > target) overshot = true;
+        if (frame > 5 && frame < 20 && cui_needs_redraw(ui)) redraw = true;
+        cui_end_frame(ui);
+        cui_end_frame(reference);
+    }
+    cui_set_reduced_motion(ui, true);
+    cui_begin_frame(ui, .016f);
+    ok = ok && fpas_cui_canvas_animate(ui, scope, "standard", 2, 0, 0) == 2 &&
+        fpas_cui_canvas_animate(ui, scope, "custom", 3, .4f, .7f) == 3;
+    cui_end_frame(ui);
+    cui_destroy(ui);
+    cui_destroy(reference);
+    ok = ok && moved && overshot && redraw;
+    if (!ok) fprintf(stderr, "Canvas spring did not preserve value or redraw semantics.\n");
+    return ok;
+}
+
+/** Runs painting, resource, palette and spring contracts. */
 int main(void) {
-    return parity(false,1)&&parity(true,1)&&parity(false,2)&&parity(true,2)&&resources()&&image_lifetime()&&theme_transition()?0:1;
+    return parity(false,1)&&parity(true,1)&&parity(false,2)&&parity(true,2)&&resources()&&image_lifetime()&&theme_transition()&&animated_values()?0:1;
 }

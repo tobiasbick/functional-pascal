@@ -77,7 +77,8 @@ colors of the current transition frame. See [canvas painting](canvas-and-bars/pa
 
 `Fonts.Apply of TMsg` schedules a typed `Fonts.Operation of TMsg` between frames:
 `Load(Bytes, OnLoaded)`, `Assign(Graphics.Font.Body, Face)`, `Fallback(Face, Other)`,
-`Emoji(BytesOrNullForSystem, OnLoaded)` and `SupportsEmoji(Text, OnRead)`.
+`Emoji(BytesOrNullForSystem, OnLoaded)`, `EmojiFile(Path, OnLoaded)`, and
+`SupportsEmoji(Text, OnRead)`.
 Use CLR file APIs to obtain trusted font bytes. Loading copies them; completion
 returns a `CuiFontFace` or null. Retain and reuse loaded faces in the model.
 Faces belong to one window and cannot cross contexts or threads.
@@ -90,15 +91,20 @@ among loaded faces and the icon role. Icons require a face dedicated to that rol
 Changes occur between frames, so deferred painting cannot outlive its resources.
 
 Emoji replacement owns its bytes, or asks CUI for a system font when data is
-null. Acceptance does not promise glyph coverage; query `SupportsEmoji` for the
-sequence needed. A native parse failure can clear the previous emoji resource.
+null. `EmojiFile` opens a trusted font file through CUI. CUI can read bitmap
+glyphs on demand while the file stays open. Native file opening follows the
+platform's path support. Query `SupportsEmoji` for the sequence you need.
+A native parse failure can clear the previous emoji resource.
 System-font availability and color/monochrome coverage remain platform-dependent.
 
 `Localization.Set of TMsg(CuiStrings)` copies native calendar/file-browser captions.
 Month arrays contain twelve entries; weekday arrays seven, Monday first. Null
 arrays or entries retain English; a null table restores English. Per-widget
 captions take precedence. CUI owns the copied strings until replacement/close.
-`Fpas.Ui.Gui.Colors` supplies native OKLCH, OKLab mixing and alpha helpers.
+`Fpas.Ui.Gui.Colors.Oklch` takes a hue in degrees and returns straight RGB
+and alpha. `Mix` clamps the amount to zero through one and interpolates with
+premultiplied alpha in OKLab. `Alpha` multiplies and clamps the alpha channel
+without changing RGB.
 
 See the [painting example](../../../examples/ui/gui/painting/README.md) and
 [CUI API coverage](../../cui-api-coverage.md).
@@ -279,6 +285,8 @@ name and native handle on the owner thread. A minimized window reports its
 current state here and its restore state in the placement. Use the backend
 name to interpret the borrowed handle, such as an HWND on Win32 or an X11
 Window on X11. The handle belongs to the session while the window is live.
+The same result reports DPI, focus, file drag and unclaimed drop state.
+[Window observation](app-chrome/window.md#window-observation)
 
 The position is in desktop coordinates: pixels on Windows and X11, points on
 macOS. Keep it only to pass it back. A place on no screen is left to the
@@ -369,6 +377,8 @@ The [CUI inventory](../../cui-widget-inventory.md#acceptance) records GUI
 gallery acceptance and existing TUI coverage.
 
 ## Source files
+
+- [CUI capability contract](../../../tests/Fixtures/gui-host/CuiCapabilitiesContract.fpas)
 
 <details>
 <summary>Browse 62 source files</summary>

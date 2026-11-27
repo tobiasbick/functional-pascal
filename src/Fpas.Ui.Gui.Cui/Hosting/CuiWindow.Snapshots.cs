@@ -7,6 +7,7 @@ public sealed partial class CuiWindow
 {
     private readonly Dictionary<string, int> trackedNodes = new(StringComparer.Ordinal);
     private readonly Dictionary<string, uint> controlKeys = new(StringComparer.Ordinal);
+    private bool discardedGeometry;
 
     /// <summary>Lets the owner keep pumping while asynchronous shutdown completes.</summary>
     public bool DeferClose { get { CheckOpen(); return deferClose; } set { CheckOpen(); deferClose = value; } }
@@ -20,6 +21,7 @@ public sealed partial class CuiWindow
     {
         CheckOpen();
         CheckOutsideResizeRenderer();
+        if (inFrame) discardedGeometry = true;
         NativeMethods.FinishFrameForDestroy(app);
         SnapshotShortcutKeys();
         ReleaseFrameCallbacks();
@@ -81,5 +83,12 @@ public sealed partial class CuiWindow
         if (inFrame || !hasPresentedFrame)
             throw new InvalidOperationException("Present the current frame before reading its finalized geometry.");
         return NativeMethods.NodeRectangle(context, trackedNodes[id]);
+    }
+
+    private void CheckPresentedGeometry()
+    {
+        CheckOpen();
+        if (inFrame || !hasPresentedFrame || discardedGeometry)
+            throw new InvalidOperationException("Present a frame before reading native widget geometry.");
     }
 }

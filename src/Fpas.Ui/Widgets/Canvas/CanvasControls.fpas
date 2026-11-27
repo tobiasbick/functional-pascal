@@ -19,12 +19,12 @@ end record;
 
 // One additional canvas toggle.
 public type Toggle = record
-  // Native CUI icon glyph.
-  public Icon: string;
-  // Tooltip caption.
-  public Label: string;
+  // Native CUI icon glyph, or null for a circle.
+  public Icon: string? := null;
+  // Tooltip caption, or null to omit the tooltip.
+  public Label: string? := null;
   // Current pressed state.
-  public On: bool;
+  public On: bool := false;
 end record;
 
 // Canvas rail settings.
@@ -49,6 +49,10 @@ public type Event = record
   public Toggles: array of bool;
   // Whether fit was activated.
   public Fit: bool;
+  // Whether a zoom action or a fit with bounds proposed a transform.
+  public Zoomed: bool := false;
+  // Whether a toggle changed.
+  public Toggled: bool := false;
 end record;
 
 // Builds the native CanvasControls element.

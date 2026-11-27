@@ -1,10 +1,11 @@
 // [Documentation](../../../../../docs/ui/gui/code/hex-viewer.md)
 #include "../../fpas_cui.h"
 
-int fpas_cui_hex_view(cui_ctx *ui, const char *id, uint8_t *bytes, int count, int *start, int *length, int *cursor, const fpas_hex_mark *marks, int mark_count, uint64_t address, int go_to, int bytes_per_row, int width_kind, float width, float height, float size, int flags, int *edit_offset, int *edit_length) {
+int fpas_cui_hex_view(cui_ctx *ui, const char *id, uint8_t *bytes, int count, int *start, int *length, int *cursor, const fpas_hex_mark *marks, int mark_count, uint64_t address, int go_to, int bytes_per_row, int width_kind, float width, float height, float size, int flags, int *edit_offset, int *edit_length, int *hovered) {
     const int root = ui->node_count;
     const cui_id key = cui_make_id(ui, id), focus = key ^ 0x4E5B0D1u;
-    fpas_own(ui, key, key ^ CUI__HEX_SALT, 0, 0);
+    const cui_id pointer = key ^ 0x4E584Eu;
+    fpas_own(ui, key, key ^ CUI__HEX_SALT, pointer, 0);
     fpas_owned_state *owner = cui_state(ui, fpas_owner_key(key), sizeof *owner);
     owner->focus = focus;
     const bool enabled = (flags & 1) && !cui_is_disabled(ui);
@@ -28,5 +29,10 @@ int fpas_cui_hex_view(cui_ctx *ui, const char *id, uint8_t *bytes, int count, in
     *cursor = (int)selection.cursor;
     *edit_offset = (int)result.edit_offset;
     *edit_length = (int)result.edit_length;
-    return enabled ? (result.selection_changed || go_to >= 0 ? 1 : 0) | (result.edited ? 2 : 0) : 0;
+    *hovered = (int)result.hovered;
+    int *previous = cui_state(ui, pointer, sizeof *previous);
+    const bool hover_changed = *previous != *hovered + 1;
+    if (enabled) *previous = *hovered + 1;
+    return enabled ? (result.selection_changed ? 1 : 0) | (result.edited ? 2 : 0) |
+        (result.copied ? 4 : 0) | (hover_changed ? 8 : 0) | (go_to >= 0 ? 16 : 0) : 0;
 }

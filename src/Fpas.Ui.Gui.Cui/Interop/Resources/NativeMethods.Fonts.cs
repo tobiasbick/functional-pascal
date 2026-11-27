@@ -21,6 +21,10 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_emoji_load")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial int EmojiLoad(nint ui, byte* bytes, nuint length);
+    [LibraryImport(Library, EntryPoint = "cui_emoji_font_load_file", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool EmojiFile(nint ui, string path);
     [LibraryImport(Library, EntryPoint = "fpas_cui_emoji_system")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int EmojiSystem(nint ui);

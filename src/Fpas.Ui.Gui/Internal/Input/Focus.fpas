@@ -338,7 +338,7 @@ begin
       then
         return Copy;
       end if;
-    when E.Element.DotChart(const Id: string, _, _, _, const Settings: DotCharts.Options):
+    when E.Element.DotChart(const Id: string, _, _, _, const Settings: DotCharts.Options, _):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
@@ -1178,6 +1178,10 @@ begin
       return First of TMsg(Trigger, Prepared, Preferred);
     when E.Element.Sized(const Child: E.Element of TMsg, _):
       return First of TMsg(Child, Prepared, Preferred);
+    when E.Element.DisabledScope(const Child: E.Element of TMsg, const Disabled: bool):
+      if not Disabled then
+        return First of TMsg(Child, Prepared, Preferred);
+      end if;
     when E.Element.Styled(const Child: E.Element of TMsg, _):
       return First of TMsg(Child, Prepared, Preferred);
     when E.Element.Framed(const Child: E.Element of TMsg, _):

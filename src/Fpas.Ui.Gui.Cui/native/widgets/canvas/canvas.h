@@ -6,7 +6,8 @@ enum { FPAS_PAINT_DISABLED = 1, FPAS_PAINT_FOCUSED = 2, FPAS_PAINT_FOCUS_VISIBLE
 CUI_API cui_id fpas_cui_canvas_dispatch(cui_ctx *ui, int kind, int key, int mods, int down, const char *text, int *repeated);
 /* Returns nonzero when the hit defers a focused canvas's focus decision. */
 CUI_API int fpas_cui_canvas_pointer_focus(cui_ctx *ui, float x, float y);
-typedef void (*fpas_canvas_paint_fn)(void *user, cui_ctx *ui, cui_rect area, cui_id images, int state);
+/* A nonzero return replaces the default whole-canvas wheel region. */
+typedef int (*fpas_canvas_paint_fn)(void *user, cui_ctx *ui, cui_rect area, cui_id images, int state, cui_id wheel);
 CUI_API void fpas_cui_canvas_images_finish(cui_ctx *ui, cui_id key, int count);
 /* Wheel deltas are in lines. Enabled=2 preserves eligibility during a passive view. */
 CUI_API int fpas_cui_drawing_canvas(cui_ctx *ui, const char *id, int width_kind, float width, int height_kind, float height, const fpas_canvas_shape *shapes, int count, int enabled, float *x, float *y, float *w, float *h, int wheel, float *dx, float *dy, fpas_canvas_paint_fn paint, void *user, int pointer, int focusable, int component_input, int focus, int cursor);

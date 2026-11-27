@@ -11,6 +11,27 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Canvas;
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct CuiPoint(float X, float Y);
 
+/// <summary>Four independent corner radii in logical units.</summary>
+/// <param name="TopLeft">Top-left radius.</param>
+/// <param name="TopRight">Top-right radius.</param>
+/// <param name="BottomRight">Bottom-right radius.</param>
+/// <param name="BottomLeft">Bottom-left radius.</param>
+[StructLayout(LayoutKind.Sequential)]
+public readonly record struct CuiCorners(float TopLeft, float TopRight, float BottomRight, float BottomLeft)
+{
+    /// <summary>Sets all four corners to the same radius.</summary>
+    /// <param name="radius">Radius in logical units.</param>
+    public CuiCorners(float radius) : this(radius, radius, radius, radius) { }
+}
+
+/// <summary>A texture-coordinate region. Zero through one spans each image axis.</summary>
+/// <param name="U">Coordinate at the left edge of the destination.</param>
+/// <param name="V">Coordinate at the top edge of the destination.</param>
+/// <param name="Width">Signed horizontal span.</param>
+/// <param name="Height">Signed vertical span.</param>
+[StructLayout(LayoutKind.Sequential)]
+public readonly record struct CuiImageRegion(float U, float V, float Width, float Height);
+
 /// <summary>Native text metrics in logical units.</summary>
 /// <param name="Width">Advance width.</param>
 /// <param name="Height">Native measured block height.</param>
@@ -35,13 +56,43 @@ public sealed class CuiCanvasPainter
     private readonly int thread = Environment.CurrentManagedThreadId;
     private readonly nint context;
     private readonly CuiRectangle area;
-    private readonly uint images;
+    private readonly uint images, wheel;
     private readonly int state;
     private bool active = true;
     private int clips, imageIndex;
 
-    internal CuiCanvasPainter(nint context, CuiRectangle area, uint images, int state)
-        => (this.context, this.area, this.images, this.state) = (context, area, images, state);
+    internal CuiCanvasPainter(nint context, CuiRectangle area, uint images, int state, uint wheel)
+        => (this.context, this.area, this.images, this.state, this.wheel) = (context, area, images, state, wheel);
+
+    internal bool HasWheelRegion { get; private set; }
+
+    /// <summary>Moves a canvas-local value toward a target with CUI's standard spring.</summary>
+    /// <param name="id">Stable animation ID within this canvas. Sample it once per frame.</param>
+    /// <param name="target">Finite destination value.</param>
+    /// <returns>The current value, with a 0.4-second spring and no bounce.</returns>
+    public float Animate(string id, float target) => AnimateValue(id, target, 0, 0);
+
+    /// <summary>Moves a canvas-local value toward a target with an adjustable spring.</summary>
+    /// <param name="id">Stable animation ID within this canvas. Sample it once per frame.</param>
+    /// <param name="target">Finite destination value.</param>
+    /// <param name="duration">Positive, finite duration in seconds.</param>
+    /// <param name="bounce">Bounce from zero through one.</param>
+    /// <returns>The current value. Reduced motion returns the target immediately.</returns>
+    public float AnimateSpring(string id, float target, float duration, float bounce)
+    {
+        if (!float.IsFinite(duration) || duration <= 0) throw new ArgumentOutOfRangeException(nameof(duration));
+        if (!float.IsFinite(bounce) || bounce is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(bounce));
+        return AnimateValue(id, target, duration, bounce);
+    }
+
+    private float AnimateValue(string id, float target, float duration, float bounce)
+    {
+        Check();
+        ArgumentException.ThrowIfNullOrEmpty(id);
+        Utf8.Validate(id, nameof(id));
+        if (!float.IsFinite(target)) throw new ArgumentOutOfRangeException(nameof(target));
+        return NativeMethods.CanvasAnimate(context, images, id, target, duration, bounce);
+    }
 
     /// <summary>Gets the final laid-out logical width.</summary>
     public float Width { get { Check(); return area.Width; } }
@@ -53,6 +104,34 @@ public sealed class CuiCanvasPainter
     public bool Focused { get { Check(); return (state & 2) != 0; } }
     /// <summary>Gets whether CUI requests a visible keyboard-focus indicator.</summary>
     public bool FocusVisible { get { Check(); return (state & 4) != 0; } }
+
+    /// <summary>Requests the window cursor for this frame. The last CUI cursor request takes priority.</summary>
+    /// <param name="cursor">Native cursor ordinal from zero through six.</param>
+    public void SetCursor(int cursor)
+    {
+        Check();
+        if (cursor is < 0 or > 6) throw new ArgumentOutOfRangeException(nameof(cursor));
+        NativeMethods.CanvasCursor(context, cursor);
+    }
+
+    /// <summary>Adds a clipped rectangle for the canvas wheel callback, replacing the default full region.</summary>
+    /// <param name="x">Canvas-local left edge.</param>
+    /// <param name="y">Canvas-local top edge.</param>
+    /// <param name="width">Nonnegative logical width.</param>
+    /// <param name="height">Nonnegative logical height.</param>
+    public void AddWheelRegion(float x, float y, float width, float height)
+    {
+        Check();
+        if (!float.IsFinite(area.X + x)) throw new ArgumentOutOfRangeException(nameof(x));
+        if (!float.IsFinite(area.Y + y)) throw new ArgumentOutOfRangeException(nameof(y));
+        Distance(width);
+        Distance(height);
+        HasWheelRegion = true;
+        if (wheel != 0 && width > 0 && height > 0)
+            NativeMethods.CanvasWheelRegion(context, wheel,
+                new CuiRectangle { X = area.X + x, Y = area.Y + y, Width = width, Height = height });
+    }
+
     /// <summary>Gets CUI's user text multiplier. Explicit drawing sizes are logical points; apply this multiplier when desired.</summary>
     public float FontScale { get { Check(); return NativeMethods.CanvasFontScale(context); } }
     /// <summary>Gets CUI's monotonic frame time in seconds.</summary>
@@ -77,12 +156,14 @@ public sealed class CuiCanvasPainter
             throw new InvalidOperationException("Paint only on the canvas callback's owner thread.");
     }
 
-    private unsafe void Primitive(int kind, uint color, ReadOnlySpan<float> values, uint second = 0, string? text = null)
+    private unsafe void Primitive(int kind, uint color, ReadOnlySpan<float> values, uint second = 0,
+        string? text = null, CuiCorners radii = default)
     {
         Check();
         foreach (float value in values)
             if (!float.IsFinite(value)) throw new ArgumentException("Drawing coordinates must be finite.", nameof(values));
-        fixed (float* data = values) NativeMethods.CanvasPrimitive(context, kind, area.X, area.Y, data, color, second, text);
+        fixed (float* data = values)
+            NativeMethods.CanvasPrimitive(context, kind, area.X, area.Y, data, color, second, text, radii);
     }
 
     private static void Distance(float value)
@@ -90,12 +171,25 @@ public sealed class CuiCanvasPainter
         if (!float.IsFinite(value) || value < 0) throw new ArgumentOutOfRangeException(nameof(value));
     }
 
+    private static void RoundedSize(float width, float height, CuiCorners radii)
+    {
+        Distance(width); Distance(height);
+        Distance(radii.TopLeft); Distance(radii.TopRight); Distance(radii.BottomRight); Distance(radii.BottomLeft);
+    }
+
     /// <summary>Fills a rounded rectangle using canvas-local coordinates.</summary>
     /// <param name="x">Left edge.</param><param name="y">Top edge.</param>
     /// <param name="width">Nonnegative width.</param><param name="height">Nonnegative height.</param>
     /// <param name="radius">Nonnegative corner radius.</param><param name="color">Packed straight RGBA.</param>
     public void Rectangle(float x, float y, float width, float height, float radius, uint color)
-    { Distance(width); Distance(height); Distance(radius); Primitive(0, color, [x, y, width, height, radius]); }
+        => Rectangle(x, y, width, height, new CuiCorners(radius), color);
+
+    /// <summary>Fills a rectangle with independent corner radii.</summary>
+    /// <param name="x">Left edge.</param><param name="y">Top edge.</param>
+    /// <param name="width">Nonnegative width.</param><param name="height">Nonnegative height.</param>
+    /// <param name="radii">Nonnegative corner radii.</param><param name="color">Packed straight RGBA.</param>
+    public void Rectangle(float x, float y, float width, float height, CuiCorners radii, uint color)
+    { RoundedSize(width, height, radii); Primitive(0, color, [x, y, width, height], radii: radii); }
 
     /// <summary>Fills a circle in canvas-local coordinates.</summary>
     /// <param name="x">Center X.</param><param name="y">Center Y.</param>
@@ -115,20 +209,40 @@ public sealed class CuiCanvasPainter
     /// <param name="radius">Corner radius.</param><param name="fill">Packed fill RGBA.</param>
     /// <param name="border">Packed border RGBA.</param><param name="thickness">Nonnegative border width.</param>
     public void Border(float x, float y, float width, float height, float radius, uint fill, uint border, float thickness)
-    { Distance(width); Distance(height); Distance(radius); Distance(thickness); Primitive(3, fill, [x, y, width, height, radius, thickness], border); }
+        => Border(x, y, width, height, new CuiCorners(radius), fill, border, thickness);
+
+    /// <summary>Fills and outlines a rectangle with independent corner radii.</summary>
+    /// <param name="x">Left.</param><param name="y">Top.</param><param name="width">Width.</param><param name="height">Height.</param>
+    /// <param name="radii">Corner radii.</param><param name="fill">Packed fill RGBA.</param>
+    /// <param name="border">Packed border RGBA.</param><param name="thickness">Nonnegative border width.</param>
+    public void Border(float x, float y, float width, float height, CuiCorners radii, uint fill, uint border, float thickness)
+    { RoundedSize(width, height, radii); Distance(thickness); Primitive(3, fill, [x, y, width, height, thickness], border, radii: radii); }
 
     /// <summary>Fills a rounded rectangle with CUI's vertical gradient.</summary>
     /// <param name="x">Left.</param><param name="y">Top.</param><param name="width">Width.</param><param name="height">Height.</param>
     /// <param name="radius">Corner radius.</param><param name="top">Packed top RGBA.</param><param name="bottom">Packed bottom RGBA.</param>
     public void Gradient(float x, float y, float width, float height, float radius, uint top, uint bottom)
-    { Distance(width); Distance(height); Distance(radius); Primitive(4, top, [x, y, width, height, radius], bottom); }
+        => Gradient(x, y, width, height, new CuiCorners(radius), top, bottom);
+
+    /// <summary>Fills a rectangle with a vertical gradient and independent corner radii.</summary>
+    /// <param name="x">Left.</param><param name="y">Top.</param><param name="width">Width.</param><param name="height">Height.</param>
+    /// <param name="radii">Corner radii.</param><param name="top">Packed top RGBA.</param><param name="bottom">Packed bottom RGBA.</param>
+    public void Gradient(float x, float y, float width, float height, CuiCorners radii, uint top, uint bottom)
+    { RoundedSize(width, height, radii); Primitive(4, top, [x, y, width, height], bottom, radii: radii); }
 
     /// <summary>Draws a native shadow, clipped to the canvas and current clip scopes.</summary>
     /// <param name="x">Left.</param><param name="y">Top.</param><param name="width">Width.</param><param name="height">Height.</param>
     /// <param name="radius">Corner radius.</param><param name="blur">Nonnegative blur.</param><param name="spread">Signed expansion.</param>
     /// <param name="offsetX">Horizontal offset.</param><param name="offsetY">Vertical offset.</param><param name="color">Packed RGBA.</param>
     public void Shadow(float x, float y, float width, float height, float radius, float blur, float spread, float offsetX, float offsetY, uint color)
-    { Distance(width); Distance(height); Distance(radius); Distance(blur); Primitive(5, color, [x, y, width, height, radius, blur, spread, offsetX, offsetY]); }
+        => Shadow(x, y, width, height, new CuiCorners(radius), blur, spread, offsetX, offsetY, color);
+
+    /// <summary>Draws a clipped shadow with independent corner radii.</summary>
+    /// <param name="x">Left.</param><param name="y">Top.</param><param name="width">Width.</param><param name="height">Height.</param>
+    /// <param name="radii">Corner radii.</param><param name="blur">Nonnegative blur.</param><param name="spread">Signed expansion.</param>
+    /// <param name="offsetX">Horizontal offset.</param><param name="offsetY">Vertical offset.</param><param name="color">Packed RGBA.</param>
+    public void Shadow(float x, float y, float width, float height, CuiCorners radii, float blur, float spread, float offsetX, float offsetY, uint color)
+    { RoundedSize(width, height, radii); Distance(blur); Primitive(5, color, [x, y, width, height, blur, spread, offsetX, offsetY], radii: radii); }
 
     /// <summary>Draws a circular arc; angles are in radians.</summary>
     /// <param name="x">Center X.</param><param name="y">Center Y.</param><param name="radius">Radius.</param>
@@ -186,18 +300,40 @@ public sealed class CuiCanvasPainter
     /// <summary>Draws an image with a per-canvas native cache, retired when unused or removed.</summary>
     /// <param name="source">Immutable picture source.</param><param name="x">Left.</param><param name="y">Top.</param>
     /// <param name="width">Width.</param><param name="height">Height.</param><param name="radius">Corner radius.</param><param name="tint">Packed RGBA tint.</param>
-    public unsafe void Image(CuiMediaImage source, float x, float y, float width, float height, float radius, uint tint)
+    /// <param name="imageRegion">Texture-coordinate origin and signed spans. Null uses the whole image.</param>
+    public void Image(CuiMediaImage source, float x, float y, float width, float height, float radius, uint tint,
+        CuiImageRegion? imageRegion = null)
+        => Image(source, x, y, width, height, new CuiCorners(radius), tint, imageRegion);
+
+    /// <summary>Draws a cached image with independent corner radii and an optional texture region.</summary>
+    /// <param name="source">Immutable picture source.</param><param name="x">Left.</param><param name="y">Top.</param>
+    /// <param name="width">Width.</param><param name="height">Height.</param><param name="radii">Corner radii.</param><param name="tint">Packed RGBA tint.</param>
+    /// <param name="imageRegion">Texture-coordinate origin and signed spans. Null uses the whole image.</param>
+    public void Image(CuiMediaImage source, float x, float y, float width, float height, CuiCorners radii, uint tint,
+        CuiImageRegion? imageRegion = null)
     {
-        Check(); Distance(width); Distance(height); Distance(radius);
-        if (!float.IsFinite(x) || !float.IsFinite(y)) throw new ArgumentOutOfRangeException(nameof(x));
-        CuiWindow.PaintImage(context, images, imageIndex, source, area.X + x, area.Y + y, width, height, radius, tint);
+        Check(); RoundedSize(width, height, radii);
+        if (!float.IsFinite(x)) throw new ArgumentOutOfRangeException(nameof(x));
+        if (!float.IsFinite(y)) throw new ArgumentOutOfRangeException(nameof(y));
+        CuiImageRegion uv = imageRegion ?? new(0, 0, 1, 1);
+        if (!float.IsFinite(uv.U) || !float.IsFinite(uv.V) ||
+            !float.IsFinite(uv.U + uv.Width) || !float.IsFinite(uv.V + uv.Height))
+            throw new ArgumentOutOfRangeException(nameof(imageRegion));
+        CuiWindow.PaintImage(context, images, imageIndex, source, area.X + x, area.Y + y, width, height, radii, uv, tint);
         imageIndex++;
     }
 
     /// <summary>Intersects the current native clip with a canvas-local rectangle.</summary>
     /// <param name="x">Left.</param><param name="y">Top.</param><param name="width">Width.</param><param name="height">Height.</param>
     public void PushClip(float x, float y, float width, float height)
-    { Distance(width); Distance(height); Primitive(10, 0, [x, y, width, height]); clips++; }
+    {
+        Check(); Distance(width); Distance(height);
+        if (!float.IsFinite(x)) throw new ArgumentOutOfRangeException(nameof(x));
+        if (!float.IsFinite(y)) throw new ArgumentOutOfRangeException(nameof(y));
+        if (NativeMethods.CanvasPushClip(context, area.X + x, area.Y + y, width, height) == 0)
+            throw new InvalidOperationException("The native clip stack is full.");
+        clips++;
+    }
 
     /// <summary>Restores a clip pushed by this callback, without escaping the native canvas clip.</summary>
     public void PopClip()

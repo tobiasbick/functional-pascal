@@ -88,6 +88,40 @@ public type View = record
   public Range: PlayRange? := null;
 end record;
 
+// Changes and pointer state reported by the native editor.
+public type Activity = record
+  // Whether a key, clip or track flag changed.
+  public Changed: bool;
+  // Whether the playhead moved.
+  public TimeChanged: bool;
+  // Whether the pointer is dragging the playhead.
+  public Scrubbing: bool;
+  // Whether key or clip selection changed.
+  public SelectionChanged: bool;
+  // Whether the viewport moved or zoomed.
+  public ViewChanged: bool;
+  // Whether selected keys moved.
+  public KeysMoved: bool;
+  // Track where a key was added, or minus one.
+  public AddedTrack: int;
+  // Index of the added key, or minus one.
+  public AddedKey: int;
+  // Number of removed keys.
+  public RemovedKeys: int;
+  // Number of removed clips.
+  public RemovedClips: int;
+  // Track of the moved or trimmed clip, or minus one.
+  public ClipTrack: int;
+  // Index of the moved or trimmed clip, or minus one.
+  public Clip: int;
+  // Track whose flag changed, or minus one.
+  public Toggled: int;
+  // Track under the hovered key, or minus one.
+  public HoveredTrack: int;
+  // Index of the hovered key, or minus one.
+  public HoveredKey: int;
+end record;
+
 // Native edit and playback proposal.
 public type Event = record
   // Resulting tracks and selection.
@@ -96,6 +130,8 @@ public type Event = record
   public Current: View;
   // Whether Space requested a playback toggle.
   public TogglePlayback: bool;
+  // Native edit details and pointer state.
+  public Details: Activity;
 end record;
 
 // Native TimelineEditor settings.

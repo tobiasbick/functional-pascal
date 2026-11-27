@@ -34,14 +34,23 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Minimum / Maximum / Current` | Supply the first and last integer stops and a current stop in that range. |
-| `Labels / Prefix / Suffix / Display` | All empty. Provide stop captions or format integer stops with a prefix and suffix. Display overrides the value caption. |
-| `Tool / Plain / Enabled` | null / false / true. |
+| `Label` | Supply the caption. A leading `##` hides the caption. |
+| `Minimum / Maximum / Current` | Supply increasing integer endpoints and a current stop in that range. The endpoints can differ by up to 16,777,216. |
+| `Labels` | Empty. Supply one caption for each stop to override formatted values. |
+| `Format` | Empty displays the integer. A format can contain one `%d` slot and escaped `%%` signs. |
+| `Display` | Empty. Supply a caption to override stop labels and formatted values. |
+| `Tool` | Null. Supply a tool with an icon, tooltip, and pressed state to add an action. |
+| `Plain` | False. True omits the surrounding well. |
+| `Enabled` | True. False disables the track and tool. |
 
 ## Interaction
 
-Drag or step through the stops with the keyboard. Store the proposed
-value on a change. Use that stop for the operation when `Action` is true.
+Drag the thumb or use the arrow keys. Each arrow moves one stop. Shift moves
+up to ten stops. Home and End select the first and last stops.
+
+`Change` receives an event when the stop changes or the tool activates.
+Use `Changed` to store the proposed `Current`. Use `Action` to run the operation
+with that stop. Both flags can be true in the same event.
 
 ## See also
 
@@ -61,3 +70,5 @@ value on a change. Use that stop for the operation when `Action` is true.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
   - [step_slider.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/step_slider.c)
   - [step_slider.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/step_slider.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiStepSliderTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiStepSliderTests.cs)

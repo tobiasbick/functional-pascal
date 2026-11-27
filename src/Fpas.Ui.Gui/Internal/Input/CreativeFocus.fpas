@@ -110,7 +110,7 @@ begin
       if Settings.Enabled then
         const Keys: array of string := P.Indexed(Current.Items.Length, 'tool');
         const Accept: array of bool := P.Inputs(Keys.Length, true);
-        Accept[Keys.Length - 1] := Settings.ActionEnabled;
+        Accept[Keys.Length - 1] := Settings.ActionEnabled and Current.Tool <> null;
         return Pick(Id, Preferred, Keys, Accept, Current.Index);
       end if;
     when E.Element.SeedField(

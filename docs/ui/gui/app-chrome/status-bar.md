@@ -39,14 +39,20 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Items` | Use Text, Action, Progress and Spacer in display order. |
-| `Label.Icon / Tone` | Empty / Neutral. |
-| `HideBorder` | false. Set true to omit the top hairline. |
+| `Label.Icon` and `Label.Tone` | Empty and `Neutral`. The tone colors the icon. |
+| `Action` | Supply a stable key, label, optional tooltip, enabled state and activation message. |
+| `Progress` | Supply a fraction from zero to one and choose determinate or indeterminate progress. The caption can be empty. |
+| `Progress.Width` | Set the indicator width in logical units. Zero uses 64 logical units. |
+| `HideBorder` | `false`. Set `true` to omit the top hairline. |
 
 ## Interaction
 
 A spacer pushes subsequent items toward the trailing edge. Use a stable
-key on each action and handle its message in the update. Supply progress
-as a fraction and choose indeterminate progress for work without a known total.
+key on each action and handle its message in the update.
+
+When a GUI status bar is narrow, CUI can show the icon without its label.
+If the action has no tooltip, hover over its icon to see the label. CUI
+omits items that still do not fit.
 
 ## See also
 

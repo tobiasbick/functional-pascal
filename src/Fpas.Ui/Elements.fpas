@@ -483,7 +483,7 @@ public type Element of TMsg = variant
   // Native dot display.
   DotDisplay(Id: string; Text: string; Settings: DotDisplays.Options);
   // Native dot chart.
-  DotChart(Id: string; Bands: array of DotCharts.Series; Count: int; Activate: Sys.Func of (DotCharts.Hit, TMsg)?; Settings: DotCharts.Options);
+  DotChart(Id: string; Bands: array of DotCharts.Series; Count: int; Activate: Sys.Func of (DotCharts.Hit, TMsg)?; Settings: DotCharts.Options; Readout: Sys.Func of (DotCharts.Hit, TMsg)?);
   // Native event track.
   EventTrack(Id: string; Current: EventTracks.Value; Change: function(EventTracks.Change): TMsg; Settings: EventTracks.Options);
   // Native CUI path bar.
@@ -595,7 +595,7 @@ public type Element of TMsg = variant
   // Native CUI CanvasControls element.
   CanvasControls(Id: string; Viewport: NodeEditors.View; Toggles: array of CanvasControls.Toggle; Changed: function(CanvasControls.Event): TMsg; Child: Element of TMsg; Settings: CanvasControls.Options);
   // Native CUI ResultCard element.
-  ResultCard(Id: string; Image: Media.Source; Title: string; Activate: TMsg; Settings: ResultCards.Options);
+  ResultCard(Id: string; Image: Media.Source?; Title: string; Activate: TMsg; Settings: ResultCards.Options);
   // Native CUI SelectionBar element.
   SelectionBar(Id: string; Selected: SelectionBars.Selection; Actions: array of SelectionBars.Action; Changed: function(SelectionBars.Event): TMsg; Child: Element of TMsg; Settings: SelectionBars.Options);
   // Native desktop menu bar.
@@ -725,6 +725,8 @@ public type Element of TMsg = variant
   Gap(Distance: L.Measure);
   // Adjust the allocation of one child.
   Sized(Child: Element of TMsg; Settings: L.Flex);
+  // Inherit or disable native input for a graphical subtree.
+  DisabledScope(Child: Element of TMsg; Disabled: bool);
   // Apply the host theme's semantic role to one child.
   Styled(Child: Element of TMsg; Role: S.Role);
   // Frame one child with an optional title.
@@ -957,6 +959,22 @@ end function;
 public function Size of TMsg(Child: Element of TMsg; Settings: L.Flex): Element of TMsg;
 begin
   return (Element of TMsg).Sized(Child, Settings);
+end function;
+
+// Draws a graphical subtree with inherited input restrictions.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Child`: Subtree to draw.
+// - `Disabled`: True blocks input. False inherits the enclosing permission.
+// ## Returns
+// The graphical subtree with its input scope.
+public function DisabledScope of TMsg(
+  Child: Element of TMsg;
+  Disabled: bool := true
+): Element of TMsg;
+begin
+  return (Element of TMsg).DisabledScope(Child, Disabled);
 end function;
 
 // Applies a semantic style role.

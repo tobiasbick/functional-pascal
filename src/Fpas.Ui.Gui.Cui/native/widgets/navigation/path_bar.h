@@ -16,13 +16,14 @@
  * @param flags Bit 1 enables input, bit 2 enables text entry, and bit 4 enables child menus.
  * @param focus Segment index to focus, or -1.
  * @param submitted Receives frame-local submitted text, or NULL.
+ * @param editing Receives whether native text editing is active.
  * @param parts Receives two node indices per segment and one for text entry.
  * @param root Receives the path bar root node.
  * @param retained_key Receives the identity of the path bar's retained state.
  * @return Activated segment index, or -1. */
 CUI_API int fpas_cui_path_bar(cui_ctx *ui, const char *id, const char *const *segments, int count,
     const char *text, const char *icon, const char *placeholder, int size, int width_kind, float width,
-    int flags, int focus, const char **submitted, int *parts, int *root, uint32_t *retained_key);
+    int flags, int focus, const char **submitted, int *editing, int *parts, int *root, uint32_t *retained_key);
 
 /** Begins an open child menu for the path bar.
  * @param ui Current drawing context.

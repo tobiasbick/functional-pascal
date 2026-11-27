@@ -1,14 +1,6 @@
 // [Documentation](../../../../../docs/ui/gui/voice/composer.md)
 #include "../../fpas_cui.h"
 
-static bool fpas_composer_keyboard(cui_ctx *ui) {
-    const cui_popup *layer = cui__popup_get(ui, ui->current_layer, false);
-    const int z = layer ? layer->z : 0;
-    for (int i = 0; i < ui->popup_count; ++i)
-        if (ui->popups[i].open && ui->popups[i].z > z) return false;
-    return true;
-}
-
 static bool fpas_composer_has_text(const char *draft) {
     for (; *draft; ++draft)
         if (*draft != ' ' && *draft != '\n' && *draft != '\t') return true;
@@ -19,10 +11,25 @@ static void fpas_composer_forget(cui_ctx *ui, cui_id key) {
     fpas_forget_state(ui, (key ^ 0xF1E1Du) ^ 0xED17u);
 }
 
+/* CUI-133 (docs/future/cui-upstream-bugs.md#cui-133): the editor measures
+   wrapped lines using its previous width. */
+typedef struct {
+    int text;
+    float width;
+} fpas_composer_layout;
+
+static void fpas_composer_reflow(cui_ctx *ui, cui_node *node, void *data) {
+    (void)node;
+    const fpas_composer_layout *previous = data;
+    if (fabsf(ui->nodes[previous->text].rect.w - previous->width) > 0.01f)
+        cui_request_redraw(ui);
+}
+
 int fpas_cui_composer(cui_ctx *ui, const char *id, char *draft, size_t capacity, const char *placeholder,
     const char *const *attachments, int attachment_count, const cui_model *models, int model_count, int *selected,
     const float *levels, int level_count, float seconds, int max_lines, int width_kind, float width,
     int flags, int focus, int *removed, int *nodes) {
+    if (!draft || capacity == 0) return 0;
     const int root = ui->node_count;
     const cui_id key = cui_make_id(ui, id), field = key ^ 0xF1E1Du, send = key ^ 0x5E7Du;
     const cui_id mic = key ^ 0x41C0u, cancel = key ^ 0xCA9Cu, slot = key ^ 0x54465854u;
@@ -45,7 +52,16 @@ int fpas_cui_composer(cui_ctx *ui, const char *id, char *draft, size_t capacity,
     }
     cui_pop_id(ui);
     const cui_id popup = model ^ 0x30DEu;
-    if (!enabled || recording || model_count == 0) cui__popup_set(ui, popup, false);
+    cui_popup *menu = cui__popup_get(ui, popup, false);
+    const bool show_models = enabled && !recording && model_count > 0;
+    if (!show_models && menu && menu->open) cui__popup_set(ui, popup, false);
+    const bool menu_top = menu && menu->open && cui__popup_is_topmost(ui, menu);
+    /* CUI-043 (docs/future/cui-upstream-bugs.md#cui-043): an exiting model
+       menu has no selectable highlight. */
+    if (menu && (!menu_top || cui_key_pressed(ui, CUI_KEY_ESCAPE)) && cui_key_pressed(ui, CUI_KEY_ENTER)) {
+        cui__menu_nav *nav = cui__state_lazy(ui, popup ^ 0x4E4156u, sizeof *nav, false);
+        if (nav) nav->highlight = -1;
+    }
     fpas_text_binding *binding = cui_state(ui, slot, sizeof *binding);
     cui__state_set_dtor(ui, slot, fpas_text_binding_dispose);
     fpas_own(ui, key, slot, field, popup);
@@ -66,16 +82,32 @@ int fpas_cui_composer(cui_ctx *ui, const char *id, char *draft, size_t capacity,
         fpas_clear_interaction(ui, cancel);
         fpas_clear_interaction(ui, mic);
     }
-    if (enabled && focus >= 0 && focus < count && parts[focus]) ui->focus_next_request = parts[focus];
-    const bool enter = !recording && ui->focus == field && cui_key_pressed(ui, CUI_KEY_ENTER) &&
+    const bool covered = enabled && cui__keys_covered(ui);
+    if (enabled && !covered && focus >= 0 && focus < count && parts[focus])
+        ui->focus_next_request = parts[focus];
+    const bool enter = enabled && !recording && !covered && ui->focus == field && cui_key_pressed(ui, CUI_KEY_ENTER) &&
         !(ui->mods & (CUI_MOD_SHIFT | CUI_MOD_CTRL | CUI_MOD_SUPER));
-    const bool escape = recording && (ui->focus == cancel || ui->focus == send || ui->focus == field || ui->focus == mic) &&
-        cui_key_pressed(ui, CUI_KEY_ESCAPE);
-    const bool covered = (enter || escape) && !fpas_composer_keyboard(ui);
-    const cui_id retained_focus = covered ? ui->focus : 0;
-    if (covered) ui->focus = 0;
-    // CUI-109 (docs/future/cui-upstream-bugs.md#cui-109): test the draft after applying queued text.
-    if (enter && !covered) ui->kpressed[CUI_KEY_ENTER] = 0;
+    /* CUI-131 (docs/future/cui-upstream-bugs.md#cui-131): leave keyboard and
+       text input with the popup above the composer. The open model menu
+       uses its own keyboard navigation while its trigger keeps focus. */
+    cui_id retained_focus = 0;
+    if (covered && ui->focus && (ui->focus != model || !menu_top)) {
+        const cui_id focused = ui->focus;
+        bool owned = focused == field || focused == mic || focused == cancel;
+        for (int i = 1; i < count; ++i) owned |= focused == parts[i];
+        if (owned) {
+            retained_focus = focused;
+            const cui__cmp_state *state = cui__state_lazy(ui, key, sizeof *state, false);
+            if (recording && (!state || !state->was_recording) && (focused == field || focused == mic))
+                retained_focus = send;
+            if (!recording && state && state->was_recording && (focused == cancel || focused == send))
+                retained_focus = microphone ? mic : field;
+            ui->focus = 0;
+        }
+    }
+    const bool text_send = enabled && !recording && !busy;
+    const bool had_text = text_send && fpas_composer_has_text(draft);
+    if (enter) ui->kpressed[CUI_KEY_ENTER] = 0;
     const cui_composer_opts opts = { .placeholder = placeholder ? cui__frame_strdup(ui, placeholder, -1) : NULL,
         .busy = busy, .attachments = attachments, .attachment_count = attachment_count, .removed = removed,
         .models = models, .model_count = model_count, .model = selected, .max_lines = max_lines,
@@ -85,7 +117,29 @@ int fpas_cui_composer(cui_ctx *ui, const char *id, char *draft, size_t capacity,
     int result = cui_chat_composer_ex(ui, id, draft, capacity, &opts);
     cui_pop_disabled(ui);
     if (retained_focus && !ui->focus) ui->focus = retained_focus;
-    if (enter && !covered && !busy && fpas_composer_has_text(draft)) result |= CUI_COMPOSER_SEND;
+    /* CUI-109 (docs/future/cui-upstream-bugs.md#cui-109): the keyboard and
+       button submit the edited draft after queued input. */
+    if (text_send) {
+        const bool has_text = fpas_composer_has_text(draft);
+        const bool clicked_send = ui->active == send && ui->hot == send && ui->mreleased[CUI_MOUSE_LEFT];
+        if (!has_text) result &= ~CUI_COMPOSER_SEND;
+        else if (enter || clicked_send) result |= CUI_COMPOSER_SEND;
+        if (has_text != had_text) cui_request_redraw(ui);
+    }
+    /* CUI-173 (docs/future/cui-upstream-bugs.md#cui-173): cancel wins
+       when Escape and Send activate the same recorder frame. */
+    if (result & CUI_COMPOSER_CANCEL) result &= ~CUI_COMPOSER_VOICE;
+    if (width_kind == 0) {
+        ui->nodes[root].w = CUI_FIT;
+        ui->nodes[root].self_align = CUI__ALIGN_NOSTRETCH;
+    }
+    const int text_node = recording ? -1 : fpas_find(ui, text_extent);
+    if (text_node >= root) {
+        fpas_composer_layout *previous = CUI_PAINT_DATA(ui, fpas_composer_layout);
+        *previous = (fpas_composer_layout){ text_node, cui__prev_rect(ui, text_extent).w };
+        ui->nodes[root].paint = fpas_composer_reflow;
+        ui->nodes[root].paint_data = previous;
+    }
     fpas_text_store(ui, binding, draft, strlen(draft), capacity);
     for (int i = 0; i < count; ++i) nodes[i] = parts[i] ? fpas_find(ui, parts[i]) : -1;
     fpas_creative_node(ui, root, key);

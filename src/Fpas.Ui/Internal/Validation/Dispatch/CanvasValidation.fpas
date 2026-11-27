@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Validation.Dispatch.CanvasValidation;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Internal.Validation.Controls.MediaRules as MediaRules;
 uses Fpas.Ui.Internal.Validation.Core.ChartChecks as C;
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
@@ -41,6 +42,12 @@ begin
   C.Distance(Value.Zoom, At);
 end procedure;
 
+procedure RingOptions(Settings: Ring.Options; At: string);
+begin
+  Text(Settings.Name, At);
+  C.Distance(Settings.Radius, At);
+end procedure;
+
 procedure People(Items: array of Live.Person; At: string);
 begin
   const Names: Lists.HashSet of string := new Lists.HashSet of string(Sys.StringComparer.Ordinal);
@@ -63,6 +70,13 @@ begin
   end if;
 end procedure;
 
+procedure FormatTone(Value: S.Tone; At: string);
+begin
+  if not Sys.Enum.IsDefined of S.Tone(Value) then
+    R.Reject(At, 'A format color needs a known tone.');
+  end if;
+end procedure;
+
 procedure ToolbarItems(Items: array of Tools.Item; At: string; Grouped: bool);
 begin
   for Item: Tools.Item in Items do
@@ -74,26 +88,46 @@ begin
         Text(Button.Label, At);
         Text(Button.Tooltip, At);
         Text(Button.Shortcut, At);
+        if not Sys.Enum.IsDefined of S.Tone(Button.Tone) then
+          R.Reject(At, 'A toolbar button needs a known tone.');
+        end if;
       when Tools.Item.Radio(
         const Icons: array of string,
-        const Labels: array of string,
+        const Labels: (array of string)?,
         const Index: int
       ):
         Choice(Icons.Length, Index, At);
-        if Icons.Length <> Labels.Length or Icons.Length > 32 then
-          R.Reject(At, 'A toolbar radio needs at most 32 icons and one label per icon.');
+        if Icons.Length > 32 then
+          R.Reject(At, 'A toolbar radio takes at most 32 icons.');
         end if;
 
         for Icon: string in Icons do
           Text(Icon, At);
         end for;
 
-        for Label: string in Labels do
-          Text(Label, At);
-        end for;
-      when Tools.Item.Cycle(const Labels: array of string, const Index: int, const Tooltip: string):
+        if Labels <> null then
+          if Icons.Length <> Labels.Length then
+            R.Reject(At, 'Toolbar radio names must match the icon count.');
+          end if;
+
+          for Label: string in Labels do
+            Text(Label, At);
+          end for;
+        end if;
+      when Tools.Item.Cycle(
+        const Labels: array of string,
+        const Index: int,
+        const Settings: Tools.CycleOptions?
+      ):
         Choice(Labels.Length, Index, At);
-        Text(Tooltip, At);
+        if Settings <> null then
+          Text(Settings.Tooltip, At);
+          Text(Settings.Shortcut, At);
+          if not Sys.Enum.IsDefined of S.Tone(Settings.Tone) then
+            R.Reject(At, 'A toolbar cycle needs a known tone.');
+          end if;
+        end if;
+
         for Label: string in Labels do
           Text(Label, At);
         end for;
@@ -149,10 +183,22 @@ begin
       Choice(4, Value.Alignment, Path);
       Choice(4, Value.List, Path);
       C.Distance(Value.Size, Path);
+      FormatTone(Value.Color, Path);
+      if Settings.Colors.Length > 32 then
+        R.Reject(Path, 'A format color grid accepts up to 32 tones.');
+      end if;
+
+      for Tone: S.Tone in Settings.Colors do
+        FormatTone(Tone, Path);
+      end for;
+
       for Style: Format.Style in Settings.Styles do
         Text(Style.Name, Path);
         C.Distance(Style.Size, Path);
         C.Distance(Style.PreviewSize, Path);
+        if not Sys.Enum.IsDefined of Graphics.Font(Style.Font) then
+          R.Reject(Path, 'A format style preview needs a known font.');
+        end if;
       end for;
 
       Text(Settings.Footer, Path);
@@ -190,8 +236,7 @@ begin
       const Settings: Ring.Options
     ):
       const Path: string := At(Id, 'selection-ring');
-      Text(Settings.Name, Path);
-      C.Distance(Settings.Radius, Path);
+      RingOptions(Settings, Path);
       Visit(Child, Path);
     when E.Element.CanvasControls(
       const Id: string,
@@ -230,13 +275,16 @@ begin
       Visit(Child, Path);
     when E.Element.ResultCard(
       const Id: string,
-      const Image: Media.Source,
+      const Image: Media.Source?,
       const Title: string,
       _,
       const Settings: Card.Options
     ):
       const Path: string := At(Id, 'result-card');
-      MediaRules.Image(Image, Path);
+      if Image <> null then
+        MediaRules.Image(Image, Path);
+      end if;
+
       Text(Title, Path);
       Text(Settings.Caption, Path);
       Text(Settings.Badge, Path);
@@ -301,6 +349,12 @@ begin
         Finite(Item.X, Path);
         Finite(Item.Y, Path);
         C.Distance(Item.Width, Path);
+        case Item.Ring of
+          when is Ring.Options as Decoration:
+            RingOptions(Decoration, Path);
+          else
+        end case;
+
         for Pin: Nodes.Pin in Item.Pins do
           Text(Pin.Label, Path);
           if not Pins.TryAdd(Pin.Id, Pin) then

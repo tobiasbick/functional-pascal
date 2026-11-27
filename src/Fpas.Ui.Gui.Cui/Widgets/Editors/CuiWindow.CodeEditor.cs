@@ -56,7 +56,9 @@ public sealed partial class CuiWindow
             return new((changes & 1) == 0 ? null : Utf8.Encoding.GetString(buffer, 0, Array.IndexOf(buffer, (byte)0, 0, capacity)),
                 result.Line, result.Column, result.Lines, (changes & 2) != 0,
                 Utf8.Encoding.GetCharCount(buffer, 0, result.Cursor), Utf8.Encoding.GetCharCount(buffer, 0, result.Anchor),
-                result.Matches, result.MatchIndex, result.Focused != 0);
+                result.Matches, result.MatchIndex, result.Focused != 0, result.Length,
+                result.Bracket < 0 ? -1 : Utf8.Encoding.GetCharCount(buffer, 0, result.Bracket),
+                result.BracketMatch < 0 ? -1 : Utf8.Encoding.GetCharCount(buffer, 0, result.BracketMatch));
         }
         finally
         {

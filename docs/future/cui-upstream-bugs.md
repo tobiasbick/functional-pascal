@@ -154,14 +154,15 @@ use the automatic range or choose limits that include all bar endpoints.
 
 <a id="cui-031"></a>
 
-## CUI-031 — The theme toggle loses keyboard focus after an appearance change
+## CUI-031 — A toggle can lose keyboard focus when its glyph changes
 
 At CUI revision `6864776`, the theme toggle changes its glyph and tooltip
 when the appearance changes. CUI derives the button ID from those values.
 The next Enter key does not activate the toggle until focus returns.
 
 The [FPAS theme toggle](../ui/gui/actions/theme-toggle.md) keeps one stable ID
-for both appearances.
+for both appearances. [Canvas controls](../ui/gui/canvas-and-bars/canvas-controls.md)
+also keep their toggle IDs when the glyph or tooltip changes.
 
 <a id="cui-032"></a>
 
@@ -285,7 +286,10 @@ search editor while it has focus.
 At CUI revision `6864776`, Enter can toggle a highlighted item in the
 multi-select popup during its closing animation. The
 [FPAS multi-select](../ui/gui/pickers/multi-select.md) stops accepting
-selection input when the popup starts to close.
+selection input when the popup starts to close. Enter can also commit a
+model choice while the [composer menu](../ui/gui/voice/composer.md) closes
+or after the composer becomes disabled. FPAS leaves the model selection
+alone in both cases.
 
 <a id="cui-044"></a>
 
@@ -335,12 +339,16 @@ accept their own keyboard activation.
 
 <a id="cui-049"></a>
 
-## CUI-049 — An expandable text link can retain focus when hidden
+## CUI-049 — A hidden part can retain keyboard focus
 
 At CUI revision `6864776`, changing the text so it fits its line limit can
 leave focus on the missing link. If the link returns, Space can activate it.
-[FPAS expandable text](../ui/gui/disclosure/expandable-text.md) releases
-focus when the link disappears.
+Palette swatches, Shuffle and the seed lock can also keep focus while hidden.
+[FPAS expandable text](../ui/gui/disclosure/expandable-text.md),
+[palette strip](../ui/gui/creative-controls/palette-strip.md) and
+[seed field](../ui/gui/creative-controls/seed-field.md) release focus when
+the part disappears. The [FPAS voice session](../ui/gui/voice/voice-session.md)
+releases focus when its Mute or End button disappears.
 
 <a id="cui-050"></a>
 
@@ -782,18 +790,28 @@ preserves the original whitespace in the text.
 
 At CUI revision `6864776`, a keyboard focus ring replaces the waveform paint
 operation. The [FPAS waveform](../ui/gui/motion/waveform.md) paints the peaks
-and draws the focus ring over them.
+and draws the focus ring over them. The [FPAS voice waveform](../ui/gui/voice/voice-waveform.md)
+and [voice note](../ui/gui/voice/voice-note.md) also keep both paint operations.
 
 <a id="cui-100"></a>
 
-## CUI-100 — An audio control can lose the pointer release position
+## CUI-100 — A dragged control can lose the pointer release position
 
 At CUI revision `6864776`, a pointer move and release between frames can leave
-an audio control at the previous position. The
+the control at the previous position. The
 [FPAS waveform](../ui/gui/motion/waveform.md),
-[player](../ui/gui/motion/now-playing.md), [knob](../ui/gui/audio/knob.md)
-and [fader](../ui/gui/audio/fader.md) use the recorded release position to
-complete the gesture.
+[player](../ui/gui/motion/now-playing.md), [knob](../ui/gui/audio/knob.md),
+[fader](../ui/gui/audio/fader.md) and
+[event track](../ui/gui/instruments/event-track.md) use the recorded release
+position to complete the gesture. The
+[ratio](../ui/gui/creative-controls/ratio-slider.md),
+[gradient](../ui/gui/creative-controls/gradient-slider.md) and
+[step](../ui/gui/creative-controls/step-slider.md) sliders also use that
+position. The [node editor](../ui/gui/canvas-and-bars/node-editor.md) also
+applies the pointer movement that arrives with a pan release.
+The [voice waveform](../ui/gui/voice/voice-waveform.md) and
+[voice note](../ui/gui/voice/voice-note.md) also retain the final seek position
+when a click or drag ends between frames.
 
 <a id="cui-101"></a>
 
@@ -850,12 +868,25 @@ wake-up time for item labels.
 
 <a id="cui-107"></a>
 
-## CUI-107 — A covered prompt suggestion can activate from the keyboard
+## CUI-107 — A covered widget can activate from the keyboard
 
-At CUI revision `6864776`, Enter or Space can activate a focused suggestion
-behind an open popover. The
-[FPAS prompt suggestions](../ui/gui/ai/prompt-suggestions.md) leave those keys
-to the popover while it owns keyboard input.
+At CUI revision `6864776`, Enter or Space can activate a focused control
+behind an open popover. This affects
+[prompt suggestions](../ui/gui/ai/prompt-suggestions.md),
+[status tags](../ui/gui/creative-controls/status-tag.md),
+[aspect options](../ui/gui/creative-controls/aspect-ratio-picker.md),
+[option actions](../ui/gui/creative-controls/option-action.md),
+[palette swatches](../ui/gui/creative-controls/palette-strip.md),
+[seed fields](../ui/gui/creative-controls/seed-field.md) and the tools in
+[gradient](../ui/gui/creative-controls/gradient-slider.md) and
+[step](../ui/gui/creative-controls/step-slider.md) sliders. This also affects
+[canvas controls](../ui/gui/canvas-and-bars/canvas-controls.md),
+[result cards](../ui/gui/canvas-and-bars/result-card.md),
+[selection bars](../ui/gui/canvas-and-bars/selection-bar.md),
+[toolbar buttons](../ui/gui/canvas-and-bars/toolbar.md),
+[voice notes](../ui/gui/voice/voice-note.md) and
+[voice sessions](../ui/gui/voice/voice-session.md).
+FPAS leaves those keys to the popover.
 
 <a id="cui-108"></a>
 
@@ -868,10 +899,11 @@ payload.
 
 <a id="cui-109"></a>
 
-## CUI-109 — A composer can miss Enter in the same frame as text input
+## CUI-109 — A composer can send against an earlier draft
 
-At CUI revision `6864776`, the composer can process Enter against an empty
-draft before it adds the new text. The
+At CUI revision `6864776`, the composer can process Enter or a Send click
+before it applies the same frame's edit. This can miss a new draft or send
+an empty one. The
 [FPAS composer](../ui/gui/voice/composer.md) checks the edited draft before
 submitting.
 
@@ -1062,7 +1094,7 @@ clears the held gesture when the control is disabled.
 
 <a id="cui-131"></a>
 
-## CUI-131 — Developer widgets can handle keys beneath an open popup
+## CUI-131 — A focused widget can handle keys beneath an open popup
 
 At CUI revision `6864776`, a focused widget can handle selection or
 activation keys while a popup covers it. This affects the
@@ -1075,10 +1107,15 @@ activation keys while a popup covers it. This affects the
 [keymap](../ui/gui/developer-tools/keymap.md),
 [test explorer](../ui/gui/more-developer-tools/test-explorer.md),
 [stack trace](../ui/gui/more-developer-tools/stack-trace.md),
-[API explorer](../ui/gui/more-developer-tools/api-explorer.md) and
+[API explorer](../ui/gui/more-developer-tools/api-explorer.md),
+[event track](../ui/gui/instruments/event-track.md) and
 [request bar](../ui/gui/more-developer-tools/http-request-bar.md).
-The covered request URL can also accept queued text. FPAS leaves that input
-to the popup.
+The covered request URL and [composer](../ui/gui/voice/composer.md) can also
+accept queued text. FPAS leaves that input to the popup.
+The [aspect](../ui/gui/creative-controls/aspect-ratio-picker.md) and
+[option](../ui/gui/creative-controls/option-action.md) pickers and the
+[palette](../ui/gui/creative-controls/palette-strip.md) also leave arrow
+keys to the popup, as do [toolbar radio groups](../ui/gui/canvas-and-bars/toolbar.md).
 
 <a id="cui-132"></a>
 
@@ -1091,7 +1128,7 @@ requests a frame when the actual width differs from the layout width.
 
 <a id="cui-133"></a>
 
-## CUI-133 — A developer widget can retain its layout after resize
+## CUI-133 — A widget can retain its layout after resize
 
 At CUI revision `6864776`, the pipeline, problems panel and keymap can retain
 their old layout after their parent changes width. The
@@ -1104,7 +1141,11 @@ laid-out width changes. The [test explorer](../ui/gui/more-developer-tools/test-
 [API explorer](../ui/gui/more-developer-tools/api-explorer.md),
 [feature flags](../ui/gui/more-developer-tools/feature-flags.md) and
 [request bar](../ui/gui/more-developer-tools/http-request-bar.md) also
-request a frame when their width changes.
+request a frame when their width changes. A
+[result card](../ui/gui/canvas-and-bars/result-card.md) also requests a frame
+if its image height was calculated from the previous width. The
+[composer](../ui/gui/voice/composer.md) requests another frame when the
+laid-out width changes its wrapped draft height.
 
 <a id="cui-134"></a>
 
@@ -1253,3 +1294,254 @@ Send button after the application switches to Cancel. A second Enter can
 then fail to cancel. The
 [FPAS request bar](../ui/gui/more-developer-tools/http-request-bar.md) moves
 the action focus to the button for the new loading state.
+
+<a id="cui-150"></a>
+
+## CUI-150 — The Instruments gallery can label zero cups as 5+
+
+At CUI revision `6864776`, removing the final cup leaves the CUPS readout
+at 5+. The [FPAS Instruments page](../ui/gui/instruments/README.md)
+displays 0 for an empty track.
+
+<a id="cui-151"></a>
+
+## CUI-151 — The dot-matrix chart omits series names from its readout
+
+At CUI revision `6864776`, the dot-matrix chart accepts a name for each
+series and omits the names from the readout. The
+[FPAS dot-matrix chart](../ui/gui/instruments/dot-chart.md) passes the names
+to CUI and uses the native readout.
+
+<a id="cui-152"></a>
+
+## CUI-152 — A click outside a dot chart plot can activate the chart
+
+At CUI revision `6864776`, clicking the value gutter or the axis label area
+can report an activation with a missing sample index. The
+[FPAS dot-matrix chart](../ui/gui/instruments/dot-chart.md) restricts pointer
+activation to the plot.
+
+<a id="cui-153"></a>
+
+## CUI-153 — Readout Left and Right reverse in right-to-left layout
+
+At CUI revision `6864776`, the readout treats physical Left and Right as
+logical start and end. In right-to-left layout this places the content on
+the opposite side. The [FPAS readout](../ui/gui/instruments/readout.md)
+keeps the physical side and the reading direction.
+
+<a id="cui-154"></a>
+
+## CUI-154 — A scrolling dot display can stop requesting frames
+
+At CUI revision `6864776`, the dot display can use an obsolete width after
+mounting or resizing. Displays in separate anonymous containers can also
+share an identity. The [FPAS dot-matrix display](../ui/gui/instruments/dot-display.md)
+gives each display a stable ID and schedules the next frame from its current
+width.
+
+<a id="cui-155"></a>
+
+## CUI-155 — An explicit label interval can fail to advance the axis
+
+At CUI revision `6864776`, floating-point rounding can leave an axis tick
+at the same position after adding the explicit interval. The
+[FPAS dot-matrix chart](../ui/gui/instruments/dot-chart.md) and
+[event track](../ui/gui/instruments/event-track.md) reject intervals that
+cannot advance across the axis.
+
+<a id="cui-156"></a>
+
+## CUI-156 — A choice can move against the arrow in RTL
+
+At CUI revision `6864776`, the option field moves by logical index
+in right-to-left layout. Left can leave the selection on the visually
+rightmost option. The [FPAS option field](../ui/gui/creative-controls/option-action.md)
+and [toolbar radio groups](../ui/gui/canvas-and-bars/toolbar.md) move in the
+visual direction of the arrow.
+
+<a id="cui-157"></a>
+
+## CUI-157 — The focus ring can stay on the old choice for a frame
+
+At CUI revision `6864776`, an arrow can change the focused choice while
+the ring stays on the old one for the current frame. The
+[FPAS aspect ratio picker](../ui/gui/creative-controls/aspect-ratio-picker.md),
+[FPAS option field](../ui/gui/creative-controls/option-action.md),
+[FPAS palette strip](../ui/gui/creative-controls/palette-strip.md) and
+[FPAS toolbar radio groups](../ui/gui/canvas-and-bars/toolbar.md) draw the
+ring on the new focus target.
+
+<a id="cui-158"></a>
+
+## CUI-158 — Editing a ratio caption can remove keyboard focus
+
+At CUI revision `6864776`, the ratio slider uses both captions to compute
+its identity. Changing either caption can leave focus on the old identity.
+The [FPAS ratio slider](../ui/gui/creative-controls/ratio-slider.md) uses
+the supplied stable widget ID for input.
+
+<a id="cui-159"></a>
+
+## CUI-159 — An active seed animation can ignore reduced motion
+
+At CUI revision `6864776`, switching to reduced motion during a dice roll
+can leave the old digit animation running. The
+[FPAS seed field](../ui/gui/creative-controls/seed-field.md) settles the
+display when reduced motion takes effect.
+
+<a id="cui-160"></a>
+
+## CUI-160 — Presence tooltips can use the wrong hover state
+
+At CUI revision `6864776`, a lone named avatar can show its tooltip at an
+unrelated pointer position. Multiple avatars can reset a hovered avatar's
+tooltip timer and request frames while the pointer is idle elsewhere. The
+[FPAS presence pill](../ui/gui/canvas-and-bars/presence-pill.md) submits the
+native tooltip for the hovered avatar.
+
+<a id="cui-161"></a>
+
+## CUI-161 — Gallery Fit can leave a moved node out of view
+
+At CUI revision `6864776`, the Canvas gallery calculates Fit bounds from
+the first and last nodes' horizontal positions and a fixed height. A node
+moved outside those bounds can stay outside the viewport after Fit. The
+[FPAS gallery](../ui/gui/canvas-and-bars/README.md) includes the current
+bounds of every sample node and keeps the original rectangle at startup.
+
+<a id="cui-162"></a>
+
+## CUI-162 — A format color palette can open without keyboard focus
+
+At CUI revision `6864776`, a custom palette can open without a focused
+swatch if it omits the current color. Enter then selects nothing. The
+[FPAS format bar](../ui/gui/canvas-and-bars/format-bar.md) focuses the first
+swatch in that case.
+
+<a id="cui-163"></a>
+
+## CUI-163 — A disabled format bar can confirm deletion
+
+At CUI revision `6864776`, disabling a format bar while its Delete
+confirmation is open can leave the dialog active. Enter can still confirm
+the action. The [FPAS format bar](../ui/gui/canvas-and-bars/format-bar.md)
+closes its confirmation and menus when disabled or removed.
+
+<a id="cui-164"></a>
+
+## CUI-164 — A literal double hash can shorten a style caption
+
+At CUI revision `6864776`, the format bar style menu interprets `##` in
+a custom style caption as a native identity suffix. It hides the rest of
+the caption. The [FPAS format bar](../ui/gui/canvas-and-bars/format-bar.md)
+displays the full style name.
+
+<a id="cui-165"></a>
+
+## CUI-165 — Custom zoom presets can clamp an idle canvas
+
+At CUI revision `6864776`, a custom preset range can clamp an existing
+viewport even without input. Reset can also clamp 100 percent to that
+range. [FPAS canvas controls](../ui/gui/canvas-and-bars/canvas-controls.md)
+leave the idle viewport alone and reset to 100 percent.
+
+<a id="cui-166"></a>
+
+## CUI-166 — Zoom can skip closely spaced presets
+
+At CUI revision `6864776`, a fixed tolerance can treat two distinct zoom
+presets as the same value. [FPAS canvas controls](../ui/gui/canvas-and-bars/canvas-controls.md)
+step through consecutive representable preset values.
+
+<a id="cui-167"></a>
+
+## CUI-167 — Cycling a single toolbar choice reports a change
+
+At CUI revision `6864776`, activating a one-choice cycle returns true
+even though the selected index stays the same. The
+[FPAS toolbar](../ui/gui/canvas-and-bars/toolbar.md) reports a cycle change
+only when the index changes.
+
+<a id="cui-168"></a>
+
+## CUI-168 — A pending toolbar choice can apply after disabling
+
+At CUI revision `6864776`, a radio choice made in the overflow menu can
+reach the owner on a later frame even if the group has since been disabled.
+The [FPAS toolbar](../ui/gui/canvas-and-bars/toolbar.md) discards that
+pending choice.
+
+<a id="cui-169"></a>
+
+## CUI-169 — A narrow format bar can hide color or style controls
+
+At CUI revision `6864776`, the color or style trigger can disappear at
+very small widths without a corresponding overflow item. The
+[FPAS format bar](../ui/gui/canvas-and-bars/format-bar.md) documents the
+available space requirement for these native controls.
+
+<a id="cui-170"></a>
+
+## CUI-170 — A node can draw its old selection outline for one frame
+
+At CUI revision `6864776`, pressing a node submitted later in the frame
+can leave the selection outline on a node already submitted. The
+[FPAS node editor](../ui/gui/canvas-and-bars/node-editor.md) applies the
+final selection to the outlines and reports it to the model.
+
+<a id="cui-171"></a>
+
+## CUI-171 — A voice note can exceed the available width
+
+At CUI revision `6864776`, a voice note enforces a minimum width of
+200 logical points. It can exceed its parent or a smaller fixed width.
+The [FPAS voice note](../ui/gui/voice/voice-note.md) fits the width offered
+by the parent and gives the playback controls the available space.
+
+<a id="cui-172"></a>
+
+## CUI-172 — A zero-duration voice note can report a seek
+
+At CUI revision `6864776`, clicking a zero-duration note's waveform
+can report Seek with position still zero. The
+[FPAS voice note](../ui/gui/voice/voice-note.md) treats a zero-duration
+waveform as display-only.
+
+<a id="cui-173"></a>
+
+## CUI-173 — A composer can cancel and send the same recording
+
+At CUI revision `6864776`, Escape and Enter in one recorder frame can
+report both Cancel and Voice Send. The
+[FPAS composer](../ui/gui/voice/composer.md) reports Cancel only in this
+case.
+
+<a id="cui-174"></a>
+
+## CUI-174 — Leaving the window can discard an earlier button release
+
+At CUI revision `6864776`, leaving the window after releasing a pressed
+button can discard the click when both events reach the same frame. The
+leave event clears the pointer hit before the button evaluates the pending
+release. The voice note's Play button reproduces the issue with native
+input calls.
+
+<a id="cui-175"></a>
+
+## CUI-175 — A compact status item can show its native ID in the tooltip
+
+At CUI revision `6864776`, a compact status bar can replace an item's
+caption with its icon. Its automatically generated tooltip can include the
+caption's `###` identity suffix. The
+[FPAS status bar](../ui/gui/app-chrome/status-bar.md) supplies the visible
+caption as the tooltip.
+
+<a id="cui-176"></a>
+
+## CUI-176 — A full clip stack can drop the parent canvas clip
+
+At CUI revision `6864776`, CUI ignores a clip push when the stack is full.
+A matching pop can then remove a valid outer clip, so drawing can extend
+past the canvas. [FPAS canvas painting](../ui/gui/canvas-and-bars/painting.md)
+checks capacity before adding a clip and pops only the clips it accepts.

@@ -1,0 +1,20 @@
+// [Documentation](../../docs/ui/gui/editing-tools/curve-editor.md)
+
+unit Fpas.Ui.Gui.Curves;
+
+uses Fpas.Ui.Gui.Cui.Widgets.Editors as Native;
+uses Fpas.Ui.Gui.Internal.Data.CurveData as Data;
+uses Fpas.Ui.Widgets.Editors.CurveEditors as Editor;
+
+// Evaluates the curve with the same interpolation as the editor.
+// ## Parameters
+// - `Keys`: Finite curve keys in ascending X order.
+// - `X`: The position to sample. Positions beyond the keys use the nearest endpoint.
+// ## Returns
+// The curve value, or zero for an empty curve. NaN samples the first key.
+public function Evaluate(Keys: array of Editor.Key; X: float): float;
+begin
+  return Native.CuiCurve.Evaluate(Data.PackKeys(Keys), X);
+end function;
+
+end unit;

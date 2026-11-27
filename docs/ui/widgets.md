@@ -954,7 +954,8 @@ profile. The Social and media page shows all five with the original CUI examples
 ## Voice and AI
 
 - `VoiceWaves.VoiceWave` draws live levels or a clip. Optional speaker tags
-  distinguish both voices. Supply a progress fraction and a callback to seek.
+  distinguish both voices. Supply a progress fraction to display the played
+  portion. Add a callback to accept seek proposals.
 - `VoiceNotes.VoiceNote` proposes play, pause, seek and speed changes.
   `VoiceSessions.VoiceSession` displays a shared signal and transcript and
   reports mute and end actions. The app supplies audio levels and playback.

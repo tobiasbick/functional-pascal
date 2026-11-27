@@ -13,4 +13,5 @@ internal struct NativeTextMark
 internal struct NativeCodeEditor
 {
     internal int Line, Column, Lines, Cursor, Anchor, Matches, MatchIndex, Focused;
+    internal int Length, Bracket, BracketMatch;
 }

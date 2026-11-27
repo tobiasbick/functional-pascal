@@ -10,6 +10,9 @@ uses System as Sys;
 // Shared width of the three fixed gallery node specimens, in canvas points.
 public const NodeWidth: float := 184.0F;
 
+// Fit uses the original specimen rectangle height until a node needs more space.
+const MinimumFitHeight: float := 290.0F;
+
 // Conservative extents for these specimens, including room around their native
 // title, pin rows and wrapped body text. Positive has two body lines, Negative
 // has one, and Generate has one body line below two pins. These bounds do not
@@ -36,7 +39,12 @@ begin
     Bottom := Sys.MathF.Max(Bottom, Position.Y + Heights[Index]);
   end for;
 
-  return new Controls.Bounds(Left, Top, Right - Left, Bottom - Top);
+  return new Controls.Bounds(
+    Left,
+    Top,
+    Right - Left,
+    Sys.MathF.Max(MinimumFitHeight, Bottom - Top)
+  );
 end function;
 
 end unit;

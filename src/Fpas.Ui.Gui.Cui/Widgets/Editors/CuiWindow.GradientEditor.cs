@@ -26,8 +26,12 @@ public sealed partial class CuiWindow
         stops.CopyTo(buffer, 0);
         int count = stops.Length;
         fixed (CuiGradientStop* data = buffer)
-            return NativeMethods.GradientEditor(context, Stable(id), data, ref count, capacity, ref selected, out int added, out int removed, widthKind, width, height, enabled ? 1 : 0) == 0
+        {
+            int result = NativeMethods.GradientEditor(context, Stable(id), data, ref count, capacity, ref selected,
+                out int added, out int removed, widthKind, width, height, enabled ? 1 : 0);
+            return result == 0
                 ? null
-                : new(buffer[..count], selected, added, removed);
+                : new(buffer[..count], selected, added, removed, (result & 2) != 0);
+        }
     }
 }

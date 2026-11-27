@@ -15,15 +15,25 @@ public sealed partial class CuiWindow
     /// <param name="settings">Native chart and axis settings.</param>
     /// <param name="enabled">Whether the chart accepts input.</param>
     /// <param name="focus">Whether to focus the chart.</param>
+    /// <param name="names">Optional names in band order. An empty or null name omits the name.</param>
     /// <returns>Activation, sample index and plotted values.</returns>
     public unsafe CuiDotHit DotChart(string id, float[] samples, int[] accent, int count,
-        CuiDotOptions settings, bool enabled, bool focus)
+        CuiDotOptions settings, bool enabled, bool focus, string?[]? names = null)
     {
         CheckFrame();
         CheckExtent(settings.Chart.WidthKind, settings.Chart.Width, nameof(settings));
         CheckFeedbackNumber(settings.Chart.Height, nameof(settings));
         CheckFeedbackNumber(settings.Pitch, nameof(settings));
+        CheckChartFormat(settings.Chart.Format);
+        CheckChartFormat(settings.XFormat);
         Utf8.Validate(settings.Unit, nameof(settings));
+        if (names is not null)
+        {
+            if (names.Length != accent.Length)
+                throw new ArgumentException("Supply one name per dot chart band.", nameof(names));
+            foreach (string? name in names)
+                if (name is not null) Utf8.Validate(name, nameof(names));
+        }
         if (accent.Length > 16 || count < 0 || (long)accent.Length * count != samples.Length ||
             !double.IsFinite(settings.Minimum) || !double.IsFinite(settings.Maximum) ||
             !double.IsFinite(settings.Maximum - settings.Minimum) || !double.IsFinite(settings.Step) ||
@@ -31,6 +41,10 @@ public sealed partial class CuiWindow
             settings.Units == 1 && (Math.Abs(settings.Minimum) > 35_000_000 ||
                 Math.Abs(settings.Maximum) > 35_000_000 || settings.Minimum == settings.Maximum && count > 35_000_000))
             throw new ArgumentException("Invalid dot chart series or axis.", nameof(settings));
+        bool indexAxis = settings.Minimum == settings.Maximum;
+        if (settings.Axis && !InstrumentLabelStepAdvances(indexAxis ? 0 : settings.Minimum,
+            indexAxis ? Math.Max(1, count - 1) : settings.Maximum, settings.Step))
+            throw new ArgumentException("The dot chart label step must advance across the axis.", nameof(settings));
         using var memory = new ChartMemory();
         nint xLabel = RetainAxisLabel(settings.XLabel), valueLabel = RetainAxisLabel(settings.ValueLabel);
         var native = new NativeDotOptions {
@@ -39,7 +53,8 @@ public sealed partial class CuiWindow
             Unit = memory.Text(Optional(settings.Unit)), Pitch = settings.Pitch,
             XLabel = AxisLabelFunction(xLabel), XLabelUser = xLabel,
             ValueLabel = AxisLabelFunction(valueLabel), ValueLabelUser = valueLabel,
-            Flags = (settings.Axis ? 0 : 1) | (settings.Readout ? 0 : 2) | (enabled ? 4 : 0) | (focus ? 8 : 0)
+            Flags = (settings.Axis ? 0 : 1) | (settings.Readout ? 0 : 2) | (enabled ? 4 : 0) | (focus ? 8 : 0),
+            Names = memory.Labels(names)
         };
         fixed (float* values = samples)
         fixed (int* bands = accent)

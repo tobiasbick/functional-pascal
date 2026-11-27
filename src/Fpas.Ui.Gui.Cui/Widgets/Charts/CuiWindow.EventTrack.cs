@@ -10,7 +10,7 @@ public sealed partial class CuiWindow
     /// <summary>Draws native editable time markers and returns a proposal.</summary>
     /// <param name="id">Stable track identity.</param>
     /// <param name="events">Current sorted events.</param>
-    /// <param name="selected">Current selected index, or minus one.</param>
+    /// <param name="selected">Current selected index, or minus one. Native selection ignores this index.</param>
     /// <param name="options">Native bounds, capacity and input settings.</param>
     /// <param name="enabled">Whether the track accepts input.</param>
     /// <param name="focus">Whether to focus the track.</param>
@@ -20,10 +20,11 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         CheckExtent(options.WidthKind, options.Width, nameof(options));
-        if (options.Capacity < events.Length || selected < -1 || selected >= events.Length ||
+        if (options.Capacity < events.Length || (!options.NativeSelection && (selected < -1 || selected >= events.Length)) ||
             !double.IsFinite(options.Minimum) || !double.IsFinite(options.Maximum - options.Minimum) ||
             options.Maximum <= options.Minimum || !double.IsFinite(options.Step) || options.Step < 0 ||
             !double.IsFinite(options.LabelStep) || options.LabelStep < 0 || options.Units is < 0 or > 1 ||
+            options.Axis && !InstrumentLabelStepAdvances(options.Minimum, options.Maximum, options.LabelStep) ||
             options.Units == 1 && (Math.Abs(options.Minimum) > 35_000_000 || Math.Abs(options.Maximum) > 35_000_000))
             throw new ArgumentException("Invalid event track model or axis.", nameof(options));
         double previous = options.Minimum;
@@ -43,13 +44,17 @@ public sealed partial class CuiWindow
             WidthKind = options.WidthKind, Units = options.Units,
             Label = AxisLabelFunction(label), LabelUser = label,
             Flags = (options.Add ? 0 : 1) | (options.Remove ? 0 : 2) | (options.Axis ? 0 : 4) |
-                (enabled ? 8 : 0) | (focus ? 16 : 0)
+                (enabled ? 8 : 0) | (focus ? 16 : 0) | (options.NativeSelection ? 32 : 0)
         };
         int count = events.Length;
         int* result = stackalloc int[5];
         result[0] = selected;
         fixed (double* values = times)
             NativeMethods.EventTrack(context, Stable(id), values, ref count, options.Capacity, in native, result);
-        return new(result[4] != 0, times.AsSpan(0, count).ToArray(), result[0], result[1], result[2], result[3] != 0);
+        return new((result[4] & 1) != 0, times.AsSpan(0, count).ToArray(), result[0], result[1], result[2], result[3] != 0)
+        {
+            SelectionChanged = (result[4] & 2) != 0,
+            DragChanged = (result[4] & 4) != 0
+        };
     }
 }

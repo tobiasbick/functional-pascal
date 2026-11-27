@@ -11,14 +11,14 @@ public sealed partial class CuiWindow
     /// <param name="second">Second caption.</param>
     /// <param name="value">Model value and native proposal.</param>
     /// <param name="tone">Native semantic tone.</param>
-    /// <param name="step">Logical or normalized step.</param>
+    /// <param name="step">Step as a share of the range, or zero for one percent.</param>
     /// <param name="height">Logical height.</param>
     /// <param name="widthKind">Native width encoding.</param>
     /// <param name="width">Width associated with the encoding.</param>
     /// <param name="flags">Native appearance and input bits.</param>
     /// <param name="focus">Native focus part, or minus one.</param>
     /// <param name="part">Maps native parts to tracking identities.</param>
-    /// <returns>The native change and action flags.</returns>
+    /// <returns>One if the slider proposes a new share, otherwise zero.</returns>
     public unsafe int RatioSlider(string id, string first, string second, ref float value, int tone, float step, float height, int widthKind, float width,
         int flags, int focus, Func<int, string>? part)
     {

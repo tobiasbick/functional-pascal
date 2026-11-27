@@ -1,0 +1,62 @@
+// [Documentation](../../docs/ui/gui/editing-tools/flame-graph.md)
+
+unit Fpas.Ui.Gui.FlameGeometry;
+
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Editors as Native;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Editors.FlameGraphs as Graph;
+
+// Requests one span's logical rectangle in a presented flame graph.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Request of TMsg = record implements Mvu.HostExtension of TMsg
+  // Application identity of the graph.
+  public Id: string;
+  // Model span represented in CUI format.
+  public Span: Native.CuiFlameSpan;
+  // Maps the logical rectangle to a message.
+  public OnRead: function(Cui.CuiRectangle): TMsg;
+
+  // Maps the result into the parent view's message type.
+  // ## Type parameters
+  // - `TNext`: Parent message type.
+  // ## Parameters
+  // - `Messages`: Maps child messages.
+  // ## Returns
+  // The same request in the parent message space.
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
+  begin
+    const Read: function(Cui.CuiRectangle): TMsg := self.OnRead;
+    return new Request of TNext(
+      self.Id, self.Span,
+      function(Bounds: Cui.CuiRectangle): TNext => Messages(Read(Bounds))
+    );
+  end function;
+end record;
+
+// Reads the native geometry of a span after presentation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable identity of the graph.
+// - `Span`: Span from the presented graph.
+// - `OnRead`: Maps the bounds to a message. An absent graph or offscreen span returns empty bounds.
+// ## Returns
+// An owner-thread command to use after the first presentation.
+public function ReadSpanRectangle of TMsg(
+  Id: string;
+  Span: Graph.Span;
+  OnRead: function(Cui.CuiRectangle): TMsg
+): Mvu.Command of TMsg;
+requires Id <> '';
+begin
+  const Item: Native.CuiFlameSpan := new Native.CuiFlameSpan(
+    Span.Name, Span.Start, Span.Finish, Span.Depth, Span.ColorKey
+  );
+  return (Mvu.Command of TMsg).Host(
+    Mvu.HostRequest.Extension(new Request of TMsg(Id, Item, OnRead))
+  );
+end function;
+
+end unit;

@@ -29,17 +29,38 @@ end unit;
 
 ## Options and defaults
 
-| Option | Default or requirement |
-| --- | --- |
-| `Value.Swatches / Swatch.Locked` | Supply one to sixteen `Swatch` records with a color and optional lock. Each lock defaults to false. |
-| `Seed / NoShuffle` | null / false. Pass a seed to let CUI shuffle unlocked swatches. |
-| `Display / Height / Plain / Enabled` | Empty / 0 / false / true. Zero height uses the native size. |
+| Field | Default or requirement | Behavior |
+| --- | --- | --- |
+| `Value.Label` | Required | Sets the caption. Begin with `##` to hide the caption. |
+| `Value.Swatches` | One to sixteen swatches | Sets the colors and locks in display order. |
+| `Swatch.Color` | Required | Sets the swatch color. |
+| `Swatch.Locked` | `false` | Marks the swatch with a lock and preserves its color during shuffle. |
+| `Value.Seed` | `null` | Gives CUI a shuffle seed. If `null`, the application chooses how to shuffle. |
+| `Options.Display` | Empty | Sets the caption opposite the label. |
+| `Options.NoShuffle` | `false` | Hides the Shuffle button when `true`. |
+| `Options.Height` | `0` | Sets the logical swatch height. Zero uses the native height of 32. |
+| `Options.Plain` | `false` | Removes the surrounding well when `true`. |
+| `Options.Enabled` | `true` | Accepts pointer and keyboard input when `true`. |
+| `Options.NoLocks` | `false` | Hides swatch locks and includes every swatch in shuffle when `true`. |
 
 ## Interaction
 
-Click a swatch to toggle its lock. With a seed, store the proposed
-swatches and new seed after shuffling. With a null seed, handle
-`Shuffled` in the application to choose new colors.
+The swatch under the pointer or keyboard focus widens and shows its hex code
+when space permits. Press Tab to reach the swatches and the Shuffle button.
+Left and Right move between swatches in the direction of the arrow.
+To toggle a lock, click the swatch or press Enter or Space while it has focus.
+
+| Result | Behavior |
+| --- | --- |
+| `Event.Swatches` | Contains the proposed swatch colors and locks. |
+| `Event.Seed` | Contains the proposed seed. It is `null` if the application omits `Value.Seed`. |
+| `Event.Changed` | Is `true` after a lock toggle or a seeded shuffle. |
+| `Event.Shuffled` | Is `true` when the Shuffle button activates. |
+
+With a seed, CUI recolors the unlocked swatches and advances the seed.
+The seed advances even if every swatch is locked. Store the proposed swatches
+and seed in the model to continue the same shuffle sequence. With a null seed,
+use `Shuffled` to choose the new colors in the application.
 
 ## See also
 

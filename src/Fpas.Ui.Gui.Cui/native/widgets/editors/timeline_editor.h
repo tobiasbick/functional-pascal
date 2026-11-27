@@ -5,6 +5,9 @@
 typedef struct {
     float time, start, end, scroll, in, out; /**< Playhead, visible bounds, vertical scroll and in/out times. */
     int track, key, range; /**< Selected track/key (minus one for none), and whether in/out is enabled. */
+    int activity; /**< Edit, playhead, scrubbing, selection, viewport and key movement bits 1–32. */
+    int added_track, added_key, removed_keys, removed_clips; /**< Added indices and deletion counts. */
+    int clip_track, clip, toggled, hovered_track, hovered_key; /**< Clip, toggle and pointer indices. */
 } fpas_timeline_view;
 /** Borrowed timeline time scale, layout and input settings. */
 typedef struct {

@@ -31,6 +31,11 @@ int fpas_cui_status_bar_item(cui_ctx *ui, const char *title, const char *icon, i
     const bool clicked = cui_status_bar_item_ex(ui, title, &opts);
     *node = fpas_find(ui, key);
     if (*node < 0 && ui->focus_next_request == key) ui->focus_next_request = previous;
+    if (!tooltip && icon && *node >= 0 && fpas_label_node(ui, *node) < 0) {
+        const int length = cui__display_len(title);
+        /* CUI-175 (docs/future/cui-upstream-bugs.md#cui-175): use the visible caption in the tooltip. */
+        if (length > 0 && title[length]) cui_tooltip(ui, cui__frame_strdup(ui, title, length));
+    }
     return clicked;
 }
 

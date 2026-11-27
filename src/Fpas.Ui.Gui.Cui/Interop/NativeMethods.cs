@@ -52,6 +52,10 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void PopDisabled(nint context);
 
+    [LibraryImport(Library, EntryPoint = "fpas_cui_disabled_scope")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void DisabledScope(nint context, int entering);
+
     [LibraryImport(Library, EntryPoint = "fpas_cui_wake_open")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial nint OpenWakeTarget(nint app);
@@ -91,6 +95,22 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "cui_viewport_size")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial CuiSize ViewportSize(nint context);
+
+    [LibraryImport(Library, EntryPoint = "cui_dpi_scale")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial float DpiScale(nint context);
+
+    [LibraryImport(Library, EntryPoint = "cui_window_focused")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial byte WindowFocused(nint context);
+
+    [LibraryImport(Library, EntryPoint = "cui_file_drag_active")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial byte FileDragActive(nint context);
+
+    [LibraryImport(Library, EntryPoint = "cui_dropped_file_count")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial int DroppedFileCount(nint context);
 
     [LibraryImport(Library, EntryPoint = "cui_set_reduced_motion")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

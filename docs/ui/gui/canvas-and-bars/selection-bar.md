@@ -38,15 +38,32 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Selected / Actions` | Supply `Selection.Items(Flags)` or `Selection.Count(Count)` and ordered actions. The count must be nonnegative. |
-| `NoEscape / Enabled` | false / true. NoEscape keeps selection when Escape is pressed. |
-| `CountFormat` | Empty uses CUI's default. At most one `%d` slot and literal `%%` are accepted. |
+| `Selected` | Supply `Selection.Items(Flags)` or `Selection.Count(Count)`. The count must be nonnegative. |
+| `Actions` | Supply actions in display order. Each action has a `Label`, an optional glyph in `Icon`, and a `Tone`. |
+| `Child` | The component that anchors the bar. Use a list, table, grid, or other rendered element. |
+| `NoEscape` | `false` lets Escape clear the selection. Set `true` to keep the selection when Escape is pressed. |
+| `Enabled` | `true` lets the bar accept activation and clear requests. |
+| `CountFormat` | An empty string uses `%d selected`. A custom format accepts one `%d` slot at most and `%%` for a percent sign. |
+
+Use an empty `Icon` for a text-only action. `Tone.Neutral` uses the native
+secondary text color. Use `Tone.Danger` for a destructive action.
 
 ## Interaction
 
-Use `Event.Index` to resolve the action and apply it to the selected
-items. When `Clear` is true, clear the flags or reset the aggregate count in
-the model. Count mode needs no item-flag array and retains native count animation.
+The bar floats below `Child` and mirrors its controls in right-to-left layout.
+It slides in when the count becomes positive and slides out when the count
+returns to zero. The bar displays the last count while it slides out.
+
+Tab reaches the clear button and actions after the child's controls. Click a
+control or focus it and press Enter or Space. An open popover or dialog takes
+keyboard input before the bar.
+
+For an action, `Event.Index` is the zero-based action index and `Event.Clear`
+is false. Apply the action to the selected items in the update function. For
+the clear button or Escape, `Event.Index` is -1 and `Event.Clear` is true.
+Clear the flags or set the aggregate count to zero in the model. The GUI host
+sends no message while the bar is idle or disabled. The host keeps the
+model's flags unchanged until the update function processes the clear message.
 
 ## See also
 
@@ -67,3 +84,5 @@ the model. Count mode needs no item-flag array and retains native count animatio
 - `src/Fpas.Ui.Gui.Cui/native/widgets/canvas/`
   - [selection_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/selection_bar.c)
   - [selection_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/selection_bar.h)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [canvas_cards.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/canvas_cards.c)

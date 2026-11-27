@@ -7,28 +7,25 @@ public sealed partial class CuiWindow
 {
     /// <summary>Presents the native CUI status tag.</summary>
     /// <param name="id">Stable widget identity.</param>
-    /// <param name="label">Widget caption.</param>
+    /// <param name="label">Widget caption, or empty for the preset caption.</param>
     /// <param name="status">Native status preset.</param>
-    /// <param name="icon">Optional glyph.</param>
-    /// <param name="tone">Native semantic tone.</param>
-    /// <param name="flags">Native appearance and input bits.</param>
+    /// <param name="icon">Replacement glyph, or empty for the preset icon.</param>
+    /// <param name="tone">Native semantic tone, or zero for the preset color.</param>
+    /// <param name="flags">Bits for compact size (1), removal (2), and input (4).</param>
     /// <param name="focus">Native focus part, or minus one.</param>
     /// <param name="part">Maps native parts to tracking identities.</param>
-    /// <returns>The native change and action flags.</returns>
+    /// <returns>One when the user requests removal, or zero otherwise.</returns>
     public unsafe int StatusTag(string id, string label, int status, string icon, int tone,
         int flags, int focus, Func<int, string>? part)
     {
         CheckFrame();
         Utf8.Validate(label, nameof(label));
         Utf8.Validate(icon, nameof(icon));
-        if (status is < 0 or > 7 || tone is < 0 or > 8) throw new ArgumentOutOfRangeException(nameof(status));
-        int count = 1;
-        int* nodes = stackalloc int[count];
-        int result;
-        result = NativeMethods.StatusTag(context, Stable(id), Optional(label), status, Optional(icon), tone, flags, focus, nodes);
-        if (part is not null)
-            for (int i = 0; i < count; ++i)
-                if (nodes[i] >= 0) TrackControl(part(i), nodes[i]);
+        if (status is < 0 or > 7) throw new ArgumentOutOfRangeException(nameof(status));
+        if (tone is < 0 or > 8) throw new ArgumentOutOfRangeException(nameof(tone));
+        int node;
+        int result = NativeMethods.StatusTag(context, Stable(id), Optional(label), status, Optional(icon), tone, flags, focus, &node);
+        if (part is not null && node >= 0) TrackControl(part(0), node);
         return result;
     }
 }

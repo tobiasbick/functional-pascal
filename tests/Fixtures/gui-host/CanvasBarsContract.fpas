@@ -2,10 +2,13 @@
 
 unit GalleryCanvasBarsContract;
 
+uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as Context;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Canvas.CanvasControls as Controls;
 uses Fpas.Ui.Widgets.Editors.NodeEditors as Nodes;
 uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
@@ -18,8 +21,107 @@ uses GuiGallery.Pages.Canvas.SampleBounds as SampleBounds;
 uses GuiGallery.Pages.Canvas.State as Canvas;
 uses GuiGallery.Pages.Canvas.Update as CanvasUpdate;
 
+procedure NodeStatus(Renderer: Cui.CuiRenderer);
+  function UpdateStatus(
+    Current: Nodes.Status;
+    Message: Nodes.Event
+  ): Mvu.Transition of (Nodes.Status, Nodes.Event);
+  begin
+    case Message of
+      when Nodes.Event.StatusChanged(const Value: Nodes.Status):
+        Updates := Updates + 1;
+        Observed := Value;
+        return new Mvu.Transition of (Nodes.Status, Nodes.Event)(Value, []);
+      else
+        return new Mvu.Transition of (Nodes.Status, Nodes.Event)(Current, []);
+    end case;
+  end function;
+  function View(Current: Nodes.Status; Viewport: L.Viewport): E.Element of Nodes.Event;
+  begin
+    return Nodes.NodeEditor of Nodes.Event(
+      'node-status-graph',
+      new Nodes.View(),
+      [
+        new Nodes.Node of Nodes.Event(
+          1, 35.0F, 60.0F, 'Source', [new Nodes.Pin(10, 'Output', true)]
+        ),
+        new Nodes.Node of Nodes.Event(
+          2, 350.0F, 60.0F, 'Target', [new Nodes.Pin(20, 'Input', false)]
+        )
+      ],
+      [new Nodes.Link(100, 10, 20)],
+      function(Value: Nodes.Event): Nodes.Event => Value,
+      new Nodes.Options(ObservedStatus := Current)
+    );
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+  end procedure;
+  procedure Step(Driver: Gui.Session of Nodes.Event);
+  begin
+    discard Window.TryWake();
+    A.Check(Driver.Step(), 'The node status session closed.');
+  end procedure;
+begin
+  var Updates: int := 0;
+  var Observed: Nodes.Status := new Nodes.Status();
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Node status contract',
+    650,
+    530,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session of Nodes.Event := Host.Start of (Nodes.Status, Nodes.Event)(
+    Observed, UpdateStatus, View, Window, 16, Inject
+  );
+  for Frame: int := 0 to 4 do
+    Step(Session);
+  end for;
+
+  A.Check(
+    Observed.ConnectedPins.Length = 2 and Observed.ConnectedPins[0] = 10
+    and Observed.ConnectedPins[1] = 20 and Updates = 1,
+    'Node status must report both connected native pins once.'
+  );
+  for Control: Gui.Control in Session.Snapshot().Controls do
+    if Control.Id = 'node-status-graph' then
+      X := Control.Bounds.X + 70.0F;
+      Y := Control.Bounds.Y + 73.0F;
+    end if;
+  end for;
+
+  A.Check(X >= 0.0F and Y >= 0.0F, 'The node status graph has no bounds.');
+  Step(Session);
+  Button := 1;
+  Step(Session);
+  Button := 0;
+  for Frame: int := 0 to 2 do
+    Step(Session);
+  end for;
+
+  A.Check(
+    Observed.SelectedNodes.Length = 1 and Observed.SelectedNodes[0] = 1 and Updates = 2,
+    'Node status must report the selected native node once.'
+  );
+end procedure;
+
 procedure MovedSampleBounds();
 begin
+  const Default: Controls.Bounds := SampleBounds.Content(new Canvas.Model());
+  A.Check(
+    Default.X = 36.0F and Default.Y = 64.0F and Default.Width = 478.0F and Default.Height = 290.0F,
+    'Fit must use the original content bounds while the specimen positions match.'
+  );
   const First: Canvas.Model := CanvasUpdate.Update(
     new Canvas.Model(), Canvas.Msg.Graph(Nodes.Event.Move(0, 800.0F, -700.0F))
   ).Model;
@@ -106,6 +208,8 @@ begin
 
   if Page = State.Page.CanvasAndBars and Width = 1100 then
     A.Check(A.Control(Session, 'canvas-graph').Value = '1', 'The canvas starts at 100 percent.');
+    discard Session.Post(State.Msg.Canvas(Canvas.Msg.Tick(8.0F)));
+    A.Check(Session.Step(), 'The canvas must keep drawing after the cursor sample hash wraps.');
     A.Check(
       A.Control(Session, 'canvas-result').Text = 'Final result',
       'The result card is missing.'
@@ -143,6 +247,7 @@ end procedure;
 // - `Capture`: Prefix of the gallery screenshots.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 begin
+  NodeStatus(Renderer);
   MovedSampleBounds();
   CapturePage(State.Page.CanvasAndBars, Renderer, Capture + '-canvas', 1100);
   CapturePage(State.Page.CanvasAndBars, Renderer, Capture + '-canvas', 550);

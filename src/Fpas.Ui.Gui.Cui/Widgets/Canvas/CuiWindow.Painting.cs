@@ -42,14 +42,14 @@ public sealed partial class CuiWindow
     }
 
     private static unsafe nint CanvasPaintFunction(nint user) => user == 0 ? 0 :
-        (nint)(delegate* unmanaged[Cdecl]<nint, nint, CuiRectangle, uint, int, void>)&PaintCanvas;
+        (nint)(delegate* unmanaged[Cdecl]<nint, nint, CuiRectangle, uint, int, uint, int>)&PaintCanvas;
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
-    private static void PaintCanvas(nint user, nint context, CuiRectangle area, uint images, int state)
+    private static int PaintCanvas(nint user, nint context, CuiRectangle area, uint images, int state, uint wheel)
     {
         var callback = (CanvasPaint)GCHandle.FromIntPtr(user).Target!;
-        if (callback.Failure is not null) return;
-        var painter = new CuiCanvasPainter(context, area, images, state);
+        if (callback.Failure is not null) return 0;
+        var painter = new CuiCanvasPainter(context, area, images, state, wheel);
         try
         {
             callback.Owner.paintingCanvas = true;
@@ -61,16 +61,17 @@ public sealed partial class CuiWindow
             painter.Complete();
             callback.Owner.paintingCanvas = false;
         }
+        return painter.HasWheelRegion ? 1 : 0;
     }
 
     internal static unsafe void PaintImage(nint context, uint images, int index, CuiMediaImage source,
-        float x, float y, float width, float height, float radius, uint tint)
+        float x, float y, float width, float height, CuiCorners radii, CuiImageRegion uv, uint tint)
     {
         using var memory = new ChartMemory();
         fixed (byte* bytes = source.Pixels)
         {
             var image = MediaSource(source, memory, bytes);
-            NativeMethods.CanvasImage(context, images, index, in image, x, y, width, height, radius, tint);
+            NativeMethods.CanvasImage(context, images, index, in image, x, y, width, height, radii, uv, tint);
         }
     }
 }

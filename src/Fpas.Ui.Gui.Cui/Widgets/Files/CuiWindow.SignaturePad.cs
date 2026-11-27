@@ -41,8 +41,28 @@ public sealed partial class CuiWindow
         clearVisible = clear >= 0;
         if (track) TrackControl(id, node);
         if (clearVisible && clearId is not null) TrackControl(clearId, clear);
-        if (!readChanges || changed == 0) return null;
+        return readChanges && changed != 0 ? ReadSignaturePoints(stable) : null;
+    }
 
+    /// <summary>Copies the current signature within the pad's drawing scope.</summary>
+    /// <param name="id">Stable pad identity.</param>
+    /// <returns>Detached points and stroke boundaries.</returns>
+    public CuiSignature ReadSignature(string id)
+    {
+        CheckFrame();
+        return ReadSignaturePoints(Stable(id));
+    }
+
+    /// <summary>Clears a signature and cancels any in-progress stroke before drawing the pad.</summary>
+    /// <param name="id">Stable pad identity in the current drawing scope.</param>
+    public void ClearSignature(string id)
+    {
+        CheckFrame();
+        NativeMethods.SignatureClear(context, Stable(id));
+    }
+
+    private CuiSignature ReadSignaturePoints(string stable)
+    {
         lock (signaturePointsLock)
         {
             int pointCount = NativeMethods.SignaturePoints(context, stable, out nint points,

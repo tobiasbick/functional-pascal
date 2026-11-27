@@ -14,4 +14,9 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_popover_end")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void PopoverEnd(nint context, int node);
+
+    [LibraryImport(Library, EntryPoint = "cui_popover_is_open", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.I1)]
+    internal static partial bool PopoverIsOpen(nint context, string id);
 }

@@ -34,15 +34,25 @@ end unit;
 
 ## Options and defaults
 
-| Option | Default or requirement |
+| Field | Default and behavior |
 | --- | --- |
-| `Items / Index / Tool` | Supply ordered captions, the selected index and the action glyph and tooltip. |
-| `Display / Plain / ActionEnabled / Enabled` | Empty / false / true / true. ActionEnabled can disable the tool separately. |
+| `Items` | Supply one to 32 option captions in order. |
+| `Index` | Supply the zero-based index of the selected option. |
+| `Tool` | Null omits the action button. Supply an icon and an optional tooltip. Set `Active` to show the button pressed. |
+| `Display` | Empty. Supply text to display it beside the well caption. |
+| `Plain` | False. Set true to omit the well background and border. |
+| `ActionEnabled` | True. Set false to disable the action button. |
+| `Enabled` | True. Set false to disable input for the entire control. |
 
 ## Interaction
 
-Store the proposed `Index` on a change. Use that same index to run the
-operation when `Action` is true.
+Click an option, or press Tab to focus a choice and move the selection
+with Left or Right. Press Enter or Space to select the focused option.
+Tab also reaches the enabled action button. Click the button or press
+Enter or Space to activate it.
+
+If `Changed` is true, store the proposed `Index` in the model. If `Action`
+is true, use the same index to run the operation.
 
 ## See also
 

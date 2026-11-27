@@ -50,6 +50,11 @@ The change message contains `Points` in logical drawing coordinates and
 snapshot. Save the detached data in the model if you need it after the pad is
 removed.
 
+When drawing directly with `CuiWindow`, call `ReadSignature(Id)` to copy the
+points on any frame. Call `ClearSignature(Id)` before drawing the pad to
+remove the ink and cancel any stroke in progress. Use the same ID and drawing
+scope for both calls.
+
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_signature_pad)

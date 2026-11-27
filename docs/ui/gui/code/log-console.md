@@ -38,9 +38,17 @@ end unit;
 
 ## Interaction
 
-CUI handles filtering, copying and follow mode. The Clear button sends
-the message supplied to `LogConsole`. Clear the entries in your update to
-apply it. Pass new entries as output arrives.
+Pass new entries as output arrives. The viewer appends a new suffix to its
+buffer. It replaces the buffer when the entries no longer share that prefix.
+
+The toolbar filters entries by severity and searches their text. Follow
+keeps the latest entry in view. Scrolling up pauses Follow. Scrolling to
+the bottom or pressing End resumes it.
+
+Click an entry to select it. Shift extends the selection. Ctrl+C copies
+the selection or the visible entries. When Clear removes entries, the
+widget sends the supplied message. Clear the entries in your update
+to keep the buffer empty.
 
 ## See also
 

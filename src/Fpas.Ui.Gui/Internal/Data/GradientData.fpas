@@ -1,0 +1,27 @@
+// [Documentation](../../../../docs/ui/gui/editing-tools/gradient-editor.md)
+
+unit Fpas.Ui.Gui.Internal.Data.GradientData;
+
+uses Fpas.Ui.Gui.Cui.Widgets.Editors as Native;
+uses Fpas.Ui.Gui.Internal.Core.Values as Colors;
+uses Fpas.Ui.Widgets.Editors.GradientEditors as Gradient;
+
+// Packs a gradient in its original order.
+// ## Parameters
+// - `Stops`: Positions and color values.
+// ## Returns
+// Native gradient stops.
+public function Pack(Stops: array of Gradient.Stop): array of Native.CuiGradientStop;
+begin
+  const Result: array of Native.CuiGradientStop := new Native.CuiGradientStop[Stops.Length];
+  for Index: int := 0 to Stops.Length - 1 do
+    Result[Index] := new Native.CuiGradientStop(
+      Stops[Index].Position,
+      Colors.Pack(Stops[Index].Tint)
+    );
+  end for;
+
+  return Result;
+end function;
+
+end unit;

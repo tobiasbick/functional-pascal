@@ -14,6 +14,9 @@ from those times. These widgets require the GUI host.
 To align a chart with an event track, give them the same width and X range.
 The gallery lets the event track draw the shared axis.
 
+See the [CUI gallery comparison](../../../future/cui-compare/README.md#instruments-evidence)
+for the layout and input checks.
+
 ## See also
 
 - [UI handbook](../README.md)
@@ -24,3 +27,4 @@ The gallery lets the event track draw the shared axis.
 
 - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Instruments/State.fpas)
 - [code_instruments.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/code_instruments.c)
+- [instrument_display.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/instrument_display.c)

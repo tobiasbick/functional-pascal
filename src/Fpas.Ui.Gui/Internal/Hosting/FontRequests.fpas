@@ -45,6 +45,8 @@ begin
           end if
         )
       );
+    when Fonts.Operation.EmojiFile(const Path: string, const Loaded: function(bool): TMsg):
+      Pending.Enqueue(Loaded(Window.LoadEmojiFontFile(Path)));
     when Fonts.Operation.SupportsEmoji(const Text: string, const Read: function(bool): TMsg):
       Pending.Enqueue(Read(Window.SupportsEmoji(Text)));
   end case;

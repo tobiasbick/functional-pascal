@@ -51,6 +51,18 @@ begin
   return Time - Sys.MathF.Floor(Time / Length) * Length;
 end function;
 
+function TurnAt(Time: float; out Into: float): int;
+begin
+  Into := Position(Time);
+  var Index: int := 0;
+  while Index < Turns.Length - 1 and Into >= Turns[Index].Seconds do
+    Into := Into - Turns[Index].Seconds;
+    Index := Index + 1;
+  end while;
+
+  return Index;
+end function;
+
 // A moment in the original scripted conversation.
 public type Moment = record
   // Activity shown in the voice session.
@@ -71,12 +83,8 @@ end record;
 // The current activity and transcript.
 public function At(Time: float; Muted: bool): Moment;
 begin
-  var Into: float := Position(Time);
-  var Index: int := 0;
-  while Index < Turns.Length - 1 and Into >= Turns[Index].Seconds do
-    Into := Into - Turns[Index].Seconds;
-    Index := Index + 1;
-  end while;
+  var Into: float := 0.0F;
+  const Index: int := TurnAt(Time, out Into);
   const Current: Turn := Turns[Index];
   const Thinking: bool := Current.Text = '';
   const Said: Turn := if Thinking then
@@ -121,14 +129,11 @@ end record;
 // A measured level and the speaker tag.
 public function Sample(Time: float; CallTime: float; Muted: bool): SampleValue;
 begin
-  const Current: Moment := At(CallTime, Muted);
-  const Speaker: V.Owner := if Current.Mode = V.Activity.Thinking then
-    V.Owner.Reply
-  else
-    Current.Speaker
-  end if;
+  var Into: float := 0.0F;
+  const Current: Turn := Turns[TurnAt(CallTime, out Into)];
+  const Speaker: V.Owner := Current.Speaker;
   return new SampleValue(
-    if Current.Mode = V.Activity.Thinking then
+    if Current.Text = '' then
       V.Silent
     elsif Speaker = V.Owner.Reply then
       Level(Time * 1.4F, 5.0F)

@@ -45,6 +45,10 @@ resolve a selected menu item, or `Text` to handle a submitted path. Unused
 indices are minus one. Resolve or validate the destination in the update
 and pass the resulting segments and menus back to the view.
 
+Press Ctrl+L or click the current segment to edit the path. Press Enter to
+submit it, or press Escape to cancel. When drawing directly with `CuiWindow`,
+`CuiPathResult.Editing` reports whether the native editor is active.
+
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_path_bar)

@@ -34,7 +34,7 @@ public sealed partial class CuiWindow
     /// <param name="toggle">Minus one for an action, zero for an unchecked toggle, one for a checked toggle.</param>
     /// <param name="tone">Native semantic tone ordinal.</param>
     /// <param name="flags">Bits: 1 disables the tool, 2 shows a flyout marker, 4 draws a primary action.</param>
-    /// <returns>Minus one when idle; otherwise the proposed toggle value, or zero for an activated action.</returns>
+    /// <returns>Minus one when idle; otherwise the proposed ordinary toggle value, or zero for an activated action.</returns>
     public unsafe int ToolbarButton(string? icon, string? label, string? tooltip, string? shortcut, int toggle, int tone, int flags)
     {
         CheckFrame();
@@ -44,13 +44,14 @@ public sealed partial class CuiWindow
     /// <summary>Adds an exclusive choice of icon tools to the current toolbar.</summary>
     /// <param name="id">Stable choice identity.</param>
     /// <param name="icons">Option glyphs; CUI uses at most the first 32 entries.</param>
-    /// <param name="labels">One tooltip per icon.</param>
+    /// <param name="labels">Optional overflow menu names, with one name per icon.</param>
     /// <param name="value">Current zero-based selection.</param>
     /// <returns>The proposed index, or minus one when unchanged or empty.</returns>
-    public unsafe int ToolbarRadio(string id, string[] icons, string[] labels, int value)
+    public unsafe int ToolbarRadio(string id, string[] icons, string[]? labels, int value)
     {
         CheckFrame();
-        if (icons.Length != labels.Length) throw new ArgumentException("A radio option needs one label per icon.", nameof(labels));
+        if (labels is not null && icons.Length != labels.Length)
+            throw new ArgumentException("A radio option needs one label per icon.", nameof(labels));
         using var memory = new ChartMemory();
         return NativeMethods.ToolbarRadio(context, Stable(id), memory.Labels(icons), memory.Labels(labels), icons.Length, value);
     }
@@ -59,13 +60,19 @@ public sealed partial class CuiWindow
     /// <param name="id">Stable tool identity.</param>
     /// <param name="labels">Available captions in cycle order.</param>
     /// <param name="value">Current zero-based selection.</param>
-    /// <param name="tooltip">Hover caption.</param>
+    /// <param name="tooltip">Optional hover caption and overflow menu prefix.</param>
+    /// <param name="shortcut">Optional shortcut hint.</param>
+    /// <param name="disabled">Whether the tool is unavailable.</param>
+    /// <param name="tone">Native semantic tone ordinal.</param>
+    /// <param name="flyout">Whether to show the flyout marker.</param>
     /// <returns>The proposed index, or minus one when unchanged.</returns>
-    public unsafe int ToolbarCycle(string id, string[] labels, int value, string tooltip)
+    public unsafe int ToolbarCycle(string id, string[] labels, int value, string? tooltip = null,
+        string? shortcut = null, bool disabled = false, int tone = 0, bool flyout = false)
     {
         CheckFrame();
         using var memory = new ChartMemory();
-        return NativeMethods.ToolbarCycle(context, Stable(id), memory.Labels(labels), labels.Length, value, tooltip);
+        return NativeMethods.ToolbarCycle(context, Stable(id), memory.Labels(labels), labels.Length, value, tooltip,
+            shortcut, tone, (disabled ? 1 : 0) | (flyout ? 2 : 0));
     }
 
     /// <summary>Opens a native tool group; pair with EndToolbarGroup before closing the toolbar.</summary>
@@ -94,5 +101,12 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         NativeMethods.ToolbarSpacer(context);
+    }
+
+    /// <summary>Draws the native flyout marker on the previous widget's end-side corner.</summary>
+    public void MarkFlyout()
+    {
+        CheckFrame();
+        NativeMethods.MarkFlyout(context);
     }
 }

@@ -1,0 +1,208 @@
+// [Documentation](../../../docs/ui/gui/host.md)
+
+unit GuiCuiCapabilitiesContract;
+
+uses Fpas.Ui.Composition as Composition;
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Cui.Widgets.Developer as Developer;
+uses Fpas.Ui.Gui.Curves as Curves;
+uses Fpas.Ui.Gui.DiffGeometry as DiffGeometry;
+uses Fpas.Ui.Gui.FlameGeometry as FlameGeometry;
+uses Fpas.Ui.Gui.Gradients as Gradients;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Gui.QueryBuilders as Query;
+uses Fpas.Ui.Gui.Windows as Windows;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Widgets.Canvas.Painting as Painting;
+uses Fpas.Ui.Widgets.Developer.DiffViews as Diffs;
+uses Fpas.Ui.Widgets.Developer.QueryBuilders as Builder;
+uses Fpas.Ui.Widgets.Editors.CurveEditors as Curve;
+uses Fpas.Ui.Widgets.Editors.FlameGraphs as Flame;
+uses Fpas.Ui.Widgets.Editors.GradientEditors as Gradient;
+
+uses GalleryHostAssertions as A;
+uses System as Sys;
+
+type Message = variant
+  Read;
+  Rows(Value: Developer.CuiDiffRows);
+  Bounds(Value: Cui.CuiRectangle);
+  Info(Value: Windows.Info);
+  Press;
+  Noop;
+end variant;
+
+// Exercises the FPAS APIs through the live GUI host.
+// ## Parameters
+// - `Renderer`: The renderer requested for the window.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+  function Control(Session: Gui.Session of Message; Id: string): Gui.Control;
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Id = Id then
+        return Item;
+      end if;
+    end for;
+
+    raise new Sys.InvalidOperationException('Missing control ' + Id);
+  end function;
+
+  procedure Inject();
+  begin
+    if ButtonState >= 0 then
+      Window.MovePointer(PointerX, PointerY);
+      Window.SetLeftButton(ButtonState = 1);
+    end if;
+  end procedure;
+
+  procedure Click(Session: Gui.Session of Message; Id: string);
+  begin
+    const Box: Cui.CuiRectangle := Control(Session, Id).Bounds;
+    A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Button needs a hit area.');
+    PointerX := Box.X + Box.Width / 2.0F;
+    PointerY := Box.Y + Box.Height / 2.0F;
+    ButtonState := 1;
+    A.Check(Session.Step(), 'The session failed during pointer press.');
+    ButtonState := 0;
+    A.Check(Session.Step(), 'The session failed during pointer release.');
+    ButtonState := -1;
+    A.Check(Session.Step(), 'The session failed after the click.');
+  end procedure;
+
+  function Update(Model: int; Value: Message): Mvu.Transition of (int, Message);
+  begin
+    case Value of
+      when Message.Read:
+        return new Mvu.Transition of (int, Message)(
+          Model,
+          [
+            DiffGeometry.ReadRows of Message(
+              'diff',
+              0,
+              1,
+              function(Page: Developer.CuiDiffRows): Message => Message.Rows(Page)
+            ),
+            FlameGeometry.ReadSpanRectangle of Message(
+              'flame',
+              Span,
+              function(Box: Cui.CuiRectangle): Message => Message.Bounds(Box)
+            ),
+            Windows.ReadInfo of Message(Message.Info),
+            Mvu.Focus of Message('blocked')
+          ]
+        );
+      when Message.Rows(const Page: Developer.CuiDiffRows):
+        RowsRead := Page.Rows.Length = 1 and Page.Total > 0;
+      when Message.Bounds(const Box: Cui.CuiRectangle):
+        BoundsRead := Box.Width > 0.0F and Box.Height > 0.0F;
+      when Message.Info(const Info: Windows.Info):
+        InfoRead := Info.DpiScale > 0.0F and Info.DroppedFileCount = 0;
+      when Message.Press:
+        Presses := Presses + 1;
+      else
+    end case;
+
+    return new Mvu.Transition of (int, Message)(Model, []);
+  end function;
+
+  function View(Model: int; Size: L.Viewport): E.Element of Message;
+  begin
+    const Inner: E.Element of int := E.DisabledScope of int(
+      Buttons.Button of int('blocked', 'Blocked', 1), false
+    );
+    const Blocked: E.Element of Message := Composition.Map of (int, Message)(
+      E.DisabledScope of int(Inner), function(Value: int): Message => Message.Press
+    );
+    return E.Column of Message(
+      Blocked,
+      Buttons.Button of Message('enabled', 'Enabled', Message.Press),
+      Diffs.DiffView of Message(
+        'diff', 'old', 'new', -1, function(Change: Diffs.Event): Message => Message.Noop,
+        new Diffs.Options(Height := 120.0F)
+      ),
+      Flame.FlameGraph of Message(
+        'flame', [Span], new Flame.View(),
+        function(Change: Flame.Event): Message => Message.Noop, new Flame.Options(Height := 110.0F)
+      ),
+      Canvas.Canvas of Message(
+        'canvas', [], function(Click: Canvas.Event): Message => Message.Noop,
+        new Canvas.Options(Height := L.Extent.Fixed(L.Measure.Points(42.0F))),
+        Paint := procedure(Surface: Painting.Surface) begin
+          Animated := Surface.Animate('default', 10.0F) = 10.0F
+            and Surface.AnimateSpring('custom', 20.0F, 0.25F, 0.5F) = 20.0F;
+        end procedure
+      )
+    );
+  end function;
+begin
+  A.Check(
+    Curves.Evaluate(
+      [new Curve.Key(0.0F, 1.0F, Interpolation := Curve.Mode.Linear), new Curve.Key(2.0F, 3.0F)],
+      1.0F
+    ) = 2.0F,
+    'Curve sampling failed.'
+  );
+  const Middle: Graphics.Color := Gradients.Evaluate(
+    [
+      new Gradient.Stop(1.0F, new Graphics.Color(0, 0, 0, 255)),
+      new Gradient.Stop(0.0F, new Graphics.Color(255, 0, 0, 0))
+    ],
+    0.5F
+  );
+  A.Check(Middle.Red = 128 and Middle.Alpha = 128, 'Gradient sampling failed.');
+  A.Check(
+    Query.Matches(
+      [new Builder.Field('Name', 0, [])],
+      [new Builder.Rule(0, true, false, 0, 0, ''), new Builder.Rule(1, false, false, 0, 2, 'fp')],
+      ['FPAS']
+    ),
+    'Query did not match the displayed condition.'
+  );
+
+  var RowsRead: bool := false;
+  var BoundsRead: bool := false;
+  var InfoRead: bool := false;
+  var Animated: bool := false;
+  var Presses: int := 0;
+  var ButtonState: int := -1;
+  var PointerX: float := 0.0F;
+  var PointerY: float := 0.0F;
+  const Span: Flame.Span := new Flame.Span('root', 0.0, 10.0, 0);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'CUI capability contract',
+    740,
+    500,
+    Renderer,
+    true
+  );
+  using const Session: Gui.Session of Message := Host.Start of (int, Message)(
+    0, Update, View, Window, 32, Inject
+  );
+  A.Check(Session.Step(), 'The session failed to present.');
+  const State: Windows.Info := Session.InspectWindow();
+  A.Check(State.DpiScale > 0.0F and State.Focused = Window.IsFocused, 'Window state is invalid.');
+  A.Check(State.DroppedFileCount = 0 and not State.FileDragActive, 'Unexpected file drag.');
+  A.Check(not Control(Session, 'blocked').Enabled, 'Nested disabled state was lost.');
+  A.Check(Control(Session, 'enabled').Enabled, 'Disabled scope leaked into its sibling.');
+  discard Session.Post(Message.Read);
+  A.Check(Session.Step(), 'The session failed to deliver host requests.');
+  A.Check(RowsRead and BoundsRead, 'Presented geometry was not returned.');
+  A.Check(InfoRead, 'Window observation was not returned from the command.');
+  A.Check(
+    not Control(Session, 'blocked').Focused and Presses = 0,
+    'Disabled control accepted input.'
+  );
+  Click(Session, 'blocked');
+  A.Check(Presses = 0, 'Disabled control handled a click.');
+  Click(Session, 'enabled');
+  A.Check(Presses = 1, 'The sibling lost pointer input.');
+  A.Check(Animated, 'Canvas animation calls did not reach CUI.');
+end procedure;
+
+end unit;

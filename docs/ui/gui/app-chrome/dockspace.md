@@ -59,6 +59,10 @@ string to restore pane positions, sizes, and tabs. To restore an existing
 workspace, supply `Load` with a new `Revision`. CUI keeps the current layout
 if the restore text is invalid.
 
+When drawing directly with `CuiWindow`, `RestoreDockLayout` returns whether
+CUI accepted the restore. Calls with the same revision return the earlier
+result. `ReadDockLayout` returns the complete serialized layout.
+
 ## Interaction
 
 Drag a tab to dock it or a divider to resize its pane. A panel with an

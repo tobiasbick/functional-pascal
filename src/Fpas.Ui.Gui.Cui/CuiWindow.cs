@@ -104,6 +104,23 @@ public sealed partial class CuiWindow : IDisposable
     /// <remarks>The native frame pump refreshes this value when it begins each frame.</remarks>
     public CuiSize ViewportSize { get { CheckOpen(); return NativeMethods.ViewportSize(context); } }
 
+    /// <summary>Gets the drawable pixels per logical unit at the last viewport update.</summary>
+    public float DpiScale { get { CheckOpen(); return NativeMethods.DpiScale(context); } }
+
+    /// <summary>Gets the current window focus state observed by CUI.</summary>
+    public bool IsFocused { get { CheckOpen(); return NativeMethods.WindowFocused(context) != 0; } }
+
+    /// <summary>Gets whether files are being dragged over the window. Requires platform drag hover support.</summary>
+    public bool FileDragActive { get { CheckOpen(); return NativeMethods.FileDragActive(context) != 0; } }
+
+    /// <summary>Gets the unclaimed file count in the open frame or the last presented frame.</summary>
+    public int DroppedFileCount
+    {
+        get { CheckOpen(); return inFrame ? NativeMethods.DroppedFileCount(context) : lastDroppedFileCount; }
+    }
+
+    private int lastDroppedFileCount;
+
     /// <summary>Requests a new logical size; the native event loop applies the resize.</summary>
     /// <param name="width">Positive requested width.</param>
     /// <param name="height">Positive requested height.</param>
@@ -132,7 +149,11 @@ public sealed partial class CuiWindow : IDisposable
         bool presented = inFrame;
         if (presented) editorRequests.Clear();
         if (presented) SnapshotShortcutKeys();
-        if (presented) ResolveHostLayout();
+        if (presented)
+        {
+            ResolveHostLayout();
+            lastDroppedFileCount = NativeMethods.DroppedFileCount(context);
+        }
         var retiredControls = presented ? controlKeys.Where(pair => !trackedNodes.ContainsKey(pair.Key)).ToArray() : null;
         var retiredModals = presented ? modalKeys.Where(pair => !usedModals.Contains(pair.Key)).ToArray() : null;
         int resizeVersion = resizeRenderVersion;
@@ -140,7 +161,11 @@ public sealed partial class CuiWindow : IDisposable
         ExceptionDispatchInfo? callbackFailure;
         try { result = PumpCanvasInput(); }
         finally { callbackFailure = ReleaseFrameCallbacks(); }
-        if (presented) RetireMissingControls(retiredControls!, retiredModals!, resizeVersion != resizeRenderVersion);
+        if (presented)
+        {
+            discardedGeometry = false;
+            RetireMissingControls(retiredControls!, retiredModals!, resizeVersion != resizeRenderVersion);
+        }
         CloseRequested |= result == 2;
         inFrame = result != 0;
         shortcutsRead = false;
@@ -181,15 +206,16 @@ public sealed partial class CuiWindow : IDisposable
         CheckOutsideResizeRenderer();
         if (layouts.Count != 0) throw new InvalidOperationException("Close all layouts before presenting.");
         ResolveHostLayout();
+        int dropped = NativeMethods.DroppedFileCount(context);
         int presented = 0;
         ExceptionDispatchInfo? callbackFailure;
         try { presented = NativeMethods.Present(app); }
-        finally { callbackFailure = CompleteRenderedFrame(presented != 0); }
+        finally { callbackFailure = CompleteRenderedFrame(presented != 0, dropped); }
         if (presented == 0) throw new InvalidOperationException("CUI could not present the current view.");
         callbackFailure?.Throw();
     }
 
-    private ExceptionDispatchInfo? CompleteRenderedFrame(bool succeeded)
+    private ExceptionDispatchInfo? CompleteRenderedFrame(bool succeeded, int dropped)
     {
         // Capture can fail before its native screenshot starts rendering.
         NativeMethods.FinishFrameForDestroy(app);
@@ -197,8 +223,10 @@ public sealed partial class CuiWindow : IDisposable
         inFrame = false;
         editorRequests.Clear();
         var callbackFailure = ReleaseFrameCallbacks();
+        discardedGeometry = !succeeded;
         if (succeeded)
         {
+            lastDroppedFileCount = dropped;
             hasPresentedFrame = true;
             RetireMissingControls(
                 controlKeys.Where(pair => !trackedNodes.ContainsKey(pair.Key)).ToArray(),
@@ -328,10 +356,11 @@ public sealed partial class CuiWindow : IDisposable
             throw new InvalidOperationException("Capture needs closed layouts and a previously presented frame.");
         bool rendering = inFrame;
         if (rendering) ResolveHostLayout();
+        int dropped = rendering ? NativeMethods.DroppedFileCount(context) : 0;
         int captured = 0;
         ExceptionDispatchInfo? callbackFailure = null;
         try { captured = NativeMethods.Capture(app, path); }
-        finally { if (rendering) callbackFailure = CompleteRenderedFrame(captured != 0); }
+        finally { if (rendering) callbackFailure = CompleteRenderedFrame(captured != 0, dropped); }
         if (captured == 0) throw new IOException("CUI could not capture the current view.");
         callbackFailure?.Throw();
     }

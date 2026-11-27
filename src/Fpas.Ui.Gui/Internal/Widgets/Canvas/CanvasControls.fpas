@@ -77,7 +77,15 @@ begin
     Current.Zoom)
   then
     Frame.Messages.Add(
-      Changed(new D.Event(new N.View(Next.X, Next.Y, Next.Zoom), States, (Flags and 2) <> 0))
+      Changed(
+        new D.Event(
+          new N.View(Next.X, Next.Y, Next.Zoom),
+          States,
+          (Flags and 2) <> 0,
+          Zoomed := (Flags and 1) <> 0,
+          Toggled := (Flags and 4) <> 0
+        )
+      )
     );
   end if;
 end procedure;

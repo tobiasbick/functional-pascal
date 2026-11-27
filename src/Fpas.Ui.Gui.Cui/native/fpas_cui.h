@@ -239,6 +239,8 @@
  * @param app Live UI-thread application with a frame open.
  * @return Nonzero when a nonempty framebuffer was presented. */
 CUI_API int fpas_cui_present(cui_app *app);
+/** Enters or leaves a managed disabled drawing scope, in the same frame. */
+CUI_API void fpas_cui_disabled_scope(cui_ctx *ui, int entering);
 
 /** Pumps a frame, optionally keeping a close-requested window alive for cleanup.
  * @param app The owned application.

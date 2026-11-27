@@ -32,14 +32,22 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `First / Second / Ratio` | Supply both labels and the first part's share. The second share is one minus Ratio. |
-| `Tone / Step` | Neutral / 0. Zero Step uses one percentage point. |
-| `Height / Width / Enabled` | 0 / Fill / true. Zero height uses native sizing. |
+| `First / Second / Ratio` | Supply both captions and the first part's share from 0 through 1. The second share is one minus `Ratio`. |
+| `Tone` | `Neutral` uses the theme accent for the first part. |
+| `Step` | Zero uses one percentage point. A positive value sets the increment as a fraction of the range. |
+| `Height` | Zero uses 52 logical units. |
+| `Width` | `Fill`. Set a fixed or percentage width to constrain the slider. |
+| `Enabled` | True. False disables pointer and keyboard input. |
 
 ## Interaction
 
-Drag the divider or use the arrow keys. Shift increases the keyboard step.
-Store the proposed first share in the model.
+Drag the divider or use the arrow keys. Shift multiplies the keyboard step by
+ten. Home and End move the divider to the limits that keep the text readable.
+The limits depend on the available width.
+
+`Change` receives the proposed first share when input changes the value.
+Store that share in the model. Keep the widget ID stable when either caption
+changes to preserve focus.
 
 ## See also
 

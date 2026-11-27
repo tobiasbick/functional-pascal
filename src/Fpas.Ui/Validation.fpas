@@ -1498,6 +1498,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       when E.Element.Sized(const Child: E.Element of TMsg, const Flex: L.Flex):
         LayoutRules.CheckFlex(Flex, Mode, Location + '/size');
         Visit(Child, Location + '/size');
+      when E.Element.DisabledScope(const Child: E.Element of TMsg, _):
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
+        Visit(Child, Location + '/disabledScope');
       when E.Element.Styled(const Child: E.Element of TMsg, const Role: S.Role):
         if not Sys.Enum.IsDefined of S.Role(Role) then
           Rules.Reject(Location + '/style', 'Unknown semantic style role.');

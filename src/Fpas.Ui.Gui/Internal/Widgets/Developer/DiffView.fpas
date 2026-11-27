@@ -36,15 +36,33 @@ begin
   const Enabled: bool := Frame.AcceptInput;
   const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
   const Result: CuiDeveloper.CuiDiffViewEvent? := Frame.Window.DiffView(
-    Token, Before, After, Current, Settings.Language, Settings.OldTitle, Settings.NewTitle,
-    Settings.Context, Width.Kind, Width.Value, Settings.Height, Settings.Size,
+    Token,
+    Before,
+    After,
+    Current,
+    Settings.Language,
+    Settings.OldTitle,
+    Settings.NewTitle,
+    Settings.Context,
+    Width.Kind,
+    Width.Value,
+    Settings.Height,
+    Settings.Size,
+    Settings.SplitMinimumWidth,
     Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Inline, 2) or Enc.Bits(not Settings.Fold, 4)
     or Enc.Bits(Settings.IgnoreLineEndings, 8) or Enc.Bits(Focus, 16)
   );
   if Enabled then
     case Result of
       when is CuiDeveloper.CuiDiffViewEvent as Event:
-        Frame.Messages.Add(Changed(new D.Event(Event.Selected, Event.Count, Event.Inline)));
+        Frame.Messages.Add(
+          Changed(
+            new D.Event(
+              Event.Selected, Event.Count, Event.Inline, Event.Added, Event.Removed, Event.Folds,
+              Event.Hidden, Event.Approximate, Event.CurrentChanged, Event.Recomputed
+            )
+          )
+        );
       else
     end case;
   end if;

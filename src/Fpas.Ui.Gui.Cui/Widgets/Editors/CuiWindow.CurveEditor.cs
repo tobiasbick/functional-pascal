@@ -24,11 +24,15 @@ public sealed partial class CuiWindow
     /// <param name="width">Native width value.</param>
     /// <param name="playhead">Playhead position.</param>
     /// <param name="flags">Native adapter options.</param>
+    /// <param name="xFormat">Optional horizontal axis and readout format.</param>
+    /// <param name="yFormat">Optional vertical axis and readout format.</param>
     /// <returns>The proposed edit or observation.</returns>
-    public unsafe CuiCurveEdit? CurveEditor(string id, CuiCurveKey[] keys, int capacity, int selected, float xMin, float xMax, float yMin, float yMax, string xLabel, string yLabel, float height, int widthKind, float width, float playhead, int flags)
+    public unsafe CuiCurveEdit? CurveEditor(string id, CuiCurveKey[] keys, int capacity, int selected, float xMin, float xMax, float yMin, float yMax, string xLabel, string yLabel, float height, int widthKind, float width, float playhead, int flags, CuiChartFormat? xFormat = null, CuiChartFormat? yFormat = null)
     {
         CheckFrame();
         CheckExtent(widthKind, width, nameof(width));
+        CheckChartFormat(xFormat);
+        CheckChartFormat(yFormat);
         if (capacity < keys.Length) throw new ArgumentOutOfRangeException(nameof(capacity));
         var buffer = new CuiCurveKey[capacity];
         keys.CopyTo(buffer, 0);
@@ -37,12 +41,14 @@ public sealed partial class CuiWindow
         var options = new NativeCurveOptions
         {
             XLabel = memory.Text(OptionalAi(xLabel)), YLabel = memory.Text(OptionalAi(yLabel)),
+            XFormat = memory.Format(xFormat), YFormat = memory.Format(yFormat),
             XMin = xMin, XMax = xMax, YMin = yMin, YMax = yMax, Height = height, Width = width,
             Playhead = playhead, WidthKind = widthKind, Flags = flags
         };
         fixed (CuiCurveKey* data = buffer)
-            return NativeMethods.CurveEditor(context, Stable(id), data, ref count, capacity, ref selected, out int added, out int removed, in options) == 0
+            return NativeMethods.CurveEditor(context, Stable(id), data, ref count, capacity, ref selected, out var result, in options) == 0
                 ? null
-                : new(buffer[..count], selected, added, removed);
+                : new(buffer[..count], selected, result.Added, result.Removed,
+                    result.Changed != 0, result.Hovered != 0, result.X, result.Y);
     }
 }

@@ -65,8 +65,8 @@ begin
       ChartRules.Distance(Settings.Step, At);
       ChartRules.Color(Settings.Color, At);
       VoiceRules.Owner(Settings.Owner, At);
-      if (Progress = null) <> (Changed = null) then
-        Rules.Reject(At, 'Seekable waveforms need progress and a change handler.');
+      if Progress = null and Changed <> null then
+        Rules.Reject(At, 'A waveform seek callback needs a progress fraction.');
       end if;
     when E.Element.VoiceNote(
       const Id: string,
@@ -81,8 +81,8 @@ begin
       LR.CheckExtent(Settings.Width, Profile, At);
       ChartRules.Distance(Playback.Duration, At);
       ChartRules.Distance(Playback.Position, At);
-      if Playback.Position > Playback.Duration or (Playback.Speed <> 1.0F and Playback.Speed <>
-        1.5F and Playback.Speed <> 2.0F)
+      if Playback.Position > Playback.Duration or (Playback.Speed <> 0.0F and Playback.Speed <>
+        1.0F and Playback.Speed <> 1.5F and Playback.Speed <> 2.0F)
       then
         Rules.Reject(At, 'Invalid playback position or speed.');
       end if;

@@ -1,7 +1,7 @@
 # Status tag
 
-The gallery shows seven native status presets and a row of compact tags that users can remove.
-Available in **GUI**.
+A status tag shows a workflow state in a tinted label. The gallery shows all
+seven presets in standard and compact sizes. Available in **GUI**.
 
 ![Status presets in the FPAS gallery](images/status-tag.png)
 
@@ -31,14 +31,25 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Value.Label / Preset` | Empty / Pending. An empty label uses the preset caption. |
-| `Small / Icon / Tone` | false / empty / Neutral. Neutral keeps the preset tone. |
-| `Remove / Enabled` | null / true. Supply a callback to make the tag removable. |
+| `Id` | Required. Use a stable ID for each tag, including tags with the same label. |
+| `Value.Label` | Empty. An empty label uses the preset caption. |
+| `Value.Preset` | `Pending`. The presets are `Pending`, `InProgress`, `Submitted`, `InReview`, `Success`, `Failed`, and `Expired`. |
+| `Small` | `false`. The standard height is 30 logical units. The compact height is 24. |
+| `Icon` | Empty. An empty icon keeps the preset icon. Supply a CUI icon glyph to replace it. |
+| `Tone` | `Neutral`. Neutral keeps the preset color. |
+| `Remove` | `null`. Supply a callback to make the tag removable. |
+| `Enabled` | `true`. Set to `false` to dim a removable tag and prevent input. |
 
 ## Interaction
 
-For a custom state, supply a label, icon and tone with `Status.Custom`.
-Handle the removal message in the model.
+The `InProgress` preset shows a dashed ring that completes one turn in 2.4
+seconds. The ring holds still when reduced motion is active. A replacement icon
+takes the place of the ring. For a custom state, use `Status.Custom` and supply a
+label. With the default options, a custom tag displays its label in gray.
+
+A removable tag shows an × on hover or keyboard focus. Click the tag to send
+the removal message. With keyboard focus, press Enter, Space, Delete, or Backspace.
+Update the model to remove the tag from the view.
 
 ## See also
 

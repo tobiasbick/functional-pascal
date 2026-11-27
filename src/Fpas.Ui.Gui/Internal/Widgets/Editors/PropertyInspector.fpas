@@ -7,6 +7,7 @@ uses Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
+uses Fpas.Ui.Gui.Internal.Data.ChartData as Data;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Editors.PropertyInspectors as D;
 
@@ -47,7 +48,7 @@ begin
   return new CuiEditors.CuiProperty(
     Row.Label, Kind, Integer, Values, Text, Color, Choices, Row.Minimum, Row.Maximum,
     Row.Step, Row.Digits, Row.Suffix, Row.Placeholder, Row.Tooltip, Row.Capacity,
-    Enc.Bits(Row.Enabled, 1) or Enc.Bits(Row.Checkbox, 2)
+    Enc.Bits(Row.Enabled, 1) or Enc.Bits(Row.Checkbox, 2), Data.Format(Row.Format)
   );
 end function;
 

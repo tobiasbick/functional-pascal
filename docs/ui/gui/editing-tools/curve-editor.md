@@ -39,6 +39,7 @@ end unit;
 | `Key.InX / InY / OutX / OutY` | All zero. Handles use offsets from the key. |
 | `XMinimum / XMaximum / YMinimum / YMaximum` | 0 / 1 / 0 / 1. |
 | `XLabel / YLabel / Playhead` | Empty / empty / null. |
+| `XFormat / YFormat` | Null uses the grid spacing to format axis labels and readouts. |
 | `Width / Height / Capacity / Snap` | Fill / 0 / 32 / false. Zero height uses the native height. Enable Snap to drag on the grid. |
 
 ## Interaction
@@ -47,6 +48,16 @@ Drag keys and handles or nudge a focused key with the arrows. Double-click
 the plot to add a key within Capacity. Delete removes a focused key.
 Accept a change by storing the sorted keys and selected index. `Added`
 indexes the new curve, and `Removed` indexes the previous curve.
+`Changed` identifies a key edit. When `Hovered` is true, `HoverX` gives
+the pointer's horizontal coordinate and `HoverY` gives the curve value there.
+
+## Sample a curve
+
+Use `Fpas.Ui.Gui.Curves.Evaluate(Keys, X)` to read the value shown by the
+editor. Pass finite keys ordered by X. Smooth, Free, Linear and Step use
+the same interpolation as the editor.
+Positions outside the curve use the nearest end value. An empty curve
+returns zero, and NaN uses the first key. The call works without a window.
 
 ## See also
 
@@ -57,6 +68,9 @@ indexes the new curve, and `Removed` indexes the previous curve.
 - [Editing tools](README.md)
 
 ## Source files
+
+- [FPAS curve sampling](../../../../src/Fpas.Ui.Gui/Curves.fpas)
+- [Managed curve sampling](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiCurve.cs)
 
 - `src/Fpas.Ui.Gui/Internal/Widgets/Editors/`
   - [CurveEditor.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Editors/CurveEditor.fpas)

@@ -66,6 +66,7 @@ uses GalleryTreemapContract as TreemapContract;
 uses GalleryTypewriterObservationContract as TypewriterObservationContract;
 uses GalleryValidationBoundaryContract as ValidationBoundaryContract;
 uses GalleryVoiceAiContract as VoiceAiContract;
+uses GuiCuiCapabilitiesContract as CuiCapabilities;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as GalleryUpdate;
 uses GuiGallery.App.View as View;
@@ -282,6 +283,7 @@ begin
   CanvasBarsContract.Verify(Renderer, Capture);
   DisplayContract.Verify(Renderer, Capture);
   SourceToolsContract.Verify(Renderer, Capture);
+  CuiCapabilities.Verify(Renderer);
   EditingToolsContract.Verify(Renderer, Capture);
   DesktopChromeContract.Verify(Renderer, Capture);
   LayoutContract.Verify(Renderer, Capture);

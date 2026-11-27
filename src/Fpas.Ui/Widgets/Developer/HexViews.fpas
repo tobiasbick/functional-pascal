@@ -38,6 +38,12 @@ public type Event = record
   public EditOffset: int;
   // Number of overwritten bytes.
   public EditLength: int;
+  // Whether the range or its caret changed.
+  public SelectionChanged: bool := false;
+  // Byte under the pointer, or minus one.
+  public Hovered: int := -1;
+  // Whether a copy shortcut activated.
+  public Copied: bool := false;
 end record;
 
 // Native HexView configuration.

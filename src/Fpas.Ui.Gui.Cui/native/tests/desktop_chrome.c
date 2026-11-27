@@ -68,6 +68,35 @@ static void operations(cui_ctx *ui) {
     CHECK(shown > 0 && chosen == 0 && item >= 0);
 }
 
+static float status_tooltip_width(const char *tooltip) {
+    cui_ctx *ui = cui_create(NULL);
+    const char *title = "Document encoding###Y2hyb21lLXN0YXR1cy1lbmNvZGluZw==";
+    cui_set_viewport(ui, 420, 280, 1);
+    cui_set_reduced_motion(ui, true);
+    cui_rect item = {0};
+    for (int frame = 0; frame < 12; ++frame) {
+        if (frame == 3) cui_input_mouse_move(ui, item.x + item.w / 2, item.y + item.h / 2);
+        cui_begin_frame(ui, .1f);
+        int node = -1;
+        cui_column(ui, .pad = 26, .width = CUI_PX(120)) {
+            fpas_cui_status_bar_begin(ui, "status", 1);
+            fpas_cui_status_bar_item(ui, title, CUI_ICON_FILE_TEXT, 0, tooltip, 1, 0, &node);
+            fpas_cui_status_bar_end(ui);
+        }
+        cui_end_frame(ui);
+        if (node >= 0) item = fpas_cui_node_rect(ui, node);
+    }
+    const float width = cui_get_rect(ui, 0x7001718u).w;
+    cui_destroy(ui);
+    return width;
+}
+
+static void compact_status_tooltip(void) {
+    const float explicit_width = status_tooltip_width("Document encoding");
+    const float fallback_width = status_tooltip_width(NULL);
+    CHECK(explicit_width > 0 && fabsf(fallback_width - explicit_width) < .01f);
+}
+
 static void split(cui_ctx *ui) {
     float ratio = .35f;
     for (int frame = 0; frame < 9; ++frame) {
@@ -317,6 +346,7 @@ int main(int argc, char **argv) {
         cases[i](ui);
         cui_destroy(ui);
     }
+    compact_status_tooltip();
     for (int dark = 0; dark < 2; ++dark) {
         pixels(740, dark);
         pixels(360, dark);

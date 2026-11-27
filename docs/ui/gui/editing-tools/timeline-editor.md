@@ -48,8 +48,13 @@ end unit;
 | `Track.Keys / Clips / Capacity` | Empty / empty / 0. Sort keys by time and supply sorted, non-overlapping clips. Positive Capacity allows inserting keys. |
 | `Start / Finish / FramesPerSecond` | 0 / 10 / 30. Sequence times are in seconds. |
 | `Labels` | Frames. Seconds and Timecode are also available. |
+| `Width` | Fill. Set the editor width with a layout extent. |
 | `Height / RowHeight / TrackWidth` | All zero. Zero height fits rows. Other zeros use native dimensions. |
 | `Toggles / FreeDrag` | Both false. Toggle buttons control mute and lock. FreeDrag disables frame snapping. |
+
+Pass `View.Range` to show editable in and out markers. Pass a zero-width
+visible time range to fit the sequence. `View.TrackIndex` and `View.KeyIndex`
+use minus one when there is no current key.
 
 ## Interaction
 
@@ -58,6 +63,11 @@ them. Store `Tracks` and `Current` from the proposal. Space can request
 playback via `TogglePlayback`. Run playback in the application and pass
 the resulting time back in the view. To share a track with a curve editor,
 use the track's curve keys and apply curve edits to that same track.
+
+`Event.Details` reports playhead movement, scrubbing, selection, viewport,
+and edits. It gives indices for added keys, edited clips, toggled tracks,
+and hovered keys. Indices start at zero. Minus one indicates absence.
+`RemovedKeys` and `RemovedClips` report how many items the editor removed.
 
 ## See also
 

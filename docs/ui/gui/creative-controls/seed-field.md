@@ -31,17 +31,35 @@ end unit;
 
 ## Options and defaults
 
-| Option | Default or requirement |
-| --- | --- |
-| `Seed / Locked` | Supply an unsigned integer. Locked defaults to null, which hides the lock. |
-| `Display / RandomText / FixedText` | All empty. Supply captions to override native text. |
-| `Plain / Enabled` | false / true. |
+| Field | Default or requirement | Behavior |
+| --- | --- | --- |
+| `Value.Label` | Required | Sets the caption. Begin with `##` to hide the caption. |
+| `Value.Seed` | Required `uint` | Sets the seed displayed by the field. |
+| `Value.Locked` | `null` | Hides the lock when `null`. A `true` lock disables the dice. |
+| `Options.Display` | Empty | Sets the caption opposite the label. |
+| `Options.RandomText` | Empty | Sets the unlocked mode caption. An empty string uses `random`. |
+| `Options.FixedText` | Empty | Sets the locked mode caption. An empty string uses `fixed`. |
+| `Options.Plain` | `false` | Removes the surrounding well when `true`. |
+| `Options.Enabled` | `true` | Accepts pointer and keyboard input when `true`. |
 
 ## Interaction
 
-Press the dice to propose a new seed. Locking it keeps the value and
-disables the dice. Store the seed and lock state to use when generating
-a result.
+Press Tab to reach the dice and the lock. Press Enter or Space to activate the
+focused control. If the seed is locked, the dice cannot receive focus.
+
+The dice proposes a ten-digit seed from a deterministic sequence. The digits
+roll into place with motion enabled and read left to right in every layout.
+Reducing motion displays the seed immediately and stops a roll in progress.
+
+| Result | Behavior |
+| --- | --- |
+| `Event.Seed` | Contains the proposed seed. |
+| `Event.Locked` | Contains the proposed lock. If the field has no lock, the result is `null`. |
+| `Event.Changed` | Is `true` after a roll or a lock toggle. |
+| `Event.Rolled` | Is `true` when the dice activates. |
+
+Store the proposed seed and lock in the model to use them when generating a
+result.
 
 ## See also
 

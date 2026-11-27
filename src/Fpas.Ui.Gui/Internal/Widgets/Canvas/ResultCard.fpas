@@ -2,6 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.ResultCard;
 
+uses Fpas.Ui.Gui.Cui.Widgets.Media as CuiMedia;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 uses Fpas.Ui.Gui.Internal.Data.MediaData as Images;
@@ -15,14 +16,14 @@ uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 // ## Parameters
 // - `Frame`: Current presentation frame.
 // - `Id`: Stable widget identity.
-// - `Image`: Picture displayed in the card.
+// - `Image`: Picture displayed in the card, or null for a muted surface.
 // - `Title`: Caption title.
 // - `Activate`: Message on card activation.
 // - `Settings`: Native widget settings.
 public procedure Draw of TMsg(
   Frame: C.State of TMsg;
   Id: string;
-  Image: Media.Source;
+  Image: Media.Source?;
   Title: string;
   Activate: TMsg;
   Settings: D.Options
@@ -33,9 +34,15 @@ begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
   const Width: Size.NativeExtent := Size.Extent(Settings.Width);
+  const Source: CuiMedia.CuiMediaImage? := if Image <> null then
+    Images.Convert(Image)
+  else
+    null
+  end if;
   const Picked: bool := Frame.Window.ResultCard(
-    Token, Images.Convert(Image), Title, Settings.Caption, Settings.Badge,
-    cast Settings.BadgeTone as int, Width.Kind, Width.Value, Settings.Aspect, Enabled, Focus
+    Token, Source, Title, Settings.Caption, Settings.Badge,
+    cast Settings.BadgeTone as int, Width.Kind, Width.Value, Settings.Aspect, Enabled, Focus,
+    Settings.StretchImage
   );
   P.Root of TMsg(Frame, Id, Role, Title, Enabled, '');
   if Picked then

@@ -439,6 +439,9 @@ pixel-identical on Windows with Software and OpenGL at 1100 × 1700 and
 550 × 1700, scale 1, light theme and reduced motion. The compact test
 checks that the slider wells stack in one column.
 
+See the [Creative controls comparison](future/cui-compare/README.md#creative-controls-evidence)
+for the Linux layout and input checks.
+
 ### Navigation and app chrome
 
 The [Navigation chapter](ui/gui/navigation/README.md) shows the sidebar, tabs,
@@ -924,7 +927,9 @@ focused native parity covers a threshold and point with labels and details.
 The dot-matrix chart uses the same annotation API. Direct Windows tests compare
 X and Y references, an accented point, and label details pixel for pixel.
 At 1100 × 1390, the Instruments content matches in both Software and OpenGL,
-including the threshold, bedtime and peak annotations.
+including the threshold, bedtime and peak annotations. See the
+[Instruments comparison](future/cui-compare/README.md#instruments-evidence)
+for the Linux layout and input checks.
 
 Include axis formatting through `cui_axis_units`, including `CUI_AXIS_HOURS`:
 12.25 reads 12:15 and 30 reads 06:00 on the next day. Match these semantics
@@ -1029,9 +1034,9 @@ and FPAS examples, including the node editor and toolbar.
 The [Canvas and bars APIs](ui/widgets.md#canvas-and-bars) use the
 graphical profile. Windows captures at 1100 × 1700 and 550 × 1700, scale 1,
 match the original page content at rest and after scrolling the narrow layout.
-The wide OpenGL capture differs in one pixel by one RGB level on an
-antialiased edge. The Creative controls regression captures match exactly at
-both sizes in software and OpenGL.
+The wide OpenGL capture differs by one RGB level at one antialiased pixel.
+The Linux comparison covers both themes and sizes from 360 to 1240 pixels.
+[Canvas and bars comparison](future/cui-compare/README.md#canvas-and-bars-evidence)
 
 ### Motion
 
@@ -1086,14 +1091,22 @@ See [AI](ui/gui/ai/README.md) for gallery screenshots and FPAS examples.
   voting and share toolbar. Windows checks vote and regenerate proposals.
 - [x] <a id="cui_context_meter"></a>[Context meter](ui/gui/ai/context-meter.md) (`cui_context_meter`): the original context percentage and
   breakdown by system, files and messages.
-- [x] <a id="cui_voice_orb"></a>[Voice orb](ui/gui/voice/voice-orb.md) (`cui_voice_orb`): a supplemental example on Voice for CUI's
-  legacy widget. Clicking it switches from idle to listening.
-
 The [AI gallery comparison](future/cui-compare/README.md#ai-evidence) records
-the pixel and input checks. On Windows, the original Voice sections match at
-1100 × 1800 and scale one in Software and OpenGL with the demo time set to
-250 ms. The standalone model picker and legacy voice orb follow the original
-content.
+the pixel and input checks.
+
+### Voice
+
+- [x] <a id="cui_voice_note"></a>[Voice note](ui/gui/voice/voice-note.md) (`cui_voice_note`) shows the original incoming note and recorded takes.
+- [x] <a id="cui_voice_session"></a>[Voice session](ui/gui/voice/voice-session.md) (`cui_voice_session`) displays the scripted call and transcript.
+- [x] <a id="cui_voice_wave"></a>[Voice waveform](ui/gui/voice/voice-waveform.md) (`cui_voice_wave`) displays live levels and a seekable clip.
+- [x] <a id="cui_voice_resample"></a>[Voice resampling](ui/gui/voice/voice-waveform.md) (`cui_voice_resample`) produces a 64-peak waveform for a sent recording.
+- [x] <a id="cui_voice_orb"></a>[Voice orb](ui/gui/voice/voice-orb.md) (`cui_voice_orb`) switches from idle to listening in a separate example.
+
+The gallery uses a [composer](ui/gui/voice/composer.md) as its recorder.
+On Windows, the original sections match at 1100 × 1800 and scale 1 in software
+and OpenGL at 250 ms of demo time. The Linux comparison checks both themes
+and sizes from 360 to 1240 pixels.
+[Voice comparison](future/cui-compare/README.md#voice-evidence)
 
 [revision]: https://github.com/yappologistic/CUI/tree/86d9781bbc3c35c264ec46287ad89c1d86a4c4de
 [fpas-motion]: ui/widgets.md#motion-and-compact-controls

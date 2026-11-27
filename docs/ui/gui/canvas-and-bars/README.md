@@ -22,6 +22,7 @@ These widgets require the GUI host.
 - [UI handbook](../README.md)
 - [Creative controls](../creative-controls/README.md)
 - [Canvas and bars in the gallery](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
+- [Comparison with the CUI gallery](../../../future/cui-compare/README.md#canvas-and-bars-evidence)
 
 ## Source files
 

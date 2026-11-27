@@ -35,6 +35,8 @@ public type Options = record
   public Plain: bool := false;
   // Accepts input.
   public Enabled: bool := true;
+  // Hides swatch locks and lets shuffle recolor every swatch.
+  public NoLocks: bool := false;
 end record;
 
 // Native proposal.
@@ -43,7 +45,7 @@ public type Event = record
   public Swatches: array of Swatch;
   // Proposed shuffle state.
   public Seed: uint?;
-  // A color or lock changed.
+  // A lock toggled or a seeded shuffle advanced the seed.
   public Changed: bool;
   // Shuffle was activated.
   public Shuffled: bool;

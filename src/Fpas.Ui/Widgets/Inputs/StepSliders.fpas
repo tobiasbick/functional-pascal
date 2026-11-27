@@ -21,10 +21,9 @@ end record;
 public type Options = record
   // Optional caption for each stop.
   public Labels: array of string := [];
-  // Literal prefix when the slider formats its integer stop.
-  public Prefix: string := '';
-  // Literal suffix when the slider formats its integer stop.
-  public Suffix: string := '';
+  // Native count format with at most one %d slot and escaped %% signs.
+  // An empty format displays the integer stop.
+  public Format: string := '';
   // Optional value caption.
   public Display: string := '';
   // Optional action next to the track.

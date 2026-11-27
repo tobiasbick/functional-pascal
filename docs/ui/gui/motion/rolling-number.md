@@ -34,13 +34,13 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Text` | Format the value in the application. CUI draws tabular digits. |
-| `Font / Size / Color` | Body / 0 / Automatic. |
+| `Font / Size / Color` | Body / 0 / Automatic. Zero uses the theme's body size. Automatic uses the theme foreground. |
 
 ## Interaction
 
-Keep the ID stable when the text changes to animate the changed digits.
-Long values beyond the native animation capacity appear as complete
-tabular text.
+Keep the ID stable when the text changes. Changed digits roll up when the
+value rises and down when the value falls. The width follows the formatted
+figure. CUI draws values beyond its animation capacity as complete tabular text.
 
 ![Rolling number after changing the value in the FPAS gallery](images/rolling-number-changed.png)
 

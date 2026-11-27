@@ -203,30 +203,70 @@ static bool json_view_behavior(void) {
     return ok;
 }
 
+static cui_dot_chart_result chart_frame(cui_ctx *ui, bool adapter, bool focus) {
+    const float samples[] = { 0, 20, 40, 1, 2, 3 };
+    const int accent[] = { 0, 1 };
+    const char *names[] = { "First", "Second" };
+    const fpas_chart_annotation mark = { .kind = CUI_ANNOTATION_X, .x = 12, .label = "Marker" };
+    const fpas_dot_options opts = { .chart = { .annotations = &mark, .annotation_count = 1 },
+        .x_min = 6, .x_max = 30, .flags = 4, .names = names };
+    const cui_dot_series series[] = { { samples, names[0], false }, { samples + 3, names[1], true } };
+    const cui_chart_annotation annotation = { .kind = CUI_ANNOTATION_X, .x = 12, .label = "Marker" };
+    cui_begin_frame(ui, .016f);
+    if (focus) fpas_cui_request_focus(ui, "chart");
+    cui_dot_chart_result result;
+    if (adapter) {
+        result.clicked = fpas_cui_dot_chart(ui, "chart", samples, accent, 2, 3, &opts,
+            &result.hovered, &result.x, &result.value) != 0;
+    } else {
+        result = cui_dot_chart(ui, "chart", series, 2, 3, .x_min = 6, .x_max = 30,
+            .annotations = &annotation, .annotation_count = 1);
+    }
+    cui_end_frame(ui);
+    return result;
+}
+
+static cui_dot_chart_result chart_click(cui_ctx *ui, bool adapter, float x, float y) {
+    cui_input_mouse_move(ui, x, y);
+    chart_frame(ui, adapter, false);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+    chart_frame(ui, adapter, false);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+    return chart_frame(ui, adapter, false);
+}
+
 static bool chart(bool adapter) {
     cui_ctx *ui = context();
-    const float samples[] = { 0, 20, 40 };
-    const int accent = 0;
-    const fpas_dot_options opts = { .x_min = 6, .x_max = 30, .flags = 4 };
-    const cui_dot_series series = { samples, NULL, false };
-    int index = -1, clicked = 0;
-    double x = 0;
-    float value = 0;
-    for (int frame = 0; frame < 2; ++frame) {
-        if (frame == 1) key(ui, CUI_KEY_ENTER);
-        cui_begin_frame(ui, .016f);
-        if (frame == 0) fpas_cui_request_focus(ui, "chart");
-        if (adapter)
-            clicked = fpas_cui_dot_chart(ui, "chart", samples, &accent, 1, 3, &opts, &index, &x, &value);
-        else {
-            const cui_dot_chart_result r = cui_dot_chart(ui, "chart", &series, 1, 3, .x_min = 6, .x_max = 30);
-            clicked = r.clicked; index = r.hovered; x = r.x; value = r.value;
-        }
-        cui_end_frame(ui);
-    }
-    printf("%s chart Enter: index=%d x=%g value=%g\n", adapter ? "FPAS" : "CUI", index, x, value);
+    cui_input_mouse_leave(ui);
+    chart_frame(ui, adapter, true);
+    key(ui, CUI_KEY_ENTER);
+    cui_dot_chart_result result = chart_frame(ui, adapter, false);
+    bool ok = result.clicked && result.hovered == 1 && result.x == 18 && result.value == 22;
+    printf("%s chart Enter: index=%d x=%g value=%g\n",
+        adapter ? "FPAS" : "CUI", result.hovered, result.x, result.value);
+
+    const cui_rect rect = cui_get_rect(ui, cui_make_id(ui, "chart"));
+    const float quarter = rect.x + (rect.w - 34) * .25f;
+    result = chart_click(ui, adapter, quarter, rect.y + 75);
+    ok &= result.clicked && result.hovered == 1 && result.x == 12 && result.value == 22;
+    result = chart_click(ui, adapter, rect.x + rect.w - 10, rect.y + 75);
+    ok &= result.clicked == !adapter && result.hovered == -1 && result.x == (adapter ? 0 : 30);
+    result = chart_click(ui, adapter, quarter, rect.y + rect.h - 9);
+    ok &= result.clicked == !adapter && result.hovered == -1 && result.x == (adapter ? 0 : 12);
+    result = chart_click(ui, adapter, quarter, rect.y + 2);
+    ok &= result.clicked == !adapter && result.hovered == -1 && result.x == (adapter ? 0 : 12);
+    key(ui, CUI_KEY_HOME);
+    result = chart_frame(ui, adapter, false);
+    ok &= !result.clicked && result.hovered == 0 && result.x == 6 && result.value == 1;
+    key(ui, CUI_KEY_SPACE);
+    result = chart_frame(ui, adapter, false);
+    ok &= result.clicked && result.hovered == 0 && result.x == 6 && result.value == 1;
+    key(ui, CUI_KEY_ESCAPE);
+    result = chart_frame(ui, adapter, false);
+    ok &= !result.clicked && result.hovered == -1 && result.x == 0 && result.value == 0;
+    if (!ok) fprintf(stderr, "Dot chart pointer activation or keyboard readout mismatch.\n");
     cui_destroy(ui);
-    return clicked && index == 1 && x == 18 && value == 20;
+    return ok;
 }
 
 static bool track(void) {
@@ -242,10 +282,84 @@ static bool track(void) {
         if (frame == 0) fpas_cui_request_focus(ui, "track");
         fpas_cui_event_track(ui, "track", times, &count, 4, &opts, result);
         cui_end_frame(ui);
-        if (frame == 1) ok &= count == 2 && times[1] == 12.5;
-        if (frame == 2) ok &= count == 3 && times[2] == 12.75 && result[1] == 2;
-        if (frame == 3) ok &= count == 2 && result[2] == 2;
+        if (frame == 1) ok &= count == 2 && times[1] == 12.5 && result[4] == 1;
+        if (frame == 2) ok &= count == 3 && times[2] == 12.75 && result[1] == 2 && result[4] == 3;
+        if (frame == 3) ok &= count == 2 && result[2] == 2 && result[4] == 3;
     }
+    cui_destroy(ui);
+    return ok;
+}
+
+static void track_frame(cui_ctx *ui, double *times, int *count, int *result, bool popup) {
+    const fpas_event_options options = { .minimum = 0, .maximum = 24, .step = 1, .flags = 8 | 32 };
+    result[0] = 99;
+    cui_begin_frame(ui, .016f);
+    fpas_cui_event_track(ui, "track", times, count, 4, &options, result);
+    if (popup) {
+        cui_button(ui, "Anchor");
+        cui_popover(ui, "Popup") cui_text(ui, "Popup content");
+    }
+    cui_end_frame(ui);
+}
+
+static bool track_drag_and_selection(void) {
+    cui_ctx *ui = context();
+    double times[4] = { 6, 12 };
+    int count = 2, result[5];
+    track_frame(ui, times, &count, result, false);
+    bool ok = result[0] == -1 && result[4] == 0;
+    const cui_rect track = cui_get_rect(ui, cui_make_id(ui, "track"));
+    const float unit = (track.w - 34) / 24, y = track.y + 12;
+    const float first = track.x + 6 * unit;
+    cui_input_mouse_move(ui, first, y);
+    track_frame(ui, times, &count, result, false);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+    track_frame(ui, times, &count, result, false);
+    ok &= result[0] == 0 && !result[3] && result[4] == 2;
+    track_frame(ui, times, &count, result, false);
+    ok &= result[0] == 0 && result[4] == 0;
+    cui_input_mouse_move(ui, first + 3, y);
+    track_frame(ui, times, &count, result, false);
+    ok &= times[0] == 6 && result[3] && result[4] == 4;
+    cui_input_mouse_move(ui, track.x + 16 * unit, y);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+    cui_input_mouse_move(ui, first, y);
+    track_frame(ui, times, &count, result, false);
+    ok &= count == 2 && times[0] == 12 && times[1] == 16 && result[0] == 1 && !result[3] && result[4] == 7;
+    track_frame(ui, times, &count, result, false);
+    ok &= result[0] == 1 && result[4] == 0;
+
+    cui_input_mouse_move(ui, track.x + 12 * unit, y);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+    cui_input_mouse_move(ui, track.x + 20 * unit, track.y + track.h + 10);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+    track_frame(ui, times, &count, result, false);
+    ok &= count == 2 && times[0] == 16 && times[1] == 20 && result[0] == 1 && !result[3] && result[4] == 1;
+
+    const float last = track.x + 20 * unit;
+    cui_input_mouse_move(ui, last, y);
+    track_frame(ui, times, &count, result, false);
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, true);
+    track_frame(ui, times, &count, result, false);
+    cui_input_mouse_move(ui, last + 3, y);
+    track_frame(ui, times, &count, result, false);
+    ok &= times[1] == 20 && result[3] && result[4] == 4;
+    cui_input_mouse_button(ui, CUI_MOUSE_LEFT, false);
+    track_frame(ui, times, &count, result, false);
+    ok &= times[1] == 20 && !result[3] && result[4] == 4;
+
+    key(ui, CUI_KEY_HOME);
+    track_frame(ui, times, &count, result, false);
+    ok &= result[0] == 0 && result[4] == 2;
+    cui_popover_open(ui, "Popup");
+    track_frame(ui, times, &count, result, true);
+    const cui_key blocked[] = { CUI_KEY_RIGHT, CUI_KEY_ENTER, CUI_KEY_SPACE, CUI_KEY_DELETE };
+    for (size_t i = 0; i < sizeof blocked / sizeof blocked[0]; ++i) {
+        key(ui, blocked[i]);
+        track_frame(ui, times, &count, result, true);
+        ok &= count == 2 && times[0] == 16 && times[1] == 20 && result[0] == 0 && result[4] == 0;
+    }
+    ok &= cui_popover_is_open(ui, "Popup");
     cui_destroy(ui);
     return ok;
 }
@@ -257,7 +371,7 @@ int main(int argc, char **argv) {
     const bool copied = !adapter || (code(NULL, NULL) && code(NULL, "") && code("", NULL)
         && code("sql", "teams.sql") && code_pixels());
     const bool scrolled = !adapter || code_scroll_behavior();
-    const bool edited = !adapter || track();
+    const bool edited = !adapter || (track() && track_drag_and_selection());
     const bool viewed = !adapter || json_view_behavior();
     if (!copied || !edited) fprintf(stderr, "Code clipboard=%d, event track=%d\n", copied, edited);
     return parsed && hit && copied && edited && viewed && scrolled ? 0 : 1;

@@ -6,20 +6,22 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    private readonly Dictionary<string, int> dockRestores = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (int Revision, bool Accepted)> dockRestores = new(StringComparer.Ordinal);
 
     /// <summary>Applies a native layout once for a model revision before building the workspace.</summary>
     /// <param name="id">Stable workspace identity.</param>
     /// <param name="revision">Application restore revision.</param>
     /// <param name="layout">Saved native layout in dock1 format.</param>
+    /// <returns>Whether CUI accepted the layout for this revision.</returns>
     /// <remarks>Forgetting the tracked workspace ends its revision history; a later workspace can apply the same revision again.</remarks>
-    public void RestoreDockLayout(string id, int revision, string layout)
+    public bool RestoreDockLayout(string id, int revision, string layout)
     {
         CheckFrame();
-        if (dockRestores.TryGetValue(id, out int previous) && previous == revision) return;
+        if (dockRestores.TryGetValue(id, out var previous) && previous.Revision == revision) return previous.Accepted;
         Utf8.Validate(layout, nameof(layout));
-        NativeMethods.DockspaceLoad(context, Stable(id), layout);
-        dockRestores[id] = revision;
+        bool accepted = NativeMethods.DockspaceLoad(context, Stable(id), layout) != 0;
+        dockRestores[id] = (revision, accepted);
+        return accepted;
     }
 
     /// <summary>Opens a native workspace. Submit every panel before closing it.</summary>

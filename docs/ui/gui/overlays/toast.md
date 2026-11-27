@@ -39,6 +39,11 @@ end unit;
 
 The host shows the toast after committing the model and leaves focus in place. Hover to expand the stack and pause its timer. Use the dismiss button or swipe right to close a toast. The gallery's Archive a message example uses the default duration and closes through its Undo button.
 
+When drawing directly with `CuiWindow`, keep the handle returned by `Toast`.
+Use `DismissToast(Handle)` during a frame to close that toast. Repeated
+dismissals have no effect. After presenting, `PollToast` reports that the
+toast is inactive. Activating the action button produces a separate result.
+
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_toast)

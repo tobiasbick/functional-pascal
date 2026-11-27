@@ -34,18 +34,21 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Tone / Color / Name` | Neutral / null / null. A color overrides the tone. Supply Name to label the ring. |
-| `Radius` | 0. Zero follows the child's corner radius. |
+| `Tone` | Neutral uses the CUI emphasis color. Set a tone to use its theme color. |
+| `Color` | Null uses the tone. Supply an explicit color to override the tone. CUI uses its emphasis color when the explicit color has zero alpha. |
+| `Name` | Null. Supply a name to add a flag to the top end corner. The flag follows the reading direction. |
+| `Radius` | Zero uses the child's top-left corner radius. Supply a radius in logical points to override it. |
 
 ## Interaction
 
-Wrap the selected child, or set the node's `Ring` options if the child
-is a node inside a node editor. Draw a new ring when the model changes
-the selected object.
+Wrap the selected child. CUI draws the ring around the previous widget after
+the child draws. For a node editor card, set the node's `Ring` options.
+Draw the ring for the object that the model identifies as selected.
 
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_live_cursors)
+- [CUI collaborator reference](https://github.com/yappologistic/CUI/blob/6864776/docs/components-more.md#live-cursors)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/SelectionRings.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Node editor](node-editor.md)

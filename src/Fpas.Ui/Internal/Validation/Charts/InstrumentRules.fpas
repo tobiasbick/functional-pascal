@@ -137,15 +137,10 @@ begin
   end if;
 
   for Band: Dots.Series in Bands do
+    R.CheckText(Band.Name, At);
     if Band.Values.Length <> Count then
       R.Reject(At, 'Each band must supply the declared number of samples.');
     end if;
-
-    for Value: float in Band.Values do
-      if not Sys.Single.IsFinite(Value) then
-        R.Reject(At, 'Chart samples must be finite.');
-      end if;
-    end for;
   end for;
 
   for Item: Charts.Annotation in Settings.Annotations do
@@ -165,7 +160,8 @@ begin
   Axis(Settings.Minimum, Settings.Maximum, Settings.Step, Settings.Units, At);
   Axis(Settings.Minimum, Settings.Maximum, Settings.LabelStep, Settings.Units, At);
   if Settings.Maximum <= Settings.Minimum or Settings.Capacity < Current.Times.Length
-    or Current.Selected < -1 or Current.Selected >= Current.Times.Length
+    or (not Settings.NativeSelection and (Current.Selected < -1 or Current.Selected >=
+    Current.Times.Length))
   then
     R.Reject(At, 'Invalid event track bounds, capacity or selection.');
   end if;

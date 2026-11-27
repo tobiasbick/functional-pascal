@@ -49,6 +49,15 @@ filtering data in your application.
 Use `Fpas.Ui.Gui.QueryBuilders.Description(Fields, Rules)` to format the
 rules as CUI display text. An empty query gives an empty string.
 
+## Match a record
+
+Use `Fpas.Ui.Gui.QueryBuilders.Matches(Fields, Rules, Values)` to test a
+record with the builder's operators. Pass one string per field in schema
+order. Use strings such as `'12.5'` for numbers and `'true'` or `'1'` for
+true Boolean values. CUI compares text case-insensitively for ASCII and
+compares choice values exactly. Groups apply all or any of their child rules.
+An empty query or group matches every record. The call works without a window.
+
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_query_builder)

@@ -647,13 +647,15 @@ begin
     ): (E.Element of TParent).DotDisplay(Id, Text, Settings);
     when E.Element.DotChart(
       const Id: string, const Bands: array of DotCharts.Series, const Count: int,
-      const Activate: Sys.Func of (DotCharts.Hit, TChild)?, const Settings: DotCharts.Options
+      const Activate: Sys.Func of (DotCharts.Hit, TChild)?, const Settings: DotCharts.Options,
+      const Readout: Sys.Func of (DotCharts.Hit, TChild)?
     ): (E.Element of TParent).DotChart(
       Id,
       Bands,
       Count,
       M.Callback of (DotCharts.Hit, TChild, TParent)(Activate, Messages),
-      Settings
+      Settings,
+      M.Callback of (DotCharts.Hit, TChild, TParent)(Readout, Messages)
     );
     when E.Element.EventTrack(
       const Id: string, const Current: EventTracks.Value,
@@ -1580,6 +1582,10 @@ begin
       const FChild: E.Element of TChild,
       const FSettings: L.Flex
     ): (E.Element of TParent).Sized(Map of (TChild, TParent)(FChild, Messages), FSettings);
+    when E.Element.DisabledScope(
+      const FChild: E.Element of TChild,
+      const FDisabled: bool
+    ): (E.Element of TParent).DisabledScope(Map of (TChild, TParent)(FChild, Messages), FDisabled);
     when E.Element.Styled(
       const FChild: E.Element of TChild,
       const FRole: S.Role

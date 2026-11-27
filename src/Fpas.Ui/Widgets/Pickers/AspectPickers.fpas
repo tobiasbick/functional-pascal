@@ -24,7 +24,7 @@ end record;
 
 // Native widget settings.
 public type Options = record
-  // Custom ratios. Empty uses the six native defaults.
+  // Up to 32 ratios with positive dimensions. Empty uses the six native defaults.
   public Ratios: array of Ratio := [];
   // Adds the Custom choice.
   public Custom: bool := false;
@@ -32,7 +32,7 @@ public type Options = record
   public CustomLabel: string := '';
   // Short side in pixels. Zero uses 1080. Negative hides the size.
   public Base: int := 0;
-  // Optional value caption.
+  // Optional value caption. Empty shows the selected ratio's size or the Custom caption.
   public Display: string := '';
   // Omits the surrounding well.
   public Plain: bool := false;
@@ -46,7 +46,7 @@ end record;
 // ## Parameters
 // - `Id`: Stable widget identity.
 // - `Current`: Current model value.
-// - `Change`: Maps a native proposal to an application message.
+// - `Change`: Maps the proposed index to an application message when the selection changes.
 // - `Settings`: Optional native appearance and input settings.
 // ## Returns
 // The graphical widget.

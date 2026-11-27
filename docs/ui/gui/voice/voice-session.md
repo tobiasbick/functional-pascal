@@ -36,16 +36,41 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Activity / Signal` | Supply the current activity and recent levels, with one speaker tag per level when tags are present. |
-| `Muted / HideEnd / Enabled` | Pass null Muted to omit that button. HideEnd defaults to false and Enabled to true. |
-| `Label / You / Assistant` | All empty. Supply display labels to override native text. |
-| `Transcript / Upcoming / Speaker` | null / null / You. Supply spoken and upcoming text and the speaker for that text. |
+| `Activity` | Supply `Idle`, `Listening`, `Thinking`, `Speaking`, or `Muted`. These show Waiting, Listening, Thinking…, Speaking, or Muted. |
+| `Signal` | Supply measured levels, oldest first. With no speaker tags, all levels use the caller color. |
+| `Muted` | Supply the current microphone state. Pass `null` to omit Mute. |
+| `Width` | `Fill`. Set a fixed or percentage width. `Content` also fills the available width. |
+| `Label` | Empty. Supply text to replace the activity caption. |
+| `You` | Empty. Supply a name to replace You in the legend and transcript. |
+| `Assistant` | Empty. Supply a name to replace Assistant in the legend and transcript. |
+| `Transcript` | `null`. Supply the words spoken so far. |
+| `Upcoming` | `null`. Supply the words still to come. The session displays these words dimmed. |
+| `Speaker` | `You`. Choose whose name precedes the transcript. |
+| `HideEnd` | `false`. Set to `true` to omit End. |
+| `Enabled` | `true`. Set to `false` to disable Mute and End. |
 
 ## Interaction
 
-Update the signal and transcript as the conversation advances. Handle
-`Mute` and `EndCall` in the application. Use `Voice.Silent` in the
-signal to represent a quiet interval.
+Update the signal and transcript as the conversation advances. For a
+shared signal, supply one `You` or `Reply` tag per level. The caller and
+assistant use different colors, as shown in the legend. Use `Voice.Silent`
+to show a flat gap while the assistant thinks.
+
+The timeline always runs left to right. The transcript appears when
+either `Transcript` or `Upcoming` is supplied. The transcript reserves
+space for two lines.
+
+Tab moves through the available Mute and End buttons. Enter or Space
+activates the focused button. The timeline is display-only.
+
+## Results
+
+`Mute(Muted)` proposes the new microphone state. Store it in the model
+and apply it to the microphone. The button displays Unmute while the model
+supplies `true`.
+
+`EndCall` requests the end of the call. The application ends the call and
+updates the displayed activity and signal.
 
 ## See also
 
@@ -58,6 +83,8 @@ signal to represent a quiet interval.
 
 ## Source files
 
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [voice_session.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/voice_session.c)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
   - [VoiceSession.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/VoiceSession.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Audio/`

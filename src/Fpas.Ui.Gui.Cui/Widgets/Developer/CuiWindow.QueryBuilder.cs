@@ -8,6 +8,42 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
+    /// <summary>Tests a record against the native query builder's conditions.</summary>
+    /// <param name="fields">Field schema, in record order.</param>
+    /// <param name="rules">The model's flattened groups and conditions.</param>
+    /// <param name="values">One textual value per field, in schema order.</param>
+    /// <returns>Whether the record matches. An empty query accepts every record.</returns>
+    public static unsafe bool MatchQuery(CuiDevField[] fields, CuiDevRule[] rules, string[] values)
+    {
+        ArgumentNullException.ThrowIfNull(fields);
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(values);
+        if (values.Length != fields.Length)
+            throw new ArgumentException("Supply one value per query field.", nameof(values));
+        foreach (string value in values) Utf8.Validate(value, nameof(values));
+        using var memory = new ChartMemory();
+        var schema = PackQueryFields(memory, fields);
+        var rows = new NativeDevRule[rules.Length];
+        fixed (NativeDevRule* data = rows)
+        {
+            PackQueryRules(rules, data);
+            for (int i = 0; i < rules.Length; i++)
+            {
+                CuiDevRule rule = rules[i];
+                if (i == 0 ? rule.Depth != 0 || !rule.Group : rule.Depth == 0 ||
+                    rule.Depth > rules[i - 1].Depth + 1 ||
+                    rule.Depth > rules[i - 1].Depth && !rules[i - 1].Group)
+                    throw new ArgumentException("Expected one root group and ordered descendants.", nameof(rules));
+                if (rule.Group) continue;
+                if ((uint)rule.Field >= (uint)fields.Length ||
+                    (uint)rule.Operator >= (fields[rule.Field].Kind <= 1 ? 6u : 2u))
+                    throw new ArgumentException("Invalid query field or operator.", nameof(rules));
+            }
+            return NativeMethods.MatchQuery(schema, fields.Length, data, rows.Length,
+                memory.Labels(values)) != 0;
+        }
+    }
+
     /// <summary>Draws CUI's native QueryBuilder widget.</summary>
     /// <param name="Id">Id supplied to the widget.</param>
     /// <param name="Fields">Fields supplied to the widget.</param>

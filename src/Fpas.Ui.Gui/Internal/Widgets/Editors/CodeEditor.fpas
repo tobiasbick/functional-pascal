@@ -43,7 +43,8 @@ begin
     Token, Text, Settings.Capacity, Settings.Language, Settings.Placeholder,
     Width.Kind, Width.Value, Settings.Height, Settings.Size, Settings.TabSize,
     Enc.Bits(Enabled, 1) or Enc.Bits(Settings.ReadOnly, 2) or Enc.Bits(Settings.UseTabs, 4)
-    or Enc.Bits(not Settings.LineNumbers, 8) or Enc.Bits(Focus, 16), Marks.ToArray()
+    or Enc.Bits(not Settings.LineNumbers, 8) or Enc.Bits(Focus, 16)
+    or Enc.Bits(Settings.Autofocus, 32), Marks.ToArray()
   );
   if Enabled then
     case Result of
@@ -52,7 +53,8 @@ begin
           Changed(
             new D.Event(
               Event.Text, Event.Line, Event.Column, Event.Lines, Event.Refused,
-              Event.Cursor, Event.Anchor, Event.Matches, Event.MatchIndex, Event.Focused
+              Event.Cursor, Event.Anchor, Event.Matches, Event.MatchIndex, Event.Focused,
+              Event.ByteLength, Event.Bracket, Event.BracketMatch
             )
           )
         );

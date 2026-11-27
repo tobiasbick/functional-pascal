@@ -128,7 +128,10 @@ begin
     when E.Element.Sized(
       const Child: E.Element of TMsg,
       _
-    ), E.Element.Styled(const Child: E.Element of TMsg, _):
+    ), E.Element.Styled(
+      const Child: E.Element of TMsg,
+      _
+    ), E.Element.DisabledScope(const Child: E.Element of TMsg, _):
       return HasAnchor of TMsg(Child, Subviews);
     when E.Element.Deferred(const Id: string, _):
       return HasAnchor of TMsg(Subviews[Id].Tree, Subviews);

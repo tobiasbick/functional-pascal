@@ -34,16 +34,25 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Person.Name / X / Y` | Supply a stable name and the position in canvas coordinates. |
-| `Says / Speaking / Away` | null / false / false. Away hides the cursor and dims the avatar in the presence pill. |
-| `Tone / Color` | Neutral / null. Pass Color to override the theme tone. |
-| `View / NoGlide` | null / false. With a null View, positions are relative to the child. NoGlide applies positions immediately. |
+| `Person.Name` | Supply a nonempty, unique name that stays the same across updates. |
+| `Person.X` / `Y` | `0` / `0`. Supply positions in logical units. |
+| `Person.Says` | `null`. Supply text for the cursor's speech bubble. |
+| `Person.Away` | `false`. Set to `true` to hide the cursor. |
+| `Person.Tone` / `Color` | `Neutral` / `null`. An explicit `Color` takes priority. With the neutral tone, CUI chooses a theme tone from the name. |
+| `View` | `null`. Positions are relative to the child's top-left corner. Supply a view to apply its canvas pan and zoom. |
+| `NoGlide` | `false`. Set to `true` to apply each new position immediately. |
 
 ## Interaction
 
-Render updated positions when the application receives them. Keep the
-same canvas transform for the child and cursor overlay so they move and
-zoom together.
+Update the model when the application receives new positions. Keep the same
+canvas transform for the child and cursor overlay so they pan and zoom together.
+CUI clips the cursors to the child. The cursors take no input or focus.
+Reduced motion applies positions immediately.
+
+The gallery sends a typed message every 400 ms while the Canvas and bars page
+is open. The message advances the synthetic collaborator positions in the model.
+Use a [frame request](../host.md#invalidation-and-inspection) when only painting
+needs to run again.
 
 ## See also
 

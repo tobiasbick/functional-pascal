@@ -38,41 +38,53 @@ public sealed partial class CuiWindow
         return result;
     }
 
-    /// <summary>Opens the native BeginNode operation.</summary>
-    /// <param name="id">id supplied to the native operation.</param>
-    /// <param name="x">x supplied to the native operation.</param>
-    /// <param name="y">y supplied to the native operation.</param>
-    /// <param name="title">title supplied to the native operation.</param>
-    /// <param name="width">width supplied to the native operation.</param>
-    /// <param name="icon">icon supplied to the native operation.</param>
-    public unsafe void BeginNode(int id, ref float x, ref float y, string title, float width, string? icon)
+    /// <summary>Opens a node. Call EndNode for each opened node.</summary>
+    /// <param name="id">Stable node ID within the editor.</param>
+    /// <param name="x">Canvas X coordinate, updated when the node moves.</param>
+    /// <param name="y">Canvas Y coordinate, updated when the node moves.</param>
+    /// <param name="title">Visible node title.</param>
+    /// <param name="width">Node width in canvas units, or zero for the native default.</param>
+    /// <param name="icon">Optional title glyph.</param>
+    /// <returns>Whether CUI reports this node as selected.</returns>
+    public unsafe bool BeginNode(int id, ref float x, ref float y, string title, float width, string? icon)
     {
         CheckFrame();
         using var input = RestrictChrome(Layout.NodeEditor);
-        NativeMethods.NodeBegin(context, id, ref x, ref y, title, width, icon);
+        return NativeMethods.NodeBegin(context, id, ref x, ref y, title, width, icon) != 0;
     }
 
-    /// <summary>Invokes the native NodePin operation.</summary>
-    /// <param name="id">id supplied to the native operation.</param>
-    /// <param name="label">label supplied to the native operation.</param>
-    /// <param name="output">output supplied to the native operation.</param>
-    /// <param name="type">type supplied to the native operation.</param>
-    public unsafe void NodePin(int id, string label, bool output, int type)
+    /// <summary>Draws an input or output pin in the open node.</summary>
+    /// <param name="id">Stable pin ID within the editor.</param>
+    /// <param name="label">Visible pin caption.</param>
+    /// <param name="output">Whether the pin is an output.</param>
+    /// <param name="type">Native pin compatibility type.</param>
+    /// <returns>Whether CUI reports a link on this pin.</returns>
+    public unsafe bool NodePin(int id, string label, bool output, int type)
     {
         CheckFrame();
         using var input = RestrictChrome(Layout.NodeEditor);
-        NativeMethods.NodePin(context, id, label, output ? 1 : 0, type);
+        return NativeMethods.NodePin(context, id, label, output ? 1 : 0, type) != 0;
     }
 
-    /// <summary>Invokes the native NodeLink operation.</summary>
-    /// <param name="id">id supplied to the native operation.</param>
-    /// <param name="fromPin">fromPin supplied to the native operation.</param>
-    /// <param name="toPin">toPin supplied to the native operation.</param>
-    public unsafe void NodeLink(int id, int fromPin, int toPin)
+    /// <summary>Reads a node selection after submitting every node in the editor.</summary>
+    /// <param name="id">Stable node ID within the open editor.</param>
+    /// <returns>Whether the current editor selection contains the node.</returns>
+    public unsafe bool IsNodeSelected(int id)
+    {
+        RequireLayout(Layout.NodeEditor);
+        return NativeMethods.NodeSelected(context, id) != 0;
+    }
+
+    /// <summary>Draws a link between two pins.</summary>
+    /// <param name="id">Stable link ID within the editor.</param>
+    /// <param name="fromPin">Output pin ID.</param>
+    /// <param name="toPin">Input pin ID.</param>
+    /// <returns>Whether CUI reports this link as selected.</returns>
+    public unsafe bool NodeLink(int id, int fromPin, int toPin)
     {
         CheckFrame();
         using var input = RestrictChrome(Layout.NodeEditor);
-        _ = NativeMethods.NodeLink(context, id, fromPin, toPin);
+        return NativeMethods.NodeLink(context, id, fromPin, toPin) != 0;
     }
 
     /// <summary>Invokes the native NodeEvent operation.</summary>

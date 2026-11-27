@@ -29,7 +29,7 @@ begin
   const Started: Ai.Model := AiUpdate.Update(
     new Ai.Model(), Ai.Msg.Editor(Composer.Event.Send('Question'))
   ).Model;
-  const Completed: Ai.Model := AiUpdate.Update(Started, Ai.Msg.Tick(9.0F)).Model;
+  const Completed: Ai.Model := AiUpdate.Update(Started, Ai.Msg.Tick(9.25F)).Model;
   A.Check(not Completed.Editor.Busy, 'The initial response must finish.');
   const Restarted: Ai.Model := AiUpdate.Update(
     Completed, Ai.Msg.Response(Response.Event.Regenerate)
@@ -89,15 +89,15 @@ begin
   const Original: Files.Model := new Files.Model();
   const Submitted: Files.Model := FilesUpdate.Update(
     Original, Files.Msg.Path(new Paths.Event(Text := ''))
-  );
+  ).Model;
   A.Check(Submitted.Folder = Original.Folder, 'An empty path must retain the current folder.');
   const Invalid: Files.Model := FilesUpdate.Update(
     Original, Files.Msg.Path(new Paths.Event(Text := 'invalid' + Sys.Char.ConvertFromUtf32(0)))
-  );
+  ).Model;
   A.Check(Invalid.Folder = Original.Folder, 'An invalid path must retain the current folder.');
   const Valid: Files.Model := FilesUpdate.Update(
     Original, Files.Msg.Path(new Paths.Event(Text := 'relative-folder'))
-  );
+  ).Model;
   A.Check(Valid.Folder = 'relative-folder', 'A valid path must remain selectable.');
 end procedure;
 

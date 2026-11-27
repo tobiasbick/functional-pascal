@@ -14,4 +14,8 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_toast_inspect")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int ToastInspect(nint context, int handle, out int card, out int action, out int dismiss);
+
+    [LibraryImport(Library, EntryPoint = "cui_toast_dismiss")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void ToastDismiss(nint context, int handle);
 }

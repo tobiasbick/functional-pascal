@@ -10,4 +10,5 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Display;
 /// <param name="Checked">Proposed task state.</param>
 /// <param name="Hovered">URL under the pointer.</param>
 /// <param name="HoverChanged">Whether the hover target changed.</param>
-public sealed record CuiMarkdownEvent(string? Link, int Offset, int Line, bool Checked, string? Hovered, bool HoverChanged);
+/// <param name="Height">Logical height from the latest layout, or zero before layout.</param>
+public sealed record CuiMarkdownEvent(string? Link, int Offset, int Line, bool Checked, string? Hovered, bool HoverChanged, float Height = 0);

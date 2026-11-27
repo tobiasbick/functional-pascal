@@ -16,7 +16,11 @@ public sealed record CuiHexMark(int Start, int Length, int Tone, string Label);
 /// <param name="Data">Edited copy, or null.</param>
 /// <param name="EditOffset">First edited byte.</param>
 /// <param name="EditLength">Number of edited bytes.</param>
-public sealed record CuiHexViewEvent(int Start, int Length, int Cursor, byte[]? Data, int EditOffset, int EditLength);
+/// <param name="SelectionChanged">Whether the range or its caret changed.</param>
+/// <param name="Hovered">Byte under the pointer, or minus one.</param>
+/// <param name="Copied">Whether a copy shortcut activated.</param>
+public sealed record CuiHexViewEvent(int Start, int Length, int Cursor, byte[]? Data, int EditOffset, int EditLength,
+    bool SelectionChanged, int Hovered, bool Copied);
 
 [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
 internal unsafe struct NativeHexMark

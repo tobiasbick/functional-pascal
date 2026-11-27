@@ -38,6 +38,7 @@ end unit;
 | `Width / Height / Size` | Fill / 0 / 0. Zero uses native height or font size. A height of minus one fills the viewport. |
 | `Capacity / TabSize / UseTabs` | 65,536 UTF-8 bytes including the terminator / 4 / false. |
 | `LineNumbers / ReadOnly` | true / false. ReadOnly allows selection and find. |
+| `Autofocus` | False. Set to true to focus the editor when it first appears. |
 | `Marks` | Empty. Sorted UTF-16 scalar-boundary ranges with colors zero (accent) through six. |
 
 ## Interaction
@@ -47,6 +48,9 @@ report only caret/anchor, focus, line count or native find results. Cursor and
 anchor are UTF-16 scalar-boundary offsets. Lines and visual columns start at
 one; tabs count to their configured stops. `Matches` and `MatchIndex` report
 the native search result.
+`ByteLength` counts UTF-8 bytes in the source. `Bracket` and `BracketMatch`
+report UTF-16 offsets for the bracket beside the caret and its partner.
+An absent bracket uses minus one.
 `Refused` reports an edit that exceeded the UTF-8 capacity. Replacing the
 source from outside the editor resets its undo history.
 

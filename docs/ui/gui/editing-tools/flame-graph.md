@@ -44,7 +44,21 @@ end unit;
 Click a span to select it. The wheel changes the zoom and activating
 a span can zoom to its duration. Store `Event.Current` to keep the
 visible range and selection. `Zoomed` identifies a span zoomed to by
-activation or returns minus one.
+activation or returns minus one. `Hovered` identifies the span under the
+pointer or returns minus one. `ViewChanged` and `SelectionChanged` identify
+the parts of the proposal that changed.
+
+## Inspect span bounds
+
+Return `Fpas.Ui.Gui.FlameGeometry.ReadSpanRectangle of TMsg(Id, Span, OnRead)`
+from `Update` after the first presentation. Pass a span from the presented
+graph. The callback receives its rectangle in window logical units at the
+last presented zoom and scroll position. An absent graph or a span outside
+the plot returns an empty rectangle. The rectangle can extend past the plot
+when part of a span is visible.
+
+When drawing directly with CUI, call `CuiWindow.FlameSpanRectangle(Id, Span)`
+between frames.
 
 ## See also
 
@@ -55,6 +69,8 @@ activation or returns minus one.
 - [Editing tools](README.md)
 
 ## Source files
+
+- [FPAS span geometry](../../../../src/Fpas.Ui.Gui/FlameGeometry.fpas)
 
 - `src/Fpas.Ui.Gui/Internal/Widgets/Editors/`
   - [FlameGraph.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Editors/FlameGraph.fpas)

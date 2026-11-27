@@ -40,12 +40,20 @@ begin
         Value := Button(Frame.Window, Options, true);
       when D.Item.Radio(
         const Icons: array of string,
-        const Labels: array of string,
+        const Labels: (array of string)?,
         const Selected: int
       ):
         Value := Frame.Window.ToolbarRadio('radio-' + Index.ToString(), Icons, Labels, Selected);
-      when D.Item.Cycle(const Labels: array of string, const Selected: int, const Tooltip: string):
-        Value := Frame.Window.ToolbarCycle('cycle-' + Index.ToString(), Labels, Selected, Tooltip);
+      when D.Item.Cycle(
+        const Labels: array of string,
+        const Selected: int,
+        const Settings: D.CycleOptions?
+      ):
+        const Current: D.CycleOptions := Settings ?? new D.CycleOptions();
+        Value := Frame.Window.ToolbarCycle(
+          'cycle-' + Index.ToString(), Labels, Selected, Current.Tooltip, Current.Shortcut,
+          Current.Disabled, cast Current.Tone as int, Current.Flyout
+        );
       when D.Item.Group(const Children: array of D.Item):
         Action := false;
         Frame.Window.BeginToolbarGroup();

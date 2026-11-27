@@ -59,15 +59,24 @@ begin
       const Id: string,
       _,
       const Progress: float?,
-      _,
+      const Changed: Sys.Func of (float, TMsg)?,
       const Settings: Wave.Options
     ):
-      if Settings.Enabled and Progress <> null and (Preferred = null or Preferred = Id) then
+      if Settings.Enabled and Progress <> null and Changed <> null and (Preferred = null
+        or Preferred = Id)
+      then
         return Id;
       end if;
-    when E.Element.VoiceNote(const Id: string, _, _, _, const Settings: Note.Options):
+    when E.Element.VoiceNote(
+      const Id: string, _, const Playback: Note.Value, _, const Settings: Note.Options
+    ):
       if Settings.Enabled then
-        return Parts(Id, Preferred, ['play', 'seek', 'speed']);
+        const Keys: array of string := if Playback.Duration > 0.0F then
+          ['play', 'seek', 'speed']
+        else
+          ['play', 'speed']
+        end if;
+        return Parts(Id, Preferred, Keys);
       end if;
     when E.Element.VoiceSession(
       const Id: string,

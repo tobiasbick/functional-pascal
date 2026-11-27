@@ -9,7 +9,7 @@ public sealed partial class CuiWindow
     /// <param name="tone">Native semantic tone ordinal; zero uses CUI's default when no explicit color is supplied.</param>
     /// <param name="rgba">Packed straight RGBA override, or zero to use the tone.</param>
     /// <param name="name">Optional collaborator flag at the component's top end corner.</param>
-    /// <param name="radius">Corner radius in logical points, or zero to follow the component's corners.</param>
+    /// <param name="radius">Corner radius in logical points, or zero to use the component's top-left corner radius.</param>
     public unsafe void SelectionRing(int tone, uint rgba, string? name, float radius)
     {
         CheckFrame();

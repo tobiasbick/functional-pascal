@@ -76,7 +76,9 @@ begin
   const Users: Lists.List of Live.Person := new Lists.List of Live.Person(3);
   for Index: int := 0 to 2 do
     const Step: uint := cast (cast Seconds as double / (1.6 + 0.4 * Index)) as uint;
-    const Hash: uint := Step * 2654435761U + cast Index as uint * 40503U;
+    // Keep the same 32-bit wraparound as the CUI sample.
+    const Hash: uint := cast ((cast Step as ulong * 2654435761UL + cast Index as ulong * 40503UL)
+      and $FFFFFFFFUL) as uint;
     const Says: string? := if Index = 1 and Step mod 3U <> 0U then
       'Bumping steps to 40?'
     else
@@ -204,9 +206,9 @@ begin
       T.Item.Cycle(
         ['1x', '2x', '4x'],
         Model.Scale,
-        'Scale'
+        new T.CycleOptions(Tooltip := 'Scale')
       ),
-      T.Item.Cycle(['PNG', 'JPG', 'WEBP'], Model.Kind, 'Format'),
+      T.Item.Cycle(['PNG', 'JPG', 'WEBP'], Model.Kind, new T.CycleOptions(Tooltip := 'Format')),
       T.Item.Separator,
       Tool(Glyph($E0B2), 'Download')
     ], State.Msg.ResultTools, new T.Options(Style := 2)
@@ -259,7 +261,7 @@ begin
     'hero-light.png',
     'social-card.png',
     'icon-512.png',
-    'demo@example.com'
+    'thumb@2x.png'
   ];
   const Bytes: array of string := ['2.4 MB', '2.3 MB', '812 KB', '96 KB', '140 KB'];
   const Rows: Lists.List of E.Element of State.Msg := new Lists.List of E.Element of State.Msg(
@@ -275,12 +277,12 @@ begin
       new Bulk.Action(Glyph($E09E), 'Copy'),
       new Bulk.Action(Glyph($E18E), 'Delete', S.Tone.Danger)
     ], State.Msg.Bulk, E.Size of State.Msg(
-      E.Styled of State.Msg(
-        E.Column of State.Msg(
-          new L.Flow(Padding := G.Points(4), Gap := G.Points(2), CornerRadius := 14.0F),
-          Rows.ToArray()
-        ),
-        S.Role.OutlinedPanel
+      E.Column of State.Msg(
+        new L.Flow(
+          Padding := G.Points(4), Gap := G.Points(2), Clip := false,
+          CornerRadius := 14.0F, BackgroundTheme := Theme.ColorToken.Surface,
+          Border := new L.Border()
+        ), Rows.ToArray()
       ),
       new L.Flex(
         Width := new L.AxisSize(

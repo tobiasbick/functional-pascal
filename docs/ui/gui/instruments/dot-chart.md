@@ -43,20 +43,50 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Bands / Count` | Supply up to 16 bands with `Count` finite, equally spaced samples in each. Pass the intended sample count for an empty plot. |
-| `XMinimum / XMaximum / Units` | 0 / 0 / Number. Equal bounds use sample indices. Hours formats 12.25 as 12:15 and wraps at midnight. |
-| `XFormat / XStep` | null / 0. Zero chooses automatic X label spacing. |
-| `Range / Format / Unit` | null / null / empty. The chart derives value bounds and formatting when omitted. |
-| `XLabel / ValueLabel` | Both null. Optional callbacks format X-axis and readout coordinates or the readout value during painting. |
-| `Width / Height / Pitch` | Fill / 0 / 0. Zero uses native height or dot spacing. |
-| `Grid / Axis / Readout / Enabled` | All true. |
+| `Bands / Count` | Supply up to 16 bands with `Count` equally spaced samples in each. Pass `Count` with no bands to retain the X coordinates. |
+| `Series.Values / Accent / Name` | Supply the samples. Accent defaults to false. Name defaults to empty. |
+| `XMinimum / XMaximum` | Both 0. Equal bounds select 0 through `max(1, Count - 1)`. Otherwise, supply an increasing interval. |
+| `Units / XFormat / XStep` | Number / null / 0. The native number format is `%g`. `Hours` shows 12.25 as 12:15 and wraps at midnight. Zero selects automatic label spacing. |
+| `Range / Format / Unit` | null / null / empty. The automatic range begins at zero and ends 8% above the largest stack, or at one for an empty stack. The native value format is `%.0f`. |
+| `XLabel / ValueLabel` | Both null. Optional callbacks replace the X labels and the readout's X coordinate or value. |
+| `Width / Height / Pitch` | Fill / 0 / 0. The native height is 200 logical units. The default pitch is 6 logical units. CUI limits positive pitch values to 3 through 40. |
+| `Grid / Axis / Readout / Enabled` | All true. They control dim dots, X-axis labels, the value label next to the cursor, and input. |
 | [`Annotations`](../charts/README.md#annotations) | Empty. Reference lines and points use axis units and the shared annotation colors. |
+| `Observed / OnReadout` | Both null. Set the last reported sample and a message mapper to receive changes to the readout. |
+
+The chart stacks bands in array order and interpolates between samples.
+Negative values, infinities, NaN and values at or above `1e30` count as zero.
+CUI places accented bands in the theme accent color. FPAS passes `Name` to CUI.
+The pinned CUI revision omits series names from the readout. [CUI-151](../../../future/cui-upstream-bugs.md#cui-151)
+
+A positive `XStep` sets the distance in X units. The step must advance across the axis range.
+
+Label callbacks run during painting. Capture callback state in the delegate.
+Use `XLabel` for the X-axis labels and the readout's X coordinate.
+`Units` still controls automatic label spacing. `Unit` follows the text from
+`ValueLabel`. FPAS limits each callback's text to 63 UTF-8 bytes and preserves
+whole characters.
+
+At the same width, a chart and an event track with the same bounds align their
+X coordinates. Set `Axis := false` to use the track's labels. Both axes run
+from left to right in right-to-left views.
 
 ## Interaction
 
-Activation reports an X coordinate, the nearest sample index and the stacked
-value at that sample. The index is minus one outside the plot. The gallery
-uses the coordinate to add a cup and updates the plotted bands in its model.
+Click the plot to send `OnActivate` with the exact pointer X coordinate, the
+nearest sample index, and the stacked value at that sample. The gallery uses
+the coordinate to add a cup and updates the bands in its model.
+
+With the chart focused, press Left or Right to move one sample. Hold Shift to
+move ten samples. Home and End jump to the first and last sample. Escape hides
+the keyboard cursor. Enter or Space sends `OnActivate` at the cursor. If there
+is no cursor or pointer sample, keyboard activation selects the middle sample.
+
+Set `Observed := new Hit(0.0, -1, 0.0F)` to start observing the readout. Store
+each `OnReadout` result in the model and pass it back as `Observed`. The result
+contains the sample's X coordinate, index, and stacked value. With no sample,
+the index is minus one and both values are zero. `Readout := false` hides the
+native readout label. The chart still reports sample changes and activation.
 
 ## See also
 

@@ -5,6 +5,7 @@
 typedef struct {
     const char *label, *suffix, *placeholder, *tooltip; /**< Borrowed literal row text, valid during the call. */
     char *text; /**< Writable NUL-terminated UTF-8 text for kind two. */
+    const char *format; /**< Validated optional format for one double value. */
     const char *const *choices; /**< Borrowed enum captions for kind four. */
     int kind; /**< Float zero, integer one, text two, boolean three, enum four, color five, vector six. */
     int integer; /**< Model integer, boolean or selected enum index; receives proposal. */

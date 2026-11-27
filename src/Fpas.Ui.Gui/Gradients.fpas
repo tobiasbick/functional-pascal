@@ -1,0 +1,22 @@
+// [Documentation](../../docs/ui/gui/editing-tools/gradient-editor.md)
+
+unit Fpas.Ui.Gui.Gradients;
+
+uses Fpas.Ui.Graphics as Graphics;
+uses Fpas.Ui.Gui.Cui.Widgets.Editors as Native;
+uses Fpas.Ui.Gui.Internal.Core.Values as Colors;
+uses Fpas.Ui.Gui.Internal.Data.GradientData as Data;
+uses Fpas.Ui.Widgets.Editors.GradientEditors as Editor;
+
+// Samples the ramp using CUI's interpolation for each color channel and alpha.
+// ## Parameters
+// - `Stops`: Ramp stops with finite positions from zero through one, in any order.
+// - `Position`: The position to sample. Positions beyond the stops use the nearest end color.
+// ## Returns
+// The interpolated color, or transparent black for an empty ramp. NaN samples the first stop.
+public function Evaluate(Stops: array of Editor.Stop; Position: float): Graphics.Color;
+begin
+  return Colors.Unpack(Native.CuiGradient.Evaluate(Data.Pack(Stops), Position));
+end function;
+
+end unit;

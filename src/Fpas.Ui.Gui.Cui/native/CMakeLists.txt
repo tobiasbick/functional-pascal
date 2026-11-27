@@ -73,8 +73,10 @@ if(FPAS_CUI_BUILD_TESTS)
         meter progress_ring timeline skeleton layout_parity tour input_regressions
         property_text_replacement calendar smart_inputs wheel_interruption charts
         visualizations more_charts collection_regressions grid_regressions grid_editing
-        code_instruments api_extensions editor_extensions painting motion creative
-        planning social media voice_ai ai_cards developer_tools canvas_bars display source_tools
+        code_instruments instrument_display api_extensions editor_extensions painting motion creative creative_choices
+        planning social media voice_ai voice_wave voice_composer voice_session voice_note ai_cards developer_tools
+        canvas_bars canvas_cards canvas_format_bar
+        canvas_toolbar display source_tools
         editing_tools desktop_chrome developer_graphs developer_inspectors developer_editors http_tools)
         add_executable(fpas_cui_${widget} tests/${widget}.c)
         set_target_properties(fpas_cui_${widget} PROPERTIES

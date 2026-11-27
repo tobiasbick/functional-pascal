@@ -15,4 +15,8 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial int SignaturePoints(nint context, string id, out nint points,
         out nint strokeEnds, out int strokeCount);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_signature_clear", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void SignatureClear(nint context, string id);
 }

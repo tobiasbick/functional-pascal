@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Display.Markdowns;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Layout as L;
 
 // Activation reported by CUI.
@@ -21,6 +22,8 @@ public type Options = record
   public Width: L.Extent := L.Extent.Fill;
   // Body size, or zero for the theme.
   public Size: float := 0.0F;
+  // Body and link color, or null for the theme.
+  public Color: G.Color? := null;
   // Use compact headings and spacing.
   public Compact: bool := false;
   // Treat the supplied text as a partial document.

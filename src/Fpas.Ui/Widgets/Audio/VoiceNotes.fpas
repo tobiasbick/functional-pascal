@@ -4,15 +4,14 @@ unit Fpas.Ui.Widgets.Audio.VoiceNotes;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Widgets.Audio.Voice as Voice;
 
 // Model-owned playback state.
 public type Value = record
-  // Length in seconds.
+  // Length in seconds. A zero-length waveform is passive.
   public Duration: float;
   // Played seconds.
   public Position: float := 0.0F;
-  // Playback rate: 1, 1.5 or 2.
+  // Playback rate: 1, 1.5 or 2. Zero displays 1.
   public Speed: float := 1.0F;
   // Show the pause control.
   public Playing: bool := false;
@@ -30,7 +29,7 @@ end variant;
 
 // Native presentation and interaction options.
 public type Options = record
-  // Preferred native bubble width.
+  // Preferred bubble width. Content uses up to 330 logical units.
   public Width: L.Extent := L.Extent.Content;
   // Place an outgoing bubble at the end.
   public Mine: bool := false;

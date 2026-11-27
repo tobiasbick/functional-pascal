@@ -13,6 +13,20 @@ public type Event = record
   public Count: int;
   // Whether the viewer is showing an inline diff.
   public Inline: bool;
+  // Number of added lines.
+  public Added: int;
+  // Number of removed lines.
+  public Removed: int;
+  // Number of visible fold rows.
+  public Folds: int;
+  // Number of unchanged lines hidden by the folds.
+  public Hidden: int;
+  // Whether the shortest-edit search reached its limit.
+  public Approximate: bool;
+  // Whether the selected change changed during this frame.
+  public CurrentChanged: bool;
+  // Whether CUI recomputed the diff during this frame.
+  public Recomputed: bool;
 end record;
 
 // Native DiffView configuration.
@@ -31,6 +45,8 @@ public type Options = record
   public NewTitle: string := '';
   // Request inline rather than split layout.
   public Inline: bool := false;
+  // Minimum width for split layout, or zero for the native default.
+  public SplitMinimumWidth: float := 0.0F;
   // Unchanged lines kept beside each change.
   public Context: int := 3;
   // Fold long runs of unchanged lines.

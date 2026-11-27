@@ -24,7 +24,8 @@ internal static partial class NativeMethods
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_toolbar_cycle", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial int ToolbarCycle(nint ui, string id, byte** labels, int count, int value, string? tooltip);
+    internal static unsafe partial int ToolbarCycle(nint ui, string id, byte** labels, int count, int value, string? tooltip,
+        string? shortcut, int tone, int flags);
 
     [LibraryImport(Library, EntryPoint = "cui_toolbar_group_begin", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -41,4 +42,8 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "cui_toolbar_spacer", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial void ToolbarSpacer(nint ui);
+
+    [LibraryImport(Library, EntryPoint = "cui_flyout_mark")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void MarkFlyout(nint ui);
 }

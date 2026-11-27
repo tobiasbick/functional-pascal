@@ -18,6 +18,8 @@ public type Operation of TMsg = variant
   Fallback(Face: Resources.CuiFontFace; Fallback: Resources.CuiFontFace);
   // Replaces the emoji font; null asks CUI for the system font.
   Emoji(Data: (array of byte)?; OnLoaded: function(bool): TMsg);
+  // Loads a trusted emoji font file. CUI can read bitmap glyphs on demand.
+  EmojiFile(Path: string; OnLoaded: function(bool): TMsg);
   // Queries whether the native emoji font supports a Unicode sequence.
   SupportsEmoji(Text: string; OnRead: function(bool): TMsg);
 end variant;
@@ -60,6 +62,13 @@ public type Request of TMsg = record implements Mvu.HostExtension of TMsg
       ): (Operation of TNext).Emoji(
         Data,
         function(Supported: bool): TNext => Messages(Loaded(Supported))
+      );
+      when Operation.EmojiFile(
+        const Path: string,
+        const Loaded: function(bool): TMsg
+      ): (Operation of TNext).EmojiFile(
+        Path,
+        function(Accepted: bool): TNext => Messages(Loaded(Accepted))
       );
       when Operation.SupportsEmoji(
         const Text: string,

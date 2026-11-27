@@ -2,6 +2,11 @@
 #ifndef FPAS_SIGNATURE_PAD_H
 #define FPAS_SIGNATURE_PAD_H
 
+/** Clears the pad and cancels an in-progress stroke.
+ * @param ui Current drawing context.
+ * @param id Stable identity in the same ID scope as the pad. */
+CUI_API void fpas_cui_signature_clear(cui_ctx *ui, const char *id);
+
 /** Draws CUI's signature pad.
  * @param ui Current drawing context.
  * @param id Stable identity.

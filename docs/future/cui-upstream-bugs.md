@@ -28,6 +28,8 @@ tests cover rejection, stacked overflow and the explicit-range alternative.
 
 ## CUI-020 — Removing a visible tag drops hidden tags
 
+- Upstream: [Issue #166](https://github.com/yappologistic/CUI/issues/166) reports the defect. [PR #170](https://github.com/yappologistic/CUI/pull/170) proposes a fix.
+
 At CUI revision `6864776`, the tag editor stores more than 64 tags when
 `max_tags` is zero. It displays the first 64. Removing a visible tag also
 discards the hidden tags. A direct check with 65 short tags leaves 63 after
@@ -40,6 +42,8 @@ visible tags. The host applies the same limit to native edits.
 
 ## CUI-021 — A multiline password field displays its text
 
+- Upstream: [Issue #167](https://github.com/yappologistic/CUI/issues/167) reports the defect. [PR #171](https://github.com/yappologistic/CUI/pull/171) proposes a fix.
+
 At CUI revision `6864776`, `cui_textarea` draws plain text when its shared
 `password` option is set. The setting adds a reveal button to the field.
 
@@ -51,6 +55,8 @@ masked input.
 
 ## CUI-022 — The gallery loses focus when Next becomes Finish
 
+- Upstream: [Issue #168](https://github.com/yappologistic/CUI/issues/168) reports the defect. [PR #172](https://github.com/yappologistic/CUI/pull/172) proposes a fix.
+
 At CUI revision `6864776`, activate Next with Enter on the Invite team step.
 The gallery replaces the caption with Finish. CUI derives the button ID from
 the caption, so a second Enter does not activate Finish until focus returns.
@@ -61,6 +67,8 @@ uses a stable button ID and keeps focus when the caption changes.
 <a id="cui-023"></a>
 
 ## CUI-023 — The initial tab selection can be outside the viewport
+
+- Upstream: [Issue #169](https://github.com/yappologistic/CUI/issues/169) reports the defect. [PR #173](https://github.com/yappologistic/CUI/pull/173) proposes a fix.
 
 At CUI revision `6864776`, draw a narrow underline strip with four long captions.
 Set the initial index to three. The selected tab stays outside the viewport

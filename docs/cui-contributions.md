@@ -19,7 +19,9 @@ for authorship, AI disclosure and evidence.
 
 For confirmed upstream findings, ask the user whether to open an issue and
 whether to prepare and contribute a fix. Obtain explicit approval before
-publishing an upstream issue or pull request.
+publishing an upstream issue or pull request. Work through the
+[CUI pull request checklist](future/cui-checklist.md) before you open or update
+a pull request.
 
 ## Tracking FPAS workarounds
 
@@ -39,27 +41,3 @@ the author.
 Include the tested CUI commit and the behavior you verified. If you removed a
 local workaround, say so. Omit the downstream project's name. Leave issue
 closure to the upstream maintainers, including for issues we opened.
-
-## Interaction and layout
-
-- Test nearby keys independently when changing a keyboard guard. Cover Enter
-  and Space both as openers and while the popup is open. Exercise Escape
-  dismissal separately.
-- Queue a mouse press and an arrow key in the same frame when deferring a
-  focus change. Apply the deferred move only while its originating control
-  still has focus.
-- When an open popup owns the keyboard, verify that its navigation keys leave
-  the underlying widget's value alone. For range sliders, test that Space
-  visibly distinguishes the active thumb even when both thumbs overlap.
-- For focus rendering, inspect the pixels at the expected target and verify
-  that the old ring disappears after focus moves.
-- Base responsive layout on the space offered by the container. In a
-  content-sized box, the control's previous width can keep it stuck in the
-  compact layout. Exercise narrow, wide, and narrow again in the same
-  instance.
-
-## Pull request checks
-
-- CodeRabbit requires 80% docstring coverage. Put a purpose comment using
-  `/** ... */` immediately above each changed C definition in the diff,
-  including the test runner if touched.

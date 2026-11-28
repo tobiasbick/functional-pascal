@@ -15,4 +15,5 @@ Open gaps, proposals and deferred work. Implemented behavior belongs in the
 | TUI control protocol in Native AOT | [TUI control publication gap](tui-control-aot.md) |
 | FPas-Amp recording identification and similar-track playback | [Dynamic playlists](../../apps/fpas-amp/doc/future/dynamic-playlist.md) |
 | Confirmed native defects and integration workarounds | [CUI upstream bugs](cui-upstream-bugs.md) |
+| Review points to check before a CUI pull request | [CUI pull request checklist](cui-checklist.md) |
 | Optional native title bar and its two upstream pull requests | [CUI title bar](cui-titlebar.md) |

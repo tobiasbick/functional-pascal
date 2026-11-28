@@ -5,9 +5,10 @@
 `Session` implements `ISession`. Create one session per player and dispose it
 when the player closes. `Open(path)` replaces the current track and prepares it
 paused. `Play()` starts or resumes playback and replays an ended track from zero.
-`Pause()` holds the current position. `Seek(TimeSpan)` clamps to the track and
-preserves play or pause. `Unload()` stops playback, releases the current file
-and keeps the session and mixer available for the next `Open(path)`. Seeking
+`Pause()` holds the current position. `Seek(TimeSpan)` clamps to the track.
+`SeekFraction(double)` uses the decoded duration to find the target position.
+Both seek methods preserve play or pause. `Unload()` stops playback and releases
+the current file. The session and mixer stay available for the next `Open(path)`. Seeking
 after a natural end leaves the track paused. `Unload()` does not publish a
 transport event.
 

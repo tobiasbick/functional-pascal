@@ -5,6 +5,9 @@ unit FpasAmp.UiTests.PlayerQueue;
 
 uses Fpas.Media.Audio as Audio;
 uses Fpas.Media.Tags.AudioFiles as MediaTags;
+uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Mvu.Session as Runtime;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Effects;
 
 uses FpasAmp.AppState as Storage;
 uses FpasAmp.Library.Inventory.Model as Inventory;
@@ -16,11 +19,14 @@ uses FpasAmp.Ui.Albums.Music.Browse as Browse;
 uses FpasAmp.Ui.Albums.Music.Model as Music;
 uses FpasAmp.Ui.Player.Availability as Availability;
 uses FpasAmp.Ui.Player.Model as M;
+uses FpasAmp.Ui.Player.Playback as Playback;
 uses FpasAmp.Ui.Player.Update as Update;
 uses FpasAmp.Ui.Settings.Model as Settings;
 uses System as Sys;
 uses System.Collections.Immutable as I;
 uses System.IO as IO;
+uses System.Threading as T;
+uses System.Threading.Channels as Channels;
 uses Xunit as X;
 
 function Song(Id: long; Seconds: double): Tracks.Entry;
@@ -38,6 +44,78 @@ end function;
 
 // Queue ownership, offline slot skipping and bookmark restore.
 public type PlayerQueueTests = record
+  // An early waveform seek uses the decoder duration even before the UI receives it.
+  [X.FactAttribute]
+  public procedure WaveformSeekBeforeDecoderDuration();
+    function Apply(State: M.State; Message: M.Msg): A.Transition of (M.State, M.Msg);
+    begin
+      const Next: M.Transition := Update.Apply(
+        State,
+        Message,
+        function(_Track: Tracks.Entry): bool => true
+      );
+      const Command: M.Request? := Next.Command;
+      if Command <> null then
+        Port.Send(Command);
+      end if;
+
+      case Message of
+        when M.Msg.Play(_, _, _):
+          return Gate.Wrap of M.State(
+            new A.Transition of (M.State, M.Msg)(Next.Model, Port.Watch())
+          );
+        else
+          return new A.Transition of (M.State, M.Msg)(Next.Model, []);
+      end case;
+    end function;
+  begin
+    using const Device: Audio.Session := new Audio.Session(true);
+    const Port: Playback.Connection := Playback.Connection.Create(Device);
+    const Gate: Effects.Effects of M.Msg := (Effects.Effects of M.Msg).Create();
+    const Replies: Channels.ChannelReader of Effects.Reply of M.Msg := Gate.Watch('audio-events');
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(8000);
+    const Track: Tracks.Entry := Song(1L, 1.0) with
+      Path := IO.Path.Combine(Sys.AppContext.BaseDirectory, 'Fixtures', 'silence.mp3');
+    end with;
+    const Session: Runtime.Runtime of (M.State, M.Msg, int) := Runtime.Start of (M.State, M.Msg, int)(
+      new M.State(), Apply, procedure(_Request: A.HostRequest) begin end procedure, 8
+    );
+    try
+      Session.Dispatch(
+        M.Msg.Play(I.ImmutableArray.Create of Tracks.Entry(Track), 0, new Music.Selection())
+      );
+      Session.Dispatch(M.Msg.Toggle);
+      Session.Dispatch(M.Msg.Seek(0.72F));
+      const Requested: long := Session.Model().Revision;
+      const Predicted: double := Session.Model().Position;
+      X.Assert.InRange of double(Predicted, 719.0, 721.0);
+      var Confirmed: bool := false;
+      while not Confirmed do
+        const Held: Effects.Reply of M.Msg := Replies.ReadAsync(
+          Stop.Token
+        ).AsTask().GetAwaiter().GetResult();
+        Held.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
+        discard Session.Advance();
+        case Held.Message of
+          when M.Msg.Observed(const Value: Audio.PlaybackEvent):
+            Confirmed := Value.RequestId = Requested;
+          else
+            X.Assert.True(false, 'The playback worker did not return an audio event.');
+        end case;
+
+        const Current: M.State := Session.Model();
+        if Confirmed then
+          X.Assert.False(Current.Playing);
+          X.Assert.InRange of double(Current.Position / Current.Duration, 0.70, 0.74);
+        else
+          X.Assert.Equal of double(Predicted, Current.Position);
+        end if;
+      end while;
+    finally
+      Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
   // An overlapping online source must have actually indexed the queued file.
   [X.FactAttribute]
   public procedure OverlappingSourcesUseActualOwnership();

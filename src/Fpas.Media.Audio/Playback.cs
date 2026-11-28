@@ -53,6 +53,10 @@ public interface ISession : IDisposable
     /// <param name="position">Desired presentation time, clamped to the track boundaries.</param>
     /// <param name="requestId">Caller correlation ID for this action and subsequent progress.</param>
     void Seek(TimeSpan position, long requestId = 0);
+    /// <summary>Moves to a fraction of the decoded track, preserving playback or pause.</summary>
+    /// <param name="fraction">Finite progress fraction, clamped to zero through one.</param>
+    /// <param name="requestId">Caller correlation ID for this action and subsequent progress.</param>
+    void SeekFraction(double fraction, long requestId = 0);
     /// <summary>Stops playback and releases the current track. The session can open another file.</summary>
     void Unload();
     /// <summary>Silences the session permanently and cancels ongoing decoder work before GUI cleanup.</summary>

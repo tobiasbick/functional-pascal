@@ -7,6 +7,7 @@ uses System.Collections.Generic as Collections;
 uses System.Console as Console;
 uses System.IO as IO;
 uses System.Linq.Enumerable as Seq;
+uses System.Text as Text;
 
 function CountLines(Path: string): int;
 begin
@@ -21,6 +22,7 @@ begin
 end function;
 
 begin
+  Console.OutputEncoding := Text.Encoding.UTF8;
   if args.Length < 1 or args.Length > 2 then
     Console.WriteLine('Usage: DirectoryInventory <directory> [pattern]');
     Sys.Environment.ExitCode := 2;

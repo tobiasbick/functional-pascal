@@ -148,8 +148,8 @@ begin
       else
         Device.Pause(Revision);
       end if;
-    when M.Request.Position(const Milliseconds: double, const Revision: long):
-      Device.Seek(Sys.TimeSpan.FromMilliseconds(Milliseconds), Revision);
+    when M.Request.Seek(const Fraction: float, const Revision: long):
+      Device.SeekFraction(cast Fraction as double, Revision);
     when M.Request.Mixer(const Value: Audio.Settings):
       Device.Apply(Value);
   end case;

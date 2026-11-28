@@ -37,16 +37,10 @@ public sealed partial class MsBuildTests
         Assert.NotEmpty(emptyPath.Output);
         Assert.Empty(emptyPath.Error);
         Assert.Equal(1, (await sdk.Run(project, executable, project.File("missing"))).ExitCode);
-        if (OperatingSystem.IsWindows())
-        {
-            // The relative argument fits the Windows command line, but its absolute path exceeds the path limit.
-            var workingDirectory = project.File(new string('x', 175));
-            Directory.CreateDirectory(workingDirectory);
-            var invalid = await ProcessRunner.RunAsync([Path.Combine("..", executable), new string('x', 32600)],
-                workingDirectory: workingDirectory);
-            Assert.Equal(1, invalid.ExitCode);
-            Assert.Empty(invalid.Error);
-        }
+        // One path component exceeds the file system limit without nesting the working directory.
+        var invalid = await sdk.Run(project, executable, new string('x', 256));
+        Assert.Equal(1, invalid.ExitCode);
+        Assert.Empty(invalid.Error);
     }
 
     [Fact]

@@ -7,10 +7,11 @@ namespace Fpas.IntegrationTests.Workspaces.Support;
 
 internal static class SourcePosition
 {
-    internal static SourceSelection Select(TemporaryDirectory project, string file, string source, string marker)
+    internal static SourceSelection Select(TemporaryDirectory project, string file, string source, string marker, int withinMarker = 0)
     {
         var offset = source.IndexOf(marker, StringComparison.Ordinal);
         Assert.True(offset >= 0, marker);
+        offset += withinMarker;
         if (offset > 0 && source[offset] == '\n' && source[offset - 1] == '\r')
             offset--;
         var document = new SourceDocument(project.File(file), source);

@@ -22,11 +22,11 @@ export async function testingWorkflows(data: Fixture): Promise<void> {
   }
   const vstest = path.join(path.dirname(data.vstestProject), 'Vstest.fpas');
   const mtp = path.join(path.dirname(data.mtpProject), 'Native.fpas');
-  await place(vstest, 'X.Assert.Equal<int>(Expected');
+  await place(vstest, 'Expected, Left + Right');
   const rows = await nativeRun(results, 'testing.runAtCursor', 1);
   assert.equal((rows[0].match(/<UnitTestResult\b/g) ?? []).length, 2);
   assert(!rows[0].includes('Vstest.Failure'));
-  await place(mtp, 'T.Assert.AreEqual<int>(4');
+  await place(mtp, '4, 2 + 2');
   const selected = await nativeRun(results, 'testing.runAtCursor', 1);
   assert.equal((selected[0].match(/<UnitTestResult\b/g) ?? []).length, 1);
   assert(!selected[0].includes('outcome="Failed"'));
@@ -72,7 +72,7 @@ export async function testingWorkflows(data: Fixture): Promise<void> {
 async function place(file: string, marker: string): Promise<void> {
   const target = await editor(file);
   const offset = target.document.getText().indexOf(marker);
-  assert(offset >= 0);
+  assert(offset >= 0, `Missing test marker ${marker} in ${path.basename(file)}`);
   const point = target.document.positionAt(offset);
   target.selection = new vscode.Selection(point, point);
 }

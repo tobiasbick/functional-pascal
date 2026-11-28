@@ -37,6 +37,7 @@ internal sealed class TrackOutput : IDisposable
 
     internal string Path { get; }
     internal PlaybackState State { get { lock (render) return state; } }
+    private TimeSpan Duration => TimeSpan.FromSeconds((double)source.Length / samplesPerSecond);
     internal void Apply(Settings value)
     {
         lock (render)
@@ -92,6 +93,8 @@ internal sealed class TrackOutput : IDisposable
         }
     }
 
+    internal void SeekFraction(double fraction) => Seek(Duration * Math.Clamp(fraction, 0, 1));
+
     internal void FadeOut()
     {
         lock (render)
@@ -112,14 +115,14 @@ internal sealed class TrackOutput : IDisposable
     // Available to the close gesture even during slow decoder I/O on the command thread.
     internal PlaybackEvent StoppedSnapshot() => new(Path, PlaybackState.Paused,
         TimeSpan.FromSeconds((double)Volatile.Read(ref renderedPosition) / samplesPerSecond),
-        TimeSpan.FromSeconds((double)source.Length / samplesPerSecond), [], null, Volatile.Read(ref RequestId));
+        Duration, [], null, Volatile.Read(ref RequestId));
 
     internal PlaybackEvent Snapshot()
     {
         lock (render)
         {
             var result = new PlaybackEvent(Path, state, TimeSpan.FromSeconds((double)source.Position / samplesPerSecond),
-                TimeSpan.FromSeconds((double)source.Length / samplesPerSecond), [.. peaks], error,
+                Duration, [.. peaks], error,
                 Buffering: buffering, NowPlaying: source.NowPlaying);
             for (int i = 0; i < peaks.Length; i++) peaks[i] *= 0.75f;
             return result;

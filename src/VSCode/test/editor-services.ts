@@ -34,7 +34,7 @@ export async function editorServices(data: Fixture, target: vscode.TextEditor): 
   const signature = await run<vscode.SignatureHelp>('vscode.executeSignatureHelpProvider', uri, position(', 2)', 2), ',');
   assert.equal(signature.activeParameter, 1);
   assert(signature.signatures.length >= 2);
-  assert.match(signature.signatures[signature.activeSignature].label, /Echo<string>/);
+  assert.match(signature.signatures[signature.activeSignature].label, /^Echo of string\(/);
   const tokens = await run<vscode.SemanticTokens>('vscode.provideDocumentSemanticTokens', uri);
   assert(tokens.data.length >= 5);
   const calls = await run<vscode.CallHierarchyItem[]>('vscode.prepareCallHierarchy', uri, position('Double(H.'));

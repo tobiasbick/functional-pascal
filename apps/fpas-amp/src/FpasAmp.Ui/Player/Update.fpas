@@ -389,17 +389,17 @@ begin
       end if;
     when M.Msg.Seek(const Fraction: float):
       if Track <> null and (not Current.Podcast or Current.EpisodePath <> '') then
-        const Milliseconds: double := cast Clamp(Fraction, 0.0F, 1.0F) as double * Current.Duration;
+        const Target: float := Clamp(Fraction, 0.0F, 1.0F);
         return new M.Transition(
           Current with
-            Position := Milliseconds;
+            Position := cast Target as double * Current.Duration;
             Revision := Revision;
             Finished := false;
           end with,
           if Current.NeedsOpen then
             null
           else
-            M.Request.Position(Milliseconds, Revision)
+            M.Request.Seek(Target, Revision)
           end if
         );
       end if;

@@ -92,7 +92,7 @@ public sealed class SourceQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkP
         var field = query.Inspect(Select(project, "First/Program.fpas", Consumer, "Value;"));
         Assert.Equal("public Value: T;", field.Inspect!.Source.Declaration.Text);
         Assert.Equal("no_body", field.Inspect.Source.Body.Availability);
-        var metadata = query.Inspect(Select(project, "First/Program.fpas", Consumer, "int>"));
+        var metadata = query.Inspect(Select(project, "First/Program.fpas", Consumer, "int(Value)"));
         Assert.Equal("metadata", metadata.Inspect!.Definition.Origin);
         Assert.Equal("metadata_only", metadata.Inspect.Source.Declaration.Availability);
         Assert.Null(metadata.Inspect.Source.Declaration.Span);

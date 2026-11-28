@@ -11,9 +11,9 @@ public sealed partial class LocalDeploymentTests
     public async Task Dist_small_delivers_one_offline_executable_with_matching_SDK_and_refreshes_only_its_cached_version()
     {
         var repository = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(TestEnvironment.Metadata("FpasSdkProject"))!, "..", ".."));
-        // MSVC tracks native outputs incrementally and warns for builds inside the system temporary directory.
-        using var directory = new TemporaryDirectory(Path.Combine(repository, ".temp-data"));
-        var checkout = directory.File("checkout");
+        // Keep room for CMake and MSVC's nested file tracking paths.
+        using var directory = new TemporaryDirectory(Path.Combine(repository, ".temp-data"), prefix: "");
+        var checkout = directory.File("r");
         Directory.CreateDirectory(checkout);
         foreach (var name in new[] { "src", "sdk", "third-party" }) Copy(Path.Combine(repository, name), Path.Combine(checkout, name));
         foreach (var name in new[] { "Directory.Build.props", "Directory.Packages.props", "global.json", "NuGet.Config", "dist-small.ps1", "dist-small.sh", "docs/ui/gui/cui.md" })

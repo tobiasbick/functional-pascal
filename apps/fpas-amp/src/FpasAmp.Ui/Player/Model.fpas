@@ -143,8 +143,8 @@ public type Request = variant
   Resume(Path: string; Milliseconds: double; Revision: long);
   // Pause or resume the active file.
   Transport(Playing: bool; Revision: long);
-  // Seek within the active file in milliseconds.
-  Position(Milliseconds: double; Revision: long);
+  // Seek within the active file using the decoder's duration.
+  Seek(Fraction: float; Revision: long);
   // Apply a complete mixer snapshot.
   Mixer(Value: Audio.Settings);
 end variant;

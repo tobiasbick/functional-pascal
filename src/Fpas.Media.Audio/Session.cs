@@ -112,6 +112,13 @@ public sealed class Session : ISession
     public void Seek(TimeSpan position, long requestId = 0) => Command(requestId, output => output.Seek(position));
 
     /// <inheritdoc />
+    public void SeekFraction(double fraction, long requestId = 0)
+    {
+        if (!double.IsFinite(fraction)) throw new ArgumentOutOfRangeException(nameof(fraction));
+        Command(requestId, output => output.SeekFraction(fraction));
+    }
+
+    /// <inheritdoc />
     public void Unload()
     {
         lock (commands)

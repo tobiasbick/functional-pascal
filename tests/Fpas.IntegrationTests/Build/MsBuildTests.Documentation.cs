@@ -18,7 +18,7 @@ public sealed partial class MsBuildTests
         else properties.Add(new XElement("GenerateDocumentationFile", "true"));
         definition.Save(projectFile);
         var source = project.File("Game/Bridge.fpas");
-        File.WriteAllText(source, File.ReadAllText(source).Replace("public function Message", "// Original summary.\n// ## Parameters\n// - `Value`: Text.\npublic function Message", StringComparison.Ordinal));
+        const string summary = "Decorates text through the referenced C# library.";
         async Task<ProcessResult> Build()
         {
             var result = await sdk.Run(project, "build", "Game.slnx", "--configuration", configuration);
@@ -31,9 +31,9 @@ public sealed partial class MsBuildTests
         var requested = custom ? project.File("Game/api docs/Export.xml") : output;
         var original = File.ReadAllBytes(intermediate);
         Assert.Equal(original, File.ReadAllBytes(output)); Assert.Equal(original, File.ReadAllBytes(consumer)); Assert.Equal(original, File.ReadAllBytes(requested));
-        Assert.Equal("Original summary.", XDocument.Load(output).Descendants("member").Single(member => (string?)member.Attribute("name") == "M:Demo.Bridge.Message(System.String)").Element("summary")!.Value);
+        Assert.Equal(summary, XDocument.Load(output).Descendants("member").Single(member => (string?)member.Attribute("name") == "M:Demo.Bridge.Message(System.String)").Element("summary")!.Value);
         Assert.DoesNotContain("FPAS: compiling", (await Build()).Output);
-        File.WriteAllText(source, File.ReadAllText(source).Replace("Original summary.", "Edited summary.", StringComparison.Ordinal));
+        File.WriteAllText(source, File.ReadAllText(source).Replace(summary, "Edited summary.", StringComparison.Ordinal));
         Assert.Contains("FPAS: compiling", (await Build()).Output);
         var edited = File.ReadAllBytes(intermediate); Assert.NotEqual(original, edited); Assert.Equal(edited, File.ReadAllBytes(consumer));
         File.Delete(requested); Assert.Contains("FPAS: compiling", (await Build()).Output); Assert.Equal(edited, File.ReadAllBytes(requested));
@@ -58,7 +58,7 @@ public sealed partial class MsBuildTests
         var path = project.File("Game/Game.fpasproj"); var definition = XDocument.Load(path); var properties = definition.Root!.Element("PropertyGroup")!;
         properties.Add(new XElement("GenerateDocumentationFile", "true")); definition.Save(path);
         var source = project.File("Game/Bridge.fpas");
-        File.WriteAllText(source, File.ReadAllText(source).Replace("public function Message", "// ## Parameters\n// - `Unknown`: Invalid.\npublic function Message", StringComparison.Ordinal));
+        File.WriteAllText(source, File.ReadAllText(source).Replace("- `Value`: The text to decorate.", "- `Unknown`: Invalid.", StringComparison.Ordinal));
         var warned = await sdk.Run(project, "build", "Game/Game.fpasproj"); Assert.True(warned.ExitCode == 0, warned.Output + warned.Error); Assert.Contains("warning FP6001", warned.Output);
         var unchanged = await sdk.Run(project, "build", "Game/Game.fpasproj", "--no-restore"); Assert.Equal(0, unchanged.ExitCode); Assert.Contains("warning FP6001", unchanged.Output); Assert.DoesNotContain("FPAS: compiling", unchanged.Output);
         properties.Add(new XElement("TreatWarningsAsErrors", "true")); definition.Save(path);

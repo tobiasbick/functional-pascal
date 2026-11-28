@@ -313,7 +313,7 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
             end unit;
             """;
         File.WriteAllText(project.File(file), member);
-        var completion = SourcePosition.Select(project, file, member, ";\nend function;");
+        var completion = SourcePosition.Select(project, file, member, "Va;", withinMarker: 2);
         var completed = await Query(project, "complete", context, "--file", file, "--line", completion.Line.ToString(), "--column", completion.Column.ToString());
         Assert.True(completed.ExitCode == 0, completed.Output + completed.Error);
         using var completionJson = JsonDocument.Parse(completed.Output);
@@ -322,7 +322,7 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         Assert.Equal(2, matches.GetProperty("replacement").GetProperty("length").GetInt32());
 
         File.WriteAllText(project.File(file), call);
-        var signature = SourcePosition.Select(project, file, call, ";\nend function;");
+        var signature = SourcePosition.Select(project, file, call, "42;", withinMarker: 2);
         var input = JsonSerializer.Serialize(new[] { new { operation = "signature", file, line = signature.Line, column = signature.Column } });
         var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "query", "batch", context, "--existing-inputs", "--diagnostic-limit", "0"],
             input, workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(2));

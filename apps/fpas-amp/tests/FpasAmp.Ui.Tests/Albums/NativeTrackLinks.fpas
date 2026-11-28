@@ -112,16 +112,13 @@ public type TrackLinkTests = record
       ScanPlaylists := true;
     end with;
     await using const Library: Inventory.Session := Sources.Start([Source], Data.Path);
-    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(10000);
-    var Indexed: I.ImmutableArray of Tracks.Entry := (I.ImmutableArray of Tracks.Entry).Empty;
-    while not Stop.IsCancellationRequested and Indexed.Length < 2 do
-      Indexed := Sources.Tags(Library).QueueAsync('', Stop.Token).GetAwaiter().GetResult();
-      if Indexed.Length < 2 then
-        T.Thread.Sleep(10);
-      end if;
-    end while;
-
-    X.Assert.Equal of int(2, Indexed.Length);
+    // Inventory can publish file rows before the tags and release memberships are ready.
+    discard await Sources.Until(
+      Sources.Tags(Library),
+      function(Entries: I.ImmutableArray of Tracks.Entry): bool => Entries.Length = 2
+        and Entries[0].Metadata <> null and Entries[0].AlbumId <> ''
+        and Entries[1].Metadata <> null and Entries[1].AlbumId <> ''
+    );
     using const Device: Audio.Session := new Audio.Session(true);
     const Port: Playback.Connection := Playback.Connection.Create(Device);
     const Gate: Effects.Effects of App.Msg := (Effects.Effects of App.Msg).Create();
@@ -170,7 +167,9 @@ public type TrackLinkTests = record
       'songs/observe'
     );
     Send(App.Msg.WatchLibrary);
+    X.Assert.False(Current.Songs.Page.Loaded);
     Release(Initial);
+    X.Assert.True(Current.Songs.Page.Loaded);
     Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.Search('Guest'))));
     Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.ShowFilters(true))));
     Send(
@@ -179,6 +178,7 @@ public type TrackLinkTests = record
     Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.ApplyFilters)));
     Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.Sort(new Tables.Sort(2, true)))));
     X.Assert.Equal of int(1, Current.Songs.Page.Shown.Length);
+    X.Assert.Equal of string('0:1', Control('music-tracks').Value);
     const Track: Tracks.Entry := Current.Songs.Page.Shown[0];
     const TrackId: string := Track.FileId.ToString();
     const Links: array of string := [

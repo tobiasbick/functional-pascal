@@ -36,7 +36,7 @@ public sealed class RenameGraphTests(SdkPackageFixture sdk) : IClassFixture<SdkP
 
     [Theory]
     [InlineData("Item of T =", "Item", "Node")]
-    [InlineData("T> = record", "T", "U")]
+    [InlineData("T = record", "T", "U")]
     [InlineData("Alias;", "Alias", "UnitAlias")]
     [InlineData("Bridge;", "Bridge", "Renamed")]
     public async Task Type_parameters_aliases_and_unit_names_are_checked(string marker, string oldName, string newName)

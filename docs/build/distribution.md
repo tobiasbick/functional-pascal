@@ -15,8 +15,8 @@ applications requires their own .NET runtime and application dependencies.
 
 ## Build and deliver
 
-Run [dist-small.ps1](../../dist-small.ps1) on Windows x64 or
-[dist-small.sh](../../dist-small.sh) on Linux x64 to distribute the compiler.
+Run [dist.ps1](../../dist.ps1) on Windows x64 or [dist.sh](../../dist.sh) on
+Linux x64 to distribute the compiler and both widget galleries.
 Install the .NET 10 SDK before running either script. The scripts package the
 Release SDK with the [native CUI assets](#native-cui-assets). They publish the CLI
 with its matching package embedded. Builds use the
@@ -48,26 +48,22 @@ and [single-file deployment](https://learn.microsoft.com/en-us/dotnet/core/deplo
 Optional compiler PDBs remain in the build artifacts, separate from the delivered
 file. Generated applications retain their own [symbol contract](../architecture/debug-information.md).
 
-## Distribute the compiler and applications
+## Gallery distribution
 
-Run [dist.ps1](../../dist.ps1) on Windows x64 or [dist.sh](../../dist.sh) on Linux
-x64. The script builds the compiler distribution first. It then publishes the
-two widget galleries, FPas-Sweeper and FPas-Amp with Native AOT. Both galleries
-use their existing projects under `examples/ui/`.
+The distribution script builds the FPAS compiler first. It then publishes both
+widget galleries with Native AOT. The GUI gallery links CUI statically.
 
 | Application | Windows output | Linux output |
 | --- | --- | --- |
-| GUI widget gallery | `bin/GuiWidgetGallery.exe` | `bin/GuiWidgetGallery` |
-| TUI widget gallery | `bin/TuiWidgetGallery.exe` | `bin/TuiWidgetGallery` |
-| FPas-Sweeper | `bin/FpasSweeper.exe` | `bin/FpasSweeper` |
-| FPas-Amp | `bin/FpasAmp.exe` | `bin/FpasAmp` |
+| FPas GUI Gallery | `bin/fpas-gui-gallery.exe` | `bin/fpas-gui-gallery` |
+| FPas TUI Gallery | `bin/fpas-tui-gallery.exe` | `bin/fpas-tui-gallery` |
 
-The full distribution includes the CUI notices in `bin/licenses/cui/`.
-For FPas-Amp on Windows, the portable launcher includes the AOT application and
-its dependencies. On Linux, copy the shared libraries and the `tools/`,
-`licenses/` and `share/` directories with `bin/FpasAmp`.
-Radio on Linux requires `ffmpeg` on PATH. See the
-[FPas-Amp distribution details](../../apps/fpas-amp/doc/desktop.md#windows-portable-build).
+The distribution includes the CUI notices in `bin/licenses/cui/`.
+On Windows, each gallery executable has an embedded icon.
+On Linux, the application launchers and icons are under `bin/share/`.
+For application menu entries, install the `applications/` and `icons/`
+directories under `${XDG_DATA_HOME:-$HOME/.local/share}`. Put `bin/` on the
+desktop session's `PATH` so the launchers can find the executables.
 
 ## Windows portable launcher
 
@@ -194,8 +190,9 @@ the exported SDK also contains `tools/compiler/debugger-notices.txt`.
 
 ## Acceptance
 
-`LocalDeploymentTests` runs the platform's `dist-small` script twice with an
-isolated package cache. It copies only the executable into a fresh directory,
+`LocalDeploymentTests` runs the platform's `dist` script twice with an isolated
+package cache. It checks the gallery executables and Linux desktop assets.
+It copies only the compiler executable into a fresh directory,
 hides the build checkout, removes .NET host search paths, and checks eight parallel
 first compilations, JSON failures, concurrent SDK export, conflict handling and asset-cache
 repair. It verifies executable-local hash directories, recreation after cache removal
@@ -207,10 +204,8 @@ debugging and DAP using the delivered executable. See [build acceptance](../../t
 ## Source files
 
 <details>
-<summary>Browse 18 source files</summary>
+<summary>Browse 16 source files</summary>
 
-- [dist-small.ps1](../../dist-small.ps1)
-- [dist-small.sh](../../dist-small.sh)
 - [dist.ps1](../../dist.ps1)
 - [dist.sh](../../dist.sh)
 

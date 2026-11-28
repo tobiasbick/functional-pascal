@@ -3,9 +3,20 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>WinExe</OutputType>
+    <AssemblyName>fpas-gui-gallery</AssemblyName>
+    <AssemblyTitle>FPas GUI Gallery</AssemblyTitle>
+    <ApplicationIcon>packaging/windows/FpasGuiGallery.ico</ApplicationIcon>
     <RootNamespace>Gallery</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+    <Content Include="packaging/linux/io.github.tobiasbick.FpasGuiGallery.desktop"
+             Link="share/applications/%(Filename)%(Extension)"
+             CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="packaging/linux/io.github.tobiasbick.FpasGuiGallery.svg"
+             Link="share/icons/hicolor/scalable/apps/%(Filename)%(Extension)"
+             CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 </Project>

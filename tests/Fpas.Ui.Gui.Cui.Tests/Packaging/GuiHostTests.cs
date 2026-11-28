@@ -69,7 +69,7 @@ public sealed class GuiHostTests
         foreach (string renderer in new[] { "software", "opengl" })
         {
             string galleryCapture = directory.File("gallery-" + renderer + ".png");
-            var gallery = await ProcessRunner.RunAsync([directory.File($"examples/ui/gui/gallery/bin/{configuration}/net10.0/GuiWidgetGallery.dll"), renderer, galleryCapture],
+            var gallery = await ProcessRunner.RunAsync([directory.File($"examples/ui/gui/gallery/bin/{configuration}/net10.0/fpas-gui-gallery.dll"), renderer, galleryCapture],
                 workingDirectory: directory.Path, environment: environment, timeLimit: galleryDeadline);
             Assert.True(gallery.ExitCode == 0, gallery.Output + gallery.Error);
             Assert.Equal("GUI gallery verified: " + renderer + Environment.NewLine, gallery.Output);

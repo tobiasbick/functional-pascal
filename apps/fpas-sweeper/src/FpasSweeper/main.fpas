@@ -15,7 +15,8 @@ begin
     Update.Apply,
     View.Build,
     new Gui.Options(
-      Title := 'fpas-sweeper', AppId := 'fpas-sweeper', Width := 1120, Height := 760,
+      Title := 'FPas-Sweeper', AppId := 'io.github.tobiasbick.FpasSweeper', Width := 1120,
+      Height := 760,
       MinimumWidth := 740, MinimumHeight := 640
     ),
     View.ThemeFor

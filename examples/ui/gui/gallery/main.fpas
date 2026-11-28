@@ -5,7 +5,6 @@ program GuiWidgetGallery;
 uses Fpas.Ui.Gui.Desktop as Gui;
 
 uses GuiGallery.App.Palette as Palette;
-uses GuiGallery.App.Sidebar as Sidebar;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as Update;
 uses GuiGallery.App.View as View;
@@ -13,7 +12,10 @@ uses GuiGallery.App.View as View;
 begin
   Gui.Run of (State.Model, State.Msg)(
     new State.Model(), Update.Update, View.Build,
-    new Gui.Options(Title := Sidebar.Title, Width := 1240, Height := 820), Update.ThemeFor,
+    new Gui.Options(
+      Title := 'FPas GUI Gallery', Width := 1240, Height := 820,
+      AppId := 'io.github.tobiasbick.FpasGuiGallery'
+    ), Update.ThemeFor,
     BindingsFor := Palette.Bindings
   );
 end;

@@ -1,0 +1,10 @@
+# [Documentation](../../README.md#desktop-launcher)
+[Desktop Entry]
+Type=Application
+Name=FPas TUI Gallery
+Comment=Explore terminal widgets for Functional Pascal
+Exec=fpas-tui-gallery
+TryExec=fpas-tui-gallery
+Icon=io.github.tobiasbick.FpasTuiGallery
+Terminal=true
+Categories=Development;

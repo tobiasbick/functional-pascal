@@ -10,6 +10,10 @@ Functional Pascal.
 
 ## Get started
 
+The app's [distribution scripts](doc/desktop.md#windows-portable-build) publish
+Native AOT to the repository's `bin/` directory as `fpas-amp.exe` on Windows
+or `fpas-amp` on Linux.
+
 Set up the [local FPAS SDK](../../docs/build/development.md#build-an-fpas-application)
 and the [native CUI build tools](../../docs/ui/gui/native-build.md#prerequisites).
 From this directory, run:

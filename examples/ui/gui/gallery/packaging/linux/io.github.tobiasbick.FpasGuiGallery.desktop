@@ -1,0 +1,11 @@
+# [Documentation](../../README.md#desktop-launcher)
+[Desktop Entry]
+Type=Application
+Name=FPas GUI Gallery
+Comment=Explore graphical widgets for Functional Pascal
+Exec=fpas-gui-gallery
+TryExec=fpas-gui-gallery
+Icon=io.github.tobiasbick.FpasGuiGallery
+Terminal=false
+Categories=Development;
+StartupWMClass=io.github.tobiasbick.FpasGuiGallery

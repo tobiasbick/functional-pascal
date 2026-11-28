@@ -1,4 +1,4 @@
-# TUI gallery
+# FPas TUI Gallery
 
 [Illustrated TUI widget guide](../../../../docs/ui/tui/README.md)
 
@@ -125,13 +125,22 @@ build and run the gallery from the repository root.
 
 ```sh
 dotnet build examples/ui/tui/gallery/TuiWidgetGallery.fpasproj
-dotnet examples/ui/tui/gallery/bin/Debug/net10.0/TuiWidgetGallery.dll
+dotnet examples/ui/tui/gallery/bin/Debug/net10.0/fpas-tui-gallery.dll
 ```
 
 The gallery supports the [private debug terminal](../../../../docs/pascal/tools/debugging.md#private-terminal-and-tui-control).
 For headless stepping, launch the managed build with `--headless-control` and set
 `FPAS_TUI_CONTROL_PIPE` to the controller's current-user pipe named
 `fpas-tui-<32 hex digits>`. The initial frame is 80 × 25 cells.
+
+## Desktop launcher
+
+The [FPAS distribution](../../../../docs/build/distribution.md#gallery-distribution)
+publishes `fpas-tui-gallery` with Native AOT. Terminals that accept application
+titles show **FPas TUI Gallery**. The Windows executable embeds the
+[gallery icon](packaging/windows/FpasTuiGallery.ico). The Linux
+[desktop launcher](packaging/linux/io.github.tobiasbick.FpasTuiGallery.desktop)
+opens a terminal and uses the matching [SVG icon](packaging/linux/io.github.tobiasbick.FpasTuiGallery.svg).
 
 ## Source files
 

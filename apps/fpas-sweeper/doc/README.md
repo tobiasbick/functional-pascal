@@ -1,4 +1,4 @@
-# fpas-sweeper documentation
+# FPas-Sweeper documentation
 
 The [application README](../README.md) shows the Light appearance and gives the
 build and launch commands. The [solution](../fpas-sweeper.slnx) owns the desktop
@@ -45,3 +45,21 @@ clock and estimated mines left. CUI sizes the board beside the settings pane.
 theme colors and CUI glyphs. The board uses the same grid geometry for painting
 and pointer input. The canvas sends reveal on a left click and toggles a flag
 on a right click. Focus the canvas to use the keyboard controls.
+
+## Distribution
+
+Run the repository's [FPAS distribution](../../../docs/build/distribution.md#build-and-deliver)
+to prepare the matching SDK and CUI packages. Run the app's
+[dist.ps1](../dist.ps1) on Windows x64 or `sh` [dist.sh](../dist.sh) on Linux x64.
+The scripts publish the game with Native AOT into the repository's `bin/`.
+
+The Windows executable is `bin/fpas-sweeper.exe`. It embeds the
+[Windows icon](../packaging/windows/FpasSweeper.ico) and sets the window title to
+**FPas-Sweeper**.
+
+The Linux executable is `bin/fpas-sweeper`. The
+[desktop launcher](../packaging/linux/io.github.tobiasbick.FpasSweeper.desktop)
+and [SVG icon](../packaging/linux/io.github.tobiasbick.FpasSweeper.svg) are under
+`bin/share/`. To add a menu entry, install the `applications/` and `icons/`
+directories there under `${XDG_DATA_HOME:-$HOME/.local/share}`. Put `bin/` on the
+desktop session's `PATH` so the launcher can find the game.

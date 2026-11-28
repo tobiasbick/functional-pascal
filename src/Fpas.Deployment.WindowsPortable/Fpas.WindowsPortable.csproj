@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <OutputType Condition="'$(PortableGui)' == 'true'">WinExe</OutputType>
     <AssemblyName>$(PortableName)</AssemblyName>
+    <AssemblyTitle Condition="'$(PortableTitleFile)' != ''">$([System.IO.File]::ReadAllText('$(PortableTitleFile)'))</AssemblyTitle>
+    <Product Condition="'$(PortableTitleFile)' != ''">$(AssemblyTitle)</Product>
     <PublishAot>true</PublishAot>
     <ApplicationIcon Condition="'$(PortableIcon)' != ''">$(PortableIcon)</ApplicationIcon>
     <DefineConstants Condition="'$(PortableGui)' == 'true'">$(DefineConstants);PORTABLE_GUI</DefineConstants>

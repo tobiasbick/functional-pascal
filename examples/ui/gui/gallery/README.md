@@ -1,4 +1,4 @@
-# FPas GUI based on CUI
+# FPas GUI Gallery
 
 [Illustrated GUI widget guide](../../../../docs/ui/gui/README.md)
 
@@ -23,6 +23,14 @@ the original gallery composition.
 The [editor commands example](../editor-commands/README.md) shows optional
 editor requests, application shortcuts, account images, tour labels and
 aggregate-selection settings alongside the gallery's default widget examples.
+
+## Desktop launcher
+
+The [FPAS distribution](../../../../docs/build/distribution.md#gallery-distribution)
+publishes `fpas-gui-gallery` with Native AOT. The window title is **FPas GUI Gallery**.
+The Windows executable embeds the [gallery icon](packaging/windows/FpasGuiGallery.ico).
+The Linux [desktop launcher](packaging/linux/io.github.tobiasbick.FpasGuiGallery.desktop)
+uses the matching [SVG icon](packaging/linux/io.github.tobiasbick.FpasGuiGallery.svg).
 
 ## Source structure
 

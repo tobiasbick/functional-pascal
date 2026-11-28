@@ -1,0 +1,9 @@
+<!-- [Documentation](../../README.md#desktop-launcher) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="#353489"/>
+  <rect x="13" y="15" width="38" height="34" rx="6" fill="#eeedff"/>
+  <rect x="17" y="24" width="9" height="21" rx="2" fill="#8886d9"/>
+  <rect x="30" y="24" width="17" height="8" rx="2" fill="#5756ac"/>
+  <rect x="30" y="36" width="17" height="9" rx="2" fill="#8886d9"/>
+  <circle cx="19" cy="20" r="1.5" fill="#353489"/>
+</svg>

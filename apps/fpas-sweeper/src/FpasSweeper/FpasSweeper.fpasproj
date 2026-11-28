@@ -3,10 +3,22 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>WinExe</OutputType>
+    <AssemblyName>fpas-sweeper</AssemblyName>
+    <AssemblyTitle>FPas-Sweeper</AssemblyTitle>
+    <Product>FPas-Sweeper</Product>
     <UseAppHost Condition="'$(OS)' == 'Windows_NT' and '$(RuntimeIdentifier)' == ''">true</UseAppHost>
+    <ApplicationIcon>../../packaging/windows/FpasSweeper.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../FpasSweeper.Game/FpasSweeper.Game.fpasproj" />
     <ProjectReference Include="../../../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' and ('$(UseAppHost)' != 'false' or '$(PublishAot)' == 'true')">
+    <Content Include="../../packaging/linux/io.github.tobiasbick.FpasSweeper.desktop"
+             Link="share/applications/%(Filename)%(Extension)"
+             CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="../../packaging/linux/io.github.tobiasbick.FpasSweeper.svg"
+             Link="share/icons/hicolor/scalable/apps/%(Filename)%(Extension)"
+             CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,8 @@
+<!-- [Documentation](../../README.md#desktop-launcher) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="#144a54"/>
+  <rect x="13" y="15" width="38" height="34" rx="6" fill="#dff7f4"/>
+  <rect x="17" y="24" width="30" height="21" rx="3" fill="#206977"/>
+  <circle cx="19" cy="20" r="1.5" fill="#144a54"/>
+  <path d="m23 29 5.5 5-5.5 5m10 0h7" fill="none" stroke="#dff7f4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

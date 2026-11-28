@@ -1,0 +1,11 @@
+# [Documentation](../../doc/README.md#distribution)
+[Desktop Entry]
+Type=Application
+Name=FPas-Sweeper
+Comment=Reveal tiles and flag mines
+Exec=fpas-sweeper
+TryExec=fpas-sweeper
+Icon=io.github.tobiasbick.FpasSweeper
+Terminal=false
+Categories=Game;LogicGame;
+StartupWMClass=io.github.tobiasbick.FpasSweeper

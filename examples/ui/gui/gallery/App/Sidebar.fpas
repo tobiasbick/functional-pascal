@@ -25,7 +25,7 @@ uses GuiGallery.Shared.State as Shared;
 uses System as Sys;
 uses System.Collections.Generic as Collections;
 
-// The gallery brand used by the window, compact bar and drawer.
+// The gallery brand used by the compact bar and drawer.
 public const Title: string := Strings.Get('Text.GalleryTitle');
 
 // Width of the desktop sidebar in logical points.

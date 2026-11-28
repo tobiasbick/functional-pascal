@@ -190,7 +190,7 @@ begin
   return E.Size of S.Msg(
     E.Column of S.Msg(
       new L.Flow(Gap := Space(18), Padding := Space(Margin)),
-      Texts.Text of S.Msg('fpas-sweeper', Texts.Appearance.HeadingOne),
+      Texts.Text of S.Msg('FPas-Sweeper', Texts.Appearance.HeadingOne),
       E.Size of S.Msg(
         E.Row of S.Msg(
           new L.Flow(Gap := Space(PaneGap), Align := L.Alignment.Start),

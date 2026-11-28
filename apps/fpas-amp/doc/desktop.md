@@ -166,15 +166,14 @@ bytes before publishing repaired data. See [user files and recovery](user-files.
 
 ## Windows portable build
 
-On Windows x64, run the [compiler distribution script](../../../dist-small.ps1)
+On Windows x64, run the [FPAS distribution script](../../../dist.ps1)
 to prepare the matching SDK and CUI packages, then run
 [the FPas-Amp distribution script](../dist.ps1).
-It publishes the app with Native AOT and packages it as `bin/FpasAmp.exe`.
-The [full distribution](../../../docs/build/distribution.md#distribute-the-compiler-and-applications)
-runs both steps.
+It publishes the app with Native AOT and packages it as `bin/fpas-amp.exe`
+next to `fpas.exe`.
 Copy that one file to a writable directory. The launcher verifies and
 extracts the app, native DLLs, `fpcalc.exe` and the radio decoder to a
-versioned directory under `FPasAmp-runtime/` beside it.
+versioned directory under `fpas-amp-runtime/` beside it.
 
 The [dependency packaging script](../packaging/windows/Dependencies.ps1)
 uses the pinned [Windows x64 LGPL build of FFmpeg](https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/tag/autobuild-2026-11-20-12-40).
@@ -185,29 +184,35 @@ app finds its bundled FFmpeg by its absolute path.
 ## Windows desktop launch
 
 Local `dotnet build` and `dotnet run` use the Windows GUI apphost. To open the
-app without a terminal window, launch `FpasAmp.exe` from the build directory.
+app without a terminal window, launch `fpas-amp.exe` from the build directory.
 The executable embeds the [Windows icon](../packaging/windows/FpasAmp.ico),
 rendered from the [desktop SVG](../packaging/linux/io.github.tobiasbick.FpasAmp.svg).
 The native GUI uses the embedded icon for the window caption.
 
+## Linux AOT build
+
+On Linux x64, run the [FPAS distribution script](../../../dist.sh) to prepare
+the matching SDK and CUI packages. From the app directory, run `sh dist.sh`.
+The script publishes `bin/fpas-amp` with Native AOT next to `fpas`. Keep the
+published libraries and the `tools/`, `licenses/` and `share/` directories with
+the executable. Internet radio uses `ffmpeg` on `PATH`.
+
 ## Linux desktop installation
 
 Linux x64 publication with an executable includes an application-menu entry and
-a scalable icon under `share/`. The launcher calls `FpasAmp` by name. Keep the
-published directory together and put its launcher on the desktop session's
-`PATH`, for example through a symlink in `~/.local/bin`. The `apphost` mode below
-requires the .NET 10 runtime.
+a scalable icon under `share/`. The launcher calls `fpas-amp` by name. Put it
+on the desktop session's `PATH`, for example through a symlink in `~/.local/bin`.
 
-From the FPas-Amp directory, publish and install for the current user:
+After the AOT build, run these commands from the app directory to install the
+launcher for the current user.
 
 ```sh
-app_dir="$HOME/.local/opt/fpas-amp"
+app_dir=$(cd ../../bin && pwd)
 data_dir="${XDG_DATA_HOME:-$HOME/.local/share}"
 app_id=io.github.tobiasbick.FpasAmp
 
-install -d "$HOME/.local/opt" "$HOME/.local/bin"
-fpas publish src/FpasAmp/FpasAmp.fpasproj --runtime linux-x64 --mode apphost --output "$app_dir"
-ln -s "$app_dir/FpasAmp" "$HOME/.local/bin/FpasAmp"
+install -d "$HOME/.local/bin"
+ln -s "$app_dir/fpas-amp" "$HOME/.local/bin/fpas-amp"
 install -Dm644 "$app_dir/share/applications/$app_id.desktop" "$data_dir/applications/$app_id.desktop"
 install -Dm644 "$app_dir/share/icons/hicolor/scalable/apps/$app_id.svg" "$data_dir/icons/hicolor/scalable/apps/$app_id.svg"
 ```
@@ -235,6 +240,7 @@ Run them with the local SDK and native GUI prerequisites described in the
 
 - `./`
   - [fpas-amp.slnx](../fpas-amp.slnx)
+  - [dist.sh](../dist.sh)
 - `src/FpasAmp/`
   - [AppState.fpas](../src/FpasAmp/AppState.fpas)
   - [FpasAmp.fpasproj](../src/FpasAmp/FpasAmp.fpasproj)

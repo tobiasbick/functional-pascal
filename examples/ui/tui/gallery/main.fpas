@@ -34,6 +34,7 @@ uses Gallery.Shared.SecurityCard as Security;
 uses Gallery.Shared.Strings as Strings;
 uses Gallery.Shared.TabExamples as TabExamples;
 uses System as Sys;
+uses System.Console as Console;
 uses System.Threading as Threads;
 uses TuiGallery.AlertSamples as AlertSamples;
 uses TuiGallery.Catalog as Catalog;
@@ -480,6 +481,10 @@ begin
       Threads.Thread.Sleep(20);
     end while;
   else
+    if not Console.IsOutputRedirected then
+      Console.Title := 'FPas TUI Gallery';
+    end if;
+
     Host.Run of (Model, Msg)(Initial, GalleryState.Update, View, ThemeFor);
   end if;
 end;

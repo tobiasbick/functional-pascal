@@ -1,10 +1,13 @@
-# fpas-sweeper
+# FPas-Sweeper
 
 A Minesweeper-style desktop game written in Functional Pascal with the native CUI
 GUI. Play Easy, Medium or Hard, or choose **Custom** to set the board width and
 height independently. Switch between Light and Dark during a round.
 
-![fpas-sweeper in Light mode with an active game, two flags and the custom board controls](doc/screenshots/light.png)
+![FPas-Sweeper in Light mode with an active game, two flags and the custom board controls](doc/screenshots/light.png)
+
+The [distribution scripts](doc/README.md#distribution) publish Native AOT as
+`fpas-sweeper.exe` on Windows or `fpas-sweeper` on Linux in the repository's `bin/`.
 
 ## Build and run
 

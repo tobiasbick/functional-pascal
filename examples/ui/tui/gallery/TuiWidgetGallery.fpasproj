@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
+    <AssemblyName>fpas-tui-gallery</AssemblyName>
+    <AssemblyTitle>FPas TUI Gallery</AssemblyTitle>
+    <ApplicationIcon>packaging/windows/FpasTuiGallery.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../gui/gallery/Shared/Strings.fpas" />
@@ -16,5 +19,13 @@
     <EmbeddedResource Include="../../gui/gallery/Shared/Strings.de.resx" LogicalName="Gallery.Shared.Strings.de.resources" />
     <Compile Include="../../gui/gallery/Shared/PeopleTable.fpas;../../gui/gallery/Shared/ButtonExamples.fpas;../../gui/gallery/Shared/EditorStatus.fpas;../../gui/gallery/Shared/Profile.fpas;../../gui/gallery/Shared/ProgressExample.fpas;../../gui/gallery/Shared/SwitchExamples.fpas;../../gui/gallery/Shared/CheckboxExamples.fpas;../../gui/gallery/Shared/SaveFrequency.fpas;../../gui/gallery/Shared/PickerChoices.fpas;../../gui/gallery/Shared/TabExamples.fpas;../../gui/gallery/Shared/AboutField.fpas;../../gui/gallery/Shared/ProjectOptions.fpas;../../gui/gallery/Shared/SecurityCard.fpas;../../gui/gallery/Shared/BuildLog.fpas;../../gui/gallery/Shared/SourceTree.fpas" />
     <ProjectReference Include="../../../../src/Fpas.Ui.Tui/Fpas.Ui.Tui.fpasproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+    <Content Include="packaging/linux/io.github.tobiasbick.FpasTuiGallery.desktop"
+             Link="share/applications/%(Filename)%(Extension)"
+             CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="packaging/linux/io.github.tobiasbick.FpasTuiGallery.svg"
+             Link="share/icons/hicolor/scalable/apps/%(Filename)%(Extension)"
+             CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 </Project>

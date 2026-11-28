@@ -8,22 +8,23 @@ namespace Fpas.IntegrationTests.Build;
 public sealed partial class LocalDeploymentTests
 {
     [Fact]
-    public async Task Dist_small_delivers_one_offline_executable_with_matching_SDK_and_refreshes_only_its_cached_version()
+    public async Task Dist_delivers_the_compiler_and_galleries_and_refreshes_only_the_matching_SDK()
     {
         var repository = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(TestEnvironment.Metadata("FpasSdkProject"))!, "..", ".."));
         // Keep room for CMake and MSVC's nested file tracking paths.
         using var directory = new TemporaryDirectory(Path.Combine(repository, ".temp-data"), prefix: "");
         var checkout = directory.File("r");
         Directory.CreateDirectory(checkout);
-        foreach (var name in new[] { "src", "sdk", "third-party" }) Copy(Path.Combine(repository, name), Path.Combine(checkout, name));
-        foreach (var name in new[] { "Directory.Build.props", "Directory.Packages.props", "global.json", "NuGet.Config", "dist-small.ps1", "dist-small.sh", "docs/ui/gui/cui.md" })
+        var version = "0.1.0-dist.g" + Guid.NewGuid().ToString("N");
+        foreach (var name in new[] { "src", "sdk", "third-party", "examples/ui/gui/gallery", "examples/ui/tui/gallery" })
+            Copy(Path.Combine(repository, name), Path.Combine(checkout, name));
+        foreach (var name in new[] { "Directory.Build.props", "Directory.Packages.props", "global.json", "NuGet.Config", "dist.ps1", "dist.sh", "docs/ui/gui/cui.md" })
         {
             var destination = Path.Combine(checkout, name);
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
             File.Copy(Path.Combine(repository, name), destination);
         }
         var sdkProject = Path.Combine(checkout, "sdk", "Fpas.NET.Sdk", "Fpas.NET.Sdk.csproj");
-        var version = "0.1.0-dist.g" + Guid.NewGuid().ToString("N");
         var xml = XDocument.Load(sdkProject); xml.Root!.Element("PropertyGroup")!.Element("Version")!.Value = version; xml.Save(sdkProject);
         var packages = directory.File("packages");
         var sdkCache = Path.Combine(packages, "fpas.net.sdk", version);
@@ -51,7 +52,7 @@ public sealed partial class LocalDeploymentTests
         {
             Directory.CreateDirectory(sdkCache); File.WriteAllText(Path.Combine(sdkCache, "stale"), "cached previous tools");
             Directory.CreateDirectory(guiCache); File.WriteAllText(Path.Combine(guiCache, "stale"), "cached previous binding");
-            var script = Path.Combine(checkout, OperatingSystem.IsWindows() ? "dist-small.ps1" : "dist-small.sh");
+            var script = Path.Combine(checkout, OperatingSystem.IsWindows() ? "dist.ps1" : "dist.sh");
             var shell = OperatingSystem.IsWindows()
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe") : "/bin/sh";
             string[] arguments = OperatingSystem.IsWindows() ? ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script] : [script];
@@ -59,17 +60,28 @@ public sealed partial class LocalDeploymentTests
             var deployed = await ProcessRunner.RunExecutableAsync(shell, arguments, workingDirectory: consumer,
                 environment: environment, timeLimit: TimeSpan.FromMinutes(15));
             Assert.True(deployed.ExitCode == 0, deployed.Output + deployed.Error);
-            string[] expected = run == 0 ? [Path.GetFileName(launcher)] : ["keep", Path.GetFileName(launcher)];
-            Assert.Equal(expected.Order(),
-                Directory.GetFiles(Path.Combine(checkout, "bin")).Select(Path.GetFileName).Order());
-            File.Copy(Path.Combine(checkout, "bin", Path.GetFileName(launcher)), launcher, overwrite: true);
+            var bin = Path.Combine(checkout, "bin");
+            var suffix = OperatingSystem.IsWindows() ? ".exe" : "";
+            string[] expected = [Path.GetFileName(launcher), "fpas-gui-gallery" + suffix, "fpas-tui-gallery" + suffix];
+            if (run > 0) expected = [.. expected, "keep"];
+            Assert.Equal(expected.Order(), Directory.GetFiles(bin).Select(Path.GetFileName).Order());
+            if (OperatingSystem.IsLinux())
+            {
+                foreach (var app in new[] { "FpasGuiGallery", "FpasTuiGallery" })
+                {
+                    var desktopId = "io.github.tobiasbick." + app;
+                    Assert.True(File.Exists(Path.Combine(bin, "share", "applications", desktopId + ".desktop")));
+                    Assert.True(File.Exists(Path.Combine(bin, "share", "icons", "hicolor", "scalable", "apps", desktopId + ".svg")));
+                }
+            }
+            File.Copy(Path.Combine(bin, Path.GetFileName(launcher)), launcher, overwrite: true);
             if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(launcher, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             if (run == 0) Assert.Single(Directory.GetFileSystemEntries(delivery));
             Assert.True(File.Exists(Path.Combine(checkout, "sdk", "feed", $"Fpas.NET.Sdk.{version}.nupkg")));
             var guiPackage = Path.Combine(checkout, "sdk", "feed", $"Fpas.Ui.Gui.Cui.{version}.nupkg");
             Assert.True(File.Exists(guiPackage));
-            Assert.False(Directory.Exists(sdkCache));
-            Assert.False(Directory.Exists(guiCache));
+            Assert.False(File.Exists(Path.Combine(sdkCache, "stale")));
+            Assert.False(File.Exists(Path.Combine(guiCache, "stale")));
             Assert.Equal("other SDK version", File.ReadAllText(Path.Combine(otherVersion, "keep")));
             Assert.Equal("other GUI version", File.ReadAllText(Path.Combine(otherGuiVersion, "keep")));
             Assert.Equal("other package", File.ReadAllText(Path.Combine(unrelated, "keep")));
@@ -108,10 +120,17 @@ public sealed partial class LocalDeploymentTests
             Assert.False(Directory.Exists(Path.Combine(consumer, "fpas-assets")));
         }
 
-        static void Copy(string source, string target)
+        void Copy(string source, string target)
         {
             Directory.CreateDirectory(target);
-            foreach (var file in Directory.GetFiles(source)) File.Copy(file, Path.Combine(target, Path.GetFileName(file)));
+            foreach (var file in Directory.GetFiles(source))
+            {
+                var destination = Path.Combine(target, Path.GetFileName(file));
+                if (Path.GetExtension(file) == ".fpasproj")
+                    File.WriteAllText(destination, File.ReadAllText(file).Replace("Fpas.NET.Sdk/0.1.0-dev", "Fpas.NET.Sdk/" + version, StringComparison.Ordinal));
+                else
+                    File.Copy(file, destination);
+            }
             foreach (var child in Directory.GetDirectories(source).Where(path => Path.GetFileName(path) is not ("bin" or "obj" or "feed" or "VSCode")))
                 Copy(child, Path.Combine(target, Path.GetFileName(child)));
         }

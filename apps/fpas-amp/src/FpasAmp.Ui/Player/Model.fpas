@@ -3,10 +3,9 @@
 // Playback queue, transport, volume and equalizer state for the player strip.
 unit FpasAmp.Ui.Player.Model;
 
-uses Fpas.Media.Audio as Audio;
-uses Fpas.Media.Images as Images;
-
 uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Media.Audio as Audio;
+uses FpasAmp.Media.Images as Images;
 uses FpasAmp.Ui.Albums.Music.Model as Music;
 uses FpasAmp.Ui.Fingerprints as Fp;
 uses FpasAmp.Ui.Player.Presets as Presets;

@@ -25,8 +25,9 @@ interactions and dispatches their messages through MVU. Values supplied by the
 model remain authoritative until an update supplies new values.
 
 Keep interactive control IDs, modal IDs and cached subview IDs nonempty,
-unique throughout the view, and stable between frames. Treat strings as
-case-sensitive. Sidebar keys are unique across all sections of the sidebar.
+unique throughout the view, and stable between frames. Use an [ID scope](#id-scopes)
+to repeat a subview that uses local IDs. Treat IDs as case-sensitive.
+Sidebar keys are unique across all sections of the sidebar.
 Dropdown and split-menu keys are unique within their menu. A key can repeat
 in a separate sidebar or menu. Keep view records,
 arrays and callbacks unchanged for as long as the host retains
@@ -1631,11 +1632,26 @@ dependency cache; changing the wrapper rebuilds the mapped messages without
 rerunning an unchanged child builder. Normal uncached nodes are traversed and
 rebuilt; mapping does not provide incremental native layout or virtualization.
 
-Control IDs must be unique across the composed view. The corresponding
-[`Fpas.Ui.Mvu.Composition`](mvu/runtime.md#larger-applications) helpers
+The corresponding [`Fpas.Ui.Mvu.Composition`](mvu/runtime.md#larger-applications) helpers
 translate transitions and commands, with optional scopes for background IDs.
 Keep cross-page values under one shared owner, as in the
 [GUI gallery](../../examples/ui/gui/gallery/README.md#source-structure).
+
+### ID scopes
+
+Use `Fpas.Ui.Composition.IdScope of TMsg(Scope, Value)` to assign a stable,
+nonempty ID prefix to a subview. If a subview has a control with ID `save`,
+scope two instances as `left` and `right`. Use `left/save` and `right/save`
+to request focus or find the controls in a snapshot. Nested scopes add each
+prefix, as in `left/editor/save`. Qualified IDs must be unique across the view.
+
+Use local IDs for references within the subview, such as a dialog's initial
+focus or a table of contents' scroll target. The scope qualifies these
+references and the matching controls. Callbacks that receive a table row ID
+or a table of contents anchor receive the local ID.
+
+Use `Composition.Map` to route messages to the model for each instance.
+ID scopes apply to GUI and TUI views, including cached and deferred subviews.
 
 ## Host preflight
 
@@ -1650,7 +1666,7 @@ respective stages after preflight.
 ## Source files
 
 <details>
-<summary>Browse 83 source files</summary>
+<summary>Browse 84 source files</summary>
 
 - `src/Fpas.Ui/`
   - [Composition.fpas](../../src/Fpas.Ui/Composition.fpas)
@@ -1671,6 +1687,7 @@ respective stages after preflight.
   - [Editors.fpas](../../src/Fpas.Ui/Internal/Mapping/Editors.fpas)
   - [Feedback.fpas](../../src/Fpas.Ui/Internal/Mapping/Feedback.fpas)
   - [MessageMapping.fpas](../../src/Fpas.Ui/Internal/Mapping/MessageMapping.fpas)
+  - [Scopes.fpas](../../src/Fpas.Ui/Internal/Mapping/Scopes.fpas)
   - [SourceTools.fpas](../../src/Fpas.Ui/Internal/Mapping/SourceTools.fpas)
   - [Visualizations.fpas](../../src/Fpas.Ui/Internal/Mapping/Visualizations.fpas)
 - `src/Fpas.Ui/Internal/Theming/`

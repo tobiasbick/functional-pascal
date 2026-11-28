@@ -3,13 +3,13 @@
 // Two owned loaders service visible albums, replacing and cancelling stale ranges.
 unit FpasAmp.Ui.Albums.Update;
 
-uses Fpas.Media.Images as Images;
 uses Fpas.Ui.Mvu.Application as A;
 uses Fpas.Ui.Mvu.Composition as Composition;
 
 uses FpasAmp.Library.Albums.Access as Access;
 uses FpasAmp.Library.Albums.Model as Albums;
 uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Media.Images as Images;
 uses FpasAmp.Ui.Albums.Artwork as Artwork;
 uses FpasAmp.Ui.Albums.Browse as Browse;
 uses FpasAmp.Ui.Albums.Grid as Grid;

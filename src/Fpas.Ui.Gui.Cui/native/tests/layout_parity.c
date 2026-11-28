@@ -214,6 +214,49 @@ static bool check_formatted_text_clipping(void) {
     return matched && tooltip_visible;
 }
 
+/** Checks that an overflowing label scrolls on hover and resets when the pointer leaves. */
+static bool check_hover_scroll_text(void) {
+    enum { WIDTH = 300, HEIGHT = 100, PIXELS = WIDTH * HEIGHT * 4 };
+    static unsigned char pixels[6][PIXELS];
+    cui_sw_renderer *renderer = cui_sw_create();
+    if (!renderer) return false;
+    const cui_ctx_desc settings = { .renderer = cui_sw_iface(renderer) };
+    cui_ctx *ui = cui_create(&settings);
+    if (!ui) { cui_sw_destroy(renderer); return false; }
+    cui_set_viewport(ui, WIDTH, HEIGHT, 1);
+    cui_set_reduced_motion(ui, false);
+    cui_rect bounds = {0};
+    for (int sample = 0; sample < 6; ++sample) {
+        const bool hovered = sample == 1 || sample == 2 || sample == 5;
+        const char *text = sample < 4 ? "A long file path with a distinctive filename.mp3" : "Short.mp3";
+        cui_input_mouse_move(ui, hovered ? bounds.x + bounds.w / 2 : WIDTH - 1,
+                             hovered ? bounds.y + bounds.h / 2 : HEIGHT - 1);
+        const int frames = sample == 2 || sample == 5 ? 20 : 1;
+        for (int frame = 0; frame < frames; ++frame) {
+            int label = 0;
+            cui_begin_frame(ui, .05f);
+            cui_row(ui, .width = CUI_FILL, .pad = 8, .gap = 8) {
+                cui_text(ui, text, .width = CUI_PX(100));
+                label = fpas_cui_last_node(ui);
+                fpas_cui_node_role(ui, label, 30);
+                (void)cui_button(ui, "Copy");
+            }
+            cui_end_frame(ui);
+            bounds = fpas_cui_node_rect(ui, label);
+        }
+        cui_sw_render(renderer, cui_get_draw_data(ui), pixels[sample],
+                      WIDTH, HEIGHT, WIDTH * 4, CUI_SW_RGBA);
+    }
+    cui_destroy(ui);
+    cui_sw_destroy(renderer);
+    const bool moved = memcmp(pixels[1], pixels[2], PIXELS) != 0;
+    const bool reset = memcmp(pixels[0], pixels[3], PIXELS) == 0;
+    const bool short_still = memcmp(pixels[4], pixels[5], PIXELS) == 0;
+    if (!moved || !reset || !short_still)
+        fprintf(stderr, "Hover text: moved=%d reset=%d short_still=%d\n", moved, reset, short_still);
+    return moved && reset && short_still;
+}
+
 /** Compares every card child layout and the full native card options against direct CUI. */
 static bool check_card_arrangements(void) {
     enum { WIDTH = 300, HEIGHT = 180 };
@@ -323,7 +366,7 @@ static bool check_reader_jump(bool reduced_motion) {
 
 int main(void) {
     bool valid = check_hover() && check_box_close() && check_text_alignment() &&
-                 check_formatted_text_clipping() && check_card_arrangements() &&
+                 check_formatted_text_clipping() && check_hover_scroll_text() && check_card_arrangements() &&
                  check_reader_jump(false) && check_reader_jump(true);
     for (int axis = 0; axis < 3; ++axis)
         for (int rtl = 0; rtl < 2; ++rtl)

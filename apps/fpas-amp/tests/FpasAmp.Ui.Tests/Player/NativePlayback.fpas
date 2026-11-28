@@ -3,7 +3,6 @@
 // Real shell, transport mailbox, decoder, device callback and native meter.
 unit FpasAmp.UiTests.NativePlayback;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 
@@ -13,6 +12,7 @@ uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Sources as Sources;
 uses FpasAmp.Library.Tests.MetadataSupport as Fixtures;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Persistence.PlayerState as Transport;
 uses FpasAmp.Settings as Preferences;
 uses FpasAmp.Ui.Albums.Music.Model as Music;

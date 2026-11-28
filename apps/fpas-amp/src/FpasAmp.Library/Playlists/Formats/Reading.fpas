@@ -3,11 +3,10 @@
 // ATL reads a bounded snapshot with target metadata/network access disabled.
 unit FpasAmp.Library.Playlists.Formats.Reading;
 
-uses Fpas.Media.Tags.Playlists as Formats;
-
 uses FpasAmp.Library.Inventory.Internal.Directories as Directories;
 uses FpasAmp.Library.Metadata.Internal.Reading as Facts;
 uses FpasAmp.Library.Playlists.Formats.References as R;
+uses FpasAmp.Media.Tags.Playlists as Formats;
 uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.IO as IO;

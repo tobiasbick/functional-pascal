@@ -1,0 +1,22 @@
+<!-- [Documentation](../../doc/media/tags.md) -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>ATL</AssemblyName>
+    <RootNamespace>ATL</RootNamespace>
+    <Version>7.20.1-fpasamp.1</Version>
+    <AssemblyVersion>7.20.1.0</AssemblyVersion>
+    <IsPackable>false</IsPackable>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../third-party/atl/ATL/**/*.cs" Exclude="../../third-party/atl/ATL/old/**;../../third-party/atl/ATL/bin/**;../../third-party/atl/ATL/obj/**" />
+    <EmbeddedResource Include="../../third-party/atl/ATL/Properties/Resources.resx" LogicalName="ATL.Properties.Resources.resources" />
+    <PackageReference Include="Ude.NetStandard" />
+    <PackageReference Include="Zomp.SyncMethodGenerator" PrivateAssets="all" />
+    <None Include="../../third-party/atl/LICENSE.txt" Link="licenses/ATL.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

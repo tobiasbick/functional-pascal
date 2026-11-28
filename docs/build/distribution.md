@@ -84,6 +84,9 @@ arguments and standard streams, and the launcher returns its exit code.
 The [Windows packaging script](../../src/Fpas.Deployment.WindowsPortable/Publish.ps1)
 builds the archive and manifest. The [launcher project](../../src/Fpas.Deployment.WindowsPortable/Fpas.WindowsPortable.csproj)
 embeds those resources using the selected console or GUI subsystem.
+Pass `-Title` to set the GUI error dialog title. Either `-Title` or `-Icon`
+selects the GUI subsystem. If you pass only `-Icon`, the dialog uses the
+launcher executable's base name.
 [Program.cs](../../src/Fpas.Deployment.WindowsPortable/Program.cs) starts the
 bundled executable, and [Payload.cs](../../src/Fpas.Deployment.WindowsPortable/Payload.cs)
 handles verification and extraction. The launcher requires a writeable

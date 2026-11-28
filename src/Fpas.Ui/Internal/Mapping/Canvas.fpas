@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Mapping.Canvas;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.Widgets.Canvas.CanvasControls as CanvasControls;
 uses Fpas.Ui.Widgets.Canvas.FormatBars as FormatBars;
 uses Fpas.Ui.Widgets.Canvas.LiveCursors as LiveCursors;
@@ -59,11 +60,13 @@ end function;
 // - `Value`: Canvas widget.
 // - `Messages`: Message conversion.
 // - `Child`: Element conversion.
+// - `Scope`: Prefix for the element ID, or empty.
 // ## Returns
 // The corresponding parent element.
 public function Map of (TChild, TParent)(
   Value: E.Element of TChild;
   Messages: function(TChild): TParent;
+  Scope: string;
   Child: function(E.Element of TChild): E.Element of TParent
 ): E.Element of TParent;
 begin
@@ -75,7 +78,7 @@ begin
       const Settings: FormatBars.Options
     ):
       return (E.Element of TParent).FormatBar(
-        Id,
+        Scopes.Id(Scope, Id),
         Format,
         function(Proposal: FormatBars.Event): TParent => Messages(Changed(Proposal)),
         Settings
@@ -86,19 +89,24 @@ begin
       const Content: E.Element of TChild,
       const Settings: LiveCursors.Options
     ):
-      return (E.Element of TParent).LiveCursors(Id, People, Child(Content), Settings);
+      return (E.Element of TParent).LiveCursors(
+        Scopes.Id(Scope, Id),
+        People,
+        Child(Content),
+        Settings
+      );
     when E.Element.PresencePill(
       const Id: string,
       const People: array of LiveCursors.Person,
       const Settings: PresencePills.Options
     ):
-      return (E.Element of TParent).PresencePill(Id, People, Settings);
+      return (E.Element of TParent).PresencePill(Scopes.Id(Scope, Id), People, Settings);
     when E.Element.SelectionRing(
       const Id: string,
       const Content: E.Element of TChild,
       const Settings: SelectionRings.Options
     ):
-      return (E.Element of TParent).SelectionRing(Id, Child(Content), Settings);
+      return (E.Element of TParent).SelectionRing(Scopes.Id(Scope, Id), Child(Content), Settings);
     when E.Element.CanvasControls(
       const Id: string,
       const Viewport: NodeEditors.View,
@@ -108,7 +116,7 @@ begin
       const Settings: CanvasControls.Options
     ):
       return (E.Element of TParent).CanvasControls(
-        Id,
+        Scopes.Id(Scope, Id),
         Viewport,
         Toggles,
         function(Proposal: CanvasControls.Event): TParent => Messages(Changed(Proposal)),
@@ -122,7 +130,13 @@ begin
       const Activate: TChild,
       const Settings: ResultCards.Options
     ):
-      return (E.Element of TParent).ResultCard(Id, Image, Title, Messages(Activate), Settings);
+      return (E.Element of TParent).ResultCard(
+        Scopes.Id(Scope, Id),
+        Image,
+        Title,
+        Messages(Activate),
+        Settings
+      );
     when E.Element.SelectionBar(
       const Id: string,
       const Selected: SelectionBars.Selection,
@@ -132,7 +146,7 @@ begin
       const Settings: SelectionBars.Options
     ):
       return (E.Element of TParent).SelectionBar(
-        Id,
+        Scopes.Id(Scope, Id),
         Selected,
         Actions,
         function(Proposal: SelectionBars.Event): TParent => Messages(Changed(Proposal)),
@@ -146,7 +160,7 @@ begin
       const Settings: Toolbars.Options
     ):
       return (E.Element of TParent).Toolbar(
-        Id,
+        Scopes.Id(Scope, Id),
         Items,
         function(Proposal: Toolbars.Event): TParent => Messages(Changed(Proposal)),
         Settings
@@ -160,7 +174,7 @@ begin
       const Settings: NodeEditors.Options
     ):
       return (E.Element of TParent).NodeEditor(
-        Id,
+        Scopes.Id(Scope, Id),
         Viewport,
         MapNodes of (TChild, TParent)(Nodes, Child),
         Links,

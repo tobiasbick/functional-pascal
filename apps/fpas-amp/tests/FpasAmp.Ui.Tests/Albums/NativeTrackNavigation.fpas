@@ -2,8 +2,6 @@
 
 unit FpasAmp.UiTests.NativeTrackNavigation;
 
-uses Fpas.Media.Audio as Audio;
-uses Fpas.Media.Images as Images;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
@@ -13,6 +11,8 @@ uses FpasAmp.Library.Albums.Model as Albums;
 uses FpasAmp.Library.Inventory.Monitoring as Inventory;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
+uses FpasAmp.Media.Images as Images;
 uses FpasAmp.Ui.Albums.Model as Releases;
 uses FpasAmp.Ui.Albums.Music.Model as M;
 uses FpasAmp.Ui.App.Controller as Controller;

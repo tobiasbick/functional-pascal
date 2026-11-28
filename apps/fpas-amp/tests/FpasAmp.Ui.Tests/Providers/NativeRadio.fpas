@@ -2,7 +2,6 @@
 
 unit FpasAmp.UiTests.NativeRadio;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Desktop as GuiHost;
@@ -12,6 +11,7 @@ uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 uses FpasAmp.Library.Inventory.Monitoring as Inventory;
 uses FpasAmp.Library.Tests.MetadataSupport as Fixtures;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Settings as Store;
 uses FpasAmp.Ui.App.Model as App;
 uses FpasAmp.Ui.Navigation.Model as Nav;

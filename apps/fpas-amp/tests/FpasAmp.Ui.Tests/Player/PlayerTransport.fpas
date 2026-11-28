@@ -3,10 +3,9 @@
 // Player transport, waveform tracking and sound settings bounds.
 unit FpasAmp.UiTests.PlayerTransport;
 
-uses Fpas.Media.Audio as Audio;
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
-
 uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Media.Audio as Audio;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 uses FpasAmp.Ui.Albums.Music.Model as Music;
 uses FpasAmp.Ui.Player.Model as M;
 uses FpasAmp.Ui.Player.Update as Update;

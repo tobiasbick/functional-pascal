@@ -8,6 +8,5 @@
       <Platform Project="AnyCPU" />
     </ProjectType>
   </Configurations>
-  <Project Path="Fpas.Media.Tests/Fpas.Media.Tests.fpasproj" />
   <Project Path="Fpas.Ui.Mvu.Tests/Fpas.Ui.Mvu.Tests.fpasproj" />
 </Solution>

@@ -11,13 +11,6 @@
     <FpasTestingPlatformVersion>2.5.2</FpasTestingPlatformVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="SoundFlow" Version="1.4.2" />
-    <PackageVersion Include="SoundFlow.Codecs.FFMpeg" Version="1.4.0" />
-    <PackageVersion Include="Ude.NetStandard" Version="1.2.0" />
-    <PackageVersion Include="PhotoSauce.MagicScaler" Version="0.15.0" />
-    <PackageVersion Include="PhotoSauce.NativeCodecs.Libjpeg" Version="3.2.0-preview1" />
-    <PackageVersion Include="PhotoSauce.NativeCodecs.Libpng" Version="1.6.59-preview1" />
-    <PackageVersion Include="Zomp.SyncMethodGenerator" Version="1.6.2" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.15" />
     <PackageVersion Include="MetaBrainz.MusicBrainz" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.1" />

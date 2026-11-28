@@ -3,7 +3,6 @@
 // Album tiles, hover details and track lists share one thumbnail presentation.
 unit FpasAmp.Ui.Albums.Artwork;
 
-uses Fpas.Media.Images as Imaging;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
@@ -12,6 +11,7 @@ uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 
 uses FpasAmp.Library.Albums.Access as Access;
 uses FpasAmp.Library.Albums.Model as Albums;
+uses FpasAmp.Media.Images as Imaging;
 uses System as Sys;
 uses System.IO as IO;
 uses System.Threading as T;

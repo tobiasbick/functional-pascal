@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using Fpas.Media.Tags;
+using FpasAmp.Media.Tags;
 
 namespace FpasAmp.Library.Serialization;
 

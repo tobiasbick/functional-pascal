@@ -3,7 +3,6 @@
 // Read-only album details reuse CUI layout, images, text and the native star display.
 unit FpasAmp.Ui.Albums.Details;
 
-uses Fpas.Media.Images as Imaging;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
@@ -11,6 +10,7 @@ uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Inputs.Ratings as Ratings;
 
 uses FpasAmp.Library.Albums.Model as Library;
+uses FpasAmp.Media.Images as Imaging;
 uses FpasAmp.Ui.Albums.Artwork as Artwork;
 uses FpasAmp.Ui.Albums.Model as M;
 

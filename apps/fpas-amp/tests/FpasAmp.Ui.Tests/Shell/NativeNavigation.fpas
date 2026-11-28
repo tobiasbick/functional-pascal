@@ -3,7 +3,6 @@
 // Native navigation frames exercise actual discovery, restoration and compact sheets.
 unit FpasAmp.UiTests.NativeNavigation;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 
@@ -17,6 +16,7 @@ uses FpasAmp.Library.Sources as Sources;
 uses FpasAmp.Library.Tests.AlbumSupport as Fixtures;
 uses FpasAmp.Library.Tests.MetadataSupport as Metadata;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Persistence.PlayerState as Bookmark;
 uses FpasAmp.Ui.Albums.Model as Albums;
 uses FpasAmp.Ui.Albums.Music.Model as Music;

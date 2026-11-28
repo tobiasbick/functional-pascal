@@ -1,6 +1,6 @@
 # FPas-Amp tests
 
-Run both FPAS xUnit projects from the FPas-Amp directory after the
+Run the FPas-Amp solution from its directory after the
 [local SDK setup](../../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
@@ -23,6 +23,15 @@ to check Unicode filters, ordering, stable identities after moves, and durable
 ratings. Artwork cases check precedence, corruption and offline reuse. Playlist
 cases check URI escaping, entry order, duplicates and round trips. See the
 [library contract](../doc/library.md#focused-verification) for the focused test command.
+
+## Media libraries
+
+[FpasAmp.Media.Tests](FpasAmp.Media.Tests/) reads MP3 and Vorbis tags and covers,
+decodes JPEG and PNG pixels, and checks playlist locations and atomic M3U8
+replacement. [FpasAmp.Media.Audio.Tests](FpasAmp.Media.Audio.Tests/) checks codec
+seeking, playback events, output devices, mixing and waveforms.
+See [audio verification](../doc/media/audio.md#verification) for the individual
+test commands.
 
 ## Desktop UI
 

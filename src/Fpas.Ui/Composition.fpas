@@ -14,6 +14,7 @@ uses Fpas.Ui.Internal.Mapping.EditingTools as EditingTools;
 uses Fpas.Ui.Internal.Mapping.Editors as Editors;
 uses Fpas.Ui.Internal.Mapping.Feedback as Feedback;
 uses Fpas.Ui.Internal.Mapping.MessageMapping as M;
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.Internal.Mapping.SourceTools as SourceTools;
 uses Fpas.Ui.Internal.Mapping.Visualizations as Visuals;
 uses Fpas.Ui.Layout as L;
@@ -128,12 +129,15 @@ type MappedCache of (TChild, TParent) = record
   public Source: E.CacheEntry of TChild;
   // Translator used to build the cached parent view.
   public Messages: function(TChild): TParent;
+  // Prefix used to build the cached view.
+  public Scope: string;
 end record;
 
 function Deferred of (TChild, TParent)(
   Id: string;
   Resolve: function((E.CacheEntry of TChild)?): E.CacheEntry of TChild;
-  Messages: function(TChild): TParent
+  Messages: function(TChild): TParent;
+  Scope: string
 ): E.Element of TParent;
   function Build(Previous: (E.CacheEntry of TParent)?): E.CacheEntry of TParent;
   begin
@@ -149,34 +153,24 @@ function Deferred of (TChild, TParent)(
       end if
     );
     if Previous <> null and Saved <> null and Sys.Object.ReferenceEquals(Saved.Source, Current)
-      and Sys.Object.Equals(Saved.Messages, Messages)
+      and Sys.Object.Equals(Saved.Messages, Messages) and Saved.Scope = Scope
     then
       return Previous;
     end if;
 
     return new E.CacheEntry of TParent(
-      new MappedCache of (TChild, TParent)(Current, Messages),
-      Map of (TChild, TParent)(Current.Tree, Messages)
+      new MappedCache of (TChild, TParent)(Current, Messages, Scope),
+      Transform of (TChild, TParent)(Current.Tree, Messages, Scope)
     );
   end function;
 begin
-  return (E.Element of TParent).Deferred(Id, Build);
+  return (E.Element of TParent).Deferred(Scopes.Id(Scope, Id), Build);
 end function;
 
-// Embeds a child view by translating all messages, callbacks and lazy subviews.
-//
-// ## Type parameters
-// - `TChild`: Child message type.
-// - `TParent`: Parent message type.
-// ## Parameters
-// - `Value`: Child element tree; its options and control identities are retained.
-// - `Messages`: Pure translation of child messages to parent messages.
-// ## Returns
-// A parent-message tree with unchanged layout, native widgets and callback timing.
-// Cached subviews retain their child dependencies and rebuild if the mapper changes.
-public function Map of (TChild, TParent)(
+function Transform of (TChild, TParent)(
   Value: E.Element of TChild;
-  Messages: function(TChild): TParent
+  Messages: function(TChild): TParent;
+  Scope: string
 ): E.Element of TParent;
   function KanbanColumns(
     Columns: array of Kanbans.Column of TChild
@@ -190,7 +184,7 @@ public function Map of (TChild, TParent)(
           new Kanbans.Card of TParent(
             Card.Key,
             Card.Title,
-            Map of (TChild, TParent)(Card.Content, Messages)
+            Transform of (TChild, TParent)(Card.Content, Messages, Scope)
           )
         );
       end for;
@@ -232,7 +226,7 @@ public function Map of (TChild, TParent)(
   begin
     const Result: Lists.List of E.Element of TParent := new Lists.List of E.Element of TParent();
     for Child: E.Element of TChild in Values do
-      Result.Add(Map of (TChild, TParent)(Child, Messages));
+      Result.Add(Transform of (TChild, TParent)(Child, Messages, Scope));
     end for;
 
     return Result.ToArray();
@@ -275,7 +269,7 @@ public function Map of (TChild, TParent)(
       );
     end for;
 
-    return new DataGrids.Row of TParent(Row.Id, Cells.ToArray());
+    return new DataGrids.Row of TParent(Scopes.Id(Scope, Row.Id), Cells.ToArray());
   end function;
   function MapRows(Rows: array of Tables.Row of TChild): array of Tables.Row of TParent;
   begin
@@ -297,7 +291,9 @@ public function Map of (TChild, TParent)(
         );
       end for;
 
-      Result.Add(new Tables.Row of TParent(Row.Id, Cells.ToArray(), Row.Selected));
+      Result.Add(
+        new Tables.Row of TParent(Scopes.Id(Scope, Row.Id), Cells.ToArray(), Row.Selected)
+      );
     end for;
 
     return Result.ToArray();
@@ -331,19 +327,19 @@ begin
       const Label: string,
       const Activate: TChild,
       const Enabled: bool
-    ): (E.Element of TParent).LinkAction(Id, Label, Messages(Activate), Enabled);
+    ): (E.Element of TParent).LinkAction(Scopes.Id(Scope, Id), Label, Messages(Activate), Enabled);
     when E.Element.Avatar(
       const Id: string,
       const Name: string,
       const Settings: Avatars.Options
-    ): (E.Element of TParent).Avatar(Id, Name, Settings);
+    ): (E.Element of TParent).Avatar(Scopes.Id(Scope, Id), Name, Settings);
     when E.Element.HoverCard(
       const Id: string, const Trigger: E.Element of TChild, const Content: E.Element of TChild,
       const Settings: HoverCards.Options
     ): (E.Element of TParent).HoverCard(
-      Id,
-      Map of (TChild, TParent)(Trigger, Messages),
-      Map of (TChild, TParent)(Content, Messages),
+      Scopes.Id(Scope, Id),
+      Transform of (TChild, TParent)(Trigger, Messages, Scope),
+      Transform of (TChild, TParent)(Content, Messages, Scope),
       Settings
     );
     when E.Element.Banner(
@@ -385,7 +381,7 @@ begin
       _,
       _,
       _
-    ): Feedback.Map of (TChild, TParent)(Value, Messages);
+    ): Feedback.Map of (TChild, TParent)(Value, Messages, Scope);
     when E.Element.Dropzone(_, _, _, _), E.Element.AvatarUpload(
       _,
       _,
@@ -394,13 +390,13 @@ begin
       _,
       _,
       _
-    ), E.Element.SignaturePad(_, _, _): Capture.Map of (TChild, TParent)(Value, Messages);
+    ), E.Element.SignaturePad(_, _, _): Capture.Map of (TChild, TParent)(Value, Messages, Scope);
     when E.Element.SwipeRow(
       const Id: string, const Content: E.Element of TChild, const Left: array of Swipe.Item,
       const Right: array of Swipe.Item, const Choose: function(Swipe.Side, int): TChild,
       const Settings: Swipe.Options
     ): (E.Element of TParent).SwipeRow(
-      Id, Map of (TChild, TParent)(Content, Messages), Left, Right,
+      Scopes.Id(Scope, Id), Transform of (TChild, TParent)(Content, Messages, Scope), Left, Right,
       function(Side: Swipe.Side; Index: int): TParent => Messages(Choose(Side, Index)), Settings
     );
     when E.Element.Accordion(
@@ -411,11 +407,11 @@ begin
       const FContent: E.Element of TChild,
       const FEnabled: bool
     ): (E.Element of TParent).Accordion(
-      FId,
+      Scopes.Id(Scope, FId),
       FTitle,
       FOpen,
       function(A0: bool): TParent => Messages(FOnChange(A0)),
-      Map of (TChild, TParent)(FContent, Messages),
+      Transform of (TChild, TParent)(FContent, Messages, Scope),
       FEnabled
     );
     when E.Element.ExpandableCard(
@@ -426,11 +422,11 @@ begin
       const FContent: E.Element of TChild,
       const FSettings: ExpandableCards.Options
     ): (E.Element of TParent).ExpandableCard(
-      FId,
+      Scopes.Id(Scope, FId),
       FTitle,
       FOpen,
       function(A0: bool): TParent => Messages(FOnChange(A0)),
-      Map of (TChild, TParent)(FContent, Messages),
+      Transform of (TChild, TParent)(FContent, Messages, Scope),
       FSettings
     );
     when E.Element.ButtonGroup(
@@ -442,8 +438,8 @@ begin
       const FEntries: array of Menus.Entry of TChild,
       const FEnabled: bool
     ): (E.Element of TParent).Contextual(
-      FId,
-      Map of (TChild, TParent)(FTarget, Messages),
+      Scopes.Id(Scope, FId),
+      Transform of (TChild, TParent)(FTarget, Messages, Scope),
       M.Menu of (TChild, TParent)(FEntries, Messages),
       FEnabled
     );
@@ -451,7 +447,11 @@ begin
       const FTarget: E.Element of TChild,
       const FText: string,
       const FShortcut: string
-    ): (E.Element of TParent).Hinted(Map of (TChild, TParent)(FTarget, Messages), FText, FShortcut);
+    ): (E.Element of TParent).Hinted(
+      Transform of (TChild, TParent)(FTarget, Messages, Scope),
+      FText,
+      FShortcut
+    );
     when E.Element.Dialog(
       const FId: string,
       const FBase: E.Element of TChild,
@@ -460,11 +460,11 @@ begin
       const FSettings: Dialogs.Options,
       const FOnDismiss: TChild
     ): (E.Element of TParent).Dialog(
-      FId,
-      Map of (TChild, TParent)(FBase, Messages),
-      Map of (TChild, TParent)(FContent, Messages),
+      Scopes.Id(Scope, FId),
+      Transform of (TChild, TParent)(FBase, Messages, Scope),
+      Transform of (TChild, TParent)(FContent, Messages, Scope),
       FOpen,
-      FSettings,
+      Scopes.Dialog(Scope, FSettings),
       Messages(FOnDismiss)
     );
     when E.Element.ActionFooter(
@@ -478,8 +478,8 @@ begin
       const FOnDismiss: TChild,
       const FSettings: Popovers.Options
     ): (E.Element of TParent).Popover(
-      FId,
-      Map of (TChild, TParent)(FTrigger, Messages),
+      Scopes.Id(Scope, FId),
+      Transform of (TChild, TParent)(FTrigger, Messages, Scope),
       Children(FChildren),
       FOpen,
       Messages(FOnDismiss),
@@ -493,8 +493,8 @@ begin
       const FOnConfirm: TChild,
       const FOnDismiss: TChild
     ): (E.Element of TParent).ConfirmPopover(
-      FId,
-      Map of (TChild, TParent)(FTrigger, Messages),
+      Scopes.Id(Scope, FId),
+      Transform of (TChild, TParent)(FTrigger, Messages, Scope),
       FOpen,
       FSettings,
       Messages(FOnConfirm),
@@ -506,7 +506,7 @@ begin
       const Activate: (Sys.Func of TChild)?,
       const Settings: ListItems.Options
     ): (E.Element of TParent).ListItem(
-      Id,
+      Scopes.Id(Scope, Id),
       Title,
       M.Factory of (TChild, TParent)(Activate, Messages),
       Settings
@@ -520,8 +520,13 @@ begin
       const Activate: (Sys.Func of TChild)?,
       const Settings: Trees.Options
     ): (E.Element of TParent).TreeNode(
-      Id, Label, Open, Children(Nodes), M.Callback of (bool, TChild, TParent)(Change, Messages),
-      M.Factory of (TChild, TParent)(Activate, Messages), Settings
+      Scopes.Id(Scope, Id),
+      Label,
+      Open,
+      Children(Nodes),
+      M.Callback of (bool, TChild, TParent)(Change, Messages),
+      M.Factory of (TChild, TParent)(Activate, Messages),
+      Settings
     );
     when E.Element.Table(
       const Id: string,
@@ -532,12 +537,12 @@ begin
       const Select: Sys.Func of (string, TChild)?,
       const Settings: Tables.Options
     ): (E.Element of TParent).Table(
-      Id,
+      Scopes.Id(Scope, Id),
       Columns,
       MapRows(Rows),
       Order,
       M.Callback of (Tables.Sort, TChild, TParent)(OnSort, Messages),
-      M.Callback of (string, TChild, TParent)(Select, Messages),
+      M.IdCallback of (TChild, TParent)(Select, Messages, Scope),
       Settings
     );
     when E.Element.FilterBar(
@@ -548,7 +553,7 @@ begin
       const Capacity: int,
       const Enabled: bool
     ): (E.Element of TParent).FilterBar(
-      Id,
+      Scopes.Id(Scope, Id),
       Fields,
       Current,
       function(Next: Filters.Value): TParent => Messages(Change(Next)),
@@ -561,7 +566,7 @@ begin
       const Change: function(DataGrids.Value): TChild, const Settings: DataGrids.Options,
       const DoubleClick: Sys.Func of (int, TChild)?, const RowClick: Sys.Func of (int, TChild)?
     ): (E.Element of TParent).DataGrid(
-      Id,
+      Scopes.Id(Scope, Id),
       Columns,
       Count,
       function(Index: int): DataGrids.Row of TParent => MapGridRow(Build(Index)),
@@ -575,7 +580,7 @@ begin
       const Id: string, const Label: string, const Depth: int, const Open: bool?,
       const Change: Sys.Func of (bool, TChild)?, const Icon: string
     ): (E.Element of TParent).TreeCell(
-      Id,
+      Scopes.Id(Scope, Id),
       Label,
       Depth,
       Open,
@@ -588,7 +593,7 @@ begin
       const Change: function(TreeTables.Change): TChild, const Settings: TreeTables.Options,
       const Menu: Sys.Func of (int, array of Menus.Entry of TChild)?
     ): (E.Element of TParent).TreeTable(
-      Id, Columns, Nodes, Cursor, Order,
+      Scopes.Id(Scope, Id), Columns, Nodes, Cursor, Order,
       function(Next: TreeTables.Change): TParent => Messages(Change(Next)), Settings,
       M.MenuSource of (int, TChild, TParent)(Menu, Messages)
     );
@@ -599,7 +604,7 @@ begin
       const Change: function(array of int): TChild,
       const Enabled: bool
     ): (E.Element of TParent).ReorderableList(
-      Id,
+      Scopes.Id(Scope, Id),
       ReorderRows(Items),
       Order,
       function(Value: array of int): TParent => Messages(Change(Value)),
@@ -614,13 +619,14 @@ begin
       const Offset: float?,
       const Scroll: Sys.Func of (float, TChild)?
     ): (E.Element of TParent).VirtualList(
-      Id,
+      Scopes.Id(Scope, Id),
       Count,
       RowHeight,
       Height,
-      function(Index: int): E.Element of TParent => Map of (TChild, TParent)(
+      function(Index: int): E.Element of TParent => Transform of (TChild, TParent)(
         Build(Index),
-        Messages
+        Messages,
+        Scope
       ),
       Offset, M.Callback of (float, TChild, TParent)(Scroll, Messages)
     );
@@ -628,29 +634,29 @@ begin
       const Id: string,
       const Code: string,
       const Settings: CodeBlocks.Options
-    ): (E.Element of TParent).CodeBlock(Id, Code, Settings);
+    ): (E.Element of TParent).CodeBlock(Scopes.Id(Scope, Id), Code, Settings);
     when E.Element.JsonView(
       const Id: string,
       const Json: string,
       const Settings: JsonViews.Options
-    ): (E.Element of TParent).JsonView(Id, Json, Settings);
+    ): (E.Element of TParent).JsonView(Scopes.Id(Scope, Id), Json, Settings);
     when E.Element.Readout(
       const Id: string,
       const Label: string,
       const Text: string,
       const Settings: Readouts.Options
-    ): (E.Element of TParent).Readout(Id, Label, Text, Settings);
+    ): (E.Element of TParent).Readout(Scopes.Id(Scope, Id), Label, Text, Settings);
     when E.Element.DotDisplay(
       const Id: string,
       const Text: string,
       const Settings: DotDisplays.Options
-    ): (E.Element of TParent).DotDisplay(Id, Text, Settings);
+    ): (E.Element of TParent).DotDisplay(Scopes.Id(Scope, Id), Text, Settings);
     when E.Element.DotChart(
       const Id: string, const Bands: array of DotCharts.Series, const Count: int,
       const Activate: Sys.Func of (DotCharts.Hit, TChild)?, const Settings: DotCharts.Options,
       const Readout: Sys.Func of (DotCharts.Hit, TChild)?
     ): (E.Element of TParent).DotChart(
-      Id,
+      Scopes.Id(Scope, Id),
       Bands,
       Count,
       M.Callback of (DotCharts.Hit, TChild, TParent)(Activate, Messages),
@@ -661,7 +667,7 @@ begin
       const Id: string, const Current: EventTracks.Value,
       const Change: function(EventTracks.Change): TChild, const Settings: EventTracks.Options
     ): (E.Element of TParent).EventTrack(
-      Id,
+      Scopes.Id(Scope, Id),
       Current,
       function(Next: EventTracks.Change): TParent => Messages(Change(Next)),
       Settings
@@ -761,7 +767,13 @@ begin
       _,
       _,
       _
-    ), E.Element.FeatureFlags(_, _, _, _, _): Developer.Map of (TChild, TParent)(Value, Messages);
+    ), E.Element.FeatureFlags(
+      _,
+      _,
+      _,
+      _,
+      _
+    ): Developer.Map of (TChild, TParent)(Value, Messages, Scope);
     when E.Element.FormatBar(
       _,
       _,
@@ -796,9 +808,11 @@ begin
     ): Canvas.Map of (TChild, TParent)(
       Value,
       Messages,
-      function(Content: E.Element of TChild): E.Element of TParent => Map of (TChild, TParent)(
+      Scope,
+      function(Content: E.Element of TChild): E.Element of TParent => Transform of (TChild, TParent)(
         Content,
-        Messages
+        Messages,
+        Scope
       )
     );
     when E.Element.Markdown(_, _, _, _), E.Element.CodeEditor(_, _, _, _), E.Element.DiffView(
@@ -820,7 +834,7 @@ begin
       _,
       _,
       _
-    ): SourceTools.Map of (TChild, TParent)(Value, Messages);
+    ): SourceTools.Map of (TChild, TParent)(Value, Messages, Scope);
     when E.Element.PropertyInspector(_, _, _, _), E.Element.FlameGraph(
       _,
       _,
@@ -845,7 +859,7 @@ begin
       _,
       _,
       _
-    ): EditingTools.Map of (TChild, TParent)(Value, Messages);
+    ): EditingTools.Map of (TChild, TParent)(Value, Messages, Scope);
     when E.Element.NativeText(_, _, _), E.Element.Icon(
       _,
       _,
@@ -868,9 +882,11 @@ begin
     ): Display.Map of (TChild, TParent)(
       Value,
       Messages,
-      function(Child: E.Element of TChild): E.Element of TParent => Map of (TChild, TParent)(
+      Scope,
+      function(Child: E.Element of TChild): E.Element of TParent => Transform of (TChild, TParent)(
         Child,
-        Messages
+        Messages,
+        Scope
       )
     );
     when E.Element.VoiceWave(
@@ -880,7 +896,11 @@ begin
       const Changed: Sys.Func of (float, TChild)?,
       const Settings: VoiceWaves.Options
     ): (E.Element of TParent).VoiceWave(
-      Id, Signal, Progress, M.Callback of (float, TChild, TParent)(Changed, Messages), Settings
+      Scopes.Id(Scope, Id),
+      Signal,
+      Progress,
+      M.Callback of (float, TChild, TParent)(Changed, Messages),
+      Settings
     );
     when E.Element.VoiceNote(
       const Id: string,
@@ -889,7 +909,7 @@ begin
       const Changed: function(VoiceNotes.Event): TChild,
       const Settings: VoiceNotes.Options
     ): (E.Element of TParent).VoiceNote(
-      Id,
+      Scopes.Id(Scope, Id),
       Levels,
       Playback,
       function(Next: VoiceNotes.Event): TParent => Messages(Changed(Next)),
@@ -903,7 +923,7 @@ begin
       const Changed: function(VoiceSessions.Event): TChild,
       const Settings: VoiceSessions.Options
     ): (E.Element of TParent).VoiceSession(
-      Id,
+      Scopes.Id(Scope, Id),
       Mode,
       Signal,
       Muted,
@@ -916,7 +936,7 @@ begin
       const Changed: function(Composers.Event): TChild,
       const Settings: Composers.Options
     ): (E.Element of TParent).Composer(
-      Id,
+      Scopes.Id(Scope, Id),
       Content,
       function(Next: Composers.Event): TParent => Messages(Changed(Next)),
       Settings
@@ -928,38 +948,45 @@ begin
       const Activate: (Sys.Func of TChild)?,
       const Settings: VoiceOrbs.Options
     ): (E.Element of TParent).VoiceOrb(
-      Id, Mode, Level, M.Factory of (TChild, TParent)(Activate, Messages), Settings
+      Scopes.Id(Scope, Id),
+      Mode,
+      Level,
+      M.Factory of (TChild, TParent)(Activate, Messages),
+      Settings
     );
     when E.Element.Reasoning(
       const Id: string,
       const Bodies: array of E.Element of TChild,
       const Settings: Reasonings.Options
-    ): (E.Element of TParent).Reasoning(Id, Children(Bodies), Settings);
+    ): (E.Element of TParent).Reasoning(Scopes.Id(Scope, Id), Children(Bodies), Settings);
     when E.Element.ToolCall(
       const Id: string,
       const Name: string,
       const Settings: ToolCalls.Options
-    ): (E.Element of TParent).ToolCall(Id, Name, Settings);
+    ): (E.Element of TParent).ToolCall(Scopes.Id(Scope, Id), Name, Settings);
     when E.Element.AgentPlan(
       const Id: string,
       const Steps: array of AgentPlans.Step,
       const Changed: Sys.Func of (int, TChild)?,
       const Settings: AgentPlans.Options
     ): (E.Element of TParent).AgentPlan(
-      Id, Steps, M.Callback of (int, TChild, TParent)(Changed, Messages), Settings
+      Scopes.Id(Scope, Id), Steps, M.Callback of (int, TChild, TParent)(Changed, Messages), Settings
     );
     when E.Element.AgentStatus(
       const Id: string,
       const Label: string,
       const Settings: AgentStatuses.Options
-    ): (E.Element of TParent).AgentStatus(Id, Label, Settings);
+    ): (E.Element of TParent).AgentStatus(Scopes.Id(Scope, Id), Label, Settings);
     when E.Element.SourceList(
       const Id: string,
       const Documents: array of Sources.Item,
       const Changed: Sys.Func of (int, TChild)?,
       const Settings: SourceLists.Options
     ): (E.Element of TParent).SourceList(
-      Id, Documents, M.Callback of (int, TChild, TParent)(Changed, Messages), Settings
+      Scopes.Id(Scope, Id),
+      Documents,
+      M.Callback of (int, TChild, TParent)(Changed, Messages),
+      Settings
     );
     when E.Element.Citation(
       const Id: string,
@@ -968,7 +995,11 @@ begin
       const Activate: (Sys.Func of TChild)?,
       const Settings: Citations.Options
     ): (E.Element of TParent).Citation(
-      Id, Number, Source, M.Factory of (TChild, TParent)(Activate, Messages), Settings
+      Scopes.Id(Scope, Id),
+      Number,
+      Source,
+      M.Factory of (TChild, TParent)(Activate, Messages),
+      Settings
     );
     when E.Element.ContextMeter(
       const Id: string,
@@ -976,14 +1007,14 @@ begin
       const Limit: float,
       const Breakdown: array of ContextMeters.Part,
       const Settings: ContextMeters.Options
-    ): (E.Element of TParent).ContextMeter(Id, Used, Limit, Breakdown, Settings);
+    ): (E.Element of TParent).ContextMeter(Scopes.Id(Scope, Id), Used, Limit, Breakdown, Settings);
     when E.Element.ResponseActions(
       const Id: string,
       const Vote: int?,
       const Changed: function(ResponseActions.Event): TChild,
       const Settings: ResponseActions.Options
     ): (E.Element of TParent).ResponseActions(
-      Id,
+      Scopes.Id(Scope, Id),
       Vote,
       function(Next: ResponseActions.Event): TParent => Messages(Changed(Next)),
       Settings
@@ -994,7 +1025,7 @@ begin
       const Changed: function(int): TChild,
       const Settings: PromptSuggestions.Options
     ): (E.Element of TParent).PromptSuggestions(
-      Id,
+      Scopes.Id(Scope, Id),
       Items,
       function(Next: int): TParent => Messages(Changed(Next)),
       Settings
@@ -1006,7 +1037,7 @@ begin
       const Changed: function(int): TChild,
       const Settings: ModelPickers.Options
     ): (E.Element of TParent).ModelPicker(
-      Id,
+      Scopes.Id(Scope, Id),
       Items,
       Selected,
       function(Next: int): TParent => Messages(Changed(Next)),
@@ -1019,7 +1050,7 @@ begin
       const Changed: function(int): TChild,
       const Settings: Carousels.Options
     ): (E.Element of TParent).Carousel(
-      Id,
+      Scopes.Id(Scope, Id),
       Children(Slides),
       Index,
       function(Next: int): TParent => Messages(Changed(Next)),
@@ -1031,7 +1062,7 @@ begin
       const Changed: function(CardStacks.Direction): TChild,
       const Settings: CardStacks.Options
     ): (E.Element of TParent).CardStack(
-      Id,
+      Scopes.Id(Scope, Id),
       Children(DeckItems),
       function(Next: CardStacks.Direction): TParent => Messages(Changed(Next)),
       Settings
@@ -1043,7 +1074,7 @@ begin
       const Changed: function(ImageViewers.Value): TChild,
       const Settings: ImageViewers.Options
     ): (E.Element of TParent).ImageViewer(
-      Id,
+      Scopes.Id(Scope, Id),
       Image,
       ViewValue,
       function(Next: ImageViewers.Value): TParent => Messages(Changed(Next)),
@@ -1056,7 +1087,7 @@ begin
       const Changed: function(ImageCroppers.Value): TChild,
       const Settings: ImageCroppers.Options
     ): (E.Element of TParent).ImageCropper(
-      Id,
+      Scopes.Id(Scope, Id),
       Image,
       Crop,
       function(Next: ImageCroppers.Value): TParent => Messages(Changed(Next)),
@@ -1070,7 +1101,7 @@ begin
       const Changed: function(float): TChild,
       const Settings: ImageComparisons.Options
     ): (E.Element of TParent).ImageCompare(
-      Id,
+      Scopes.Id(Scope, Id),
       Before,
       After,
       Position,
@@ -1083,16 +1114,19 @@ begin
       const Settings: ChatMessages.Options,
       const OnMarkdown: Sys.Func of (Markdowns.Event, TChild)?
     ): (E.Element of TParent).ChatMessage(
-      Id, Text, Settings, M.Callback of (Markdowns.Event, TChild, TParent)(OnMarkdown, Messages)
+      Scopes.Id(Scope, Id),
+      Text,
+      Settings,
+      M.Callback of (Markdowns.Event, TChild, TParent)(OnMarkdown, Messages)
     );
     when E.Element.ChatDivider(
       const Id: string,
       const Label: string
-    ): (E.Element of TParent).ChatDivider(Id, Label);
+    ): (E.Element of TParent).ChatDivider(Scopes.Id(Scope, Id), Label);
     when E.Element.TypingIndicator(
       const Id: string,
       const Name: string?
-    ): (E.Element of TParent).TypingIndicator(Id, Name);
+    ): (E.Element of TParent).TypingIndicator(Scopes.Id(Scope, Id), Name);
     when E.Element.Comment(
       const Id: string,
       const Author: string,
@@ -1101,7 +1135,7 @@ begin
       const Change: function(Comments.Event): TChild,
       const Settings: Comments.Options
     ): (E.Element of TParent).Comment(
-      Id,
+      Scopes.Id(Scope, Id),
       Author,
       Text,
       Current,
@@ -1112,39 +1146,39 @@ begin
       const Id: string,
       const Users: array of Presences.User,
       const Settings: Presences.Options
-    ): (E.Element of TParent).Presence(Id, Users, Settings);
+    ): (E.Element of TParent).Presence(Scopes.Id(Scope, Id), Users, Settings);
     when E.Element.Counter(
       const Id: string,
       const Value: double,
       const Settings: Counters.Options
-    ): (E.Element of TParent).Counter(Id, Value, Settings);
+    ): (E.Element of TParent).Counter(Scopes.Id(Scope, Id), Value, Settings);
     when E.Element.Ticker(
       const Id: string,
       const Items: array of Tickers.Item,
       const Settings: Tickers.Options
-    ): (E.Element of TParent).Ticker(Id, Items, Settings);
+    ): (E.Element of TParent).Ticker(Scopes.Id(Scope, Id), Items, Settings);
     when E.Element.StatusSpinner(
       const Id: string,
       const CurrentStatus: Status.Status,
       const Settings: StatusSpinners.Options
-    ): (E.Element of TParent).StatusSpinner(Id, CurrentStatus, Settings);
+    ): (E.Element of TParent).StatusSpinner(Scopes.Id(Scope, Id), CurrentStatus, Settings);
     when E.Element.SkeletonGroup(
       const Id: string,
       const Views: array of E.Element of TChild,
       const Settings: SkeletonGroups.Options
-    ): (E.Element of TParent).SkeletonGroup(Id, Children(Views), Settings);
+    ): (E.Element of TParent).SkeletonGroup(Scopes.Id(Scope, Id), Children(Views), Settings);
     when E.Element.Sparkline(
       const Id: string,
       const Values: array of float,
       const Settings: Sparklines.Options
-    ): (E.Element of TParent).Sparkline(Id, Values, Settings);
+    ): (E.Element of TParent).Sparkline(Scopes.Id(Scope, Id), Values, Settings);
     when E.Element.PathBar(
       const Id: string,
       const Value: PathBars.Value,
       const Change: function(PathBars.Event): TChild,
       const Settings: PathBars.Options
     ): (E.Element of TParent).PathBar(
-      Id,
+      Scopes.Id(Scope, Id),
       Value,
       function(Event: PathBars.Event): TParent => Messages(Change(Event)),
       Settings
@@ -1155,7 +1189,7 @@ begin
       const Change: function(FileBrowsers.Event): TChild,
       const Settings: FileBrowsers.Options
     ): (E.Element of TParent).FileBrowser(
-      Id,
+      Scopes.Id(Scope, Id),
       Folder,
       function(Event: FileBrowsers.Event): TParent => Messages(Change(Event)),
       Settings
@@ -1167,10 +1201,10 @@ begin
       const Change: function(FilePickers.Event): TChild,
       const Settings: FilePickers.Options
     ): (E.Element of TParent).FilePicker(
-      Id, if Base = null then
+      Scopes.Id(Scope, Id), if Base = null then
         null
       else
-        Map of (TChild, TParent)(Base, Messages)
+        Transform of (TChild, TParent)(Base, Messages, Scope)
       end if, Open, function(Event: FilePickers.Event): TParent => Messages(Change(Event)), Settings
     );
     when E.Element.WeekCalendar(
@@ -1179,7 +1213,7 @@ begin
       const Change: function(WeekCalendars.Event): TChild,
       const Settings: WeekCalendars.Options
     ): (E.Element of TParent).WeekCalendar(
-      Id,
+      Scopes.Id(Scope, Id),
       Value,
       function(Event: WeekCalendars.Event): TParent => Messages(Change(Event)),
       Settings
@@ -1190,7 +1224,7 @@ begin
       const Change: function(MonthCalendars.Event): TChild,
       const Settings: MonthCalendars.Options
     ): (E.Element of TParent).MonthCalendar(
-      Id,
+      Scopes.Id(Scope, Id),
       Value,
       function(Event: MonthCalendars.Event): TParent => Messages(Change(Event)),
       Settings
@@ -1201,7 +1235,7 @@ begin
       const Change: function(Gantts.Event): TChild,
       const Settings: Gantts.Options
     ): (E.Element of TParent).Gantt(
-      Id,
+      Scopes.Id(Scope, Id),
       Value,
       function(Event: Gantts.Event): TParent => Messages(Change(Event)),
       Settings
@@ -1212,7 +1246,7 @@ begin
       const Change: function(Kanbans.Event): TChild,
       const Settings: Kanbans.Options
     ): (E.Element of TParent).Kanban(
-      Id,
+      Scopes.Id(Scope, Id),
       KanbanColumns(Columns),
       function(Event: Kanbans.Event): TParent => Messages(Change(Event)),
       Settings
@@ -1223,7 +1257,7 @@ begin
       const Remove: (Sys.Func of TChild)?,
       const Settings: StatusTags.Options
     ): (E.Element of TParent).StatusTag(
-      Id,
+      Scopes.Id(Scope, Id),
       Current,
       M.Factory of (TChild, TParent)(Remove, Messages),
       Settings
@@ -1234,7 +1268,7 @@ begin
       const Change: function(float): TChild,
       const Settings: RatioSliders.Options
     ): (E.Element of TParent).RatioSlider(
-      Id,
+      Scopes.Id(Scope, Id),
       Current,
       function(Proposed: float): TParent => Messages(Change(Proposed)),
       Settings
@@ -1245,7 +1279,7 @@ begin
       const Change: function(GradientSliders.Event): TChild,
       const Settings: GradientSliders.Options
     ): (E.Element of TParent).GradientSlider(
-      Id,
+      Scopes.Id(Scope, Id),
       Current,
       function(Proposed: GradientSliders.Event): TParent => Messages(Change(Proposed)),
       Settings
@@ -1256,7 +1290,7 @@ begin
       const Change: function(StepSliders.Event): TChild,
       const Settings: StepSliders.Options
     ): (E.Element of TParent).StepSlider(
-      Id,
+      Scopes.Id(Scope, Id),
       Current,
       function(Proposed: StepSliders.Event): TParent => Messages(Change(Proposed)),
       Settings
@@ -1267,7 +1301,7 @@ begin
       const Change: function(PaletteStrips.Event): TChild,
       const Settings: PaletteStrips.Options
     ): (E.Element of TParent).PaletteStrip(
-      Id,
+      Scopes.Id(Scope, Id),
       Current,
       function(Proposed: PaletteStrips.Event): TParent => Messages(Change(Proposed)),
       Settings
@@ -1278,7 +1312,7 @@ begin
       const Change: function(int): TChild,
       const Settings: AspectPickers.Options
     ): (E.Element of TParent).AspectPicker(
-      Id,
+      Scopes.Id(Scope, Id),
       Current,
       function(Proposed: int): TParent => Messages(Change(Proposed)),
       Settings
@@ -1289,7 +1323,7 @@ begin
       const Change: function(OptionActions.Event): TChild,
       const Settings: OptionActions.Options
     ): (E.Element of TParent).OptionAction(
-      Id,
+      Scopes.Id(Scope, Id),
       Current,
       function(Proposed: OptionActions.Event): TParent => Messages(Change(Proposed)),
       Settings
@@ -1300,7 +1334,7 @@ begin
       const Change: function(SeedFields.Event): TChild,
       const Settings: SeedFields.Options
     ): (E.Element of TParent).SeedField(
-      Id,
+      Scopes.Id(Scope, Id),
       Current,
       function(Proposed: SeedFields.Event): TParent => Messages(Change(Proposed)),
       Settings
@@ -1309,7 +1343,7 @@ begin
       const Id: string,
       const Text: string,
       const Settings: Motion.TextOptions
-    ): (E.Element of TParent).ShimmerText(Id, Text, Settings);
+    ): (E.Element of TParent).ShimmerText(Scopes.Id(Scope, Id), Text, Settings);
     when E.Element.Typewriter(
       const Id: string,
       const Text: string,
@@ -1317,7 +1351,7 @@ begin
       const Settings: Motion.TextOptions,
       const OnComplete: (Sys.Func of TChild)?
     ): (E.Element of TParent).Typewriter(
-      Id,
+      Scopes.Id(Scope, Id),
       Text,
       Replay,
       Settings,
@@ -1328,38 +1362,38 @@ begin
       const Text: string,
       const Replay: int,
       const Settings: Motion.TextOptions
-    ): (E.Element of TParent).TextReveal(Id, Text, Replay, Settings);
+    ): (E.Element of TParent).TextReveal(Scopes.Id(Scope, Id), Text, Replay, Settings);
     when E.Element.WordRotate(
       const Id: string,
       const Words: array of string,
       const Interval: float,
       const Settings: Motion.TextOptions
-    ): (E.Element of TParent).WordRotate(Id, Words, Interval, Settings);
+    ): (E.Element of TParent).WordRotate(Scopes.Id(Scope, Id), Words, Interval, Settings);
     when E.Element.NumberRoll(
       const Id: string,
       const Text: string,
       const Settings: Motion.TextOptions
-    ): (E.Element of TParent).NumberRoll(Id, Text, Settings);
+    ): (E.Element of TParent).NumberRoll(Scopes.Id(Scope, Id), Text, Settings);
     when E.Element.GradientText(
       const Id: string,
       const Text: string,
       const Settings: GradientTexts.Options
-    ): (E.Element of TParent).GradientText(Id, Text, Settings);
+    ): (E.Element of TParent).GradientText(Scopes.Id(Scope, Id), Text, Settings);
     when E.Element.Spotlight(
       const Id: string,
       const Items: array of E.Element of TChild,
       const Settings: Spotlights.Options
-    ): (E.Element of TParent).Spotlight(Id, Children(Items), Settings);
+    ): (E.Element of TParent).Spotlight(Scopes.Id(Scope, Id), Children(Items), Settings);
     when E.Element.Loader(
       const Id: string,
       const Style: Loaders.Animation,
       const Settings: Loaders.Options
-    ): (E.Element of TParent).Loader(Id, Style, Settings);
+    ): (E.Element of TParent).Loader(Scopes.Id(Scope, Id), Style, Settings);
     when E.Element.Dock(
       const Id: string,
       const Entries: array of Docks.Entry of TChild,
       const Settings: Docks.Options
-    ): (E.Element of TParent).Dock(Id, MapDock(Entries), Settings);
+    ): (E.Element of TParent).Dock(Scopes.Id(Scope, Id), MapDock(Entries), Settings);
     when E.Element.ControlTile(
       const Id: string,
       const Label: string,
@@ -1367,7 +1401,7 @@ begin
       const Change: function(bool): TChild,
       const Settings: ControlTiles.Options
     ): (E.Element of TParent).ControlTile(
-      Id,
+      Scopes.Id(Scope, Id),
       Label,
       On,
       function(Value: bool): TParent => Messages(Change(Value)),
@@ -1379,7 +1413,7 @@ begin
       const Change: function(NowPlaying.Event): TChild,
       const Settings: NowPlaying.Options
     ): (E.Element of TParent).NowPlaying(
-      Id,
+      Scopes.Id(Scope, Id),
       Current,
       function(Value: NowPlaying.Event): TParent => Messages(Change(Value)),
       Settings
@@ -1391,7 +1425,7 @@ begin
       const Change: Sys.Func of (float, TChild)?,
       const Settings: Waveforms.Options
     ): (E.Element of TParent).Waveform(
-      Id,
+      Scopes.Id(Scope, Id),
       Peaks,
       Progress,
       M.Callback of (float, TChild, TParent)(Change, Messages),
@@ -1404,7 +1438,7 @@ begin
       const Change: function(int): TChild,
       const Settings: TabBars.Options
     ): (E.Element of TParent).TabBar(
-      Id,
+      Scopes.Id(Scope, Id),
       Items,
       Selected,
       function(Value: int): TParent => Messages(Change(Value)),
@@ -1418,8 +1452,12 @@ begin
       const Change: function(bool): TChild,
       const Shortcut: bool
     ): (E.Element of TParent).CommandPalette(
-      Id, Map of (TChild, TParent)(Base, Messages), Open, MapCommands(Commands),
-      function(Value: bool): TParent => Messages(Change(Value)), Shortcut
+      Scopes.Id(Scope, Id),
+      Transform of (TChild, TParent)(Base, Messages, Scope),
+      Open,
+      MapCommands(Commands),
+      function(Value: bool): TParent => Messages(Change(Value)),
+      Shortcut
     );
     when E.Element.MenuBar(_, _, _), E.Element.StatusBar(_, _, _), E.Element.DocumentTabs(
       _,
@@ -1437,20 +1475,22 @@ begin
     ): Chrome.Map of (TChild, TParent)(
       Value,
       Messages,
-      function(Part: E.Element of TChild): E.Element of TParent => Map of (TChild, TParent)(
+      Scope,
+      function(Part: E.Element of TChild): E.Element of TParent => Transform of (TChild, TParent)(
         Part,
-        Messages
+        Messages,
+        Scope
       )
     );
     when E.Element.Grid(
       const Settings: Grids.Options,
       const Nodes: array of E.Element of TChild
-    ): (E.Element of TParent).Grid(Settings, Children(Nodes));
+    ): (E.Element of TParent).Grid(Scopes.Grid(Scope, Settings), Children(Nodes));
     when E.Element.Card(
       const Id: string, const Nodes: array of E.Element of TChild, const Settings: Cards.Options,
       const Activate: (Sys.Func of TChild)?
     ): (E.Element of TParent).Card(
-      Id,
+      Scopes.Id(Scope, Id),
       Children(Nodes),
       Settings,
       M.Factory of (TChild, TParent)(Activate, Messages)
@@ -1459,7 +1499,7 @@ begin
       const Id: string,
       const Text: string,
       const Settings: Badges.Options
-    ): (E.Element of TParent).Badge(Id, Text, Settings);
+    ): (E.Element of TParent).Badge(Scopes.Id(Scope, Id), Text, Settings);
     when E.Element.Sankey(
       _,
       _,
@@ -1533,25 +1573,25 @@ begin
       _,
       _,
       _
-    ), E.Element.PatternMeter(_, _, _): Visuals.Map of (TChild, TParent)(Value, Messages);
+    ), E.Element.PatternMeter(_, _, _): Visuals.Map of (TChild, TParent)(Value, Messages, Scope);
     when E.Element.Metric(
       const Id: string,
       const Label: string,
       const Reading: string,
       const Settings: Metrics.Options
-    ): (E.Element of TParent).Metric(Id, Label, Reading, Settings);
+    ): (E.Element of TParent).Metric(Scopes.Id(Scope, Id), Label, Reading, Settings);
     when E.Element.AvatarGroup(
       const Id: string,
       const Names: array of string,
       const Settings: AvatarGroups.Options
-    ): (E.Element of TParent).AvatarGroup(Id, Names, Settings);
+    ): (E.Element of TParent).AvatarGroup(Scopes.Id(Scope, Id), Names, Settings);
     when E.Element.EmptyState(
       const Id: string,
       const Title: string,
       const Settings: EmptyStates.Options,
       const Action: (Sys.Func of TChild)?
     ): (E.Element of TParent).EmptyState(
-      Id,
+      Scopes.Id(Scope, Id),
       Title,
       Settings,
       M.Factory of (TChild, TParent)(Action, Messages)
@@ -1564,43 +1604,66 @@ begin
       const Changed: function(Tours.Change): TChild,
       const Settings: Tours.Options
     ): (E.Element of TParent).Tour(
-      Id, Map of (TChild, TParent)(Base, Messages), Steps, Current,
-      function(Value: Tours.Change): TParent => Messages(Changed(Value)), Settings
+      Scopes.Id(Scope, Id),
+      Transform of (TChild, TParent)(Base, Messages, Scope),
+      Scopes.Tour(Scope, Steps),
+      Current,
+      function(Value: Tours.Change): TParent => Messages(Changed(Value)),
+      Settings
     );
     when E.Element.Spacer: (E.Element of TParent).Spacer;
     when E.Element.Gap(const Distance: L.Measure): (E.Element of TParent).Gap(Distance);
     when E.Element.Layered(
       const FChildren: array of E.Element of TChild,
       const FSettings: L.Flow
-    ): (E.Element of TParent).Layered(Children(FChildren), FSettings);
+    ): (E.Element of TParent).Layered(Children(FChildren), Scopes.Flow(Scope, FSettings));
     when E.Element.Stack(
       const FChildren: array of E.Element of TChild,
       const FHorizontal: bool,
       const FSettings: L.Flow
-    ): (E.Element of TParent).Stack(Children(FChildren), FHorizontal, FSettings);
+    ): (E.Element of TParent).Stack(
+      Children(FChildren),
+      FHorizontal,
+      Scopes.Flow(Scope, FSettings)
+    );
     when E.Element.Sized(
       const FChild: E.Element of TChild,
       const FSettings: L.Flex
-    ): (E.Element of TParent).Sized(Map of (TChild, TParent)(FChild, Messages), FSettings);
+    ): (E.Element of TParent).Sized(
+      Transform of (TChild, TParent)(FChild, Messages, Scope),
+      FSettings
+    );
     when E.Element.DisabledScope(
       const FChild: E.Element of TChild,
       const FDisabled: bool
-    ): (E.Element of TParent).DisabledScope(Map of (TChild, TParent)(FChild, Messages), FDisabled);
+    ): (E.Element of TParent).DisabledScope(
+      Transform of (TChild, TParent)(FChild, Messages, Scope),
+      FDisabled
+    );
     when E.Element.Styled(
       const FChild: E.Element of TChild,
       const FRole: S.Role
-    ): (E.Element of TParent).Styled(Map of (TChild, TParent)(FChild, Messages), FRole);
+    ): (E.Element of TParent).Styled(
+      Transform of (TChild, TParent)(FChild, Messages, Scope),
+      FRole
+    );
     when E.Element.Framed(
       const FChild: E.Element of TChild,
       const FTitle: string
-    ): (E.Element of TParent).Framed(Map of (TChild, TParent)(FChild, Messages), FTitle);
+    ): (E.Element of TParent).Framed(
+      Transform of (TChild, TParent)(FChild, Messages, Scope),
+      FTitle
+    );
     when E.Element.TableOfContents(
       const FId: string, const FScrollId: string, const FItems: array of Toc.Item,
       const FChanged: Sys.Func of (string, TChild)?, const FEnabled: bool
     ): (E.Element of TParent).TableOfContents(
-      FId, FScrollId, FItems, M.Callback of (string, TChild, TParent)(FChanged, Messages), FEnabled
+      Scopes.Id(Scope, FId), Scopes.Id(Scope, FScrollId), Scopes.Outline(Scope, FItems),
+      M.IdCallback of (TChild, TParent)(FChanged, Messages, Scope), FEnabled
     );
-    when E.Element.ScrollAnchor(const FId: string): (E.Element of TParent).ScrollAnchor(FId);
+    when E.Element.ScrollAnchor(const FId: string): (E.Element of TParent).ScrollAnchor(
+      Scopes.Id(Scope, FId)
+    );
     when E.Element.Scroll(
       const FId: string,
       const FChildren: array of E.Element of TChild,
@@ -1608,9 +1671,9 @@ begin
       const FOnScroll: Sys.Func of (L.ScrollChange, TChild)?,
       const FSettings: L.ScrollOptions
     ): (E.Element of TParent).Scroll(
-      FId,
+      Scopes.Id(Scope, FId),
       Children(FChildren),
-      FPosition,
+      Scopes.ScrollRequest(Scope, FPosition),
       M.Callback of (L.ScrollChange, TChild, TParent)(FOnScroll, Messages),
       FSettings
     );
@@ -1622,23 +1685,23 @@ begin
       const FSettings: Sheets.Options,
       const FOnDismiss: TChild
     ): (E.Element of TParent).Sheet(
-      FId,
-      Map of (TChild, TParent)(FBase, Messages),
-      Map of (TChild, TParent)(FContent, Messages),
+      Scopes.Id(Scope, FId),
+      Transform of (TChild, TParent)(FBase, Messages, Scope),
+      Transform of (TChild, TParent)(FContent, Messages, Scope),
       FOpen,
-      FSettings,
+      Scopes.Sheet(Scope, FSettings),
       Messages(FOnDismiss)
     );
     when E.Element.Deferred(
       const FId: string,
       const FResolve: function((E.CacheEntry of TChild)?): E.CacheEntry of TChild
-    ): Deferred of (TChild, TParent)(FId, FResolve, Messages);
+    ): Deferred of (TChild, TParent)(FId, FResolve, Messages, Scope);
     when E.Element.TerminalCellGrid(
       const Id: string,
       const Content: CellGrids.Image?,
       const Changed: function(CellGrids.Event): TChild
     ): (E.Element of TParent).TerminalCellGrid(
-      Id,
+      Scopes.Id(Scope, Id),
       Content,
       function(Event: CellGrids.Event): TParent => Messages(Changed(Event))
     );
@@ -1646,20 +1709,23 @@ begin
       const Id: string, const Items: array of SelectionLists.Item, const Selected: string,
       const OnSelect: function(string): TChild, const OnActivate: function(string): TChild
     ): (E.Element of TParent).TerminalSelectionList(
-      Id, Items, Selected,
+      Scopes.Id(Scope, Id), Items, Selected,
       function(Key: string): TParent => Messages(OnSelect(Key)),
       function(Key: string): TParent => Messages(OnActivate(Key))
     );
     when E.Element.TerminalStyle(
       const FChild: E.Element of TChild,
       const FColors: T.Style
-    ): (E.Element of TParent).TerminalStyle(Map of (TChild, TParent)(FChild, Messages), FColors);
+    ): (E.Element of TParent).TerminalStyle(
+      Transform of (TChild, TParent)(FChild, Messages, Scope),
+      FColors
+    );
     when E.Element.TerminalScreen(
       const FContent: E.Element of TChild,
       const FLayers: array of E.Element of TChild,
       const FShortcuts: array of Keys.ShortcutBinding of TChild
     ): (E.Element of TParent).TerminalScreen(
-      Map of (TChild, TParent)(FContent, Messages),
+      Transform of (TChild, TParent)(FContent, Messages, Scope),
       Children(FLayers),
       M.Shortcuts of (TChild, TParent)(FShortcuts, Messages)
     );
@@ -1667,10 +1733,11 @@ begin
       const FId: string,
       const FBuild: function(T.Viewport): E.Element of TChild
     ): (E.Element of TParent).TerminalViewport(
-      FId,
-      function(A0: T.Viewport): E.Element of TParent => Map of (TChild, TParent)(
+      Scopes.Id(Scope, FId),
+      function(A0: T.Viewport): E.Element of TParent => Transform of (TChild, TParent)(
         FBuild(A0),
-        Messages
+        Messages,
+        Scope
       )
     );
     when E.Element.ExpandableText(
@@ -1821,7 +1888,7 @@ begin
       _,
       _,
       _
-    ): Actions.Map of (TChild, TParent)(Value, Messages);
+    ): Actions.Map of (TChild, TParent)(Value, Messages, Scope);
     when E.Element.ShortcutLabel(
       const Shortcut: RecorderKeys.Combination
     ): (E.Element of TParent).ShortcutLabel(Shortcut);
@@ -1838,7 +1905,12 @@ begin
       _,
       _,
       _
-    ), E.Element.ShortcutRecorder(_, _, _, _): Editors.Map of (TChild, TParent)(Value, Messages);
+    ), E.Element.ShortcutRecorder(
+      _,
+      _,
+      _,
+      _
+    ): Editors.Map of (TChild, TParent)(Value, Messages, Scope);
     when E.Element.TextField(
       _,
       _,
@@ -1914,8 +1986,41 @@ begin
       _,
       _,
       _
-    ): Editors.Map of (TChild, TParent)(Value, Messages);
+    ): Editors.Map of (TChild, TParent)(Value, Messages, Scope);
   end case;
+end function;
+
+// Embeds a child view by translating all messages, callbacks and lazy subviews.
+//
+// ## Type parameters
+// - `TChild`: Child message type.
+// - `TParent`: Parent message type.
+// ## Parameters
+// - `Value`: Child element tree; its options and control identities are retained.
+// - `Messages`: Pure translation of child messages to parent messages.
+// ## Returns
+// A parent-message tree with unchanged layout, native widgets and callback timing.
+// Cached subviews retain their child dependencies and rebuild if the mapper changes.
+public function Map of (TChild, TParent)(
+  Value: E.Element of TChild;
+  Messages: function(TChild): TParent
+): E.Element of TParent;
+begin
+  return Transform of (TChild, TParent)(Value, Messages, '');
+end function;
+
+// Qualifies the IDs of a subview so that the view can occur in several instances.
+// ## Type parameters
+// - `TMsg`: Subview message type.
+// ## Parameters
+// - `Scope`: Stable, nonempty prefix for the instance.
+// - `Value`: Subview with local IDs.
+// ## Returns
+// The subview with IDs and internal references qualified as `Scope/Id`.
+public function IdScope of TMsg(Scope: string; Value: E.Element of TMsg): E.Element of TMsg;
+begin
+  Scopes.Check(Scope);
+  return Transform of (TMsg, TMsg)(Value, function(Message: TMsg): TMsg => Message, Scope);
 end function;
 
 end unit;

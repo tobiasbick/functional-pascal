@@ -13,6 +13,12 @@
   <Project Path="src/FpasAmp.Library/FpasAmp.Library.fpasproj" />
   <Project Path="src/FpasAmp.Library/Serialization/FpasAmp.Library.Serialization.csproj" />
   <Project Path="src/FpasAmp.Imaging/FpasAmp.Imaging.csproj" />
+  <Project Path="src/FpasAmp.Atl/FpasAmp.Atl.csproj" />
+  <Project Path="src/FpasAmp.Media.Audio/FpasAmp.Media.Audio.csproj" />
+  <Project Path="src/FpasAmp.Media.Images/FpasAmp.Media.Images.csproj" />
+  <Project Path="src/FpasAmp.Media.Tags/FpasAmp.Media.Tags.fpasproj" />
   <Project Path="tests/FpasAmp.Library.Tests/FpasAmp.Library.Tests.fpasproj" />
   <Project Path="tests/FpasAmp.Ui.Tests/FpasAmp.Ui.Tests.fpasproj" />
+  <Project Path="tests/FpasAmp.Media.Audio.Tests/FpasAmp.Media.Audio.Tests.csproj" />
+  <Project Path="tests/FpasAmp.Media.Tests/FpasAmp.Media.Tests.fpasproj" />
 </Solution>

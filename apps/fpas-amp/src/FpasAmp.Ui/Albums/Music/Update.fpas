@@ -3,13 +3,13 @@
 // Load one release and apply song edits on the UI owner.
 unit FpasAmp.Ui.Albums.Music.Update;
 
-uses Fpas.Media.Images as Imaging;
 uses Fpas.Ui.Gui.Desktop as Desktop;
 uses Fpas.Ui.Mvu.Application as A;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Metadata.Monitoring as Metadata;
+uses FpasAmp.Media.Images as Imaging;
 uses FpasAmp.Ui.Albums.Artwork as Artwork;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;
 uses FpasAmp.Ui.Albums.Music.Model as M;

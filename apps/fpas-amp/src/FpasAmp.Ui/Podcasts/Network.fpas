@@ -2,8 +2,7 @@
 
 unit FpasAmp.Ui.Podcasts.Network;
 
-uses Fpas.Media.Images as Images;
-
+uses FpasAmp.Media.Images as Images;
 uses FpasAmp.Ui.Podcasts.Model as M;
 uses System as Sys;
 uses System.IO as IO;

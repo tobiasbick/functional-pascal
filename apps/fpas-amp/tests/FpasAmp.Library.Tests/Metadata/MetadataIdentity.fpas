@@ -65,15 +65,19 @@ public type MetadataIdentityTests = record
     const Tags: Metadata.Session := F.Tags(Session);
     const Before: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1 and Items[
+        0
+      ].Sha256 <> ''
     );
     await Tags.SetRatingAsync(Before[0].TrackId, 6, T.CancellationToken.None);
     const Copy: string := IO.Path.Combine(Root.Path, 'copy.ogg');
     IO.File.Copy(Path, Copy);
     Session.Refresh();
+    // Inventory publishes file rows before the metadata stage supplies their digests.
     const After: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
       function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 2
+        and Items[0].Sha256 <> '' and Items[1].Sha256 <> ''
     );
     for Entry: M.Entry in After do
       X.Assert.Equal of string(Before[0].Sha256, Entry.Sha256);

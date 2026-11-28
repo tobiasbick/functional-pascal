@@ -3,11 +3,10 @@
 // Pure player transitions on the UI owner.
 unit FpasAmp.Ui.Player.Update;
 
-uses Fpas.Media.Audio as Audio;
-uses Fpas.Media.Images as Images;
-uses Fpas.Media.Tags.AudioFiles as Tags;
-
 uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Media.Audio as Audio;
+uses FpasAmp.Media.Images as Images;
+uses FpasAmp.Media.Tags.AudioFiles as Tags;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;
 uses FpasAmp.Ui.Albums.Music.Model as Music;
 uses FpasAmp.Ui.Fingerprints as Fp;

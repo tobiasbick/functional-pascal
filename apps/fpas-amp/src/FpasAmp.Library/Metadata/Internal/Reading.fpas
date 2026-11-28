@@ -3,9 +3,8 @@
 // One bounded stream read for hashing, followed by ATL's seek-based tag read.
 unit FpasAmp.Library.Metadata.Internal.Reading;
 
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
-
 uses FpasAmp.Library.Inventory.Internal.Directories as Directories;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 uses System as Sys;
 uses System.IO as IO;
 uses System.Security.Cryptography as Crypto;

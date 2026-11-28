@@ -3,13 +3,13 @@
 // Exercises all three levels against scanned media, persistent ratings and native controls.
 unit FpasAmp.UiTests.NativeCollections;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Cui as Cui;
 
 uses FpasAmp.Library.Albums.Model as Catalog;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Tests.MetadataSupport as Sources;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Ui.Albums.Model as Albums;
 uses FpasAmp.Ui.Albums.Music.Model as Music;
 uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;

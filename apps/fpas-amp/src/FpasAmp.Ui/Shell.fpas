@@ -3,7 +3,6 @@
 // Responsive native shell; all destinations share the same MVU navigation state.
 unit FpasAmp.Ui.Shell;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Composition as Composition;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Application as Gui;
@@ -18,6 +17,7 @@ uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses FpasAmp.Library.Inventory.Monitoring as Monitoring;
 uses FpasAmp.Library.Playlists.Model as Lists;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Ui.Albums.Model as AlbumModel;
 uses FpasAmp.Ui.Albums.Music.Model as TrackModel;
 uses FpasAmp.Ui.Albums.Music.View as TrackView;

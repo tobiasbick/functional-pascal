@@ -4,6 +4,7 @@ unit Fpas.Ui.Internal.Mapping.DeveloperTools;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Internal.Mapping.MessageMapping as M;
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.Widgets.Charts.TimeHistograms as TimeHistograms;
 uses Fpas.Ui.Widgets.Developer.ApiExplorers as ApiExplorers;
 uses Fpas.Ui.Widgets.Developer.Blames as Blames;
@@ -35,11 +36,13 @@ uses System as Sys;
 // ## Parameters
 // - `Value`: Prepared developer widget.
 // - `Messages`: Maps each child proposal.
+// - `Scope`: Prefix for the element ID, or empty.
 // ## Returns
 // A widget retaining the original data and options.
 public function Map of (TChild, TParent)(
   Value: E.Element of TChild;
-  Messages: function(TChild): TParent
+  Messages: function(TChild): TParent;
+  Scope: string
 ): E.Element of TParent;
 begin
   case Value of
@@ -50,7 +53,7 @@ begin
       const Settings: ProblemsPanels.Options
     ):
       return (E.Element of TParent).Problems(
-        Id,
+        Scopes.Id(Scope, Id),
         Diagnostics,
         function(Proposed: ProblemsPanels.Event): TParent => Messages(Changed(Proposed)),
         Settings
@@ -64,7 +67,7 @@ begin
       const Settings: Pipelines.Options
     ):
       return (E.Element of TParent).Pipeline(
-        Id,
+        Scopes.Id(Scope, Id),
         Stages,
         Jobs,
         Selection,
@@ -80,7 +83,7 @@ begin
       const Settings: Keymaps.Options
     ):
       return (E.Element of TParent).Keymap(
-        Id,
+        Scopes.Id(Scope, Id),
         Bindings,
         Categories,
         Modifiers,
@@ -95,7 +98,7 @@ begin
       const Settings: CommitGraphs.Options
     ):
       return (E.Element of TParent).CommitGraph(
-        Id,
+        Scopes.Id(Scope, Id),
         Commits,
         Selection,
         function(Proposed: CommitGraphs.Event): TParent => Messages(Changed(Proposed)),
@@ -110,7 +113,7 @@ begin
       const Settings: DependencyGraphs.Options
     ):
       return (E.Element of TParent).DependencyGraph(
-        Id,
+        Scopes.Id(Scope, Id),
         Vertices,
         Edges,
         Selection,
@@ -125,7 +128,7 @@ begin
       const Settings: NetworkWaterfalls.Options
     ):
       return (E.Element of TParent).NetworkWaterfall(
-        Id,
+        Scopes.Id(Scope, Id),
         Requests,
         Selection,
         function(Proposed: NetworkWaterfalls.Event): TParent => Messages(Changed(Proposed)),
@@ -142,7 +145,7 @@ begin
       const Settings: TraceViewers.Options
     ):
       return (E.Element of TParent).TraceViewer(
-        Id,
+        Scopes.Id(Scope, Id),
         Tracks,
         Spans,
         Markers,
@@ -158,7 +161,7 @@ begin
       const Settings: TestExplorers.Options
     ):
       return (E.Element of TParent).TestExplorer(
-        Id,
+        Scopes.Id(Scope, Id),
         Entries,
         function(Proposed: TestExplorers.Event): TParent => Messages(Changed(Proposed)),
         Settings
@@ -170,7 +173,7 @@ begin
       const Settings: StackTraces.Options
     ):
       return (E.Element of TParent).StackTrace(
-        Id,
+        Scopes.Id(Scope, Id),
         Frames,
         function(Proposed: StackTraces.Event): TParent => Messages(Changed(Proposed)),
         Settings
@@ -182,7 +185,13 @@ begin
       const Bytes: double,
       const Settings: ResponseStatuses.Options
     ):
-      return (E.Element of TParent).ResponseStatus(Id, Status, Seconds, Bytes, Settings);
+      return (E.Element of TParent).ResponseStatus(
+        Scopes.Id(Scope, Id),
+        Status,
+        Seconds,
+        Bytes,
+        Settings
+      );
     when E.Element.Uptime(
       const Id: string,
       const Services: array of Uptimes.Service,
@@ -191,7 +200,7 @@ begin
       const Changed: Sys.Func of (Uptimes.Hover, TChild)?
     ):
       return (E.Element of TParent).Uptime(
-        Id, Services, LastDay, Settings,
+        Scopes.Id(Scope, Id), Services, LastDay, Settings,
         M.Callback of (Uptimes.Hover, TChild, TParent)(Changed, Messages)
       );
     when E.Element.TimeHistogram(
@@ -205,7 +214,7 @@ begin
       const Settings: TimeHistograms.Options
     ):
       return (E.Element of TParent).TimeHistogram(
-        Id,
+        Scopes.Id(Scope, Id),
         Start,
         Bucket,
         Buckets,
@@ -221,7 +230,7 @@ begin
       const Settings: Coverages.Options
     ):
       return (E.Element of TParent).Coverage(
-        Id,
+        Scopes.Id(Scope, Id),
         ReportFiles,
         function(Proposed: Coverages.Event): TParent => Messages(Changed(Proposed)),
         Settings
@@ -235,7 +244,7 @@ begin
       const Settings: Blames.Options
     ):
       return (E.Element of TParent).Blame(
-        Id,
+        Scopes.Id(Scope, Id),
         Lines,
         LineCommits,
         Revisions,
@@ -250,7 +259,7 @@ begin
       const Settings: ApiExplorers.Options
     ):
       return (E.Element of TParent).ApiExplorer(
-        Id,
+        Scopes.Id(Scope, Id),
         Endpoints,
         Selection,
         function(Proposed: ApiExplorers.Event): TParent => Messages(Changed(Proposed)),
@@ -263,7 +272,7 @@ begin
       const Settings: KeyValueEditors.Options
     ):
       return (E.Element of TParent).KeyValueEditor(
-        Id,
+        Scopes.Id(Scope, Id),
         Pairs,
         function(Proposed: KeyValueEditors.Event): TParent => Messages(Changed(Proposed)),
         Settings
@@ -276,7 +285,7 @@ begin
       const Settings: QueryBuilders.Options
     ):
       return (E.Element of TParent).QueryBuilder(
-        Id,
+        Scopes.Id(Scope, Id),
         Fields,
         RulesData,
         function(Proposed: QueryBuilders.Event): TParent => Messages(Changed(Proposed)),
@@ -289,7 +298,7 @@ begin
       const Settings: SchedulePickers.Options
     ):
       return (E.Element of TParent).SchedulePicker(
-        Id,
+        Scopes.Id(Scope, Id),
         Expression,
         function(Proposed: SchedulePickers.Event): TParent => Messages(Changed(Proposed)),
         Settings
@@ -303,7 +312,7 @@ begin
       const Settings: RegexTesters.Options
     ):
       return (E.Element of TParent).RegexTester(
-        Id,
+        Scopes.Id(Scope, Id),
         Pattern,
         Sample,
         Modifiers,
@@ -318,7 +327,7 @@ begin
       const Settings: RequestBars.Options
     ):
       return (E.Element of TParent).RequestBar(
-        Id,
+        Scopes.Id(Scope, Id),
         Method,
         Url,
         function(Proposed: RequestBars.Event): TParent => Messages(Changed(Proposed)),
@@ -332,7 +341,7 @@ begin
       const Settings: FeatureFlagEditors.Options
     ):
       return (E.Element of TParent).FeatureFlags(
-        Id,
+        Scopes.Id(Scope, Id),
         Entries,
         Environments,
         function(Proposed: FeatureFlagEditors.Event): TParent => Messages(Changed(Proposed)),

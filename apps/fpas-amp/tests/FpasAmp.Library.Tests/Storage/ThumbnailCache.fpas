@@ -3,11 +3,10 @@
 // Content addressing, invalidation and corruption recovery are independent of GUI state.
 unit FpasAmp.Library.Tests.ThumbnailCache;
 
-uses Fpas.Media.Images as Imaging;
-
 uses FpasAmp.Imaging as Thumbnails;
 uses FpasAmp.Library.Tests.AlbumSupport as Art;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Images as Imaging;
 uses PhotoSauce.MagicScaler as Magic;
 uses System as Sys;
 uses System.IO as IO;

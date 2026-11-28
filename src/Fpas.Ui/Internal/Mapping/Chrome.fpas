@@ -4,6 +4,7 @@ unit Fpas.Ui.Internal.Mapping.Chrome;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Internal.Mapping.MessageMapping as Mapping;
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.Widgets.Desktop.Dockspaces as Dock;
 uses Fpas.Ui.Widgets.Desktop.DocumentTabs as D;
 uses Fpas.Ui.Widgets.Desktop.MenuBars as M;
@@ -21,11 +22,13 @@ uses System.Collections.Generic as Lists;
 // - `Node`: Native chrome element.
 // - `Messages`: Message translation.
 // - `Child`: Child-element translation.
+// - `Scope`: Prefix for the element ID, or empty.
 // ## Returns
 // Desktop chrome with mapped messages.
 public function Map of (TChild, TParent)(
   Node: E.Element of TChild;
   Messages: function(TChild): TParent;
+  Scope: string;
   Child: function(E.Element of TChild): E.Element of TParent
 ): E.Element of TParent;
 begin
@@ -48,13 +51,13 @@ begin
         );
       end for;
 
-      return (E.Element of TParent).MenuBar(Id, Mapped.ToArray(), Hide);
+      return (E.Element of TParent).MenuBar(Scopes.Id(Scope, Id), Mapped.ToArray(), Hide);
     when E.Element.DocumentTabs(
       const Id: string, const Tabs: array of D.Tab, const Selected: int,
       const Change: function(D.Change): TChild, const Settings: D.Options
     ):
       return (E.Element of TParent).DocumentTabs(
-        Id,
+        Scopes.Id(Scope, Id),
         Tabs,
         Selected,
         function(Value: D.Change): TParent => Messages(Change(Value)),
@@ -90,7 +93,7 @@ begin
         );
       end for;
 
-      return (E.Element of TParent).StatusBar(Id, Mapped.ToArray(), Hide);
+      return (E.Element of TParent).StatusBar(Scopes.Id(Scope, Id), Mapped.ToArray(), Hide);
     when E.Element.SplitView(
       const Id: string,
       const Ratio: float,
@@ -100,7 +103,7 @@ begin
       const Settings: Split.Options
     ):
       return (E.Element of TParent).SplitView(
-        Id, Ratio, Child(First), Child(Second),
+        Scopes.Id(Scope, Id), Ratio, Child(First), Child(Second),
         function(Value: float): TParent => Messages(Change(Value)), Settings
       );
     when E.Element.Dockspace(
@@ -128,7 +131,7 @@ begin
       end for;
 
       return (E.Element of TParent).Dockspace(
-        Id,
+        Scopes.Id(Scope, Id),
         Mapped.ToArray(),
         Settings,
         Mapping.Callback of (string, TChild, TParent)(Change, Messages)

@@ -3,7 +3,6 @@
 // Music page exercises real catalogue changes, virtual rows and playback bookmarks.
 unit FpasAmp.UiTests.NativeMusic;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 
@@ -12,6 +11,7 @@ uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Tests.MetadataSupport as Sources;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Persistence.PlayerState as Bookmark;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;
 uses FpasAmp.Ui.Albums.Music.Model as Music;

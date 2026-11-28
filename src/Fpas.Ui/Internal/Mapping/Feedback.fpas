@@ -4,6 +4,7 @@ unit Fpas.Ui.Internal.Mapping.Feedback;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Internal.Mapping.MessageMapping as M;
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Audio.LevelMeters as Levels;
 uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
@@ -23,11 +24,13 @@ uses System as Sys;
 // ## Parameters
 // - `View`: Feedback widget to map.
 // - `Messages`: Message translation.
+// - `Scope`: Prefix for the element ID, or empty.
 // ## Returns
 // The equivalent widget in the parent view.
 public function Map of (TChild, TParent)(
   View: E.Element of TChild;
-  Messages: function(TChild): TParent
+  Messages: function(TChild): TParent;
+  Scope: string
 ): E.Element of TParent;
 begin
   case View of
@@ -36,7 +39,7 @@ begin
       const Notify: (Sys.Func of TChild)?
     ):
       return (E.Element of TParent).Alert(
-        Id,
+        Scopes.Id(Scope, Id),
         Title,
         Settings,
         M.Factory of (TChild, TParent)(Notify, Messages)
@@ -46,17 +49,17 @@ begin
       const Fraction: float,
       const Settings: ProgressBars.Options
     ):
-      return (E.Element of TParent).ProgressBar(Id, Fraction, Settings);
+      return (E.Element of TParent).ProgressBar(Scopes.Id(Scope, Id), Fraction, Settings);
     when E.Element.Spinner(const Id: string, const Size: float, const Settings: Spinners.Options?):
-      return (E.Element of TParent).Spinner(Id, Size, Settings);
+      return (E.Element of TParent).Spinner(Scopes.Id(Scope, Id), Size, Settings);
     when E.Element.Skeleton(const Id: string, const Width: L.Extent, const Height: float):
-      return (E.Element of TParent).Skeleton(Id, Width, Height);
+      return (E.Element of TParent).Skeleton(Scopes.Id(Scope, Id), Width, Height);
     when E.Element.TimelineItem(
       const Id: string,
       const Title: string,
       const Settings: Timeline.Options
     ):
-      return (E.Element of TParent).TimelineItem(Id, Title, Settings);
+      return (E.Element of TParent).TimelineItem(Scopes.Id(Scope, Id), Title, Settings);
     when E.Element.LevelMeter(
       const Id: string,
       const Peaks: array of float,
@@ -64,7 +67,7 @@ begin
       const Notify: (Sys.Func of TChild)?
     ):
       return (E.Element of TParent).LevelMeter(
-        Id,
+        Scopes.Id(Scope, Id),
         Peaks,
         Settings,
         M.Factory of (TChild, TParent)(Notify, Messages)
@@ -73,17 +76,17 @@ begin
       const Id: string, const Label: string, const Used: float,
       const Total: float, const Unit: string
     ):
-      return (E.Element of TParent).Meter(Id, Label, Used, Total, Unit);
+      return (E.Element of TParent).Meter(Scopes.Id(Scope, Id), Label, Used, Total, Unit);
     when E.Element.ProgressRing(
       const Id: string, const Label: string, const Value: float, const Size: float
     ):
-      return (E.Element of TParent).ProgressRing(Id, Label, Value, Size);
+      return (E.Element of TParent).ProgressRing(Scopes.Id(Scope, Id), Label, Value, Size);
     when E.Element.Banner(
       const Id: string, const Text: string, const Open: bool, const Dismiss: (Sys.Func of TChild)?,
       const Action: (Sys.Func of TChild)?, const Settings: Banners.Options
     ):
       return (E.Element of TParent).Banner(
-        Id, Text, Open, M.Factory of (TChild, TParent)(Dismiss, Messages),
+        Scopes.Id(Scope, Id), Text, Open, M.Factory of (TChild, TParent)(Dismiss, Messages),
         M.Factory of (TChild, TParent)(Action, Messages), Settings
       );
     when E.Element.Countdown(
@@ -91,7 +94,7 @@ begin
       const Seconds: double,
       const Settings: Countdowns.Options
     ):
-      return (E.Element of TParent).Countdown(Id, Seconds, Settings);
+      return (E.Element of TParent).Countdown(Scopes.Id(Scope, Id), Seconds, Settings);
     when E.Element.Checklist(
       const Id: string,
       const Steps: array of Checklists.Step,
@@ -100,8 +103,11 @@ begin
       const Settings: Checklists.Options
     ):
       return (E.Element of TParent).Checklist(
-        Id, Steps, function(Index: int; Done: bool): TParent => Messages(Toggle(Index, Done)),
-        M.Callback of (int, TChild, TParent)(Action, Messages), Settings
+        Scopes.Id(Scope, Id),
+        Steps,
+        function(Index: int; Done: bool): TParent => Messages(Toggle(Index, Done)),
+        M.Callback of (int, TChild, TParent)(Action, Messages),
+        Settings
       );
     else
       raise new Sys.InvalidOperationException('Expected a feedback widget.');

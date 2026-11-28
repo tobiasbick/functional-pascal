@@ -3,7 +3,6 @@
 // The whole-library song browser owns its catalogue subscription and only visible covers.
 unit FpasAmp.Ui.Music.LibraryPage;
 
-uses Fpas.Media.Images as Imaging;
 uses Fpas.Ui.Mvu.Application as A;
 uses Fpas.Ui.Mvu.Composition as Composition;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
@@ -12,6 +11,7 @@ uses FpasAmp.Library.Albums.Model as Albums;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Metadata.Monitoring as Metadata;
 uses FpasAmp.Library.Playlists.Model as Lists;
+uses FpasAmp.Media.Images as Imaging;
 uses FpasAmp.Ui.Albums.Artwork as Artwork;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;
 uses FpasAmp.Ui.Albums.Music.Model as Songs;

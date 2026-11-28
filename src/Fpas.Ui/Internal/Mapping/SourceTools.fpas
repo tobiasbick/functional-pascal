@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Mapping.SourceTools;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.Widgets.Developer.DiffViews as DiffViews;
 uses Fpas.Ui.Widgets.Developer.HexViews as HexViews;
 uses Fpas.Ui.Widgets.Developer.LogConsoles as LogConsoles;
@@ -19,11 +20,13 @@ uses System as Sys;
 // ## Parameters
 // - `Value`: Source tool element.
 // - `Messages`: Message converter.
+// - `Scope`: Prefix for the element ID, or empty.
 // ## Returns
 // Equivalent element with mapped messages.
 public function Map of (TChild, TParent)(
   Value: E.Element of TChild;
-  Messages: function(TChild): TParent
+  Messages: function(TChild): TParent;
+  Scope: string
 ): E.Element of TParent;
 begin
   case Value of
@@ -34,7 +37,7 @@ begin
       const Settings: Markdowns.Options
     ):
       return (E.Element of TParent).Markdown(
-        Id,
+        Scopes.Id(Scope, Id),
         Text,
         function(Value: Markdowns.Event): TParent => Messages(Changed(Value)),
         Settings
@@ -46,7 +49,7 @@ begin
       const Settings: CodeEditors.Options
     ):
       return (E.Element of TParent).CodeEditor(
-        Id,
+        Scopes.Id(Scope, Id),
         Text,
         function(Value: CodeEditors.Event): TParent => Messages(Changed(Value)),
         Settings
@@ -60,7 +63,7 @@ begin
       const Settings: DiffViews.Options
     ):
       return (E.Element of TParent).DiffView(
-        Id,
+        Scopes.Id(Scope, Id),
         Before,
         After,
         Current,
@@ -75,7 +78,7 @@ begin
       const Settings: HexViews.Options
     ):
       return (E.Element of TParent).HexView(
-        Id,
+        Scopes.Id(Scope, Id),
         Data,
         Selected,
         function(Value: HexViews.Event): TParent => Messages(Changed(Value)),
@@ -87,7 +90,12 @@ begin
       const Cleared: TChild,
       const Settings: LogConsoles.Options
     ):
-      return (E.Element of TParent).LogConsole(Id, Entries, Messages(Cleared), Settings);
+      return (E.Element of TParent).LogConsole(
+        Scopes.Id(Scope, Id),
+        Entries,
+        Messages(Cleared),
+        Settings
+      );
     when E.Element.Terminal(
       const Id: string,
       const Output: string,
@@ -96,7 +104,7 @@ begin
       const Settings: Terminals.Options
     ):
       return (E.Element of TParent).Terminal(
-        Id,
+        Scopes.Id(Scope, Id),
         Output,
         Revision,
         function(Value: Terminals.Event): TParent => Messages(Received(Value)),

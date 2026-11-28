@@ -1,0 +1,18 @@
+<!-- [Documentation](../../doc/media/images.md) -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="PhotoSauce.MagicScaler" GeneratePathProperty="true" />
+    <PackageReference Include="PhotoSauce.NativeCodecs.Libjpeg" GeneratePathProperty="true" />
+    <PackageReference Include="PhotoSauce.NativeCodecs.Libpng" GeneratePathProperty="true" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(PkgPhotoSauce_MagicScaler)/license" Link="licenses/MagicScaler.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="$(PkgPhotoSauce_NativeCodecs_Libjpeg)/license" Link="licenses/PhotoSauce-Libjpeg.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="$(PkgPhotoSauce_NativeCodecs_Libpng)/license" Link="licenses/PhotoSauce-Libpng.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="$(PkgPhotoSauce_NativeCodecs_Libjpeg)/third-party-notices" Link="licenses/libjpeg-notices.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="$(PkgPhotoSauce_NativeCodecs_Libpng)/third-party-notices" Link="licenses/libpng-notices.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

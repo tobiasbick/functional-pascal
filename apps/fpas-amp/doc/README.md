@@ -21,6 +21,7 @@ to produce the captures.
 
 - [Desktop application](desktop.md)
 - [Music library](library.md)
+- [Media libraries](media/README.md)
 - [Artwork cache](imaging.md)
 - [Tests](../tests/README.md)
 

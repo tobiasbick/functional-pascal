@@ -2,8 +2,6 @@
 
 unit FpasAmp.Library.Tests.TagEditing;
 
-uses Fpas.Media.Tags.AudioFiles as Media;
-
 uses ATL as Atl;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Metadata.Model as Tracks;
@@ -12,6 +10,7 @@ uses FpasAmp.Library.TagEditing.Fields as Fields;
 uses FpasAmp.Library.TagEditing.Files as Files;
 uses FpasAmp.Library.Tests.MetadataSupport as F;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Tags.AudioFiles as Media;
 uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.Collections.Immutable as I;

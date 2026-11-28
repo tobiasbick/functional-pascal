@@ -297,12 +297,9 @@ run the [library test solution](Fpas.Library.Tests.slnx) from the repository roo
 dotnet test tests/Fpas.Library.Tests.slnx
 ```
 
-[Fpas.Media.Tests](Fpas.Media.Tests/) exercises public FPAS calls for tags, embedded
-artwork, playlists, RGBA decoding and waveforms using synthetic media.
 [Fpas.Ui.Mvu.Tests](Fpas.Ui.Mvu.Tests/) exercises effect cancellation and release
-through the public runtime. The [audio backend tests](Fpas.Media.Audio.Tests/)
-run with the main compiler solution and cover decoders, devices, transport,
-equalization and session lifetime.
+through the public runtime. The [FPas-Amp solution](../apps/fpas-amp/tests/README.md#media-libraries)
+owns the media library tests.
 
 ## See also
 

@@ -98,7 +98,7 @@ worker performs file and audio device operations and a separate subscription
 forwards device events to the UI. The reducer checks the track path and request
 revision before accepting an event. These checks distinguish an old seek or
 natural end from observations for the current selection, including repeat visits
-to the same file. See the [audio session contract](../../../docs/pascal/libraries/media/audio.md).
+to the same file. See the [audio session contract](media/audio.md).
 
 Playback triggers waveform work once rendered audio is reported. Chromaprint
 fingerprinting also runs on demand from track details. Work is associated with

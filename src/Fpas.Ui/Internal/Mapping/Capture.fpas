@@ -4,6 +4,7 @@ unit Fpas.Ui.Internal.Mapping.Capture;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Internal.Mapping.MessageMapping as M;
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.Widgets.Files.Dropzones as Dropzones;
 uses Fpas.Ui.Widgets.Files.SignaturePads as Signatures;
 
@@ -16,11 +17,13 @@ uses System as Sys;
 // ## Parameters
 // - `View`: Capture widget to translate.
 // - `Messages`: Application message translator.
+// - `Scope`: Prefix for the element ID, or empty.
 // ## Returns
 // The translated capture widget.
 public function Map of (TChild, TParent)(
   View: E.Element of TChild;
-  Messages: function(TChild): TParent
+  Messages: function(TChild): TParent;
+  Scope: string
 ): E.Element of TParent;
 begin
   case View of
@@ -29,7 +32,7 @@ begin
       const Browse: (Sys.Func of TChild)?, const Settings: Dropzones.Options
     ):
       return (E.Element of TParent).Dropzone(
-        Id, function(Paths: array of string): TParent => Messages(Drop(Paths)),
+        Scopes.Id(Scope, Id), function(Paths: array of string): TParent => Messages(Drop(Paths)),
         M.Factory of (TChild, TParent)(Browse, Messages), Settings
       );
     when E.Element.AvatarUpload(
@@ -42,7 +45,7 @@ begin
       const Enabled: bool
     ):
       return (E.Element of TParent).AvatarUpload(
-        Id, Name, Path, function(Image: string): TParent => Messages(Drop(Image)),
+        Scopes.Id(Scope, Id), Name, Path, function(Image: string): TParent => Messages(Drop(Image)),
         M.Factory of (TChild, TParent)(Browse, Messages), Size, Enabled
       );
     when E.Element.SignaturePad(
@@ -51,7 +54,9 @@ begin
       const Settings: Signatures.Options
     ):
       return (E.Element of TParent).SignaturePad(
-        Id, M.Callback of (Signatures.Signature, TChild, TParent)(Change, Messages), Settings
+        Scopes.Id(Scope, Id),
+        M.Callback of (Signatures.Signature, TChild, TParent)(Change, Messages),
+        Settings
       );
     else
       raise new Sys.InvalidOperationException('Expected a capture widget.');

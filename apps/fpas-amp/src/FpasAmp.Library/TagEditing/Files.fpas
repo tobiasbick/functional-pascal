@@ -3,10 +3,9 @@
 // Reads native tags and stages a verified replacement beside the original.
 unit FpasAmp.Library.TagEditing.Files;
 
-uses Fpas.Media.Tags.AudioFiles as Media;
-
 uses ATL as A;
 uses FpasAmp.Library.TagEditing.Fields as F;
+uses FpasAmp.Media.Tags.AudioFiles as Media;
 uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.Collections.Immutable as I;

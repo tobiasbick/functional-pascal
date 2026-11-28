@@ -3,8 +3,6 @@
 // Cover images remain outside the normal metadata scan and can be reused offline.
 unit FpasAmp.Library.Tests.MetadataCovers;
 
-uses Fpas.Media.Tags.Pictures as ArtFiles;
-
 uses ATL as A;
 uses FpasAmp.Library.Inventory.Model as Inventory;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
@@ -14,6 +12,7 @@ uses FpasAmp.Library.Metadata.Monitoring as Metadata;
 uses FpasAmp.Library.Sources as S;
 uses FpasAmp.Library.Tests.MetadataSupport as F;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Tags.Pictures as ArtFiles;
 uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.Collections.Immutable as I;

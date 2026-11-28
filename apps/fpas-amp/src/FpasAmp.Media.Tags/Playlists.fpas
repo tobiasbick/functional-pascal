@@ -1,0 +1,230 @@
+// [Documentation](../../doc/media/tags.md#playlist-recognition-and-import)
+
+// ATL's playlist extensions remain independent of audio-format selection.
+unit FpasAmp.Media.Tags.Playlists;
+
+uses ATL as Audio;
+uses ATL.Playlist as A;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+uses System.Text as Text;
+uses System.Threading as T;
+
+// Checks an extension against the supported playlist readers.
+// ## Parameters
+// - `Extension`: The filename extension including its leading dot.
+// ## Returns
+// True for a supported extension, ignoring case.
+public function IsExtension(Extension: string): bool;
+begin
+  for Known: string in [
+    '.m3u',
+    '.m3u8',
+    '.pls',
+    '.xspf',
+    '.fpl',
+    '.asx',
+    '.wax',
+    '.wvx',
+    '.b4s',
+    '.dpl',
+    '.smil',
+    '.smi',
+    '.wpl',
+    '.zpl'
+  ] do
+    if Sys.String.Equals(Extension, Known, Sys.StringComparison.OrdinalIgnoreCase) then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+// Identifies a playlist by its extension without opening the file.
+// ## Parameters
+// - `Path`: Local filename or path to classify.
+// ## Returns
+// True when the path has a supported playlist extension.
+public function IsPlaylist(Path: string): bool;
+begin
+  return IsExtension(IO.Path.GetExtension(Path) ?? '');
+end function;
+
+// Ordered playlist entry, detached from the parser and its mutable track objects.
+public type Item = record
+  // Original location, including relative paths, URIs and missing targets.
+  public Location: string;
+  // Display title supplied by the playlist.
+  public Title: string := '';
+end record;
+
+// Reads a local playlist without opening its media targets.
+// ## Parameters
+// - `Path`: Local playlist in a supported format, at most sixteen MiB.
+// - `Cancellation`: Cancels before parsing and between returned entries.
+// ## Returns
+// Ordered entries, preserving duplicate targets and original location spelling.
+public function Read(Path: string; Cancellation: T.CancellationToken): array of Item;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  const Local: string := IO.Path.GetFullPath(Path);
+  if not IsPlaylist(Local) or new IO.FileInfo(Local).Length > 16777216L then
+    raise new IO.InvalidDataException('Expected a supported playlist of at most sixteen MiB.');
+  end if;
+  const Factory: A.PlaylistIOFactory? := A.PlaylistIOFactory.GetInstance();
+  if Factory = null then
+    raise new Sys.InvalidOperationException('ATL playlist factory is unavailable.');
+  end if;
+  const Parsed: A.IPlaylistIO? := Factory.GetPlaylistIO(Local, readTrackMetadata := false);
+  if Parsed = null then
+    raise new IO.InvalidDataException('Unsupported playlist format.');
+  end if;
+
+  Cancellation.ThrowIfCancellationRequested();
+  const Failure: Sys.Exception? := Parsed.LoadError;
+  if Failure <> null then
+    raise new IO.InvalidDataException(
+      'ATL could not parse the playlist: ' + Failure.Message,
+      Failure
+    );
+  end if;
+  const Locations: (C.IReadOnlyList of string?)? := Parsed.OriginalLocations;
+  const Tracks: (C.IList of Audio.Track?)? := Parsed.Tracks;
+  if Locations = null or Tracks = null or Locations.Count <> Tracks.Count then
+    raise new IO.InvalidDataException('ATL returned inconsistent playlist entries.');
+  end if;
+  const Entries: C.List of Item := new C.List of Item(Locations.Count);
+  for Position: int := 0 to Locations.Count - 1 do
+    Cancellation.ThrowIfCancellationRequested();
+    const Track: Audio.Track? := Tracks[Position];
+    const Artist: string := if Track <> null then
+      Track.Artist ?? ''
+    else
+      ''
+    end if;
+    const Title: string := (if Artist <> '' then
+      Artist + ' - '
+    else
+      ''
+    end if) + (if Track <> null then
+      Track.Title ?? ''
+    else
+      ''
+    end if);
+    Entries.Add(new Item(Locations[Position] ?? '', Title));
+  end for;
+
+  return Entries.ToArray();
+end function;
+
+procedure Validate(Value: string; Name: string);
+begin
+  if Sys.String.IsNullOrWhiteSpace(
+    Value
+  ) or Value.Contains(#0) or Value.Contains(#10) or Value.Contains(#13)
+  then
+    raise new Sys.ArgumentException('Expected a nonempty single-line value.', Name);
+  end if;
+end procedure;
+
+function ExportLocation(Location: string; Directory: string): string;
+begin
+  if not Sys.OperatingSystem.IsWindows() and (Location.StartsWith(
+    '\\',
+    Sys.StringComparison.Ordinal
+  )
+    or (Location.Length >= 3 and Location[1] = #58 and (Location[2] = #92 or Location[2] = #47)))
+  then
+    return Location;
+  end if;
+
+  var Local: string := Location;
+  var Parsed: Sys.Uri? := null;
+  if not IO.Path.IsPathFullyQualified(Local) and Sys.Uri.TryCreate(
+    Local,
+    Sys.UriKind.Absolute,
+    out Parsed
+  )
+  then
+    case Parsed of
+      when is Sys.Uri as Uri if Uri.IsFile:
+        Local := Uri.LocalPath;
+      else
+        return Location;
+    end case;
+  end if;
+
+  const Absolute: string := IO.Path.GetFullPath(Local, Directory);
+  const Relative: string := IO.Path.GetRelativePath(Directory, Absolute);
+  if Relative.StartsWith('#') then
+    return './' + Relative;
+  end if;
+
+  return Relative;
+end function;
+
+// Atomically writes an ordered UTF-8 playlist without reading media targets.
+// ## Parameters
+// - `Destination`: Absolute .m3u8 output path.
+// - `Entries`: Ordered locations and optional display titles.
+// - `Overwrite`: Allows replacement of an existing file.
+// - `Cancellation`: Cancels before publication.
+public procedure WriteM3u8(
+  Destination: string;
+  Entries: array of Item;
+  Overwrite: bool;
+  Cancellation: T.CancellationToken
+);
+requires Entries.Length <= 100000;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  if not IO.Path.IsPathFullyQualified(Destination) or not Sys.String.Equals(
+    IO.Path.GetExtension(Destination),
+    '.m3u8',
+    Sys.StringComparison.OrdinalIgnoreCase
+  )
+  then
+    raise new Sys.ArgumentException('Expected an absolute .m3u8 export path.', 'Destination');
+  end if;
+  const Directory: string := IO.Path.GetDirectoryName(Destination) ?? '';
+  const Temporary: string := IO.Path.Combine(
+    Directory,
+    '.' + Sys.Guid.NewGuid().ToString('N') + '.m3u8'
+  );
+  try
+    begin
+      using const Writer: IO.StreamWriter := new IO.StreamWriter(
+        Temporary,
+        false,
+        new Text.UTF8Encoding(false)
+      );
+      Writer.WriteLine('#EXTM3U');
+      for Entry: Item in Entries do
+        Cancellation.ThrowIfCancellationRequested();
+        Validate(Entry.Location, 'Reference');
+        const Title: string := if Entry.Title <> '' then
+          Entry.Title
+        else
+          IO.Path.GetFileNameWithoutExtension(Entry.Location) ?? ''
+        end if;
+        if Entry.Title <> '' then
+          Validate(Title, 'Title');
+        end if;
+
+        const Location: string := ExportLocation(Entry.Location, Directory);
+        Validate(Location, 'Reference');
+        Writer.WriteLine('#EXTINF:-1,' + Title);
+        Writer.WriteLine(Location);
+      end for;
+    end;
+
+    Cancellation.ThrowIfCancellationRequested();
+    IO.File.Move(Temporary, Destination, Overwrite);
+  finally
+    IO.File.Delete(Temporary);
+  end try;
+end procedure;
+
+end unit;

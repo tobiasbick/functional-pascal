@@ -3,7 +3,6 @@
 // Exercises both routes to a fingerprint with the real native tool and a private library.
 unit FpasAmp.UiTests.Fingerprints;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
@@ -17,6 +16,7 @@ uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Sources as Sources;
 uses FpasAmp.Library.Tests.MetadataSupport as Fixtures;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Ui.Albums.Music.Model as Music;
 uses FpasAmp.Ui.Albums.Music.View as View;
 uses FpasAmp.Ui.App.Controller as Controller;

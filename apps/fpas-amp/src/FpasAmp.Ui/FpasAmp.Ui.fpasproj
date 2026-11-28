@@ -10,7 +10,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../FpasAmp.Library/FpasAmp.Library.fpasproj" />
-    <ProjectReference Include="../../../../src/Fpas.Media.Audio/Fpas.Media.Audio.csproj" />
+    <ProjectReference Include="../FpasAmp.Media.Audio/FpasAmp.Media.Audio.csproj" />
     <ProjectReference Include="../../../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" />
   </ItemGroup>
 </Project>

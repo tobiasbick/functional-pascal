@@ -2,10 +2,9 @@
 
 unit FpasAmp.UiTests.TrackFilters;
 
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
-
 uses FpasAmp.Library.Albums.Model as Albums;
 uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;
 uses FpasAmp.Ui.Albums.Music.Model as Music;
 uses FpasAmp.Ui.Albums.Music.Update as Edit;

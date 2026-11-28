@@ -1,0 +1,150 @@
+# FpasAmp.Media.Audio
+
+## Playback
+
+`Session` implements `ISession`. Create one session per player and dispose it
+when the player closes. `Open(path)` replaces the current track and prepares it
+paused. `Play()` starts or resumes playback and replays an ended track from zero.
+`Pause()` holds the current position. `Seek(TimeSpan)` clamps to the track.
+`SeekFraction(double)` uses the decoded duration to find the target position.
+Both seek methods preserve play or pause. `Unload()` stops playback and releases
+the current file. The session and mixer stay available for the next `Open(path)`. Seeking
+after a natural end leaves the track paused. `Unload()` does not publish a
+transport event.
+
+`Open` and `Seek` can do blocking decoder work. In a GUI, send transport
+requests to an ordered background worker and consume events separately.
+The [session tests](../../tests/FpasAmp.Media.Audio.Tests/SessionTests.cs)
+show how to distinguish notifications by request ID.
+Tracks with the same PCM format share an output device. The outgoing track
+fades to silence and the incoming track fades in over five milliseconds each.
+The output supplies silence during decoder seeks and between tracks.
+`StopPlayback()` silences the session and returns its final rendered position
+without waiting for decoder work, as a `PlaybackEvent` snapshot or null when
+no track is open. It permanently shuts down transport and repeat calls return
+the same snapshot. Call it when the window receives a close request, then
+dispose the session during cleanup.
+
+Read `Events` from one consumer. Each `PlaybackEvent` carries the file path,
+transport state, rendered position, duration and a linear peak per decoded
+channel. While playing, status updates arrive roughly 30 times per second.
+Transport methods accept an optional caller request ID. Each event carries
+the ID of its originating transport action, including subsequent progress or
+natural end. A subscriber can discard stale events after selecting the same
+file again or seeking.
+Periodic progress is skipped while an earlier event remains unread.
+`PlaybackEvent.State` is `Paused`, `Playing`, `Ended` or `Failed`.
+`Error` carries a message on failure. The channel also delivers transport
+changes, natural ends and file or device failures. A failed session can open
+another file. Disposing the session completes the channel.
+
+## Live streams
+
+`ISession.OpenStream` accepts an absolute HTTP(S) URL. It requires the FFmpeg
+command-line program on PATH and decodes direct audio and HLS with the same
+output and mixer as local tracks. The decoder feeds a bounded PCM queue read by
+the audio callback. Empty reads while the connection is open emit buffering.
+The event duration is zero, and `NowPlaying` carries the ICY title when present.
+Seeking a live source has no effect. EOF or lost connections emit a failure
+after the available audio drains. Unload, switching source and disposal release
+the decoder and close the connection.
+
+## Mixer settings
+
+`Apply(new Settings(volume, gains))` sets volume from −60 to 0 dB and ten
+band gains from −12 to +12 dB. The constructor copies the gains and requires
+finite values. `Settings.Frequencies` orders them from 31 Hz to 16 kHz
+(31, 62, 125, 250, 500, 1000, 2000, 4000, 8000 and 16000).
+`Settings.Flat` starts at 0 dB volume and 0 dB across all bands.
+Settings survive track changes within a session. The device callback smooths
+live gain changes and measures the output after equalization, volume and
+clipping. Unity gain preserves the original channel levels. Bands at or above
+the track's Nyquist frequency are bypassed.
+
+## Output devices
+
+`new Session()` opens the system output on first use (WASAPI on Windows,
+PulseAudio or ALSA on Linux). `new Session(true)` uses the real-time null
+device. To run the session tests against the system output, set
+`FPAS_TEST_SYSTEM_OUTPUT=1`; this plays short test tones.
+
+## Waveform analysis
+
+`Analysis.LoudnessAsync(path, buckets, cancellation)` reads a local track on a
+worker thread. It returns a `Task<float[]>` with one RMS value per equal-duration
+interval. Channels contribute by energy, including channels in opposite phase.
+The loudest nonsilent interval is 1. Silence and empty intervals are 0.
+Use a positive bucket count and await the task to observe decoding failures
+or cancellation. Analysis runs without an audio device and uses the same
+decoder and channel layout as playback.
+
+## Local formats and seek behavior
+
+The library selects the decoder by file extension, case-insensitively.
+
+| Files | Decoder | PCM supplied to the mixer |
+| --- | --- | --- |
+| `.wav`, `.flac`, `.mp3` | SoundFlow miniaudio | Stereo float at 44.1 kHz |
+| `.m4a` (AAC or ALAC), `.ogg` (Vorbis or Opus), `.opus` | SoundFlow FFmpeg | Float at the decoded rate and channel count |
+
+`TrackSource` uses interleaved sample offsets. The session creates the
+device with the source's `Format`. This gives the
+device backend the correct client rate for conversion to hardware format.
+Compressed packet seeks can miss the requested sample. WAV and FLAC try
+the native seek first. MP3 and the FFmpeg formats decode forward to the target,
+reopening the decoder on the same file handle when moving backward. The cost
+of a backward seek grows with the target's distance from the start.
+
+Opening Ogg and Opus counts the decoded samples once because the container
+duration can include pre-skip. An unavailable decoder length also triggers
+this count. A positive M4A presentation length bounds the
+last AAC packet. SoundFlow positions and lengths are signed 32-bit sample counts.
+
+## Verification
+
+Run `dotnet test tests/FpasAmp.Media.Audio.Tests/FpasAmp.Media.Audio.Tests.csproj`
+from the FPas-Amp directory. The device test resolves miniaudio's `Null` backend
+by name and renders to it on Windows x64 and Linux x64.
+
+Run `dotnet test tests/FpasAmp.Media.Tests/FpasAmp.Media.Tests.fpasproj` with the
+[local FPAS SDK](../../../../docs/build/development.md#build-an-fpas-application) to
+verify the public analysis call from FPAS.
+
+## See also
+
+- [Using the media libraries from FPAS](README.md)
+- [Audio project](../../src/FpasAmp.Media.Audio/FpasAmp.Media.Audio.csproj)
+
+## Source files
+
+<details>
+<summary>Browse 18 source files</summary>
+
+- `src/FpasAmp.Media.Audio/`
+  - [Analysis.cs](../../src/FpasAmp.Media.Audio/Analysis.cs)
+  - [Playback.cs](../../src/FpasAmp.Media.Audio/Playback.cs)
+  - [Session.cs](../../src/FpasAmp.Media.Audio/Session.cs)
+  - [Settings.cs](../../src/FpasAmp.Media.Audio/Settings.cs)
+- `src/FpasAmp.Media.Audio/Decoding/`
+  - [TrackSource.cs](../../src/FpasAmp.Media.Audio/Decoding/TrackSource.cs)
+  - [IPlaybackSource.cs](../../src/FpasAmp.Media.Audio/Decoding/IPlaybackSource.cs)
+  - [LiveSource.cs](../../src/FpasAmp.Media.Audio/Decoding/LiveSource.cs)
+- `src/FpasAmp.Media.Audio/Output/`
+  - [Backend.cs](../../src/FpasAmp.Media.Audio/Output/Backend.cs)
+  - [DeviceStream.cs](../../src/FpasAmp.Media.Audio/Output/DeviceStream.cs)
+  - [Equalizer.cs](../../src/FpasAmp.Media.Audio/Output/Equalizer.cs)
+  - [TrackOutput.cs](../../src/FpasAmp.Media.Audio/Output/TrackOutput.cs)
+- `tests/FpasAmp.Media.Audio.Tests/`
+  - [AnalysisTests.cs](../../tests/FpasAmp.Media.Audio.Tests/AnalysisTests.cs)
+  - [EqualizerTests.cs](../../tests/FpasAmp.Media.Audio.Tests/EqualizerTests.cs)
+  - [LiveStreamsTests.cs](../../tests/FpasAmp.Media.Audio.Tests/LiveStreamsTests.cs)
+  - [FpasAmp.Media.Audio.Tests.csproj](../../tests/FpasAmp.Media.Audio.Tests/FpasAmp.Media.Audio.Tests.csproj)
+  - [PlaybackDeviceTests.cs](../../tests/FpasAmp.Media.Audio.Tests/PlaybackDeviceTests.cs)
+  - [SessionTests.cs](../../tests/FpasAmp.Media.Audio.Tests/SessionTests.cs)
+  - [TrackSourceTests.cs](../../tests/FpasAmp.Media.Audio.Tests/TrackSourceTests.cs)
+  - [TransitionsTests.cs](../../tests/FpasAmp.Media.Audio.Tests/TransitionsTests.cs)
+- `tests/FpasAmp.Media.Audio.Tests/Support/`
+  - [FakeSession.cs](../../tests/FpasAmp.Media.Audio.Tests/Support/FakeSession.cs)
+  - [Wave.cs](../../tests/FpasAmp.Media.Audio.Tests/Support/Wave.cs)
+
+</details>

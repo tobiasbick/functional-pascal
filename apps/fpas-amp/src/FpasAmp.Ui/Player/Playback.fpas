@@ -3,10 +3,10 @@
 // The GUI submits transport requests in order; file and device work runs on one worker.
 unit FpasAmp.Ui.Player.Playback;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Mvu.Application as A;
 
 uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Ui.Player.Model as M;
 uses FpasAmp.Ui.Podcasts.Downloads as Downloads;
 uses System as Sys;

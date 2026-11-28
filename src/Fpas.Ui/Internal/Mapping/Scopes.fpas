@@ -1,0 +1,204 @@
+// [Documentation](../../../../docs/ui/widgets.md#id-scopes)
+
+unit Fpas.Ui.Internal.Mapping.Scopes;
+
+uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Grids as Grids;
+uses Fpas.Ui.Widgets.Navigation.TableOfContents as Toc;
+uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+uses Fpas.Ui.Widgets.Overlays.Tours as Tours;
+
+uses System as Sys;
+uses System.Collections.Generic as Lists;
+
+// Validates a public scope before using it as a prefix.
+// ## Parameters
+// - `Scope`: Stable, nonempty scope.
+public procedure Check(Scope: string);
+begin
+  if Sys.String.IsNullOrWhiteSpace(Scope) then
+    Rules.Reject('ID scope', 'The scope must be nonempty.');
+  end if;
+
+  Rules.CheckText(Scope, 'ID scope');
+end procedure;
+
+// Qualifies a view ID while retaining missing IDs for widget validation.
+// ## Parameters
+// - `Scope`: Prefix, or empty to preserve the ID.
+// - `Local`: Local ID.
+// ## Returns
+// The scope and ID joined with a slash, or the original ID if either is missing.
+public function Id(Scope: string; Local: string): string;
+begin
+  if Scope = '' or Sys.String.IsNullOrWhiteSpace(Local) then
+    return Local;
+  end if;
+
+  return Scope + '/' + Local;
+end function;
+
+function Optional(Scope: string; Local: string?): string?;
+begin
+  if Local = null then
+    return null;
+  end if;
+
+  return Id(Scope, Local);
+end function;
+
+// Removes this scope from an ID reported by the host.
+// ## Parameters
+// - `Scope`: Prefix, or empty to preserve the ID.
+// - `Qualified`: ID reported by the host.
+// ## Returns
+// The ID with the prefix removed when present.
+public function LocalId(Scope: string; Qualified: string): string;
+begin
+  if Scope <> '' and Qualified.StartsWith(Scope + '/', Sys.StringComparison.Ordinal) then
+    return Qualified.Substring(Scope.Length + 1);
+  end if;
+
+  return Qualified;
+end function;
+
+// Qualifies the optional ID of a row, column or layered stack.
+// ## Parameters
+// - `Scope`: ID prefix, or empty.
+// - `Settings`: Flow settings with a local ID.
+// ## Returns
+// Flow settings with a qualified ID, if set.
+public function Flow(Scope: string; Settings: L.Flow): L.Flow;
+begin
+  if Scope = '' or Settings.Id = null then
+    return Settings;
+  end if;
+
+  return Settings with
+    Id := Optional(Scope, Settings.Id);
+  end with;
+end function;
+
+// Qualifies a grid's optional ID.
+// ## Parameters
+// - `Scope`: ID prefix, or empty.
+// - `Settings`: Grid settings with optional flow settings.
+// ## Returns
+// Grid settings with a qualified ID, if set.
+public function Grid(Scope: string; Settings: Grids.Options): Grids.Options;
+begin
+  const Layout: L.Flow? := Settings.Flow;
+  if Scope = '' or Layout = null or Layout.Id = null then
+    return Settings;
+  end if;
+
+  return Settings with
+    Flow := Flow(Scope, Layout);
+  end with;
+end function;
+
+// Qualifies the initial focus target of a dialog.
+// ## Parameters
+// - `Scope`: ID prefix, or empty.
+// - `Settings`: Dialog settings with optional initial focus.
+// ## Returns
+// Dialog settings with a qualified initial focus target, if set.
+public function Dialog(Scope: string; Settings: Dialogs.Options): Dialogs.Options;
+begin
+  if Scope = '' or Settings.InitialFocus = null then
+    return Settings;
+  end if;
+
+  return Settings with
+    InitialFocus := Optional(Scope, Settings.InitialFocus);
+  end with;
+end function;
+
+// Qualifies the initial focus target of a sheet.
+// ## Parameters
+// - `Scope`: ID prefix, or empty.
+// - `Settings`: Sheet settings with optional initial focus.
+// ## Returns
+// Sheet settings with a qualified initial focus target, if set.
+public function Sheet(Scope: string; Settings: Sheets.Options): Sheets.Options;
+begin
+  if Scope = '' or Settings.InitialFocus = null then
+    return Settings;
+  end if;
+
+  return Settings with
+    InitialFocus := Optional(Scope, Settings.InitialFocus);
+  end with;
+end function;
+
+// Qualifies the IDs of scroll anchors linked from a table of contents.
+// ## Parameters
+// - `Scope`: ID prefix, or empty.
+// - `Items`: Entries with local anchor IDs.
+// ## Returns
+// Entries in their original order with qualified anchor IDs.
+public function Outline(Scope: string; Items: array of Toc.Item): array of Toc.Item;
+begin
+  if Scope = '' then
+    return Items;
+  end if;
+
+  const Result: Lists.List of Toc.Item := new Lists.List of Toc.Item(Items.Length);
+  for Item: Toc.Item in Items do
+    Result.Add(
+      Item with
+        Anchor := Id(Scope, Item.Anchor);
+      end with
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Qualifies the control IDs referenced by a guided tour.
+// ## Parameters
+// - `Scope`: ID prefix, or empty.
+// - `Steps`: Steps with local control IDs.
+// ## Returns
+// Steps in their original order with qualified target IDs.
+public function Tour(Scope: string; Steps: array of Tours.Step): array of Tours.Step;
+begin
+  if Scope = '' then
+    return Steps;
+  end if;
+
+  const Result: Lists.List of Tours.Step := new Lists.List of Tours.Step(Steps.Length);
+  for Step: Tours.Step in Steps do
+    Result.Add(
+      Step with
+        Target := Id(Scope, Step.Target);
+      end with
+    );
+  end for;
+
+  return Result.ToArray();
+end function;
+
+// Qualifies the ID of a control that a scroll viewport must reveal.
+// ## Parameters
+// - `Scope`: ID prefix, or empty.
+// - `Position`: Scroll request or null for host-owned scrolling.
+// ## Returns
+// The scroll request with a qualified reveal target, if set.
+public function ScrollRequest(Scope: string; Position: L.ScrollPosition?): L.ScrollPosition?;
+begin
+  if Scope = '' then
+    return Position;
+  end if;
+
+  case Position of
+    when L.ScrollPosition.Reveal(const Target: string):
+      return L.ScrollPosition.Reveal(Id(Scope, Target));
+    else
+      return Position;
+  end case;
+end function;
+
+end unit;

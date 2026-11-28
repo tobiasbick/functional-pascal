@@ -1,7 +1,7 @@
 # FpasAmp.Library
 
 UI-independent FPAS directory discovery, audio metadata, playlists and durable user
-ratings, using .NET, `Microsoft.Data.Sqlite` and the [Fpas.Media.Tags](../../../docs/pascal/libraries/media/tags.md) library. Discovery enumerates
+ratings, using .NET, `Microsoft.Data.Sqlite` and the [FpasAmp.Media.Tags](media/tags.md) library. Discovery enumerates
 filesystem entries; the optional second stage reads tags, technical audio
 properties and SHA-256 without decoding or modifying audio.
 
@@ -159,7 +159,7 @@ is unavailable, the method measures directly. A SQLite cache error also allows
 measurement to proceed. If the file stamp changes during a cacheable
 measurement, the method returns an empty array and skips the write.
 
-See [audio analysis](../../../docs/pascal/libraries/media/audio.md#waveform-analysis)
+See [audio analysis](media/audio.md#waveform-analysis)
 and the [waveform cache tests](../tests/FpasAmp.Library.Tests/Storage/Waveforms.fpas).
 
 ## Durable identities and ratings
@@ -265,7 +265,7 @@ Albums or closing the window cancels work; generation checks reject stale result
 The view retains only the requested images. Cached positive thumbnails work offline.
 All source reads, decoding and resizing stay outside the GUI thread.
 
-[Fpas.Media.Images](../../../docs/pascal/libraries/media/images.md) decodes the artwork.
+[FpasAmp.Media.Images](media/images.md) decodes the artwork.
 [FpasAmp.Imaging](imaging.md) owns content-addressed thumbnail storage: 384 × 384 RGBA, 32 MiB decoded cache and
 256 MiB disk pixel cache. Shared picture bytes share a blob across albums. Album
 thumbnail requests bypass the per-track original-image cache to avoid duplication.

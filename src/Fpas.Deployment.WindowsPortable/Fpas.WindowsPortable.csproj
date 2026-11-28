@@ -11,5 +11,6 @@
   <ItemGroup>
     <EmbeddedResource Include="$(PortableArchive)" LogicalName="Fpas.Portable.Archive" />
     <EmbeddedResource Include="$(PortableManifest)" LogicalName="Fpas.Portable.Manifest" />
+    <EmbeddedResource Include="$(PortableTitleFile)" Condition="'$(PortableTitleFile)' != ''" LogicalName="Fpas.Portable.Title" />
   </ItemGroup>
 </Project>

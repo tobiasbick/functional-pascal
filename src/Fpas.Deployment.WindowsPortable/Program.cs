@@ -12,11 +12,11 @@ internal static class Program
     {
         // The child shares the console and receives Ctrl+C itself. Wait for its exit code.
         Console.CancelKeyPress += (_, signal) => signal.Cancel = true;
+        var bundle = Assembly.GetExecutingAssembly();
+        var name = bundle.GetName().Name!;
         try
         {
-            var bundle = Assembly.GetExecutingAssembly();
             var adjacent = Path.GetFullPath(AppContext.BaseDirectory);
-            var name = bundle.GetName().Name!;
             var runtime = Path.Combine(adjacent, name + "-runtime");
             var executable = Payload.Extract(bundle, runtime);
             var start = new ProcessStartInfo(executable)
@@ -44,7 +44,9 @@ internal static class Program
             var message = "Could not start the portable application. " + error.Message;
             Console.Error.WriteLine(message);
 #if PORTABLE_GUI
-            _ = MessageBox(0, message, "FPas-Amp", 0x10);
+            var titleResource = bundle.GetManifestResourceStream("Fpas.Portable.Title");
+            using var title = titleResource is null ? null : new StreamReader(titleResource);
+            _ = MessageBox(0, message, title?.ReadToEnd() ?? name, 0x10);
 #endif
             return 1;
         }

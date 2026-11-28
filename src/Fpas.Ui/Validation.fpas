@@ -1511,7 +1511,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           or Role = S.Role.DisplayTitle or Role = S.Role.Introduction or Role = S.Role.SingleLine
           or Role = S.Role.Tabular or Role = S.Role.SmallBody or Role = S.Role.MutedIcon
           or Role = S.Role.DisplayBody or Role = S.Role.CompactLabel or Role = S.Role.SuccessGlyph
-          or Role = S.Role.CompactMutedIcon
+          or Role = S.Role.CompactMutedIcon or Role = S.Role.HoverScroll
           or Role = S.Role.InverseSurface or Role = S.Role.PillSurface or Role = S.Role.InverseLabel
         then
           Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/style');

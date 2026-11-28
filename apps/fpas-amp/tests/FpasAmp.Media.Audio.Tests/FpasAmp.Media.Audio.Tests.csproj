@@ -1,0 +1,15 @@
+<!-- [Documentation](../../doc/media/audio.md) -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../../tests/TestSupport/TemporaryDirectory.cs" Link="Support/TemporaryDirectory.cs" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <ProjectReference Include="../../src/FpasAmp.Media.Audio/FpasAmp.Media.Audio.csproj" />
+    <None Update="Fixtures/step.*" CopyToOutputDirectory="PreserveNewest" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

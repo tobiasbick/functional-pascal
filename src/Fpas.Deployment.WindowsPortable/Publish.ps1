@@ -4,7 +4,8 @@ param(
     [Parameter(Mandatory = $true)][string]$EntryPoint,
     [Parameter(Mandatory = $true)][string]$Output,
     [Parameter(Mandatory = $true)][string]$ArtifactsPath,
-    [string]$Icon
+    [string]$Icon,
+    [ValidateNotNullOrEmpty()][string]$Title
 )
 
 $ErrorActionPreference = 'Stop'
@@ -49,9 +50,16 @@ finally {
 
 $dist = Join-Path $work 'publish'
 $properties = @("-p:PortableName=$name", "-p:PortableArchive=$archivePath", "-p:PortableManifest=$manifestPath")
-if ($Icon) {
+if ($Icon -or $Title) {
     $properties += '-p:PortableGui=true'
+}
+if ($Icon) {
     $properties += "-p:PortableIcon=$((Resolve-Path -LiteralPath $Icon).Path)"
+}
+if ($Title) {
+    $titlePath = Join-Path $work 'title.txt'
+    [IO.File]::WriteAllText($titlePath, $Title)
+    $properties += "-p:PortableTitleFile=$titlePath"
 }
 dotnet publish (Join-Path $PSScriptRoot 'Fpas.WindowsPortable.csproj') -c Release -r win-x64 `
     --artifacts-path (Join-Path $work 'build') --output $dist @properties --nologo -warnaserror

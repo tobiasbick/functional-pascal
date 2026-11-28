@@ -3,11 +3,11 @@
 // Shared song browsing and playback selection for releases and the Music destination.
 unit FpasAmp.Ui.Albums.Music.Model;
 
-uses Fpas.Media.Images as Imaging;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 
 uses FpasAmp.Library.Albums.Model as Albums;
 uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Media.Images as Imaging;
 uses FpasAmp.Ui.Fingerprints as Fp;
 uses FpasAmp.Ui.Navigation.Model as Nav;
 uses System as Sys;

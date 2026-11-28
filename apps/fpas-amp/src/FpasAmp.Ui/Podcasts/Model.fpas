@@ -2,9 +2,9 @@
 
 unit FpasAmp.Ui.Podcasts.Model;
 
-uses Fpas.Media.Images as Images;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 
+uses FpasAmp.Media.Images as Images;
 uses FpasAmp.Ui.Podcasts.Catalog as Catalog;
 uses FpasAmp.Ui.Radio.Model as Radio;
 uses System as Sys;

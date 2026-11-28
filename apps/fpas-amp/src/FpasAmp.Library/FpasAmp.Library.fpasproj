@@ -8,8 +8,8 @@
   <ItemGroup>
     <ProjectReference Include="Serialization/FpasAmp.Library.Serialization.csproj" />
     <ProjectReference Include="../FpasAmp.Imaging/FpasAmp.Imaging.csproj" />
-    <ProjectReference Include="../../../../src/Fpas.Media.Tags/Fpas.Media.Tags.fpasproj" />
-    <ProjectReference Include="../../../../src/Fpas.Media.Audio/Fpas.Media.Audio.csproj" />
+    <ProjectReference Include="../FpasAmp.Media.Tags/FpasAmp.Media.Tags.fpasproj" />
+    <ProjectReference Include="../FpasAmp.Media.Audio/FpasAmp.Media.Audio.csproj" />
     <PackageReference Include="Microsoft.Data.Sqlite" />
   </ItemGroup>
   <Import Project="../../third-party/chromaprint/Fpcalc.targets" />

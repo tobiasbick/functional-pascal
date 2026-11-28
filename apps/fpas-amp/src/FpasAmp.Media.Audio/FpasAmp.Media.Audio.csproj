@@ -1,0 +1,11 @@
+<!-- [Documentation](../../doc/media/audio.md) -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="SoundFlow" />
+    <PackageReference Include="SoundFlow.Codecs.FFMpeg" />
+    <InternalsVisibleTo Include="FpasAmp.Media.Audio.Tests" />
+  </ItemGroup>
+</Project>

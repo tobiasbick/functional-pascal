@@ -5,6 +5,7 @@ unit Fpas.Ui.Internal.Mapping.Display;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Internal.Mapping.MessageMapping as Mapping;
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.Widgets.Canvas.Canvases as Canvases;
 uses Fpas.Ui.Widgets.Canvas.Painting as Painting;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
@@ -23,11 +24,13 @@ uses System as Sys;
 // - `Value`: Element to map.
 // - `Messages`: Converts proposed messages.
 // - `Content`: Maps a nested element.
+// - `Scope`: Prefix for the element ID, or empty.
 // ## Returns
 // The element in the parent message type.
 public function Map of (TChild, TParent)(
   Value: E.Element of TChild;
   Messages: function(TChild): TParent;
+  Scope: string;
   Content: function(E.Element of TChild): E.Element of TParent
 ): E.Element of TParent;
 begin
@@ -52,7 +55,7 @@ begin
       const Source: Media.Source,
       const Settings: Images.Options
     ):
-      return (E.Element of TParent).Image(Id, Source, Settings);
+      return (E.Element of TParent).Image(Scopes.Id(Scope, Id), Source, Settings);
     when E.Element.Canvas(
       const Id: string,
       const Drawing: array of Canvases.Shape,
@@ -65,7 +68,7 @@ begin
       const OnRightClick: Sys.Func of (Canvases.Event, TChild)?
     ):
       return (E.Element of TParent).Canvas(
-        Id,
+        Scopes.Id(Scope, Id),
         Drawing,
         function(Event: Canvases.Event): TParent => Messages(Clicked(Event)),
         Settings,
@@ -83,7 +86,7 @@ begin
       const Settings: Veils.Options
     ):
       return (E.Element of TParent).Veil(
-        Id,
+        Scopes.Id(Scope, Id),
         Revealed,
         function(Visible: bool): TParent => Messages(Changed(Visible)),
         Content(Child),

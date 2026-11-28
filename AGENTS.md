@@ -19,8 +19,11 @@ the topics needed for the task.
 - Keep temporary data under the git-ignored `.temp-data/` in this checkout:
   scripts, logs, patches, measurements, build trees, worktrees and clones. Do
   not use the system temp directory or a session scratchpad; MSBuild rejects
-  intermediate directories below `%TEMP%`. Linux checks under WSL are the
-  exception and use a clone below `~/work/`, because builds on `/mnt/` are slow.
+  intermediate directories below `%TEMP%`.
+- Run Linux checks under WSL with the Linux tools only: the WSL compilers,
+  CMake and the .NET SDK in `~/.dotnet`. Never call Windows executables from
+  WSL. Clone the repository below `~/work/` in the WSL file system and build
+  there, never below `/mnt/`.
 
 ## Code
 

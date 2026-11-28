@@ -2,6 +2,7 @@
 
 unit GalleryModalCompositionContract;
 
+uses Fpas.Ui.Composition as Views;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
@@ -196,6 +197,46 @@ begin
   Assert(Control(Session, 'background').Enabled, 'Dismissal must restore background input.');
 end procedure;
 
+procedure VerifyScopedDialogs(Renderer: Cui.CuiRenderer);
+  function Component(Open: bool; OnOpen: bool): E.Element of bool;
+  begin
+    return Dialogs.Dialog of bool(
+      'dialog',
+      Buttons.Button of bool('open', 'Open', OnOpen),
+      Buttons.Button of bool('finish', 'Finish', OnOpen),
+      Open,
+      new Dialogs.Options('Scoped dialog', InitialFocus := 'finish'),
+      not OnOpen
+    );
+  end function;
+
+  function View(LeftOpen: bool; Viewport: L.Viewport): E.Element of bool;
+  begin
+    return E.Row of bool(
+      Views.IdScope of bool('left', Component(LeftOpen, true)),
+      Views.IdScope of bool('right', Component(not LeftOpen, false))
+    );
+  end function;
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Scoped dialogs', 700, 500, Renderer, true
+  );
+  using const Session: Gui.Session of bool := Host.Start of (bool, bool)(
+    true,
+    function(Model: bool; Message: bool): App.Transition of (bool, bool) => new App.Transition of (bool, bool)(
+      Message,
+      []
+    ),
+    View, Window, 16
+  );
+  Check(Session.Step(), 'The left dialog did not present.');
+  Check(Control(Session, 'left/finish').Focused, 'The left dialog lost its scoped focus target.');
+
+  discard Session.Post(false);
+  Check(Session.Step(), 'The right dialog did not present.');
+  Check(Control(Session, 'right/finish').Focused, 'The right dialog lost its scoped focus target.');
+end procedure;
+
 // Exercises modal input ownership through graphical composition containers.
 // ## Parameters
 // - `Renderer`: Native renderer used for every composed view.
@@ -204,6 +245,8 @@ begin
   for Kind: int := 0 to 15 do
     VerifyContainer(Renderer, Kind);
   end for;
+
+  VerifyScopedDialogs(Renderer);
 end procedure;
 
 end unit;

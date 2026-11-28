@@ -64,6 +64,8 @@ public type Role = enum: byte
   InverseLabel;
   // A muted CUI icon glyph at fifteen logical points.
   CompactMutedIcon;
+  // Single-line graphical text that scrolls on hover if it exceeds its width.
+  HoverScroll;
 end enum;
 
 // Native CUI semantic colors shared by graphical widgets.

@@ -3,7 +3,6 @@
 // Native music table, toolbars and details for a selected album.
 unit FpasAmp.Ui.Albums.Music.View;
 
-uses Fpas.Media.Images as Imaging;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
@@ -13,6 +12,7 @@ uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
 uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
 
 uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Media.Images as Imaging;
 uses FpasAmp.Ui.Albums.Artwork as Artwork;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;
 uses FpasAmp.Ui.Albums.Music.Details.View as Dialog;

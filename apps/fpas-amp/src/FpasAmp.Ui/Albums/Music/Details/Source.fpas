@@ -93,7 +93,7 @@ begin
       Texts.Text of M.Msg('File path', Texts.Appearance.Label),
       E.Row of M.Msg(
         Row,
-        E.Size of M.Msg(E.Text of M.Msg(Item.Path), Fill),
+        E.Size of M.Msg(E.Styled of M.Msg(E.Text of M.Msg(Item.Path), S.Role.HoverScroll), Fill),
         Icons.IconButton of M.Msg(
           'track-open-folder',
           Sys.Char.ConvertFromUtf32($E247),

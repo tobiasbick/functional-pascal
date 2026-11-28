@@ -13,15 +13,6 @@ the [distribution reference](../build/distribution.md) owns deployment.
 Examples and applications build and run through the SDK. The responsibilities
 below describe their boundaries.
 
-`Fpas.Atl` builds the pinned ATL source under `third-party/atl` for applications.
-It preserves ATL's CLR namespace/assembly name and owns the dependency build and
-license delivery; the compiler has no dependency on it. Local playlist changes
-and snapshot/update details live in the [ATL provenance](../../third-party/atl/UPSTREAM.md).
-
-The [media libraries](../pascal/libraries/media/README.md) can each be referenced directly.
-`Fpas.Media.Tags` exposes FPAS records over ATL, `Fpas.Media.Images` owns image
-decoding and `Fpas.Media.Audio` owns playback and waveform analysis.
-
 ## Repository tree
 
 ```text
@@ -152,8 +143,6 @@ sdk/
     README.md
 tests/
   Fpas.Library.Tests.slnx
-  Fpas.Media.Tests/
-  Fpas.Media.Audio.Tests/
   Fpas.Ui.Mvu.Tests/
   Fpas.Compiler.Tests/
     Fpas.Compiler.Tests.csproj
@@ -344,9 +333,9 @@ The two consumer directories have distinct purposes:
   own `.fpasproj`, supporting units, and a short README. Interactive demos are
   allowed when clearly identified.
 - `apps/` contains complete end-user applications written in FPAS. An application
-  owns a directory with its README, source, `.fpasproj` project or projects,
-  assets, and application-specific material. It may grow across multiple units
-  and projects as its features require.
+  owns its README, projects, tests, assets, and dependencies. For example,
+  FPas-Amp owns the [media libraries](../../apps/fpas-amp/doc/media/README.md)
+  and the [ATL source snapshot](../../apps/fpas-amp/third-party/atl/UPSTREAM.md).
 
 Both are consumers of the same compiler and .NET SDK contract. They use the new
 language syntax and `.fpasproj` format. Test assertions and regression fixtures

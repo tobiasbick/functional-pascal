@@ -87,10 +87,70 @@ void fpas_cui_node_size(cui_ctx *ui, int node, int horizontal, int kind, float b
     }
 }
 
+typedef struct {
+    double started;
+    uint64_t frame;
+} fpas_text_scroll_state;
+
+/** Paints an overflowing text line inside its own bounds while the pointer is over it. */
+static void fpas_paint_hover_scroll(cui_ctx *ui, cui_node *node, void *data) {
+    const cui_rect bounds = node->rect;
+    const cui_rect clip = ui->dl.clip_stack[ui->dl.clip_depth - 1];
+    if (!ui->mouse_inside || !ui->window_focused || ui->hot_layer != ui->current_layer ||
+        !cui__rect_contains(cui__xform_rect(ui, bounds), ui->mx, ui->my) ||
+        !cui__rect_contains(clip, ui->mx * ui->scale, ui->my * ui->scale)) return;
+
+#ifdef CUI_TEXT_SHAPING
+    const cui_direction previous = ui->text_direction;
+    ui->text_direction = node->rtl ? CUI_DIRECTION_RTL : CUI_DIRECTION_LTR;
+#endif
+    const float width = cui__text_width(ui, node->font, node->font_size, node->text, node->text_len,
+                                       (node->flags & CUI_NF_TABULAR) != 0);
+#ifdef CUI_TEXT_SHAPING
+    ui->text_direction = previous;
+#endif
+    const float overflow = width - bounds.w;
+    if (overflow <= 0.5f) return;
+
+    float offset = overflow;
+    if (ui->theme.motion > 0) {
+        const cui_id key = *(const cui_id *)data;
+        fpas_text_scroll_state *state = cui_state(ui, key, sizeof *state);
+        if (state->frame == 0 || state->frame < ui->frame - 1) state->started = ui->time;
+        state->frame = ui->frame;
+        const double travel = CUI_MIN(6.0, overflow / 72.0);
+        const double half = travel + 0.5;
+        const double phase = fmod(ui->time - state->started, 2 * half);
+        const double position = CUI_MIN(phase, 2 * half - phase);
+        offset = overflow * cui__clampf((float)((position - 0.25) / travel), 0, 1);
+        ui->animating = true;
+    }
+
+    cui_node shown = *node;
+    shown.rect.x -= node->rtl ? overflow - offset : offset;
+    shown.rect.w = width + 0.5f;
+    cui_push_clip(ui, bounds);
+    cui__paint_text(ui, &shown);
+    cui_pop_clip(ui);
+    /* Layout already measured the text; suppress its default ellipsis paint for this frame. */
+    node->flags &= ~CUI_NF_TEXT;
+}
+
+/** Applies a semantic theme role to a node and its children. */
 void fpas_cui_node_role(cui_ctx *ui, int node, int role) {
     if (node < 0 || node >= ui->node_count) return;
     if (role == 0) return;
     cui_node *n = &ui->nodes[node];
+    if (role == 30) {
+        if (n->flags & CUI_NF_TEXT) {
+            cui_id *key = cui__frame_alloc(ui, sizeof *key);
+            *key = cui__hash_str(n->text, cui_make_id(ui, "#hover-scroll") ^ (cui_id)node);
+            n->flags &= ~CUI_NF_WRAP;
+            n->paint = fpas_paint_hover_scroll;
+            n->paint_data = key;
+        }
+        return;
+    }
     if (role == 26 || role == 27) {
         n->bg = role == 26 ? CUI_C(ui, FOREGROUND) : CUI_C(ui, SURFACE);
         n->radius = CUI_CORNERS(role == 26 ? 10 : 999);

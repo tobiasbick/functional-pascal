@@ -1,7 +1,7 @@
 # FpasAmp.Imaging
 
 `FpasAmp.Imaging` manages the album thumbnail cache and uses
-[Fpas.Media.Images](../../../docs/pascal/libraries/media/images.md) to decode covers.
+[FpasAmp.Media.Images](media/images.md) to decode covers.
 
 `ThumbnailStore` accepts encoded pictures on background callers and returns
 immutable-by-contract straight-alpha RGBA `Bitmap` values. Pictures are fitted

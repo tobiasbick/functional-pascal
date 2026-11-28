@@ -3,8 +3,6 @@
 // Exercise the owned metadata lifetime with a competing SQLite writer.
 unit FpasAmp.Library.Tests.MetadataLocking;
 
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
-
 uses FpasAmp.Library.Inventory.Internal.Observations as O;
 uses FpasAmp.Library.Metadata.Model as M;
 uses FpasAmp.Library.Metadata.Monitoring as Metadata;
@@ -13,6 +11,7 @@ uses FpasAmp.Library.Sources as S;
 uses FpasAmp.Library.Tests.MetadataSupport as F;
 uses FpasAmp.Library.Tests.StorageSupport as D;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 uses Microsoft.Data.Sqlite as Db;
 uses System as Sys;
 uses System.Collections.Generic as C;

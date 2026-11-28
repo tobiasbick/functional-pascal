@@ -3,12 +3,11 @@
 // Explicit imports create durable copies; export has one canonical UTF-8 format.
 unit FpasAmp.Library.Playlists.Internal.Transfer;
 
-uses Fpas.Media.Tags.Playlists as Files;
-
 uses FpasAmp.Library.Playlists.Formats.Reading as Reading;
 uses FpasAmp.Library.Playlists.Model as M;
 uses FpasAmp.Library.Playlists.Persistence.Queries as Queries;
 uses FpasAmp.Library.Playlists.Persistence.UserLists as Lists;
+uses FpasAmp.Media.Tags.Playlists as Files;
 uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.IO as IO;

@@ -3,12 +3,11 @@
 // Opens an exact release through native input and returns to the scrolled album grid.
 unit FpasAmp.UiTests.NativeAlbumMusic;
 
-uses Fpas.Media.Audio as Media;
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as A;
+uses Fpas.Ui.Mvu.Testing.EffectReplies as Effects;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
 uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
@@ -20,6 +19,8 @@ uses FpasAmp.Library.Metadata.Model as Metadata;
 uses FpasAmp.Library.Tests.AlbumSupport as Fixtures;
 uses FpasAmp.Library.Tests.MetadataSupport as Sources;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Media;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 uses FpasAmp.Persistence.PlayerState as Bookmark;
 uses FpasAmp.Ui.Albums.Model as Albums;
 uses FpasAmp.Ui.Albums.Music.Model as Music;
@@ -35,6 +36,7 @@ uses FpasAmp.Ui.Shell as Shell;
 uses System as Sys;
 uses System.IO as IO;
 uses System.Threading as T;
+uses System.Threading.Channels as Channels;
 uses Xunit as X;
 
 function Control(Session: Gui.Session of App.Msg; Id: string; Key: string := ''): Gui.Control;
@@ -128,7 +130,7 @@ public type AlbumMusicTests = record
       end case;
 
       Last := Next.Model;
-      return Next;
+      return Gate.Wrap of App.State(Next);
     end function;
     procedure Click(
       Session: Gui.Session of App.Msg;
@@ -150,11 +152,46 @@ public type AlbumMusicTests = record
       discard Session.Post(App.Msg.Albums(Message));
       Step(Session);
     end procedure;
+    procedure ReceivePlayback(
+      Session: Gui.Session of App.Msg;
+      Ready: function(Media.PlaybackEvent): bool
+    );
+    begin
+      using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(8000);
+      const Revision: long := Last.Player.Revision;
+      while true do
+        const Held: Effects.Reply of App.Msg := AudioReplies.ReadAsync(
+          Stop.Token
+        ).AsTask().GetAwaiter().GetResult();
+        case Held.Message of
+          when App.Msg.Player(Player.Msg.Observed(const Value: Media.PlaybackEvent)):
+            const Position: double := Last.Player.Position;
+            Held.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
+            Step(Session);
+            X.Assert.Equal of long(Revision, Last.Player.Revision);
+            if Value.RequestId <> Revision then
+              X.Assert.Equal of double(Position, Last.Player.Position);
+            else
+              X.Assert.True(Value.State <> Media.PlaybackState.Failed, Value.Error ?? '');
+              X.Assert.Equal of double(Value.Position.TotalMilliseconds, Last.Player.Position);
+              if Ready(Value) then
+                return;
+              end if;
+            end if;
+          else
+            raise new Sys.InvalidOperationException(
+              'The playback worker did not return an audio event.'
+            );
+        end case;
+      end while;
+    end procedure;
   begin
     using const Root: H.Folder := H.Folder.Create();
     using const Data: H.Folder := H.Folder.Create();
+    // An unbroken directory name must leave room for both file actions.
+    const MusicRoot: string := IO.Path.Combine(Root.Path, new Sys.String(#87, 80));
     for Index: int := 1 to 20 do
-      const Folder: string := IO.Path.Combine(Root.Path, Index.ToString('D2'));
+      const Folder: string := IO.Path.Combine(MusicRoot, Index.ToString('D2'));
       const Artist: string := 'Artist ' + Index.ToString('D2');
       const Intro: string := Fixtures.Track(Folder, 'Intro.mp3', 'Demo Release', Artist);
       if Index = 20 then
@@ -173,6 +210,10 @@ public type AlbumMusicTests = record
 
     using const Device: Media.Session := new Media.Session(true);
     const Port: Playback.Connection := Playback.Connection.Create(Device);
+    const Gate: Effects.Effects of App.Msg := (Effects.Effects of App.Msg).Create();
+    const AudioReplies: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
+      'player/audio-events'
+    );
     var Last: App.State := new App.State(
       new Settings.State(new Settings.Preferences([Sources.Source(Root.Path)], 'light')),
       Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Albums))
@@ -184,7 +225,7 @@ public type AlbumMusicTests = record
     var Wheel: float := 0.0F;
     var Key: int := 0;
     using const Window: Cui.CuiWindow := new Cui.CuiWindow(
-      'FPas-Amp album music', 1320, 820, Cui.CuiRenderer.Software, true
+      'FPas-Amp album music', 1320, 820, Cui.CuiRenderer.Software, true, hidden := true
     );
     const Store: Library.Session := Sources.Start([Sources.Source(Root.Path)], Data.Path);
     try
@@ -318,7 +359,28 @@ public type AlbumMusicTests = record
       if SaveAt <> null then
         discard IO.Directory.CreateDirectory(SaveAt);
         Session.CapturePng(IO.Path.Combine(SaveAt, 'track-details-overview.png'));
+        XPos := (Control(Session, 'track-detail-source').Bounds.X + OpenPath.X) / 2.0F;
+        YPos := OpenPath.Y + OpenPath.Height / 2.0F;
+        Step(Session);
+        Session.CapturePng(IO.Path.Combine(SaveAt, 'track-details-path-hover.png'));
       end if;
+
+      const WideSource: Cui.CuiRectangle := Control(Session, 'track-detail-source').Bounds;
+      Window.Resize(560, 820);
+      Until(
+        Session, function(): bool => Session.Snapshot().Size.Width < 580.0F,
+        'The track details did not reach the compact layout.'
+      );
+      X.Assert.Contains of string(Track.Path, Session.Snapshot().Text);
+      const CompactSource: Cui.CuiRectangle := Control(Session, 'track-detail-source').Bounds;
+      const CompactCopy: Cui.CuiRectangle := Control(Session, 'track-copy-path').Bounds;
+      X.Assert.Equal of float(WideSource.Height, CompactSource.Height);
+      X.Assert.True(CompactCopy.X + CompactCopy.Width <= CompactSource.X + CompactSource.Width);
+      Window.Resize(1320, 820);
+      Until(
+        Session, function(): bool => Session.Snapshot().Size.Width > 1000.0F,
+        'The track details did not return to the wide layout.'
+      );
 
       Click(Session, Control(Session, 'track-detail-tabs', '1').Bounds);
       X.Assert.Contains of string('Test label', Session.Snapshot().Text);
@@ -398,8 +460,20 @@ public type AlbumMusicTests = record
       X.Assert.Equal of string(Page.Album.Id, Bookmark.Capture(Last.Player).Source.AlbumId);
       Click(Session, Control(Session, 'player-toggle').Bounds, 0.5F);
       X.Assert.False(Last.Player.Playing);
+      ReceivePlayback(
+        Session,
+        function(Value: Media.PlaybackEvent): bool => Value.State <> Media.PlaybackState.Playing
+      );
+      X.Assert.False(Last.Player.Playing);
       const Wave: Cui.CuiRectangle := Control(Session, 'player-position').Bounds;
+      const BeforeSeek: long := Last.Player.Revision;
       Click(Session, Wave, 0.72F);
+      X.Assert.Equal of long(BeforeSeek + 1L, Last.Player.Revision);
+      X.Assert.InRange of double(Last.Player.Position / Last.Player.Duration, 0.70, 0.74);
+      ReceivePlayback(
+        Session,
+        function(Value: Media.PlaybackEvent): bool => Value.State = Media.PlaybackState.Paused
+      );
       X.Assert.InRange of double(Last.Player.Position / Last.Player.Duration, 0.70, 0.74);
       const BeforeDrag: long := Last.Player.Revision;
       XPos := Wave.X + Wave.Width * 0.9F;
@@ -415,6 +489,11 @@ public type AlbumMusicTests = record
       Step(Session);
       Step(Session);
       X.Assert.Equal of long(BeforeDrag + 1L, Last.Player.Revision);
+      X.Assert.InRange of double(Last.Player.Position / Last.Player.Duration, 0.18, 0.22);
+      ReceivePlayback(
+        Session,
+        function(Value: Media.PlaybackEvent): bool => Value.State = Media.PlaybackState.Paused
+      );
       X.Assert.InRange of double(Last.Player.Position / Last.Player.Duration, 0.18, 0.22);
       const Volume: Cui.CuiRectangle := Control(Session, 'player-volume').Bounds;
       X.Assert.True(Volume.X + Volume.Width <= Control(Session, 'player-levels').Bounds.X);
@@ -496,11 +575,12 @@ public type AlbumMusicTests = record
       );
       discard Session.Post(App.Msg.Player(Player.Msg.Seek(0.05F)));
       discard Session.Post(App.Msg.Player(Player.Msg.Toggle));
-      Until(
+      Step(Session);
+      X.Assert.True(Last.Player.Playing);
+      ReceivePlayback(
         Session,
-        function(): bool => Last.Player.Playing and Last.Player.Position > Last.Player.Duration *
-          0.05 + 1.0,
-        'Playback did not resume before closing.'
+        function(Value: Media.PlaybackEvent): bool => Value.State = Media.PlaybackState.Playing
+          and Value.Position.TotalMilliseconds > Value.Duration.TotalMilliseconds * 0.05 + 1.0
       );
       Window.RequestClose();
       while Session.Step() do

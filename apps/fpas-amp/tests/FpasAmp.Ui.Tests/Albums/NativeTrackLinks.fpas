@@ -2,7 +2,6 @@
 
 unit FpasAmp.UiTests.NativeTrackLinks;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
@@ -18,6 +17,7 @@ uses FpasAmp.Library.Sources as Input;
 uses FpasAmp.Library.Tests.AlbumSupport as Art;
 uses FpasAmp.Library.Tests.MetadataSupport as Sources;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Ui.Albums.Model as AlbumsPage;
 uses FpasAmp.Ui.Albums.Music.Model as Songs;
 uses FpasAmp.Ui.App.Controller as Controller;

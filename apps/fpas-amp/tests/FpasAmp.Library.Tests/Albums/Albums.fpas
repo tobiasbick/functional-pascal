@@ -3,9 +3,6 @@
 // Album identity, cover precedence and watcher invalidation use real synthetic media.
 unit FpasAmp.Library.Tests.Albums;
 
-uses Fpas.Media.Images as Images;
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
-
 uses ATL as A;
 uses FpasAmp.Library.Albums.Model as M;
 uses FpasAmp.Library.Albums.Persistence.Queries as Query;
@@ -18,6 +15,8 @@ uses FpasAmp.Library.Tests.AlbumSupport as Art;
 uses FpasAmp.Library.Tests.MetadataSupport as F;
 uses FpasAmp.Library.Tests.Support as H;
 uses FpasAmp.Library.UserData.Schema as Users;
+uses FpasAmp.Media.Images as Images;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 uses Microsoft.Data.Sqlite as Db;
 uses System as Sys;
 uses System.Collections.Immutable as I;

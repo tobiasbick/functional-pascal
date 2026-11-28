@@ -3,7 +3,6 @@
 // The settings slice: saved preferences, open dialogs and library status.
 unit FpasAmp.Ui.Settings.Model;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
@@ -11,6 +10,7 @@ uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 uses FpasAmp.Library.Inventory.Model as Inv;
 uses FpasAmp.Library.Inventory.Progress as Work;
 uses FpasAmp.Library.Sources as Locations;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Ui.Podcasts.Model as Podcasts;
 uses FpasAmp.Ui.Radio.Model as Radio;
 uses System as Sys;

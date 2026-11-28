@@ -12,7 +12,7 @@ try {
     & 'packaging/windows/Dependencies.ps1' -Payload $payload -Cache (Join-Path $artifacts 'ffmpeg')
     & (Join-Path $repository 'src/Fpas.Deployment.WindowsPortable/Publish.ps1') -PayloadDirectory $payload `
         -EntryPoint 'FpasAmp.exe' -Output (Join-Path $repository 'bin/FpasAmp.exe') `
-        -Icon 'packaging/windows/FpasAmp.ico' -ArtifactsPath (Join-Path $artifacts 'portable')
+        -Icon 'packaging/windows/FpasAmp.ico' -Title 'FPas-Amp' -ArtifactsPath (Join-Path $artifacts 'portable')
     Write-Host 'Deployed portable bin/FpasAmp.exe.'
 }
 finally {

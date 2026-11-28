@@ -3,11 +3,10 @@
 // Track presentation and selection for a single release.
 unit FpasAmp.Ui.Albums.Music.Browse;
 
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
-
 uses FpasAmp.Library.Albums.Model as Albums;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Search.Text as Text;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 uses FpasAmp.Ui.Albums.Music.Model as M;
 uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
 uses FpasAmp.Ui.Collections.FilterOptions as Options;

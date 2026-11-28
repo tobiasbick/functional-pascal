@@ -3,8 +3,6 @@
 // Queue availability, offline skipping and bookmark persistence.
 unit FpasAmp.UiTests.PlayerQueue;
 
-uses Fpas.Media.Audio as Audio;
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
 uses Fpas.Ui.Mvu.Application as A;
 uses Fpas.Ui.Mvu.Session as Runtime;
 uses Fpas.Ui.Mvu.Testing.EffectReplies as Effects;
@@ -14,6 +12,8 @@ uses FpasAmp.Library.Inventory.Model as Inventory;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Sources as Sources;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 uses FpasAmp.Persistence.PlayerState as Bookmark;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;
 uses FpasAmp.Ui.Albums.Music.Model as Music;

@@ -1,2 +1,2 @@
 *.sh text eol=lf
-third-party/atl/ATL/** -whitespace
+apps/fpas-amp/third-party/atl/ATL/** -whitespace

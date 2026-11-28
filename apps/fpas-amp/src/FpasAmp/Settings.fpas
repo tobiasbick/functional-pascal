@@ -3,12 +3,12 @@
 // Stores the user's sources, appearance, mixer and metadata settings.
 unit FpasAmp.Settings;
 
-uses Fpas.Media.Audio as Audio;
-uses Fpas.Media.Tags.Playlists as Playlists;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses FpasAmp.Library.Sources as Locations;
+uses FpasAmp.Media.Audio as Audio;
+uses FpasAmp.Media.Tags.Playlists as Playlists;
 uses FpasAmp.Persistence.JsonFields as Fields;
 uses FpasAmp.Persistence.JsonOutput as Output;
 uses FpasAmp.Persistence.PodcastSubscriptions as Podcasts;

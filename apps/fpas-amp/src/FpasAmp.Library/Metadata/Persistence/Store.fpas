@@ -3,13 +3,12 @@
 // Atomic metadata replacement retains the last successful tags after read errors.
 unit FpasAmp.Library.Metadata.Persistence.Store;
 
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
-
 uses FpasAmp.Library.Albums.Persistence.Store as Albums;
 uses FpasAmp.Library.Persistence.Sql as Sql;
 uses FpasAmp.Library.Serialization.CatalogueJson as Codec;
 uses FpasAmp.Library.TagEditing.Fields as Fields;
 uses FpasAmp.Library.TagEditing.Overrides as Overrides;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 uses Microsoft.Data.Sqlite as Db;
 uses System as Sys;
 uses System.Threading as T;

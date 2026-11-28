@@ -1,0 +1,18 @@
+<!-- [Documentation](../../doc/media/README.md) -->
+<Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Fixtures/wide.jpg" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../FpasAmp.Media.Audio.Tests/Fixtures/step.mp3;../FpasAmp.Media.Audio.Tests/Fixtures/step.ogg" Link="Fixtures/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <ProjectReference Include="../../src/FpasAmp.Media.Tags/FpasAmp.Media.Tags.fpasproj" />
+    <ProjectReference Include="../../src/FpasAmp.Media.Audio/FpasAmp.Media.Audio.csproj" />
+    <ProjectReference Include="../../src/FpasAmp.Media.Images/FpasAmp.Media.Images.csproj" />
+  </ItemGroup>
+</Project>

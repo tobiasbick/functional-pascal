@@ -147,5 +147,3 @@ members dispatch through constrained type parameters, including generic operator
 Before changing public identities, signatures or representations, read the
 [interop rules](../interop/README.md) and [CLR mapping](../../specs/clr-mapping.md).
 [Attributes](../interop/attributes.md) and [events](../interop/events.md) own their contracts.
-
-For tag, image and audio project references and FPAS calls, see [media libraries](../libraries/media/README.md).

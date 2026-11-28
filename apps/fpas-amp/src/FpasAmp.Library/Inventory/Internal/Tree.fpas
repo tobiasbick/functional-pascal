@@ -3,8 +3,6 @@
 // Streaming physical traversal with independently owned source memberships.
 unit FpasAmp.Library.Inventory.Internal.Tree;
 
-uses Fpas.Media.Tags.Playlists as PlaylistFormats;
-
 uses FpasAmp.Library.Albums.Artwork.Names as ArtworkNames;
 uses FpasAmp.Library.Inventory.Internal.Catalog as Data;
 uses FpasAmp.Library.Inventory.Internal.Directories as Directories;
@@ -13,6 +11,7 @@ uses FpasAmp.Library.Inventory.Model as M;
 uses FpasAmp.Library.Inventory.Progress as P;
 uses FpasAmp.Library.Sources as S;
 uses FpasAmp.Library.TagEditing.Files as TagFiles;
+uses FpasAmp.Media.Tags.Playlists as PlaylistFormats;
 uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.Collections.Immutable as I;

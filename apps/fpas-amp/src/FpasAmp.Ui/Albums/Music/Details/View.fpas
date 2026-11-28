@@ -3,8 +3,6 @@
 // Shared track detail dialog for both the album and library song tables.
 unit FpasAmp.Ui.Albums.Music.Details.View;
 
-uses Fpas.Media.Images as Images;
-uses Fpas.Media.Tags.AudioFiles as Tags;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
@@ -13,6 +11,8 @@ uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
 uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
 
 uses FpasAmp.Library.Metadata.Model as Tracks;
+uses FpasAmp.Media.Images as Images;
+uses FpasAmp.Media.Tags.AudioFiles as Tags;
 uses FpasAmp.Ui.Albums.Artwork as Artwork;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;
 uses FpasAmp.Ui.Albums.Music.Details.Metadata as Metadata;

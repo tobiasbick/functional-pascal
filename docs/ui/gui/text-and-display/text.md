@@ -66,6 +66,11 @@ Apply `Elements.Styled` to a label when its appearance should follow a
 semantic role from the theme. Overview uses `DisplayTitle` for its main
 heading and `Introduction` for the paragraph beneath it.
 
+Apply `HoverScroll` to a single-line label with a bounded width. If the text
+overflows, it scrolls while the pointer is over the label. With reduced motion,
+hover reveals the end immediately. The label returns to its start on pointer
+exit.
+
 ## See also
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_text)

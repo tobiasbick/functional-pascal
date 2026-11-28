@@ -3,11 +3,11 @@
 // Formats the tagged values used by the track summary and its three detail panels.
 unit FpasAmp.Ui.Albums.Music.Details.Metadata;
 
-uses Fpas.Media.Tags.AudioFiles as Tags;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
 
+uses FpasAmp.Media.Tags.AudioFiles as Tags;
 uses FpasAmp.Ui.Albums.Music.Model as M;
 uses System as Sys;
 uses System.Collections.Generic as C;

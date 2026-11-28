@@ -4,6 +4,7 @@ unit Fpas.Ui.Internal.Mapping.Visualizations;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Internal.Mapping.MessageMapping as M;
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.Widgets.Charts.ActivityRings as ActivityRings;
 uses Fpas.Ui.Widgets.Charts.BarLists as BarLists;
 uses Fpas.Ui.Widgets.Charts.CalendarHeatmaps as CalendarHeatmaps;
@@ -30,11 +31,13 @@ uses System as Sys;
 // ## Parameters
 // - `Value`: Native chart or visualization leaf.
 // - `Messages`: Pure message translation.
+// - `Scope`: Prefix for the element ID, or empty.
 // ## Returns
 // The same chart data, identities and options with translated callbacks.
 public function Map of (TChild, TParent)(
   Value: E.Element of TChild;
-  Messages: function(TChild): TParent
+  Messages: function(TChild): TParent;
+  Scope: string
 ): E.Element of TParent;
 begin
   case Value of
@@ -46,7 +49,7 @@ begin
       const OnActivate: Sys.Func of (Sankeys.Selection, TChild)?
     ):
       return (E.Element of TParent).Sankey(
-        Id,
+        Scopes.Id(Scope, Id),
         Nodes,
         Links,
         Settings,
@@ -59,7 +62,7 @@ begin
       const OnActivate: Sys.Func of (int, TChild)?
     ):
       return (E.Element of TParent).BarList(
-        Id,
+        Scopes.Id(Scope, Id),
         Items,
         Settings,
         M.Callback of (int, TChild, TParent)(OnActivate, Messages)
@@ -71,7 +74,7 @@ begin
       const OnActivate: Sys.Func of (int, TChild)?
     ):
       return (E.Element of TParent).ActivityRings(
-        Id,
+        Scopes.Id(Scope, Id),
         Items,
         Settings,
         M.Callback of (int, TChild, TParent)(OnActivate, Messages)
@@ -83,7 +86,7 @@ begin
       const OnActivate: Sys.Func of (ScatterCharts.PointIndex, TChild)?
     ):
       return (E.Element of TParent).ScatterChart(
-        Id,
+        Scopes.Id(Scope, Id),
         Series,
         Settings,
         M.Callback of (ScatterCharts.PointIndex, TChild, TParent)(OnActivate, Messages)
@@ -95,7 +98,13 @@ begin
       const Maximum: float,
       const Settings: RadialGauges.Options
     ):
-      return (E.Element of TParent).RadialGauge(Id, Value, Minimum, Maximum, Settings);
+      return (E.Element of TParent).RadialGauge(
+        Scopes.Id(Scope, Id),
+        Value,
+        Minimum,
+        Maximum,
+        Settings
+      );
     when E.Element.Candlestick(
       const Id: string,
       const Candles: array of Candlesticks.Candle,
@@ -103,7 +112,7 @@ begin
       const OnCursorChange: Sys.Func of (int, TChild)?
     ):
       return (E.Element of TParent).Candlestick(
-        Id,
+        Scopes.Id(Scope, Id),
         Candles,
         Settings,
         M.Callback of (int, TChild, TParent)(OnCursorChange, Messages)
@@ -117,7 +126,7 @@ begin
       const OnActivate: Sys.Func of (Heatmaps.Cell, TChild)?
     ):
       return (E.Element of TParent).Heatmap(
-        Id,
+        Scopes.Id(Scope, Id),
         Values,
         Rows,
         Columns,
@@ -132,7 +141,7 @@ begin
       const OnActivate: Sys.Func of (Sys.DateOnly, TChild)?
     ):
       return (E.Element of TParent).CalendarHeatmap(
-        Id,
+        Scopes.Id(Scope, Id),
         Start,
         Values,
         Settings,
@@ -147,7 +156,7 @@ begin
       const OnActivate: Sys.Func of (int, TChild)?
     ):
       return (E.Element of TParent).Treemap(
-        Id,
+        Scopes.Id(Scope, Id),
         Items,
         Selected,
         M.Callback of (int, TChild, TParent)(OnSelect, Messages),
@@ -162,7 +171,7 @@ begin
       const OnActivate: Sys.Func of (int, TChild)?
     ):
       return (E.Element of TParent).RadarChart(
-        Id,
+        Scopes.Id(Scope, Id),
         Series,
         Axes,
         Settings,
@@ -175,7 +184,7 @@ begin
       const OnActivate: Sys.Func of (int, TChild)?
     ):
       return (E.Element of TParent).Funnel(
-        Id,
+        Scopes.Id(Scope, Id),
         Items,
         Settings,
         M.Callback of (int, TChild, TParent)(OnActivate, Messages)
@@ -187,7 +196,7 @@ begin
       const OnActivate: Sys.Func of (int, TChild)?
     ):
       return (E.Element of TParent).SplitBar(
-        Id,
+        Scopes.Id(Scope, Id),
         Items,
         Settings,
         M.Callback of (int, TChild, TParent)(OnActivate, Messages)
@@ -199,7 +208,7 @@ begin
       const OnActivate: Sys.Func of (int, TChild)?
     ):
       return (E.Element of TParent).Waffle(
-        Id,
+        Scopes.Id(Scope, Id),
         Items,
         Settings,
         M.Callback of (int, TChild, TParent)(OnActivate, Messages)
@@ -209,33 +218,33 @@ begin
       const Series: array of Charts.Series,
       const Settings: Charts.Options
     ):
-      return (E.Element of TParent).LineChart(Id, Series, Settings);
+      return (E.Element of TParent).LineChart(Scopes.Id(Scope, Id), Series, Settings);
     when E.Element.BarChart(
       const Id: string,
       const Series: array of Charts.Series,
       const Settings: Charts.Options
     ):
-      return (E.Element of TParent).BarChart(Id, Series, Settings);
+      return (E.Element of TParent).BarChart(Scopes.Id(Scope, Id), Series, Settings);
     when E.Element.DonutChart(
       const Id: string,
       const Values: array of float,
       const Labels: array of string,
       const Settings: Donuts.Options
     ):
-      return (E.Element of TParent).DonutChart(Id, Values, Labels, Settings);
+      return (E.Element of TParent).DonutChart(Scopes.Id(Scope, Id), Values, Labels, Settings);
     when E.Element.Gauge(
       const Id: string,
       const Label: string?,
       const Current: float,
       const Size: float
     ):
-      return (E.Element of TParent).Gauge(Id, Label, Current, Size);
+      return (E.Element of TParent).Gauge(Scopes.Id(Scope, Id), Label, Current, Size);
     when E.Element.PatternMeter(
       const Id: string,
       const Parts: array of Patterns.Part,
       const Settings: Patterns.Options
     ):
-      return (E.Element of TParent).PatternMeter(Id, Parts, Settings);
+      return (E.Element of TParent).PatternMeter(Scopes.Id(Scope, Id), Parts, Settings);
     else
       raise new Sys.InvalidOperationException('An unexpected node reached visualization mapping.');
   end case;

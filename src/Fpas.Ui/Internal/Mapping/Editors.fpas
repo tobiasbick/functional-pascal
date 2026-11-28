@@ -5,6 +5,7 @@ unit Fpas.Ui.Internal.Mapping.Editors;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Internal.Mapping.MessageMapping as M;
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.Widgets.Inputs.InlineEdits as InlineEdits;
 uses Fpas.Ui.Widgets.Inputs.MoneyFields as MoneyFields;
 uses Fpas.Ui.Widgets.Inputs.MultiSelects as Multi;
@@ -33,11 +34,13 @@ uses System as Sys;
 // ## Parameters
 // - `Value`: Original node.
 // - `Messages`: Message translation.
+// - `Scope`: Prefix for the element ID, or empty.
 // ## Returns
 // The node producing parent messages.
 public function Map of (TChild, TParent)(
   Value: E.Element of TChild;
-  Messages: function(TChild): TParent
+  Messages: function(TChild): TParent;
+  Scope: string
 ): E.Element of TParent;
 begin
   case Value of
@@ -48,7 +51,7 @@ begin
       const Settings: InlineEdits.Options
     ):
       return (E.Element of TParent).InlineEdit(
-        Id,
+        Scopes.Id(Scope, Id),
         Current,
         function(Next: string): TParent => Messages(Changed(Next)),
         Settings
@@ -63,7 +66,7 @@ begin
       const Settings: ScrubFields.Options
     ):
       return (E.Element of TParent).ScrubField(
-        Id,
+        Scopes.Id(Scope, Id),
         Label,
         Current,
         Minimum,
@@ -78,7 +81,7 @@ begin
       const Settings: MoneyFields.Options
     ):
       return (E.Element of TParent).MoneyField(
-        Id,
+        Scopes.Id(Scope, Id),
         Current,
         function(Next: decimal): TParent => Messages(Changed(Next)),
         Settings
@@ -90,7 +93,7 @@ begin
       const Settings: RecorderKeys.Options
     ):
       return (E.Element of TParent).ShortcutRecorder(
-        Id,
+        Scopes.Id(Scope, Id),
         Current,
         function(Next: RecorderKeys.Combination): TParent => Messages(Changed(Next)),
         Settings
@@ -103,7 +106,7 @@ begin
       const FOnSubmit: Sys.Func of (string, TChild)?
     ):
       return (E.Element of TParent).TextField(
-        FId,
+        Scopes.Id(Scope, FId),
         FValue,
         function(A0: string): TParent => Messages(FOnChange(A0)),
         FSettings,
@@ -117,7 +120,7 @@ begin
       const FOnSubmit: Sys.Func of (string, TChild)?
     ):
       return (E.Element of TParent).SearchField(
-        FId,
+        Scopes.Id(Scope, FId),
         FValue,
         function(A0: string): TParent => Messages(FOnChange(A0)),
         FSettings,
@@ -131,7 +134,7 @@ begin
       const FOnSubmit: Sys.Func of (string, TChild)?
     ):
       return (E.Element of TParent).TextArea(
-        FId,
+        Scopes.Id(Scope, FId),
         FValue,
         function(A0: string): TParent => Messages(FOnChange(A0)),
         FSettings,
@@ -144,7 +147,7 @@ begin
       const FSettings: TagInputs.Options
     ):
       return (E.Element of TParent).TagInput(
-        FId,
+        Scopes.Id(Scope, FId),
         FTags,
         function(A0: array of string): TParent => Messages(FOnChange(A0)),
         FSettings
@@ -157,7 +160,7 @@ begin
       const FOnComplete: Sys.Func of (string, TChild)?
     ):
       return (E.Element of TParent).OneTimeCodeInput(
-        FId,
+        Scopes.Id(Scope, FId),
         FValue,
         function(A0: string): TParent => Messages(FOnChange(A0)),
         FSettings,
@@ -168,7 +171,7 @@ begin
       const Enabled: bool
     ):
       return (E.Element of TParent).ColorPicker(
-        Id,
+        Scopes.Id(Scope, Id),
         Value,
         function(Proposal: Graphics.Color): TParent => Messages(Change(Proposal)),
         Enabled
@@ -178,7 +181,7 @@ begin
       const Settings: Emojis.Options
     ):
       return (E.Element of TParent).EmojiPicker(
-        Id,
+        Scopes.Id(Scope, Id),
         Value,
         function(Proposal: Emojis.Change): TParent => Messages(Change(Proposal)),
         Settings
@@ -188,21 +191,27 @@ begin
       const Enabled: bool
     ):
       return (E.Element of TParent).Calendar(
-        Id, Value, function(Proposed: Sys.DateOnly): TParent => Messages(Change(Proposed)), Enabled
+        Scopes.Id(Scope, Id),
+        Value,
+        function(Proposed: Sys.DateOnly): TParent => Messages(Change(Proposed)),
+        Enabled
       );
     when E.Element.DatePicker(
       const Id: string, const Value: Sys.DateOnly?, const Change: function(Sys.DateOnly): TChild,
       const Settings: DatePickers.Options
     ):
       return (E.Element of TParent).DatePicker(
-        Id, Value, function(Proposed: Sys.DateOnly): TParent => Messages(Change(Proposed)), Settings
+        Scopes.Id(Scope, Id),
+        Value,
+        function(Proposed: Sys.DateOnly): TParent => Messages(Change(Proposed)),
+        Settings
       );
     when E.Element.RangeCalendar(
       const Id: string, const Value: Dates.Value, const Change: function(Dates.Value): TChild,
       const Months: int, const Enabled: bool
     ):
       return (E.Element of TParent).RangeCalendar(
-        Id,
+        Scopes.Id(Scope, Id),
         Value,
         function(Proposed: Dates.Value): TParent => Messages(Change(Proposed)),
         Months,
@@ -213,21 +222,27 @@ begin
       const Settings: RangePickers.Options
     ):
       return (E.Element of TParent).RangePicker(
-        Id, Value, function(Proposed: Dates.Value): TParent => Messages(Change(Proposed)), Settings
+        Scopes.Id(Scope, Id),
+        Value,
+        function(Proposed: Dates.Value): TParent => Messages(Change(Proposed)),
+        Settings
       );
     when E.Element.TimePicker(
       const Id: string, const Value: Sys.TimeOnly, const Change: function(Sys.TimeOnly): TChild,
       const Settings: TimePickers.Options
     ):
       return (E.Element of TParent).TimePicker(
-        Id, Value, function(Proposed: Sys.TimeOnly): TParent => Messages(Change(Proposed)), Settings
+        Scopes.Id(Scope, Id),
+        Value,
+        function(Proposed: Sys.TimeOnly): TParent => Messages(Change(Proposed)),
+        Settings
       );
     when E.Element.WheelPicker(
       const Id: string, const Items: array of string, const Selected: int,
       const Change: function(int): TChild, const Settings: WheelPickers.Options
     ):
       return (E.Element of TParent).WheelPicker(
-        Id,
+        Scopes.Id(Scope, Id),
         Items,
         Selected,
         function(Proposed: int): TParent => Messages(Change(Proposed)),
@@ -238,7 +253,7 @@ begin
       const Size: float, const Enabled: bool
     ):
       return (E.Element of TParent).TimeDial(
-        Id,
+        Scopes.Id(Scope, Id),
         Value,
         function(Proposed: Sys.TimeOnly): TParent => Messages(Change(Proposed)),
         Size,
@@ -249,7 +264,7 @@ begin
       const Change: function(array of bool): TChild, const Settings: Multi.Options
     ):
       return (E.Element of TParent).MultiSelectInput(
-        Id,
+        Scopes.Id(Scope, Id),
         Items,
         Selected,
         function(Flags: array of bool): TParent => Messages(Change(Flags)),
@@ -263,7 +278,7 @@ begin
       const FSettings: Selects.Options
     ):
       return (E.Element of TParent).SelectInput(
-        FId,
+        Scopes.Id(Scope, FId),
         FItems,
         FSelected,
         function(A0: int): TParent => Messages(FOnChange(A0)),
@@ -278,7 +293,7 @@ begin
       const FSettings: NumberFields.Options
     ):
       return (E.Element of TParent).NumberField(
-        FId,
+        Scopes.Id(Scope, FId),
         FValue,
         FMinimum,
         FMaximum,

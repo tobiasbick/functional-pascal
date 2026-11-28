@@ -9,6 +9,8 @@ uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Mvu.Application as A;
 uses Fpas.Ui.Mvu.Composition as M;
 uses Fpas.Ui.TerminalExtensions.Input as Keys;
+uses Fpas.Ui.Tui.Application as Tui;
+uses Fpas.Ui.Tui.Headless as Headless;
 uses Fpas.Ui.Validation as V;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
@@ -286,6 +288,51 @@ begin
   Check(Builds = 2, 'Mapping ignored changed child dependencies.');
 end procedure;
 
+procedure ScopedViews();
+  function Build(Count: int): E.Element of int;
+  begin
+    Builds := Builds + 1;
+    return B.Button of int('save', 'Save', Count + 1);
+  end function;
+
+  function View(State: string): E.Element of string;
+  begin
+    const Child: E.Element of int := E.CachedSubview of (int, int)(
+      'editor', 0, Build, function(Left: int; Right: int): bool => Left = Right
+    );
+    const Panel: E.Element of int := U.IdScope of int('panel', Child);
+    return E.Column of string(
+      E.Text of string(State),
+      U.Map of (int, string)(U.IdScope of int('left', Panel), Wrap),
+      U.IdScope of string(
+        'right',
+        U.Map of (int, string)(
+          Panel,
+          function(Message: int): string => 'right/' + Message.ToString()
+        )
+      )
+    );
+  end function;
+
+  function Update(State: string; Message: string): A.Transition of (string, string);
+  begin
+    return new A.Transition of (string, string)(Message, []);
+  end function;
+begin
+  var Builds: int := 0;
+  using const Session: Tui.HeadlessSession := Headless.Start of (string, string)(
+    'ready', Update, View, 30, 8
+  );
+  Check(Builds = 2, 'Both scoped instances need a cache entry.');
+  discard Session.Send(Tui.Input.Activate('right/panel/save'));
+  discard Session.Step();
+  Check(Session.Snapshot().Lines[0].TrimEnd() = 'right/1', 'The right instance did not activate.');
+  discard Session.Send(Tui.Input.Activate('left/panel/save'));
+  discard Session.Step();
+  Check(Session.Snapshot().Lines[0].TrimEnd() = 'parent/1', 'The left instance did not activate.');
+  Check(Builds = 2, 'A redraw rebuilt an unchanged scoped subview.');
+end procedure;
+
 procedure Outline();
   function TableRow(
     Id: string;
@@ -333,7 +380,13 @@ procedure Outline();
 begin
   const First: Toc.Item := new Toc.Item('First', 'first');
   const Last: Toc.Item := new Toc.Item('Last', 'last');
-  discard V.Prepare of string(Reader([First, Last]), V.Target.Graphical);
+  const Subview: E.Element of string := Reader([First, Last]);
+  discard V.Prepare of string(Subview, V.Target.Graphical);
+  RejectOutline(E.Row of string(Subview, Subview), 'Duplicate ID');
+  discard V.Prepare of string(
+    E.Row of string(U.IdScope of string('left', Subview), U.IdScope of string('right', Subview)),
+    V.Target.Graphical
+  );
   RejectOutline(Reader([Last, First]), 'in document order');
   const Settings: Dialogs.Options := new Dialogs.Options('Reader');
   discard V.Prepare of string(
@@ -400,6 +453,7 @@ begin
   Commands();
   Callbacks();
   Cached();
+  ScopedViews();
   Outline();
   Console.WriteLine('Composition contracts verified');
 end;

@@ -3,11 +3,10 @@
 // On-demand, content-addressed loudness envelopes in the reconstructible catalogue.
 unit FpasAmp.Library.Metadata.Waveforms;
 
-uses Fpas.Media.Audio as Audio;
-
 uses FpasAmp.Library.Metadata.Internal.Reading as Reading;
 uses FpasAmp.Library.Metadata.Model as M;
 uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Media.Audio as Audio;
 uses Microsoft.Data.Sqlite as Db;
 uses System as Sys;
 uses System.IO as IO;

@@ -3,8 +3,6 @@
 // Album updates keep browser state and release rating controls after durable writes.
 unit FpasAmp.UiTests.Albums;
 
-uses Fpas.Media.Audio as Media;
-uses Fpas.Media.Images as Images;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
@@ -18,6 +16,8 @@ uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Tests.AlbumSupport as Fixtures;
 uses FpasAmp.Library.Tests.MetadataSupport as Sources;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Media;
+uses FpasAmp.Media.Images as Images;
 uses FpasAmp.Ui.Albums.Model as M;
 uses FpasAmp.Ui.Albums.Music.Model as Music;
 uses FpasAmp.Ui.Albums.Update as Update;

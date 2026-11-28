@@ -273,13 +273,6 @@ cancellation callbacks, late resource acquisition after scope closure, and
 deadline/caller/unrelated cancellation precedence. It also verifies UTF-8
 decoding on both captured process streams.
 
-## Media libraries
-
-The [FPAS library tests](README.md#fpas-library-tests) read MP3 and Vorbis tags
-and embedded covers, decode JPEG and PNG pixels, preserve playlist locations,
-and check atomic M3U8 replacement. The [audio tests](Fpas.Media.Audio.Tests/)
-exercise codec seeking, playback events, output devices, mixing and waveforms.
-
 ## Language and metadata
 
 ForeignHabitDiagnosticsTests verifies targeted Pascal/Delphi/Ada guidance,

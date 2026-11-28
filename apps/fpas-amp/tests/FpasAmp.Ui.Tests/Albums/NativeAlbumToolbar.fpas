@@ -3,7 +3,6 @@
 // Native search, filter and sort controls select the albums of the page.
 unit FpasAmp.UiTests.NativeAlbumToolbar;
 
-uses Fpas.Media.Images as Imaging;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
@@ -17,6 +16,7 @@ uses FpasAmp.Imaging as Thumbnails;
 uses FpasAmp.Library.Albums.Model as Library;
 uses FpasAmp.Library.Tests.AlbumSupport as Art;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Images as Imaging;
 uses FpasAmp.Ui.Albums.Model as Albums;
 uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;
 uses FpasAmp.Ui.Albums.Update as Update;

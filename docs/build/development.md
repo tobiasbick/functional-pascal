@@ -4,6 +4,9 @@ Use a stable .NET 10 SDK satisfying global.json. Package versions are centralize
 in Directory.Packages.props. Commands below run from the repository root.
 Use the SDK's default build parallelism unless the user requests a limit.
 
+Build under WSL from a checkout on the Linux file system. Access across file
+systems is slower. [WSL file storage and performance](https://learn.microsoft.com/de-de/windows/wsl/filesystems#file-storage-and-performance-across-file-systems)
+
 The solution includes the CUI binding and its tests. Building it also requires
 CMake 3.20 or newer, a C99 compiler and the platform development libraries listed
 in the [native build reference](../ui/gui/native-build.md#prerequisites).
@@ -33,8 +36,7 @@ dotnet test Fpas.slnx --no-build --no-restore --configuration Debug
 ```
 
 The SDK-based [FPAS library tests](../../tests/README.md#fpas-library-tests) run
-after the local SDK is available. They exercise the media and MVU libraries
-directly.
+after the local SDK is available. They exercise the MVU runtime directly.
 
 Debug is the development configuration. Use Release for release validation and
 controlled performance measurements:

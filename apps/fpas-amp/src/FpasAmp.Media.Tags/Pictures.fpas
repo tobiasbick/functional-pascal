@@ -1,0 +1,58 @@
+// [Documentation](../../doc/media/tags.md#embedded-artwork)
+
+unit FpasAmp.Media.Tags.Pictures;
+
+uses ATL as A;
+uses System as Sys;
+uses System.Collections.Generic as C;
+uses System.IO as IO;
+
+// Detached original artwork; no image decoding or resizing occurs here.
+public type Cover = record
+  // MIME type reported by ATL.
+  public MimeType: string;
+  // Original encoded image bytes, limited to sixteen MiB.
+  public Data: array of byte;
+  // Whether ATL marked the selected picture as a front cover.
+  public Front: bool := false;
+end record;
+
+// Reads embedded artwork on explicit request, preferring the front cover.
+// ## Parameters
+// - `Path`: Local audio file.
+// ## Returns
+// Encoded picture and MIME type, or null when there is no picture.
+public function Read(Path: string): Cover?;
+requires Path <> '';
+begin
+  const Track: A.Track := new A.Track(Path);
+  const Pictures: (C.IList of A.PictureInfo?)? := Track.EmbeddedPictures;
+  var Selected: A.PictureInfo? := null;
+  if Pictures <> null then
+    for Picture: A.PictureInfo? in Pictures do
+      if Picture <> null then
+        if Picture.PicType = A.PictureInfo.PIC_TYPE.Front then
+          Selected := Picture;
+          break;
+        elsif Selected = null then
+          Selected := Picture;
+        end if;
+      end if;
+    end for;
+  end if;
+
+  if Selected = null then
+    return null;
+  end if;
+  const Bytes: array of byte := Selected.PictureData ?? Sys.Array.Empty of byte();
+  if Bytes.Length > 16777216 then
+    raise new IO.InvalidDataException('Embedded artwork exceeds sixteen MiB.');
+  end if;
+
+  return new Cover(
+    Selected.MimeType ?? 'application/octet-stream', Bytes,
+    Selected.PicType = A.PictureInfo.PIC_TYPE.Front
+  );
+end function;
+
+end unit;

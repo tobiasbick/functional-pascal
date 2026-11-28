@@ -3,8 +3,6 @@
 // Schema upgrade, skip decisions, error retention and bounded catalogue ordering.
 unit FpasAmp.Library.Tests.MetadataStorage;
 
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
-
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Metadata.Internal.Pending as Pending;
 uses FpasAmp.Library.Metadata.Model as M;
@@ -15,6 +13,7 @@ uses FpasAmp.Library.Sources as S;
 uses FpasAmp.Library.Tests.MetadataSupport as F;
 uses FpasAmp.Library.Tests.StorageSupport as D;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 uses Microsoft.Data.Sqlite as Db;
 uses System as Sys;
 uses System.Collections.Immutable as I;

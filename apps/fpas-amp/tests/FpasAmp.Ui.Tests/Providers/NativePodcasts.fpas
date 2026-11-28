@@ -2,7 +2,6 @@
 
 unit FpasAmp.UiTests.NativePodcasts;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
@@ -17,6 +16,7 @@ uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Tests.AlbumSupport as Art;
 uses FpasAmp.Library.Tests.MetadataSupport as LibraryFixture;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Settings as Saved;
 uses FpasAmp.Ui.App.Controller as Controller;
 uses FpasAmp.Ui.App.Model as App;

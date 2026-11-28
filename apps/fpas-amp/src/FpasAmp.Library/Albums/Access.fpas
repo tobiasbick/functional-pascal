@@ -3,8 +3,6 @@
 // Borrowed album queries and artwork access share the metadata session lifetime.
 unit FpasAmp.Library.Albums.Access;
 
-uses Fpas.Media.Images as Imaging;
-
 uses FpasAmp.Imaging as Thumbnails;
 uses FpasAmp.Library.Albums.Artwork.Names as Artwork;
 uses FpasAmp.Library.Albums.Artwork.Reading as Reading;
@@ -17,6 +15,7 @@ uses FpasAmp.Library.Metadata.Internal.Policy as Policy;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Metadata.Persistence.Queries as Queries;
 uses FpasAmp.Library.Sources as Sources;
+uses FpasAmp.Media.Images as Imaging;
 uses System as Sys;
 uses System.Collections.Immutable as I;
 uses System.Diagnostics as D;

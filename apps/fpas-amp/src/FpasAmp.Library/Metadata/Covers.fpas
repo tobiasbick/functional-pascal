@@ -3,11 +3,10 @@
 // Embedded artwork is loaded explicitly and cached independently of tag rows.
 unit FpasAmp.Library.Metadata.Covers;
 
-uses Fpas.Media.Tags.Pictures as Pictures;
-
 uses FpasAmp.Library.Metadata.Internal.Reading as Reading;
 uses FpasAmp.Library.Persistence.Sql as Sql;
 uses FpasAmp.Library.Serialization.CatalogueJson as Codec;
+uses FpasAmp.Media.Tags.Pictures as Pictures;
 uses Microsoft.Data.Sqlite as Db;
 uses System as Sys;
 uses System.IO as IO;

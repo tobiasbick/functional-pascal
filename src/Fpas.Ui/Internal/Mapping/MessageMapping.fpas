@@ -2,6 +2,7 @@
 
 unit Fpas.Ui.Internal.Mapping.MessageMapping;
 
+uses Fpas.Ui.Internal.Mapping.Scopes as Scopes;
 uses Fpas.Ui.TerminalExtensions.Input as K;
 uses Fpas.Ui.Widgets.Actions.SplitButtons as S;
 uses Fpas.Ui.Widgets.Navigation.Navigation as N;
@@ -50,6 +51,30 @@ begin
   case Value of
     when is Sys.Func of (TArg, TChild) as Original:
       return function(Argument: TArg): TParent => Messages(Original.Invoke(Argument));
+    else
+      return null;
+  end case;
+end function;
+
+// Wraps a callback that receives a view ID from the host.
+// ## Type parameters
+// - `TChild`: Source message type.
+// - `TParent`: Destination message type.
+// ## Parameters
+// - `Value`: Optional callback that expects a local ID.
+// - `Messages`: Message translation.
+// - `Scope`: ID prefix, or empty.
+// ## Returns
+// A callback that accepts a qualified ID, retaining absence.
+public function IdCallback of (TChild, TParent)(
+  Value: Sys.Func of (string, TChild)?;
+  Messages: function(TChild): TParent;
+  Scope: string
+): Sys.Func of (string, TParent)?;
+begin
+  case Value of
+    when is Sys.Func of (string, TChild) as Original:
+      return function(Id: string): TParent => Messages(Original.Invoke(Scopes.LocalId(Scope, Id)));
     else
       return null;
   end case;

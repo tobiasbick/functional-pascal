@@ -2,7 +2,6 @@
 
 unit FpasAmp.UiTests.NativeTagEditor;
 
-uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
@@ -18,6 +17,7 @@ uses FpasAmp.Library.TagEditing.Fields as Fields;
 uses FpasAmp.Library.TagEditing.Files as Files;
 uses FpasAmp.Library.Tests.MetadataSupport as Fixture;
 uses FpasAmp.Library.Tests.Support as H;
+uses FpasAmp.Media.Audio as Audio;
 uses FpasAmp.Ui.App.Controller as Controller;
 uses FpasAmp.Ui.App.Model as App;
 uses FpasAmp.Ui.Player.Playback as Playback;

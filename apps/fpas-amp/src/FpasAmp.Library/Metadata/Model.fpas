@@ -3,7 +3,7 @@
 // Detached metadata and bounded catalogue queries, independent of the GUI.
 unit FpasAmp.Library.Metadata.Model;
 
-uses Fpas.Media.Tags.AudioFiles as MediaTags;
+uses FpasAmp.Media.Tags.AudioFiles as MediaTags;
 
 // One indexed file and its independent durable user identity.
 public type Entry = record

@@ -3,7 +3,6 @@
 // CUI's virtual rows contain ordinary native grids of cover/title cards.
 unit FpasAmp.Ui.Albums.View;
 
-uses Fpas.Media.Images as Imaging;
 uses Fpas.Ui.Composition as Composition;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
@@ -18,6 +17,7 @@ uses Fpas.Ui.Widgets.Inputs.Ratings as Ratings;
 uses Fpas.Ui.Widgets.Overlays.HoverCards as Hover;
 
 uses FpasAmp.Library.Albums.Model as Library;
+uses FpasAmp.Media.Images as Imaging;
 uses FpasAmp.Ui.Albums.Artwork as Artwork;
 uses FpasAmp.Ui.Albums.Details as Details;
 uses FpasAmp.Ui.Albums.Grid as Grid;

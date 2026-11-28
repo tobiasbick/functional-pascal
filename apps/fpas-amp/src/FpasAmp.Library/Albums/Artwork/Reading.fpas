@@ -3,14 +3,13 @@
 // Album cover precedence is explicit; no network or arbitrary folder image is used.
 unit FpasAmp.Library.Albums.Artwork.Reading;
 
-uses Fpas.Media.Images as Imaging;
-uses Fpas.Media.Tags.Pictures as Pictures;
-
 uses FpasAmp.Imaging as Thumbnails;
 uses FpasAmp.Library.Albums.Artwork.Names as Names;
 uses FpasAmp.Library.Metadata.Covers as Covers;
 uses FpasAmp.Library.Metadata.Internal.Reading as Facts;
 uses FpasAmp.Library.Persistence.Sql as Sql;
+uses FpasAmp.Media.Images as Imaging;
+uses FpasAmp.Media.Tags.Pictures as Pictures;
 uses Microsoft.Data.Sqlite as Db;
 uses System as Sys;
 uses System.Collections.Generic as C;

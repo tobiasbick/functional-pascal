@@ -119,7 +119,7 @@ public sealed class GuiHostTests
                 ("time-wheels-dial", 1000, 1280), ("time-24-hour", 1000, 1280), ("time-12-hour", 1000, 1280),
                 ("wheel-focused", 1000, 1280),
                 ("ruler-histogram", 1000, 1600), ("ruler-focused", 1000, 1600), ("histogram-adjusted", 1000, 1600),
-                ("navigation", 1000, 900), ("navigation-compact", 360, 900), ("toasts", 1000, 760),
+                ("navigation", 1000, 900), ("navigation-compact", 360, 900), ("toasts", 1000, 1000),
                 ("tooltips", 1000, 900), ("popover", 1000, 900), ("confirm-popover", 1000, 900),
                 ("text-fields", 1000, 760), ("text-fields-compact", 360, 760),
                 ("tags-codes-strength", 1000, 1000),

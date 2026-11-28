@@ -37,13 +37,13 @@ public sealed partial class GuiPublishingTests
             using var input = new X11Input(title);
             await Click("browse");
             await Read(frame => frame.Has("save"));
-            await Click("format-bold");
-            await Read(frame => frame.Find("format-bold").Value == "true");
+            await Click("save");
+            await Read(frame => frame.Find("save").Value == "loading");
             await Click("theme", "1");
             await Read(frame => frame.Dark);
             input.Resize(520, 900);
             await Read(frame => frame.Width == 520 && frame.Height == 900 && frame.Dark &&
-                frame.Find("format-bold").Value == "true");
+                frame.Find("save").Value == "loading");
             await Click("drawer-open");
             await Read(frame => frame.Controls.Any(control =>
                 control.Id == "navigation" && control.Key == "overlays"));
@@ -80,7 +80,9 @@ public sealed partial class GuiPublishingTests
                 long before = latest.Id;
                 input.Move(control.X + control.Width / 2, control.Y + control.Height / 2);
                 await Read(frame => frame.Id > before);
-                before = latest!.Id; input.Button(true); await Read(frame => frame.Id > before);
+                before = latest!.Id;
+                input.Button(true);
+                await Read(frame => frame.Id > before && frame.Find(id, key).Focused);
                 before = latest!.Id; input.Button(false); await Read(frame => frame.Id > before);
             }
             async Task Key(string key, bool down)
